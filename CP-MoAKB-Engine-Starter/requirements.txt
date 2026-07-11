@@ -1,0 +1,6 @@
+pandas
+openpyxl
+pymupdf
+pdfplumber
+sqlalchemy
+click
