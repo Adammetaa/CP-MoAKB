@@ -1,0 +1,1 @@
+from cpmoakb.database.sqlite_builder import build_database
