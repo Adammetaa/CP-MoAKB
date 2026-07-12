@@ -1,3 +1,0 @@
-# CP-MoAKB
-
-Starter repository.
