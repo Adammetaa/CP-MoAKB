@@ -2,11 +2,24 @@
 
 ## Status and purpose
 
-This specification defines the architecture gate and exact first tranche for a later Sprint-016. It creates no candidate or production record, identifier, source approval, schema, or dataset. Authoring cannot begin until [ADR-009](../ARCHITECTURE_DECISIONS/ADR-009-canonical-candidate-record-format-for-rice-pilot.md) is Accepted and every blocking gate below is satisfied.
+This specification defines the architecture gate and phased Rice pilot scope. It creates no candidate or production record, identifier, schema, or dataset. The **first structural Tranche A** is the 18-entity scope below. The earlier 64-entity design is retained as a deferred expanded tranche and is not authorized by Tranche A approval. Authoring cannot begin until every row in the [Tranche A Entry Checklist](SPRINT_016_TRANCHE_A_ENTRY_CHECKLIST.md) passes.
 
-## Exact entity/context tranche
+## Exact structural Tranche A
 
-The tranche contains exactly **64 candidate entity/context records** if authorized:
+If separately authorized, Tranche A contains exactly **18 entity candidates**:
+
+| Entity type | Count | Governing decision |
+| --- | ---: | --- |
+| Crop | 1 | [Rice Crop Scope Decision](RICE_CROP_SCOPE_DECISION.md) |
+| GrowthStageSystem | 1 | [Growth-Stage Framework Decision](RICE_GROWTH_STAGE_FRAMEWORK_DECISION.md) |
+| GrowthStage | 8 | BBCH principal stages 0, 1, 2, 3, 4, 5, 6, and 8 only |
+| PlantOrgan | 8 | [Exact Plant-Organ Selection](RICE_TRANCHE_A_PLANT_ORGAN_SELECTION.md) |
+
+No context or relationship candidate is permitted. `relationships` and relationship-reference fields are prohibited by the [Nested Validation Profile](RICE_TRANCHE_A_NESTED_VALIDATION_PROFILE.md). The eight selected BBCH stages are a pilot subset, not the complete rice scale.
+
+## Deferred expanded tranche
+
+The following **64 candidate entity/context record** design is retained for later architecture review. It is not part of structural Tranche A and remains unauthorized:
 
 | Category | Count | Why included; source and authority | Minimum provenance and reviewer | Acceptance and exclusions; ambiguity risks |
 | --- | ---: | --- | --- | --- |
@@ -27,7 +40,7 @@ The tranche contains exactly **64 candidate entity/context records** if authoriz
 | Damage Mechanism | 6 | Tests how selected pest roles injure rice; entomology/zoology evidence. | Pest/host/context evidence; relevant specialist reviewer. | Excludes visible outcome, symptom diagnosis, and unsupported causality. |
 | Damage Pattern | 6 | Tests visible injury descriptions tied to mechanisms; assessed descriptive sources. | Pattern/location evidence; Agricultural Domain and specialist reviewers. | Excludes mechanisms, field observations, and diagnostic certainty. |
 
-Relationship statements are separate candidates and have no target quota: evidence, not a numeric goal, determines whether they exist. Their scope is strictly limited to connecting these 64 candidates through `crop has stage system`, `system has stage`, `crop has organ`, `disease has causal agent`, `disease manifests symptom`, `agent may produce sign`, `symptom/sign/damage affects organ`, `organism has contextual pest/weed role`, `role relevant to crop/stage/context`, `role causes damage mechanism`, and `mechanism produces damage pattern`. No other predicate enters the tranche.
+In a later expanded tranche, relationship statements would require a new authorization and profile. No relationship described by the earlier design is permitted in Tranche A.
 
 ## Source selection
 
@@ -42,8 +55,8 @@ Every item must satisfy the [Candidate Record Envelope](CANDIDATE_RECORD_ENVELOP
 1. Approve the frozen source list and one growth-stage framework.
 2. Accept ADR-009 and approve the candidate template/validation contract.
 3. Approve candidate-ID allocation rules without minting production IDs.
-4. Review one record and one relationship exemplar structurally before scaling.
-5. Complete source/rights, language, domain, taxonomy, evidence, and relationship reviews.
+4. Review one entity exemplar structurally before scaling; relationship exemplars are prohibited in Tranche A.
+5. Complete source/rights, language, domain, taxonomy, anatomy, and evidence reviews.
 6. Pass deterministic validation and the [Candidate-to-Production Gate](CANDIDATE_TO_PRODUCTION_GATE.md).
 7. Obtain Chief Architect approval and Product Owner release decision through a separate promotion action.
 

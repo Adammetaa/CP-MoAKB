@@ -26,8 +26,8 @@ The following eight principal stages are the complete planned Tranche A subset. 
 | 2 | Tillering |
 | 3 | Stem elongation |
 | 4 | Booting |
-| 5 | Inflorescence emergence / heading |
-| 6 | Flowering / anthesis |
+| 5 | Inflorescence emergence, heading |
+| 6 | Flowering, anthesis |
 | 8 | Ripening |
 
 Principal stage 7 (development of fruit) and principal stage 9 (senescence) remain part of the selected framework but are outside this eight-stage pilot subset. Their omission is a scope decision, not a merge, assertion of equivalence, or alteration of BBCH.
@@ -39,7 +39,7 @@ Principal stage 7 (development of fruit) and principal stage 9 (senescence) rema
 | Issuing authority | JKI, Germany's Federal Research Centre for Cultivated Plants. |
 | Purpose and applicability | Standardized phenological coding across crops, with a rice-specific key; applicable as a reference framework rather than local agronomic advice. |
 | Granularity | Principal and secondary stages; Tranche A intentionally uses only eight named principal stages. |
-| Definitions and boundaries | Published in the rice key; exact boundary wording and page layout require human visual verification before candidate authoring. |
+| Definitions and boundaries | Published in rice-key pp. 23–27; visual verification and concise boundary review completed 2026-07-14. |
 | Version and stability | Citable 2018 monograph with DOI and ISBN. |
 | Thai compatibility | Concepts can be mapped for review, but Thai Rice Department terminology is not presumed equivalent. |
 | Multilingual feasibility | Codes stabilize framework identity; Thai labels require separately sourced or explicitly editorial mappings. |
@@ -59,4 +59,4 @@ Stage identities are framework- and edition-specific. A new BBCH edition or chan
 
 ## Entry limitation
 
-This decision selects the framework but does not authorize candidate authoring. The official PDF's rice pages still require recorded human visual review, Thai labels remain blocked, and the [Tranche A entry checklist](SPRINT_016_TRANCHE_A_ENTRY_CHECKLIST.md) remains controlling.
+This decision selects the framework but does not authorize candidate authoring. The official PDF review is recorded in the [BBCH Visual Review](RICE_BBCH_VISUAL_REVIEW.md); Thai labels, reviewer staffing, and the [Tranche A entry checklist](SPRINT_016_TRANCHE_A_ENTRY_CHECKLIST.md) remain controlling.

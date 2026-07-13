@@ -6,34 +6,9 @@
 
 This contract specializes [ADR-009](../ARCHITECTURE_DECISIONS/ADR-009-canonical-candidate-record-format-for-rice-pilot.md). It defines failure conditions but creates no schema, validator, candidate directory, or record. Mechanical success never asserts scientific correctness, rights clearance, diagnosis, regulation, safety, or recommendation validity.
 
-## Canonical top-level key order
+## Canonical profile
 
-When applicable, keys appear exactly in this order; inapplicable optional keys are omitted:
-
-1. `candidate_id`
-2. `record_kind`
-3. `entity_type`
-4. `candidate_status`
-5. `labels`
-6. `scientific_name`
-7. `authority_references`
-8. `scope_note`
-9. `subject`
-10. `predicate`
-11. `object`
-12. `context`
-13. `source_references`
-14. `evidence_references`
-15. `provenance`
-16. `language_status`
-17. `taxonomy_verification`
-18. `ambiguity`
-19. `relationship_references`
-20. `supersession`
-21. `dates`
-22. `review`
-
-`entity_type`, entity content, and `relationship_references` apply to entity/context records. `subject`, `predicate`, `object`, and relationship context apply to relationship records. A profile approved before implementation must define nested key order and the exact allowed entity types and predicates; until it exists, candidate authoring is blocked.
+The [Tranche A Nested Validation Profile](RICE_TRANCHE_A_NESTED_VALIDATION_PROFILE.md) defines the exact 18-key top-level order, every nested key order and type, four entity-type profiles, controlled values, value-state objects, list ordering, and prohibited fields. It is normative for Tranche A. Relationship records and relationship fields are prohibited rather than represented as empty values.
 
 ## Check classes
 
@@ -48,11 +23,11 @@ When applicable, keys appear exactly in this order; inapplicable optional keys a
 
 ### Structural checks
 
-- Only the ordered top-level allowlist above is permitted; unknown or out-of-order keys fail.
-- `record_kind` is exactly `entity`, `context`, or `relationship`. For structural Tranche A, only `entity` is permitted; context and relationship records remain prohibited until separately scoped.
-- Tranche A `entity_type` is exactly `crop`, `growth_stage_system`, `growth_stage`, or `plant_organ`. Later types require a reviewed contract revision.
+- Only the ordered top-level and nested allowlists in the Tranche A profile are permitted; unknown or out-of-order keys fail.
+- `record_type` is exactly `entity`; context and relationship records remain prohibited until separately scoped.
+- Tranche A `entity_type` is exactly `Crop`, `GrowthStageSystem`, `GrowthStage`, or `PlantOrgan`. Later types require a reviewed contract revision.
 - `candidate_status` is exactly `draft_candidate`, `in_review`, `changes_requested`, `accepted_candidate`, `rejected`, `withdrawn`, or `superseded`. These are all candidate-workflow states; production/published status is prohibited.
-- `candidate_id` matches `^CPM-CAND-[ER]-[0-9]{6}$`; `E` is required for entity/context and `R` for relationship.
+- `candidate_id` matches `^CPM-CAND-E-[0-9]{6}$`; relationship identifiers and records are prohibited in Tranche A.
 - Filename is exactly `<candidate_id>.yaml`, including case, and the file is under the approved record-kind directory.
 - Common, entity/context, and relationship conditional fields follow the [Candidate Record Envelope](CANDIDATE_RECORD_ENVELOPE.md). Empty required strings and fabricated placeholders fail.
 - An unresolved required value is an object whose state is exactly `unknown`, `not_applicable`, or `disputed`, with the state-specific reason, review basis, and resolution action. Plain sentinel strings such as `N/A` fail.
@@ -65,9 +40,8 @@ When applicable, keys appear exactly in this order; inapplicable optional keys a
 - Candidate identifiers are unique across the allocation registry, filenames, and record bodies, including retained rejected/superseded history.
 - Every source reference resolves to one source-register ID whose status and explicitly approved claim scope cover the field using it.
 - Every material claim has an evidence locator in the source-specific format defined by its assessment. A bare URL or portal page is insufficient.
-- Relationship subject and candidate-object references resolve to existing candidate records; typed literal objects follow their approved type profile.
-- Every predicate exists in the versioned pilot allowlist. The Tranche A predicate allowlist is empty, so relationship records fail. Inverses, transitivity, equivalence, causality, and diagnosis are never inferred.
-- Supersession and relationship references resolve, are non-self-referential where prohibited, and do not form invalid cycles.
+- The Tranche A predicate allowlist is empty, so relationship records and relationship fields fail. Inverses, transitivity, equivalence, causality, and diagnosis are never inferred.
+- Supersession references resolve, are non-self-referential, and do not form invalid cycles.
 
 ### Semantic-governance checks
 
@@ -87,4 +61,4 @@ Validation is read-only: it must not rewrite candidate files, frozen source, off
 
 ## Implementation gate
 
-Before any YAML is created, Chief Architect approval must record the nested field profile, controlled candidate statuses, entity types, predicate allowlist, registry format, parser/size limits, and validator location. Implementing this contract may not modify the frozen existing semantic-validation implementation without separate architecture approval.
+The nested field profile, controlled candidate statuses, entity types, and empty predicate allowlist are now documented. Before any YAML is created, Chief Architect start authorization must still record the registry format, parser/size limits, and approved validator location. Implementing this contract may not modify the frozen existing semantic-validation implementation without separate architecture approval.

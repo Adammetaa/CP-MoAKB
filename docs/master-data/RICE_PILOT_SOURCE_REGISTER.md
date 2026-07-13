@@ -28,12 +28,15 @@ The detailed assessment linked above is normative for claim scope, rights, curre
 
 | ID | Status | Item | Exact approved or intended scope |
 | --- | --- | --- | --- |
-| RDP-SRC-010 | **Approved for Pilot Use** (claim-scoped) | JKI, *Growth stages of mono- and dicotyledonous plants: BBCH Monograph*, 2018 | BBCH framework/edition identity, rice applicability, principal-stage codes, and concise English principal-stage labels. Detailed boundary authoring is Restricted pending visual review. |
+| RDP-SRC-010 | **Approved for Pilot Use** (claim-scoped) | JKI, *Growth stages of mono- and dicotyledonous plants: BBCH Monograph*, 2018 | BBCH framework/edition identity, rice applicability, principal-stage codes/labels, and concise boundary interpretation for selected stages using pp. 23–27. Visual review completed 2026-07-14. |
 | RDP-SRC-011 | **Under Assessment** | IRRI, *Growth stages of the rice plant*, 2007 | Comparative framework assessment only; version, rights, and image-dependent details unresolved. |
 | RDP-SRC-012 | **Restricted** | Thai Rice Department rice growth/development physiology page | Metadata and link only; Thai labels, mappings, and image-dependent content blocked. |
 | RDP-SRC-013 | **Approved for Pilot Use** (claim-scoped) | Kew Plants of the World Online record for *Oryza sativa* L. | Accepted-name status, taxonomic placement, accepted concept reference, and mapping to IPNI LSID. |
 | RDP-SRC-014 | **Approved for Pilot Use** (claim-scoped) | International Plant Names Index record for *Oryza sativa* L. | Scientific-name string, author abbreviation, original publication citation, and IPNI LSID; not accepted status. |
-| RDP-SRC-015 | **Approved for Pilot Use** (claim-scoped) | Plant Ontology in Planteome release 6.0 | Individually verified PO identifiers, English labels, definitions, and generic plant-anatomical hierarchy; not Thai labels or unreviewed rice applicability. |
+| RDP-SRC-015 | **Approved for Pilot Use** (claim-scoped) | Plant Ontology release 2026-01-09 / Planteome 6.0 | Exact selected PO identifiers, English labels, definitions, anatomical levels, and hierarchy; rice applicability requires RDP-SRC-010 or RDP-SRC-018 per organ. |
+| RDP-SRC-016 | **Approved for Pilot Use** (claim-scoped) | Thai Rice Department Rice Knowledge Bank, *การจัดการน้ำ* (Water management) | Rice as a cultivated agricultural crop in Thai rainfed/irrigated production context and direct observed Thai form `ข้าว`; not species identity, universal production scope, or management recommendation. |
+| RDP-SRC-017 | **Approved for Pilot Use** (claim-scoped) | Thai Rice Department Rice Knowledge Bank, *หนอนกอข้าว* (Rice stem borers) | Direct observed Thai agricultural usage `ใบ`, `กาบใบ`, `ลำต้น`, `รวง`, and `เมล็ดข้าว`; not PO equivalence, anatomy definition, pest identity, damage claim, or guidance. |
+| RDP-SRC-018 | **Approved for Pilot Use** (claim-scoped) | IRRI Rice Knowledge Bank, *Oryza sativa* | Morphological applicability of leaf blade, panicle, and spikelet to *O. sativa* and concise English forms; page is about weedy rice and does not define the cultivated Crop concept. |
 
 ## Approval blockers
 

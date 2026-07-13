@@ -1,6 +1,6 @@
 # Minimum Candidate-Record Envelope
 
-This is a documentation contract, not a YAML template, schema, identifier allocation, or agricultural record. Sprint-016 must translate it into a separately reviewed candidate template only after ADR-009 is Accepted.
+This is a documentation contract, not a YAML template, schema, identifier allocation, or agricultural record. The [Tranche A Nested Validation Profile](RICE_TRANCHE_A_NESTED_VALIDATION_PROFILE.md) translates it for the bounded structural tranche and is controlling where it imposes a narrower prohibition.
 
 ## Common fields
 
@@ -22,7 +22,7 @@ This is a documentation contract, not a YAML template, schema, identifier alloca
 | Taxonomy verification status | Required | `not_applicable`, unresolved, disputed, or reviewer-approved with authority evidence; required even to state non-applicability. |
 | Reviewer status | Required | Role-specific decisions, reviewer reference, date, scope, and blockers; workflow state is not truth. |
 | Ambiguity/dispute note | Required | Explicit `none_identified` with review basis, or competing interpretations/evidence and resolution action. |
-| Relationships or relationship references | Required | Empty reviewed set or references to separate relationship candidates; no inferred back-links or label-derived relationships. |
+| Relationships or relationship references | Profile-controlled | Prohibited and absent in structural Tranche A. A later tranche may require an empty reviewed set or separate relationship references only under a newly approved profile. |
 | Supersession fields | Required | Explicit `not_applicable` for new candidates or predecessor/successor/reason/effective review when applicable. |
 | Creation and review dates | Required | Quoted ISO 8601 dates; distinguish creation, source publication/update, access, review, and effective dates. |
 
