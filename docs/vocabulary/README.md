@@ -17,7 +17,7 @@ Sprint-014 is documentation-only. It creates no vocabulary records, glossary, cu
 | Dataset | Publishes a versioned collection of records/assertions. | A vocabulary release is distinct from any dataset release using it. |
 | Knowledge graph | Connects governed identities and evidence-bearing statements. | Vocabulary provides labels for navigation; it is not the graph or its truth/provenance model. |
 
-The [Ontology Foundation](../ontology/README.md) defines conceptual meaning, while the [Knowledge Identifier Strategy](../identifiers/README.md) governs identity. Evidence and source policies govern support and authority. Regulation remains jurisdiction- and time-specific. Vocabulary MUST NOT replace any of these layers.
+The [Ontology Foundation](../ontology/README.md) defines conceptual meaning, while the [Knowledge Identifier Strategy](../identifiers/README.md) governs identity and the [Master Data Foundation](../master-data/README.md) defines future governed reference records and relationships. Evidence and source policies govern support and authority. Regulation remains jurisdiction- and time-specific. Vocabulary MUST NOT replace any of these layers.
 
 ## Documents
 
