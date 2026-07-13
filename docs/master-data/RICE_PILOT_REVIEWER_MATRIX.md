@@ -2,6 +2,25 @@
 
 Roles are governance functions; no real person is assigned here. Where specialist verification is required, absence of a named qualified reviewer blocks the affected candidate and pilot release.
 
+## Tranche A staffing register
+
+No repository evidence or Product Owner authorization identifies a named qualified assignee. `Acting` below recognizes only the documentation work performed under the stated Sprint-015B role; it does not satisfy candidate-content approval or separation of duty.
+
+| Function | Assignment status | Mandatory for Tranche A | Readiness consequence |
+| --- | --- | --- | --- |
+| Master Data Curator | **Vacant** | Yes | Blocks authoring and custody of candidate records. |
+| Agricultural Domain Reviewer | **Vacant** | Yes | Blocks cultivated-rice scope, stage, organ, and Thai terminology approval. |
+| Taxonomy Reviewer | **External Review Required** | Yes | Blocks final rice taxon and plant-organ mappings despite selected authorities. |
+| Source and Rights Reviewer | **Acting** for Sprint-015B assessment only; qualified Tranche A assignee **Vacant** | Yes | Current source decisions establish boundaries; candidate extraction/sign-off remains blocked. |
+| Evidence Reviewer | **Vacant** | Yes | Blocks claim-to-locator sufficiency decisions. |
+| Architecture Reviewer | **Acting** for Sprint-015B documentation only; named Tranche A assignee **Vacant** | Yes | Does not replace scientific, taxonomy, evidence, or rights approval. |
+| Product Owner | **Vacant** | Yes | Blocks staffing authorization and tranche release decision. |
+| Plant Pathology Reviewer | **Not Required for Tranche A** | No | Tranche A contains no disease, symptom, causal-agent, or diagnosis claim. |
+| Entomology Reviewer | **Not Required for Tranche A** | No | Tranche A contains no insect, arthropod, pest-role, or damage claim. |
+| Weed Science Reviewer | **Not Required for Tranche A** | No | Tranche A contains no weed identity, role, or competition claim. |
+
+`Vacant` means no authorized named assignee is recorded. `External Review Required` means specialist competence must be obtained outside currently recorded staffing. No status implies a person's identity, qualification, consent, or future availability.
+
 | Role | Responsibilities and approval authority | Prohibited assumptions | Required evidence | Escalation and separation of duty |
 | --- | --- | --- | --- | --- |
 | Master Data Curator | Authors candidates, records provenance/value states, runs checks; may submit but not finally approve own content. | May not infer missing facts, equivalence, causality, or source permission. | Approved source entry, exact locator, extraction/paraphrase note, audit history. | Escalates ambiguity to Data Steward/domain reviewer; cannot be sole domain, rights, architecture, and release approver. |

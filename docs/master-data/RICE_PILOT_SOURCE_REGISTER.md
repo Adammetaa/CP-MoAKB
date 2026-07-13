@@ -4,7 +4,7 @@
 
 This documentation register is not a source mirror and contains no agricultural record. `RDP-SRC-*` values are assessment-local references, not canonical source or production identifiers.
 
-Allowed review statuses are **Candidate**, **Under Assessment**, **Approved for Pilot Use**, **Restricted**, **Rejected**, **Superseded**. Approval is claim-scoped and requires item-level currency, traceability, authority, reuse, and reviewer evidence. No source is Approved for Pilot Use in Sprint-015A.
+Allowed review statuses are **Candidate**, **Under Assessment**, **Approved for Pilot Use**, **Restricted**, **Rejected**, **Superseded**. Approval is claim-scoped and requires item-level currency, traceability, authority, reuse, and reviewer evidence. Sprint-015B item-level decisions are recorded in the [Tranche A Source Assessment](RICE_TRANCHE_A_SOURCE_ASSESSMENT.md).
 
 All sources below were accessed on **2026-07-13**. The issuing organization is the Thai Rice Department, with the Rice Research and Development Division and ICT Center identified by the portal footer. Geographic scope is Thailand unless a child item explicitly narrows it. The portal displays `Rice Knowledge Bank version 4 (256802)`; that site label is not an item publication date.
 
@@ -21,6 +21,19 @@ All sources below were accessed on **2026-07-13**. The issuing organization is t
 | RDP-SRC-007; **Under Assessment** | Rice animal pests and control; official navigation page; <https://rkb.ricethailand.go.th/web/content_page.php?code=A-UNYVQDF5MQ> | Item date/version unknown; accessible during Sprint-015 review; current fetch intermittently failed. | Discovery/scope for non-insect animal pest child items; national rice crop-protection guidance role. | Reuse unresolved; visual review required for selected identity/damage material; overlaps publication RDP-SRC-009; zoological identity and current guidance need separate review. |
 | RDP-SRC-008; **Under Assessment** | Rice disease, insect, animal-pest, natural-enemy, and weed fact-sheet index; official document index; <https://rkb.ricethailand.go.th/web/content_page.php?code=A-QD90356V8U> | Index date/version and child publication dates unknown; currently accessible. | Discovery of item-level official publications for bounded pilot topics; document-discovery role across pathology, entomology, zoology, and weed science. | Reuse unresolved per child document; visual review required per selected PDF; substantial overlap with web pages; index metadata does not establish edition, currency, or claim authority. |
 | RDP-SRC-009; **Restricted** | Rice animal pests and control; official PDF publication; <https://files.ricethailand.go.th/files/45/documents/page_doc/files-rice-1699340754326.pdf> | Publication date/edition not verified; 20 pages; official document host currently accessible. | Possible descriptive identity, damage, stage, and organ evidence for the one other-animal pilot candidate; publication-level national rice crop-protection role. | Reuse/license unresolved; mandatory visual review incomplete; overlaps RDP-SRC-007/008; mixes identity/damage descriptions, photographs, and management guidance. Restricted until rights, edition/currency, visual, zoology/taxonomy, and guidance-separation reviews pass. |
+
+## Tranche A item-level register additions
+
+The detailed assessment linked above is normative for claim scope, rights, currency, visual review, conflicts, and required reviewer functions.
+
+| ID | Status | Item | Exact approved or intended scope |
+| --- | --- | --- | --- |
+| RDP-SRC-010 | **Approved for Pilot Use** (claim-scoped) | JKI, *Growth stages of mono- and dicotyledonous plants: BBCH Monograph*, 2018 | BBCH framework/edition identity, rice applicability, principal-stage codes, and concise English principal-stage labels. Detailed boundary authoring is Restricted pending visual review. |
+| RDP-SRC-011 | **Under Assessment** | IRRI, *Growth stages of the rice plant*, 2007 | Comparative framework assessment only; version, rights, and image-dependent details unresolved. |
+| RDP-SRC-012 | **Restricted** | Thai Rice Department rice growth/development physiology page | Metadata and link only; Thai labels, mappings, and image-dependent content blocked. |
+| RDP-SRC-013 | **Approved for Pilot Use** (claim-scoped) | Kew Plants of the World Online record for *Oryza sativa* L. | Accepted-name status, taxonomic placement, accepted concept reference, and mapping to IPNI LSID. |
+| RDP-SRC-014 | **Approved for Pilot Use** (claim-scoped) | International Plant Names Index record for *Oryza sativa* L. | Scientific-name string, author abbreviation, original publication citation, and IPNI LSID; not accepted status. |
+| RDP-SRC-015 | **Approved for Pilot Use** (claim-scoped) | Plant Ontology in Planteome release 6.0 | Individually verified PO identifiers, English labels, definitions, and generic plant-anatomical hierarchy; not Thai labels or unreviewed rice applicability. |
 
 ## Approval blockers
 

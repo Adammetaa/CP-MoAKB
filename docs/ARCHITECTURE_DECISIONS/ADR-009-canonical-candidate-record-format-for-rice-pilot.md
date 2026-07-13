@@ -1,7 +1,9 @@
 # ADR-009: Canonical Candidate Record Format for the Rice Master Data Pilot
 
-- Status: Proposed
+- Status: Accepted
 - Date: 2026-07-13
+- Accepted: 2026-07-14
+- Acceptance basis: Chief Architect approval following the Sprint-015A architecture review
 - Decision owners: Chief Architect, Product Owner, Architecture Reviewer, and Data Steward
 
 ## Context
@@ -72,4 +74,4 @@ YAML is an authoring decision only. Future runtime storage, API and exchange for
 
 ## Relationship to Design Freeze
 
-The proposal changes no parser, exporter, database schema, validation implementation, official IRAC dataset, golden baseline, runtime, test, or dependency. Any implementation affecting frozen components requires separate approval.
+This decision changes no parser, exporter, database schema, validation implementation, official IRAC dataset, golden baseline, runtime, test, or dependency. Any implementation affecting frozen components requires separate approval.

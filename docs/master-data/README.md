@@ -4,7 +4,7 @@
 
 Canonical agricultural master data provides governed reference entities and relationships for future CP-MoAKB datasets. It is needed so labels, evidence-bearing statements, field observations, diagnoses, and recommendations can refer to stable, reviewable concepts without becoming the concepts themselves.
 
-Sprint-015 is documentation-only. It creates no production records, identifiers, runtime models, schemas, or physical dataset format. The catalogs describe future record types, not accepted agricultural facts.
+Sprint-015 and its readiness follow-ups are documentation-only. They create no production records, allocated identifiers, runtime models, schemas, or physical datasets. The catalogs describe future record types, not accepted agricultural facts.
 
 Master data provides governed reference entities and relationships. It does not prove that a field diagnosis is correct and does not independently authorize a recommendation.
 
@@ -31,7 +31,13 @@ Master data provides governed reference entities and relationships. It does not 
 - [Rice Domain Pilot Plan](RICE_DOMAIN_PILOT_PLAN.md)
 - [Sprint-016 Rice Pilot Specification](RICE_PILOT_SPECIFICATION.md)
 - [Rice Pilot Source Register](RICE_PILOT_SOURCE_REGISTER.md)
+- [Tranche A Item-Level Source Assessment](RICE_TRANCHE_A_SOURCE_ASSESSMENT.md)
+- [Rice Growth-Stage Framework Decision](RICE_GROWTH_STAGE_FRAMEWORK_DECISION.md)
+- [Rice Pilot Taxonomic Authority Policy](RICE_PILOT_TAXONOMIC_AUTHORITY_POLICY.md)
+- [Rice Pilot Candidate Identifier Rule](RICE_PILOT_CANDIDATE_IDENTIFIER_RULE.md)
+- [Rice Pilot Validation Contract](RICE_PILOT_VALIDATION_CONTRACT.md)
 - [Rice Pilot Reviewer Matrix](RICE_PILOT_REVIEWER_MATRIX.md)
+- [Sprint-016 Tranche A Entry Checklist](SPRINT_016_TRANCHE_A_ENTRY_CHECKLIST.md)
 - [Candidate Record Envelope](CANDIDATE_RECORD_ENVELOPE.md)
 - [Candidate-to-Production Gate](CANDIDATE_TO_PRODUCTION_GATE.md)
 - [Sprint-016 Execution Plan](SPRINT_016_EXECUTION_PLAN.md)
