@@ -27,7 +27,7 @@ def test_parser_detects_version_and_builds_hierarchy(tmp_path):
     source.touch()
     pdf = _PDF(
         [
-            _Page("IRAC Mode of Action Classification Scheme\nVersion 11.3\nGroup 1 - Acetylcholinesterase inhibitors\n1A  Carbamates"),
+            _Page("IRAC Mode of Action Classification Scheme\nVersion 11.3\nGroup 1 - Acetylcholinesterase inhibitors\n1A  Carbamates\nActive ingredients: Aldicarb, Carbaryl"),
             _Page("1B | Organophosphates\nGroup 4A: Neonicotinoids\nGroup UN - Unknown mode of action"),
         ]
     )
@@ -40,6 +40,8 @@ def test_parser_detects_version_and_builds_hierarchy(tmp_path):
     assert [(node.code, node.name, node.level, node.parent_code, node.page) for node in document.nodes] == [
         ("1", "Acetylcholinesterase inhibitors", 1, None, 1),
         ("1A", "Carbamates", 2, "1", 1),
+        ("1A:aldicarb", "Aldicarb", 3, "1A", 1),
+        ("1A:carbaryl", "Carbaryl", 3, "1A", 1),
         ("1B", "Organophosphates", 2, "1", 2),
         ("4A", "Neonicotinoids", 2, "4", 2),
         ("UN", "Unknown mode of action", 1, None, 2),

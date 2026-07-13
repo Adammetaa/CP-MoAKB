@@ -8,13 +8,13 @@ It does not persist anything; callers receive small, normalized value objects.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 from pathlib import Path
 import re
 from typing import Iterator
 
-import pandas as pd
 import pdfplumber
+
+from .models import IRACDocument, IRACNode
 
 
 _VERSION_RE = re.compile(
@@ -31,43 +31,10 @@ _NUMBERED_GROUP_RE = re.compile(
     re.IGNORECASE,
 )
 _CODE_RE = re.compile(r"^(?P<number>\d+)(?P<decimal>\.\d+)?(?P<suffix>[A-Z]?)$")
-
-
-@dataclass(frozen=True, slots=True)
-class IRACNode:
-    """One normalized member of the IRAC classification hierarchy."""
-
-    code: str
-    name: str
-    level: int
-    parent_code: str | None
-    page: int
-
-
-@dataclass(frozen=True, slots=True)
-class IRACDocument:
-    """The parsed, versioned contents of an IRAC classification PDF."""
-
-    version: str | None
-    nodes: tuple[IRACNode, ...]
-
-    def to_dataframe(self) -> pd.DataFrame:
-        """Return nodes as a consistently ordered pandas data frame."""
-
-        return pd.DataFrame(
-            [
-                {
-                    "code": node.code,
-                    "name": node.name,
-                    "level": node.level,
-                    "parent_code": node.parent_code,
-                    "page": node.page,
-                }
-                for node in self.nodes
-            ],
-            columns=["code", "name", "level", "parent_code", "page"],
-            dtype=object,
-        )
+_INGREDIENTS_RE = re.compile(
+    r"^\s*(?:active\s+ingredients?|iso\s+common\s+names?)\s*[:|]\s*(?P<names>.+?)\s*$",
+    re.IGNORECASE,
+)
 
 
 class IRACParser:
@@ -83,19 +50,30 @@ class IRACParser:
         version: str | None = None
         nodes: list[IRACNode] = []
         seen: set[tuple[str, str]] = set()
+        current_class_code: str | None = None
 
         with pdfplumber.open(path) as pdf:
             for page_number, page in enumerate(pdf.pages, start=1):
                 text = page.extract_text() or ""
                 if version is None:
                     version = _detect_version(text)
-                for code, name in _extract_entries(text.splitlines()):
-                    key = (code, name.casefold())
-                    if key in seen:
-                        continue
-                    seen.add(key)
-                    level, parent_code = _hierarchy_for(code)
-                    nodes.append(IRACNode(code, name, level, parent_code, page_number))
+                for line in text.splitlines():
+                    for code, name in _extract_entries([line]):
+                        key = (code, name.casefold())
+                        if key in seen:
+                            continue
+                        seen.add(key)
+                        level, parent_code = _hierarchy_for(code)
+                        nodes.append(IRACNode(code, name, level, parent_code, page_number))
+                        if level == 2:
+                            current_class_code = code
+                    if current_class_code:
+                        for name in _extract_ingredients(line):
+                            code = f"{current_class_code}:{_identifier_token(name)}"
+                            key = (code, name.casefold())
+                            if key not in seen:
+                                seen.add(key)
+                                nodes.append(IRACNode(code, name, 3, current_class_code, page_number))
 
         return IRACDocument(version=version, nodes=tuple(nodes))
 
@@ -129,6 +107,22 @@ def _extract_entries(lines: list[str]) -> Iterator[tuple[str, str]]:
 
 def _normalise_name(value: str) -> str:
     return re.sub(r"\s+", " ", value).strip(" -:|")
+
+
+def _extract_ingredients(line: str) -> Iterator[str]:
+    """Yield ingredients from explicitly labelled IRAC table text."""
+
+    match = _INGREDIENTS_RE.match(line)
+    if not match:
+        return
+    for value in re.split(r"\s*[,;]\s*", match.group("names")):
+        name = _normalise_name(value)
+        if name:
+            yield name
+
+
+def _identifier_token(value: str) -> str:
+    return re.sub(r"[^a-z0-9]+", "-", value.casefold()).strip("-")
 
 
 def _hierarchy_for(code: str) -> tuple[int, str | None]:
