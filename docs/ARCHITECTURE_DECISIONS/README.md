@@ -76,3 +76,4 @@ Does this ADR preserve frozen components, or what separate approval would be req
 - [ADR-004: Thailand-first regulatory context](ADR-004-thailand-first-regulatory-context.md)
 - [ADR-005: Layered conceptual ontology before physical implementation](ADR-005-layered-conceptual-ontology-before-physical-implementation.md) — Proposed
 - [ADR-006: Stable identity governance before controlled vocabulary implementation](ADR-006-stable-identifiers-before-controlled-vocabularies.md) — Proposed
+- [ADR-007: Controlled vocabulary governance before vocabulary construction](ADR-007-controlled-vocabulary-governance-before-vocabulary-construction.md) — Proposed

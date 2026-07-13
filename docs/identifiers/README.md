@@ -9,7 +9,7 @@ Sprint-013 is documentation-only. It defines identity policy for future design r
 ## Architectural relationships
 
 - **Sprint-012 ontology:** identifier categories provide stable handles for the conceptual entities, cases, observations, statements, and relationships in the [Ontology Foundation](../ontology/README.md). They do not approve ontology content or change proposed [ADR-005](../ARCHITECTURE_DECISIONS/ADR-005-layered-conceptual-ontology-before-physical-implementation.md).
-- **Future controlled vocabularies:** identity rules are a prerequisite for governed terms. This sprint creates no vocabulary records and reserves no numeric ranges.
+- **Future controlled vocabularies:** identity rules are a prerequisite for governed terms. [Controlled Vocabulary Governance](../vocabulary/README.md) defines the future language-review, change, quality, and release process without creating vocabulary records or reserving numeric ranges.
 - **Future knowledge graph:** stable identities and reviewed mappings support graph-ready relationships, but no graph storage, serialization, or resolver exists.
 - **Evidence and provenance:** an identifier makes a statement addressable; it does not make it true. Evidence, source versions, assertion context, review history, and mappings remain separately attributable.
 - **Field cases:** private case, observation, image, person, farm, and precise-location identities remain in the governed Field Vault. A public curated or anonymized identifier MUST NOT expose a private identifier when linkage creates privacy or confidentiality risk.
