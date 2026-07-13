@@ -74,3 +74,4 @@ Does this ADR preserve frozen components, or what separate approval would be req
 - [ADR-002: Separate observation, evidence, regulation, and recommendation](ADR-002-separate-observation-evidence-and-recommendation.md)
 - [ADR-003: Knowledge graph is conceptual, not yet implemented](ADR-003-knowledge-graph-is-conceptual-not-yet-implemented.md)
 - [ADR-004: Thailand-first regulatory context](ADR-004-thailand-first-regulatory-context.md)
+- [ADR-005: Layered conceptual ontology before physical implementation](ADR-005-layered-conceptual-ontology-before-physical-implementation.md) — Proposed
