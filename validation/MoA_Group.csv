@@ -1,0 +1,43 @@
+moa_group_id,group_code,group_name,source_version
+IRAC-11-5-GROUP-1,1,Acetylcholinesterase (AChE) inhibitors,11.5
+IRAC-11-5-GROUP-2,2,GABA-gated chloride channel blockers,11.5
+IRAC-11-5-GROUP-3,3,Sodium channel modulators,11.5
+IRAC-11-5-GROUP-4,4,Nicotinic acetylcholine receptor (nAChR) competitive modulators,11.5
+IRAC-11-5-GROUP-5,5,Nicotinic acetylcholine receptor (nAChR) allosteric modulators – Site I,11.5
+IRAC-11-5-GROUP-6,6,Glutamate-gated chloride channel (GluCl) allosteric modulators,11.5
+IRAC-11-5-GROUP-9,9,Chordotonal organ TRPV channel modulators,11.5
+IRAC-11-5-GROUP-14,14,Nicotinic acetylcholine receptor (nAChR) channel blockers,11.5
+IRAC-11-5-GROUP-19,19,Octopamine receptor agonists,11.5
+IRAC-11-5-GROUP-22,22,Voltage-dependent sodium channel blockers,11.5
+IRAC-11-5-GROUP-28,28,Ryanodine receptor modulators,11.5
+IRAC-11-5-GROUP-29,29,Chordotonal organ nicotinamidase inhibitors,11.5
+IRAC-11-5-GROUP-30,30,GABA-gated chloride channel allosteric modulators,11.5
+IRAC-11-5-GROUP-32,32,Nicotinic acetylcholine receptor (nAChR) allosteric modulators – Site II,11.5
+IRAC-11-5-GROUP-33,33,Calcium-activated potassium channel (KCa2) modulators,11.5
+IRAC-11-5-GROUP-36,36,Chordotonal organ modulators – undefined target site,11.5
+IRAC-11-5-GROUP-37,37,Vesicular acetylcholine transporter (VAChT) inhibitor,11.5
+IRAC-11-5-GROUP-7,7,Juvenile hormone mimics,11.5
+IRAC-11-5-GROUP-10,10,Mite growth inhibitors affecting CHS1,11.5
+IRAC-11-5-GROUP-15,15,Inhibitors of chitin biosynthesis affecting CHS1,11.5
+IRAC-11-5-GROUP-16,16,"Inhibitors of chitin biosynthesis, type 1",11.5
+IRAC-11-5-GROUP-17,17,"Moulting disruptors, Dipteran",11.5
+IRAC-11-5-GROUP-18,18,Ecdysone receptor agonists,11.5
+IRAC-11-5-GROUP-23,23,Inhibitors of acetyl-CoA carboxylase,11.5
+IRAC-11-5-GROUP-12,12,Inhibitors of mitochondrial ATP synthase,11.5
+IRAC-11-5-GROUP-13,13,Uncouplers of oxidative phosphorylation via disruption of the proton gradient,11.5
+IRAC-11-5-GROUP-21,21,Mitochondrial complex I electron transport inhibitors,11.5
+IRAC-11-5-GROUP-24,24,Mitochondrial complex IV electron transport inhibitors,11.5
+IRAC-11-5-GROUP-25,25,Mitochondrial complex II electron transport inhibitors,11.5
+IRAC-11-5-GROUP-34,34,Mitochondrial complex III electron transport inhibitors – Qi site,11.5
+IRAC-11-5-GROUP-11,11,Microbial disruptors of insect midgut membranes,11.5
+IRAC-11-5-GROUP-31,31,Host-specific occluded pathogenic viruses,11.5
+IRAC-11-5-GROUP-35,35,RNA interference mediated target suppressors,11.5
+IRAC-11-5-GROUP-8,8,Miscellaneous non-specific (multi-site) inhibitors,11.5
+IRAC-11-5-GROUP-UN,UN,Compounds of unknown or uncertain MoA,11.5
+IRAC-11-5-GROUP-UNB,UNB,Bacterial agents of unknown or uncertain MoA,11.5
+IRAC-11-5-GROUP-UNE,UNE,"Botanical essence including synthetic, extracts and unrefined oils with unknown or",11.5
+IRAC-11-5-GROUP-UNF,UNF,Fungal agents of unknown or uncertain MoA,11.5
+IRAC-11-5-GROUP-UNM,UNM,Non-specific mechanical and physical disruptors,11.5
+IRAC-11-5-GROUP-UNP,UNP,Peptides of unknown or uncertain MoA,11.5
+IRAC-11-5-GROUP-UNV,UNV,Viral agents of unknown or uncertain MoA,11.5
+IRAC-11-5-GROUP-20,20,IRAC group 20,11.5
