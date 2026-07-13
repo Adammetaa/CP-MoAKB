@@ -4,6 +4,28 @@
 
 CP-MoAKB is a source-oriented pipeline for parsing and validating the official IRAC Mode of Action Classification Scheme.
 
+## Architecture Overview
+
+The IRAC parser reads the retained official PDF into immutable `IRACDocument` and `IRACNode` objects. The semantic validator checks those in-memory objects without filesystem access. CSV export is an explicit, separate operation, while the SQLite builder and ZIP/XLSX import utility remain independent of the parser-validation flow.
+
+## Repository Structure
+
+- `cpmoakb/parsers/`: PDF parsing and immutable hierarchy models.
+- `cpmoakb/validation/`: deterministic, read-only semantic validation.
+- `cpmoakb/exporters/`: explicit CSV projection using the frozen layouts.
+- `cpmoakb/database/` and `cpmoakb/loaders/`: separate schema/build and import utilities.
+- `data/official/` and `references/`: registered source metadata and retained official material.
+- `tests/`: unit, canonical golden-baseline, and semantic integration tests.
+- `docs/`: governance, development, validation, and project context.
+
+## Release Status
+
+The current release baseline is v0.8.0. The `main` branch may contain reviewed work intended for a later release; a feature is not considered released until it is included in a published release or tag.
+
+## Roadmap
+
+The planned v0.9.0 line focuses on developer experience, continuous integration, and lightweight issue governance. Dataset-version, parser, exporter, validator-rule, and schema work remains subject to official-source review and Design Freeze approval. GitHub Issues and milestones are the source of truth for scoped future work.
+
 ## Quick Start
 
 ```python
@@ -18,7 +40,7 @@ The parser and semantic validator operate in memory and do not write CSV or SQLi
 
 ## Development Setup
 
-CP-MoAKB uses Python 3.11 and pinned open-source development dependencies. Follow the [development guide](docs/DEVELOPMENT.md) to create a virtual environment and install `requirements-dev.txt`. Contribution and data-governance rules are in [CONTRIBUTING.md](CONTRIBUTING.md).
+CP-MoAKB tests Python 3.11 and Python 3.12 with pinned open-source development dependencies. Follow the [development guide](docs/DEVELOPMENT.md) to create a virtual environment and install `requirements-dev.txt`. Contribution and data-governance rules are in [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Testing
 
@@ -28,7 +50,7 @@ Run the complete read-only test suite with:
 python -m pytest -q
 ```
 
-GitHub Actions runs this command for pushes to `main` and pull requests targeting `main`, then verifies that tests created no prohibited artifacts.
+GitHub Actions runs lint, governed formatting, and this test command on Python 3.11 and Python 3.12 for pushes to `main` and pull requests targeting `main`, then verifies that no prohibited artifacts were created.
 
 ## Semantic Validation
 

@@ -22,10 +22,12 @@ Install the pinned development dependencies and run:
 
 ```shell
 python -m pip install -r requirements-dev.txt
+python -m ruff check .
+python -m black --check tests/test_import_engine.py tests/test_sqlite_builder.py
 python -m pytest -q
 ```
 
-Tests must be deterministic and read-only. Do not run golden baseline generation, schema generation, the legacy artifact validator, or production CSV/database generation as part of CI. See [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) for focused test commands.
+These are the exact checks and order used by both Python versions in CI. Tests must be deterministic and read-only. Do not run golden baseline generation, schema generation, the legacy artifact validator, or production CSV/database generation as part of CI. See [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) for the Black scope rationale, pre-commit usage, focused test commands, and deferred mypy status.
 
 ## Commit messages
 

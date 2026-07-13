@@ -11,6 +11,10 @@ venv/
 # pytest
 .pytest_cache/
 
+# Developer tool caches
+.mypy_cache/
+.ruff_cache/
+
 # Coverage
 .coverage
 htmlcov/

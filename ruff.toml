@@ -1,0 +1,7 @@
+target-version = "py311"
+
+[lint.per-file-ignores]
+"cpmoakb/database/sqlite_builder.py" = ["F401"]
+"tests/test_import_engine.py" = ["F401"]
+"tests/test_sqlite_builder.py" = ["F401"]
+"tools/generate_irac_golden_baseline.py" = ["E402"]
