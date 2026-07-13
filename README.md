@@ -26,6 +26,10 @@ The current release baseline is v0.8.0. The `main` branch may contain reviewed w
 
 The planned v0.9.0 line focuses on developer experience, continuous integration, and lightweight issue governance. Dataset-version, parser, exporter, validator-rule, and schema work remains subject to official-source review and Design Freeze approval. GitHub Issues and milestones are the source of truth for scoped future work.
 
+## Knowledge Architecture
+
+The future-facing architecture is documented in [Product Vision](docs/PRODUCT_VISION.md), [Conceptual Domain Model](docs/DOMAIN_MODEL.md), [Knowledge Graph](docs/KNOWLEDGE_GRAPH.md), [Decision-Support Workflow](docs/DECISION_ENGINE.md), [Source Policy](docs/SOURCE_POLICY.md), [Evidence Levels](docs/EVIDENCE_LEVELS.md), [Field Knowledge Policy](docs/FIELD_KNOWLEDGE_POLICY.md), and [Strategic Roadmap 2.0](docs/ROADMAP_2.0.md). These documents are conceptual and do not change current runtime capabilities. Durable decisions are indexed in [Architecture Decision Records](docs/ARCHITECTURE_DECISIONS/README.md).
+
 ## Quick Start
 
 ```python
