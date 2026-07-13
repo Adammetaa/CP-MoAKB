@@ -1,0 +1,69 @@
+name: Feature request
+description: Propose a scoped improvement for CP-MoAKB
+title: "[Feature]: "
+labels:
+  - enhancement
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or use case
+      description: Describe the need without prescribing speculative implementation.
+    validations:
+      required: true
+  - type: textarea
+    id: outcome
+    attributes:
+      label: Proposed outcome
+      description: Describe the observable result you want.
+    validations:
+      required: true
+  - type: dropdown
+    id: component
+    attributes:
+      label: Affected component
+      options:
+        - Parser
+        - Exporter
+        - Semantic validation
+        - Database schema or builder
+        - Official source or golden baseline
+        - Tests or CI
+        - Documentation or governance
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: official_source
+    attributes:
+      label: Official source requirement
+      description: Identify any official source needed, or state that none is required.
+    validations:
+      required: true
+  - type: dropdown
+    id: design_freeze
+    attributes:
+      label: Design Freeze impact
+      options:
+        - No frozen component is affected
+        - A frozen component may be affected; design review is required
+        - Unsure; assessment is required
+    validations:
+      required: true
+  - type: dropdown
+    id: schema_impact
+    attributes:
+      label: Schema impact
+      options:
+        - No schema change
+        - A schema change may be required; stop for design review
+        - Unsure; assessment is required
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: List simpler or non-code approaches considered.
+    validations:
+      required: true

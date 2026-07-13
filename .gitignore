@@ -15,6 +15,12 @@ venv/
 .coverage
 htmlcov/
 
+# Generated datasets and databases
+*.csv
+*.db
+*.sqlite
+*.sqlite3
+
 # IDE
 .vscode/
 .idea/

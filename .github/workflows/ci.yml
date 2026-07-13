@@ -1,0 +1,65 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      PYTHONDONTWRITEBYTECODE: "1"
+      PYTEST_ADDOPTS: "-p no:cacheprovider"
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: requirements-dev.txt
+
+      - name: Install development dependencies
+        run: python -m pip install -r requirements-dev.txt
+
+      - name: Run test suite
+        run: python -m pytest -q
+
+      - name: Verify tests were read-only
+        if: always()
+        shell: bash
+        run: |
+          status=0
+
+          if [[ -n "$(git status --porcelain --untracked-files=all)" ]]; then
+            echo "Tests changed tracked files or created visible untracked files."
+            git status --short --untracked-files=all
+            status=1
+          fi
+
+          while IFS= read -r -d '' artifact; do
+            relative_path="${artifact#./}"
+            if ! git ls-files --error-unmatch "$relative_path" >/dev/null 2>&1; then
+              echo "Prohibited generated artifact: $relative_path"
+              status=1
+            fi
+          done < <(
+            find . -path './.git' -prune -o -type f \
+              \( -iname '*.csv' -o -iname '*.db' -o -iname '*.sqlite' -o -iname '*.sqlite3' \) \
+              -print0
+          )
+
+          exit "$status"
