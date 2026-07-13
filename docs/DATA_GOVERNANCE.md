@@ -23,6 +23,10 @@ This sprint does not generate or commit CSV files.  Existing files in `validatio
 - Keep a source document intact; do not edit raw files to normalize their contents.
 - Keep processed outputs outside raw-source directories when an approved workflow requires them.
 
+## Source Manifest Convention
+
+Each registered canonical source may have a `source_manifest.yaml` in its `data/official/<SOURCE>/` directory.  The manifest records provenance and integrity metadata only: the responsible organization, document identity/version, retained repository path, official URL when verified from source evidence, stated release date when available, media type, file size, checksum, registration date, and notes about unavailable metadata.  It must not duplicate the source file, contain parsed data, or contain generated dataset artifacts.
+
 ## Validation Requirements
 
 Before an approved export is accepted, parse the official source, verify that every class has a group parent and every ingredient has a class parent, check expected identifiers/field layouts against the frozen schema, and review duplicate or conflicting source values.  The current `tools/validate_irac.py` script checks missing names/parents, duplicate names per hierarchy level, and unresolved parsed parents; it does not independently verify provenance or perform a SQLite import.

@@ -1,0 +1,18 @@
+organization: IRAC
+document_title: "IRAC Mode of Action Classification Scheme"
+classification_version: "11.5"
+canonical: true
+source_type: official
+source_filename: "IRAC_MoA_Classification_v11.5_2026.pdf"
+source_path: "references/IRAC/IRAC_MoA_Classification_v11.5_2026.pdf"
+official_source_url: "https://www.irac-online.org/"
+release_date: "February 2026"
+media_type: application/pdf
+file_size_bytes: 1480259
+sha256: "74641b0f56bcfb46574fd0dc815ee136170af66385950ad61045a0692ea750d6"
+registered_at: "2026-07-13"
+notes: >-
+  The PDF remains at the recorded source path and is not duplicated here. Its first
+  page identifies Version 11.5, February 2026, and the IRAC International MoA Working
+  Group; its text references the recorded IRAC website. The PDF metadata has no title
+  or source URL fields.
