@@ -74,7 +74,8 @@ Does this ADR preserve frozen components, or what separate approval would be req
 - [ADR-002: Separate observation, evidence, regulation, and recommendation](ADR-002-separate-observation-evidence-and-recommendation.md)
 - [ADR-003: Knowledge graph is conceptual, not yet implemented](ADR-003-knowledge-graph-is-conceptual-not-yet-implemented.md)
 - [ADR-004: Thailand-first regulatory context](ADR-004-thailand-first-regulatory-context.md)
-- [ADR-005: Layered conceptual ontology before physical implementation](ADR-005-layered-conceptual-ontology-before-physical-implementation.md) — Proposed
-- [ADR-006: Stable identity governance before controlled vocabulary implementation](ADR-006-stable-identifiers-before-controlled-vocabularies.md) — Proposed
-- [ADR-007: Controlled vocabulary governance before vocabulary construction](ADR-007-controlled-vocabulary-governance-before-vocabulary-construction.md) — Proposed
-- [ADR-008: Canonical master-data governance before domain dataset expansion](ADR-008-canonical-master-data-before-domain-dataset-expansion.md) — Proposed
+- [ADR-005: Layered conceptual ontology before physical implementation](ADR-005-layered-conceptual-ontology-before-physical-implementation.md) — Accepted
+- [ADR-006: Stable identity governance before controlled vocabulary implementation](ADR-006-stable-identifiers-before-controlled-vocabularies.md) — Accepted
+- [ADR-007: Controlled vocabulary governance before vocabulary construction](ADR-007-controlled-vocabulary-governance-before-vocabulary-construction.md) — Accepted
+- [ADR-008: Canonical master-data governance before domain dataset expansion](ADR-008-canonical-master-data-before-domain-dataset-expansion.md) — Accepted
+- [ADR-009: Canonical candidate record format for the Rice pilot](ADR-009-canonical-candidate-record-format-for-rice-pilot.md) — Proposed

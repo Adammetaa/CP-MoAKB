@@ -29,6 +29,12 @@ Master data provides governed reference entities and relationships. It does not 
 - [Quality Standard](QUALITY_STANDARD.md)
 - [Versioning and Release](VERSIONING_AND_RELEASE.md)
 - [Rice Domain Pilot Plan](RICE_DOMAIN_PILOT_PLAN.md)
+- [Sprint-016 Rice Pilot Specification](RICE_PILOT_SPECIFICATION.md)
+- [Rice Pilot Source Register](RICE_PILOT_SOURCE_REGISTER.md)
+- [Rice Pilot Reviewer Matrix](RICE_PILOT_REVIEWER_MATRIX.md)
+- [Candidate Record Envelope](CANDIDATE_RECORD_ENVELOPE.md)
+- [Candidate-to-Production Gate](CANDIDATE_TO_PRODUCTION_GATE.md)
+- [Sprint-016 Execution Plan](SPRINT_016_EXECUTION_PLAN.md)
 
 ## Explicit non-goals
 

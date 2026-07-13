@@ -1,14 +1,16 @@
 # ADR-007: Controlled Vocabulary Governance Before Vocabulary Construction
 
-- Status: Proposed
+- Status: Accepted
 - Date: 2026-07-13
+- Accepted: 2026-07-13
+- Acceptance basis: Sprint-015A individual architecture closeout review
 - Decision owners: CP-MoAKB Product Owner, Chief Architect, vocabulary stewardship, and domain governance
 
 ## Context
 
 Future CP-MoAKB concepts need clear, multilingual, source-backed labels and definitions across crop protection, diagnosis, safety, regulation, evidence, questions, economics, and operations. Constructing vocabulary records before defining authority, term structure, review, ambiguity, change, quality, and release rules could turn labels into accidental identities, collapse distinct concepts, obscure source ownership, or imply that accepted terminology is scientific or regulatory truth.
 
-Sprint-012 documented proposed ontology concepts, and Sprint-013 documented proposed stable-identity governance. ADR-005 and ADR-006 remain Proposed. A vocabulary layer needs its own governance boundary before any terms are curated or implemented.
+Sprint-012 documented conceptual ontology concepts, and Sprint-013 documented stable-identity governance. ADR-005 and ADR-006 are Accepted. A vocabulary layer needs its own governance boundary before any terms are curated or implemented.
 
 ## Decision
 
@@ -55,7 +57,7 @@ Not selected because spelling/frequency cannot resolve concept scope, ambiguity,
 
 ## Explicit non-decisions
 
-This proposal does not decide:
+This decision does not decide:
 
 - any production term, preferred label, definition, synonym, or vocabulary identifier;
 - a vocabulary file format, database schema, API, validation shape, or runtime model;
@@ -66,11 +68,11 @@ This proposal does not decide:
 
 ## Relationship to ADR-005 and ADR-006
 
-[ADR-005](ADR-005-layered-conceptual-ontology-before-physical-implementation.md) remains Proposed and separates conceptual ontology layers before physical implementation. [ADR-006](ADR-006-stable-identifiers-before-controlled-vocabularies.md) remains Proposed and defines identity-governance prerequisites. ADR-007 complements them by governing language associated with those conceptual identities. It does not accept, supersede, or implement either proposal.
+[ADR-005](ADR-005-layered-conceptual-ontology-before-physical-implementation.md) is Accepted and separates conceptual ontology layers before physical implementation. [ADR-006](ADR-006-stable-identifiers-before-controlled-vocabularies.md) is Accepted and defines identity-governance prerequisites. ADR-007 complements them by governing language associated with those conceptual identities. It does not supersede or physically implement either decision.
 
 ## Scope
 
-This proposal governs future CP-MoAKB vocabulary scope, term metadata, multilingual forms, synonyms, ambiguity, review, lifecycle, change, quality, and release practices. It creates no vocabulary content or production artifact.
+This decision governs future CP-MoAKB vocabulary scope, term metadata, multilingual forms, synonyms, ambiguity, review, lifecycle, change, quality, and release practices. It creates no vocabulary content or production artifact.
 
 ## Relationship to Design Freeze
 

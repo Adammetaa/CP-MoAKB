@@ -1,7 +1,9 @@
 # ADR-008: Adopt canonical master-data governance before domain dataset expansion
 
-- Status: Proposed
+- Status: Accepted
 - Date: 2026-07-13
+- Accepted: 2026-07-13
+- Acceptance authority: Chief Architect, Sprint-015A authorization
 - Decision owners: Product Owner, Architecture Governor, and relevant domain/source reviewers
 
 ## Context
@@ -14,7 +16,7 @@ Before expanding domain datasets, CP-MoAKB will require a bounded master-data sp
 
 Source authority is separate from truth: an official source is assessed for a particular claim, jurisdiction, version, and time. Master data is separate from observations, diagnoses, regulatory decisions, safety conclusions, and recommendations.
 
-This Proposed ADR does not authorize implementation or production records.
+This Accepted ADR does not authorize implementation or production records.
 
 ## Rationale
 
@@ -29,7 +31,7 @@ Governance-first sequencing makes identity, ambiguity, evidence, multilingual te
 
 ## Relationship to earlier ADRs
 
-This proposal builds on, but does not accept or modify, [ADR-005](ADR-005-layered-conceptual-ontology-before-physical-implementation.md), [ADR-006](ADR-006-stable-identifiers-before-controlled-vocabularies.md), and [ADR-007](ADR-007-controlled-vocabulary-governance-before-vocabulary-construction.md). Ontology meaning, stable identity, and governed language remain distinct prerequisites. Their current Proposed statuses require separate authorized closeout.
+This decision builds on the independently accepted [ADR-005](ADR-005-layered-conceptual-ontology-before-physical-implementation.md), [ADR-006](ADR-006-stable-identifiers-before-controlled-vocabularies.md), and [ADR-007](ADR-007-controlled-vocabulary-governance-before-vocabulary-construction.md). Ontology meaning, stable identity, and governed language remain distinct prerequisites.
 
 ## Alternatives considered
 

@@ -1,7 +1,9 @@
 # ADR-006: Stable Identity Governance Before Controlled Vocabulary Implementation
 
-- Status: Proposed
+- Status: Accepted
 - Date: 2026-07-13
+- Accepted: 2026-07-13
+- Acceptance basis: Sprint-015A individual architecture closeout review
 - Decision owners: CP-MoAKB Product Owner, Chief Architect, data governance, and domain governance
 
 ## Context
@@ -54,7 +56,7 @@ Not selected because post-hoc merges lose provenance, create unstable references
 
 ## Explicit non-decisions
 
-This proposal does not decide:
+This decision does not decide:
 
 - a physical identifier syntax or universal separator;
 - UUID-like versus sequential keys;
@@ -68,11 +70,11 @@ Each requires future evidence, architecture review, and—where material—a sep
 
 ## Relationship to ADR-005
 
-[ADR-005](ADR-005-layered-conceptual-ontology-before-physical-implementation.md) is still Proposed and defines layered conceptual meaning before physical ontology implementation. ADR-006 complements that proposal by defining identity-governance prerequisites across those layers. ADR-006 neither accepts ADR-005 nor depends on a particular physical ontology; both preserve separation among entities, observations, evidence, reasoning, regulation, safety, and recommendations.
+[ADR-005](ADR-005-layered-conceptual-ontology-before-physical-implementation.md) is Accepted and defines layered conceptual meaning before physical ontology implementation. ADR-006 complements that decision by defining identity-governance prerequisites across those layers. Neither depends on a particular physical ontology; both preserve separation among entities, observations, evidence, reasoning, regulation, safety, and recommendations.
 
 ## Scope
 
-This proposal governs future CP-MoAKB identifier, namespace, label, external-mapping, lifecycle, and versioning policy. It creates no real identifier, vocabulary record, mapping, registry, or resolution service.
+This decision governs future CP-MoAKB identifier, namespace, label, external-mapping, lifecycle, and versioning policy. It creates no real identifier, vocabulary record, mapping, registry, or resolution service.
 
 ## Relationship to Design Freeze
 

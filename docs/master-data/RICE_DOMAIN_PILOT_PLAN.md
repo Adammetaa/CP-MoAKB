@@ -2,7 +2,7 @@
 
 ## Purpose and exact proposed scope
 
-This is a later-sprint plan, not a dataset. It tests entity, relationship, provenance, multilingual, and review governance using:
+This is a planning foundation, not a dataset. Sprint-015A refines its ranges into the exact, gated [Sprint-016 Rice Pilot Specification](RICE_PILOT_SPECIFICATION.md); the specification controls the first tranche if later authorized. This plan tests entity, relationship, provenance, multilingual, and review governance using:
 
 - one governed crop domain: rice;
 - one selected, explicitly sourced rice growth-stage framework, without silently merging BBCH or local stages;

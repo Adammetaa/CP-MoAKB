@@ -1,7 +1,9 @@
 # ADR-005: Layered Conceptual Ontology Before Physical Implementation
 
-- Status: Proposed
+- Status: Accepted
 - Date: 2026-07-13
+- Accepted: 2026-07-13
+- Acceptance basis: Sprint-015A individual architecture closeout review
 - Decision owners: CP-MoAKB Product Owner, Chief Architect, and domain governance
 
 ## Context
@@ -53,7 +55,7 @@ Not selected because storage choices need reviewed domain meaning and boundaries
 
 ## Scope
 
-This proposal governs conceptual architecture for the seven Sprint-012 ontology domains and their cross-domain relationships. It does not approve domain facts, controlled vocabulary content, runtime reasoning, a public field dataset, or a physical representation.
+This decision governs conceptual architecture for the seven Sprint-012 ontology domains and their cross-domain relationships. It does not approve domain facts, controlled vocabulary content, runtime reasoning, a public field dataset, or a physical representation.
 
 ## Relationship to Design Freeze
 
