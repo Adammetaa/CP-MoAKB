@@ -1,0 +1,2637 @@
+{
+  "classification_version": "11.5",
+  "nodes": [
+    {
+      "code": "1",
+      "name": "Acetylcholinesterase (AChE) inhibitors",
+      "level": 1,
+      "parent_code": null,
+      "page": 24
+    },
+    {
+      "code": "10",
+      "name": "Mite growth inhibitors affecting CHS1",
+      "level": 1,
+      "parent_code": null,
+      "page": 26
+    },
+    {
+      "code": "11",
+      "name": "Microbial disruptors of insect midgut membranes",
+      "level": 1,
+      "parent_code": null,
+      "page": 27
+    },
+    {
+      "code": "12",
+      "name": "Inhibitors of mitochondrial ATP synthase",
+      "level": 1,
+      "parent_code": null,
+      "page": 26
+    },
+    {
+      "code": "13",
+      "name": "Uncouplers of oxidative phosphorylation via disruption of the proton gradient",
+      "level": 1,
+      "parent_code": null,
+      "page": 26
+    },
+    {
+      "code": "14",
+      "name": "Nicotinic acetylcholine receptor (nAChR) channel blockers",
+      "level": 1,
+      "parent_code": null,
+      "page": 25
+    },
+    {
+      "code": "15",
+      "name": "Inhibitors of chitin biosynthesis affecting CHS1",
+      "level": 1,
+      "parent_code": null,
+      "page": 26
+    },
+    {
+      "code": "16",
+      "name": "Inhibitors of chitin biosynthesis, type 1",
+      "level": 1,
+      "parent_code": null,
+      "page": 26
+    },
+    {
+      "code": "17",
+      "name": "Moulting disruptors, Dipteran",
+      "level": 1,
+      "parent_code": null,
+      "page": 26
+    },
+    {
+      "code": "18",
+      "name": "Ecdysone receptor agonists",
+      "level": 1,
+      "parent_code": null,
+      "page": 26
+    },
+    {
+      "code": "19",
+      "name": "Octopamine receptor agonists",
+      "level": 1,
+      "parent_code": null,
+      "page": 25
+    },
+    {
+      "code": "2",
+      "name": "GABA-gated chloride channel blockers",
+      "level": 1,
+      "parent_code": null,
+      "page": 24
+    },
+    {
+      "code": "20",
+      "name": "IRAC group 20",
+      "level": 1,
+      "parent_code": null,
+      "page": 0
+    },
+    {
+      "code": "21",
+      "name": "Mitochondrial complex I electron transport inhibitors",
+      "level": 1,
+      "parent_code": null,
+      "page": 27
+    },
+    {
+      "code": "22",
+      "name": "Voltage-dependent sodium channel blockers",
+      "level": 1,
+      "parent_code": null,
+      "page": 25
+    },
+    {
+      "code": "23",
+      "name": "Inhibitors of acetyl-CoA carboxylase",
+      "level": 1,
+      "parent_code": null,
+      "page": 26
+    },
+    {
+      "code": "24",
+      "name": "Mitochondrial complex IV electron transport inhibitors",
+      "level": 1,
+      "parent_code": null,
+      "page": 27
+    },
+    {
+      "code": "25",
+      "name": "Mitochondrial complex II electron transport inhibitors",
+      "level": 1,
+      "parent_code": null,
+      "page": 27
+    },
+    {
+      "code": "28",
+      "name": "Ryanodine receptor modulators",
+      "level": 1,
+      "parent_code": null,
+      "page": 25
+    },
+    {
+      "code": "29",
+      "name": "Chordotonal organ nicotinamidase inhibitors",
+      "level": 1,
+      "parent_code": null,
+      "page": 25
+    },
+    {
+      "code": "3",
+      "name": "Sodium channel modulators",
+      "level": 1,
+      "parent_code": null,
+      "page": 24
+    },
+    {
+      "code": "30",
+      "name": "GABA-gated chloride channel allosteric modulators",
+      "level": 1,
+      "parent_code": null,
+      "page": 25
+    },
+    {
+      "code": "31",
+      "name": "Host-specific occluded pathogenic viruses",
+      "level": 1,
+      "parent_code": null,
+      "page": 27
+    },
+    {
+      "code": "32",
+      "name": "Nicotinic acetylcholine receptor (nAChR) allosteric modulators \u2013 Site II",
+      "level": 1,
+      "parent_code": null,
+      "page": 25
+    },
+    {
+      "code": "33",
+      "name": "Calcium-activated potassium channel (KCa2) modulators",
+      "level": 1,
+      "parent_code": null,
+      "page": 25
+    },
+    {
+      "code": "34",
+      "name": "Mitochondrial complex III electron transport inhibitors \u2013 Qi site",
+      "level": 1,
+      "parent_code": null,
+      "page": 27
+    },
+    {
+      "code": "35",
+      "name": "RNA interference mediated target suppressors",
+      "level": 1,
+      "parent_code": null,
+      "page": 27
+    },
+    {
+      "code": "36",
+      "name": "Chordotonal organ modulators \u2013 undefined target site",
+      "level": 1,
+      "parent_code": null,
+      "page": 25
+    },
+    {
+      "code": "37",
+      "name": "Vesicular acetylcholine transporter (VAChT) inhibitor",
+      "level": 1,
+      "parent_code": null,
+      "page": 25
+    },
+    {
+      "code": "4",
+      "name": "Nicotinic acetylcholine receptor (nAChR) competitive modulators",
+      "level": 1,
+      "parent_code": null,
+      "page": 24
+    },
+    {
+      "code": "5",
+      "name": "Nicotinic acetylcholine receptor (nAChR) allosteric modulators \u2013 Site I",
+      "level": 1,
+      "parent_code": null,
+      "page": 24
+    },
+    {
+      "code": "6",
+      "name": "Glutamate-gated chloride channel (GluCl) allosteric modulators",
+      "level": 1,
+      "parent_code": null,
+      "page": 24
+    },
+    {
+      "code": "7",
+      "name": "Juvenile hormone mimics",
+      "level": 1,
+      "parent_code": null,
+      "page": 26
+    },
+    {
+      "code": "8",
+      "name": "Miscellaneous non-specific (multi-site) inhibitors",
+      "level": 1,
+      "parent_code": null,
+      "page": 28
+    },
+    {
+      "code": "9",
+      "name": "Chordotonal organ TRPV channel modulators",
+      "level": 1,
+      "parent_code": null,
+      "page": 24
+    },
+    {
+      "code": "UN",
+      "name": "Compounds of unknown or uncertain MoA",
+      "level": 1,
+      "parent_code": null,
+      "page": 28
+    },
+    {
+      "code": "UNB",
+      "name": "Bacterial agents of unknown or uncertain MoA",
+      "level": 1,
+      "parent_code": null,
+      "page": 28
+    },
+    {
+      "code": "UNE",
+      "name": "Botanical essence including synthetic, extracts and unrefined oils with unknown or",
+      "level": 1,
+      "parent_code": null,
+      "page": 28
+    },
+    {
+      "code": "UNF",
+      "name": "Fungal agents of unknown or uncertain MoA",
+      "level": 1,
+      "parent_code": null,
+      "page": 28
+    },
+    {
+      "code": "UNM",
+      "name": "Non-specific mechanical and physical disruptors",
+      "level": 1,
+      "parent_code": null,
+      "page": 28
+    },
+    {
+      "code": "UNP",
+      "name": "Peptides of unknown or uncertain MoA",
+      "level": 1,
+      "parent_code": null,
+      "page": 28
+    },
+    {
+      "code": "UNV",
+      "name": "Viral agents of unknown or uncertain MoA",
+      "level": 1,
+      "parent_code": null,
+      "page": 28
+    },
+    {
+      "code": "10A",
+      "name": "Clofentezine",
+      "level": 2,
+      "parent_code": "10",
+      "page": 10
+    },
+    {
+      "code": "10B",
+      "name": "Etoxazole",
+      "level": 2,
+      "parent_code": "10",
+      "page": 10
+    },
+    {
+      "code": "11A",
+      "name": "Bacillus thuringiensis and the insecticidal proteins they produce",
+      "level": 2,
+      "parent_code": "11",
+      "page": 10
+    },
+    {
+      "code": "11B",
+      "name": "Bacillus sphaericus",
+      "level": 2,
+      "parent_code": "11",
+      "page": 10
+    },
+    {
+      "code": "12A",
+      "name": "Diafenthiuron",
+      "level": 2,
+      "parent_code": "12",
+      "page": 10
+    },
+    {
+      "code": "12B",
+      "name": "Organotin miticides",
+      "level": 2,
+      "parent_code": "12",
+      "page": 10
+    },
+    {
+      "code": "12C",
+      "name": "Propargite",
+      "level": 2,
+      "parent_code": "12",
+      "page": 10
+    },
+    {
+      "code": "12D",
+      "name": "Tetradifon",
+      "level": 2,
+      "parent_code": "12",
+      "page": 10
+    },
+    {
+      "code": "13-PYRROLES-DINITROPHENOLS-SULFLURAMID",
+      "name": "Pyrroles Dinitrophenols Sulfluramid",
+      "level": 2,
+      "parent_code": "13",
+      "page": 10
+    },
+    {
+      "code": "14-NEREISTOXIN-ANALOGUES",
+      "name": "Nereistoxin analogues",
+      "level": 2,
+      "parent_code": "14",
+      "page": 11
+    },
+    {
+      "code": "15-BENZOYLUREAS",
+      "name": "Benzoylureas",
+      "level": 2,
+      "parent_code": "15",
+      "page": 11
+    },
+    {
+      "code": "16-BUPROFEZIN",
+      "name": "Buprofezin",
+      "level": 2,
+      "parent_code": "16",
+      "page": 11
+    },
+    {
+      "code": "17-CYROMAZINE",
+      "name": "Cyromazine",
+      "level": 2,
+      "parent_code": "17",
+      "page": 11
+    },
+    {
+      "code": "18-DIACYLHYDRAZINES",
+      "name": "Diacylhydrazines",
+      "level": 2,
+      "parent_code": "18",
+      "page": 11
+    },
+    {
+      "code": "19-AMITRAZ",
+      "name": "Amitraz",
+      "level": 2,
+      "parent_code": "19",
+      "page": 12
+    },
+    {
+      "code": "1A",
+      "name": "Carbamates",
+      "level": 2,
+      "parent_code": "1",
+      "page": 7
+    },
+    {
+      "code": "1B",
+      "name": "Organophosphates",
+      "level": 2,
+      "parent_code": "1",
+      "page": 7
+    },
+    {
+      "code": "20A",
+      "name": "Hydramethylnon",
+      "level": 2,
+      "parent_code": "20",
+      "page": 12
+    },
+    {
+      "code": "20B",
+      "name": "Acequinocyl",
+      "level": 2,
+      "parent_code": "20",
+      "page": 12
+    },
+    {
+      "code": "20C",
+      "name": "Fluacrypyrim",
+      "level": 2,
+      "parent_code": "20",
+      "page": 12
+    },
+    {
+      "code": "20D",
+      "name": "Bifenazate",
+      "level": 2,
+      "parent_code": "20",
+      "page": 12
+    },
+    {
+      "code": "21A",
+      "name": "METI acaricides and",
+      "level": 2,
+      "parent_code": "21",
+      "page": 12
+    },
+    {
+      "code": "21B",
+      "name": "Rotenone",
+      "level": 2,
+      "parent_code": "21",
+      "page": 12
+    },
+    {
+      "code": "22A",
+      "name": "Oxadiazines",
+      "level": 2,
+      "parent_code": "22",
+      "page": 12
+    },
+    {
+      "code": "22B",
+      "name": "Semicarbazones",
+      "level": 2,
+      "parent_code": "22",
+      "page": 12
+    },
+    {
+      "code": "23-TETRONIC-AND-TETRAMIC-ACID-DERIVATIVES",
+      "name": "Tetronic and Tetramic acid derivatives",
+      "level": 2,
+      "parent_code": "23",
+      "page": 13
+    },
+    {
+      "code": "24A",
+      "name": "Phosphides",
+      "level": 2,
+      "parent_code": "24",
+      "page": 13
+    },
+    {
+      "code": "24B",
+      "name": "Cyanides",
+      "level": 2,
+      "parent_code": "24",
+      "page": 13
+    },
+    {
+      "code": "25A",
+      "name": "Beta-ketonitrile derivatives",
+      "level": 2,
+      "parent_code": "25",
+      "page": 13
+    },
+    {
+      "code": "25B",
+      "name": "Carboxanilides",
+      "level": 2,
+      "parent_code": "25",
+      "page": 13
+    },
+    {
+      "code": "28-DIAMIDES",
+      "name": "Diamides",
+      "level": 2,
+      "parent_code": "28",
+      "page": 13
+    },
+    {
+      "code": "29-FLONICAMID",
+      "name": "Flonicamid",
+      "level": 2,
+      "parent_code": "29",
+      "page": 13
+    },
+    {
+      "code": "2A",
+      "name": "Cyclodiene Organochlorines",
+      "level": 2,
+      "parent_code": "2",
+      "page": 7
+    },
+    {
+      "code": "2B",
+      "name": "Phenylpyrazoles (Fiproles)",
+      "level": 2,
+      "parent_code": "2",
+      "page": 7
+    },
+    {
+      "code": "30-ISOXAZOLINES-META-DIAMIDES",
+      "name": "Isoxazolines Meta-diamides",
+      "level": 2,
+      "parent_code": "30",
+      "page": 14
+    },
+    {
+      "code": "31-GRANULOVIRUSES-GVS-NUCLEOPOLYHEDROVIRUSES-NPVS",
+      "name": "Granuloviruses (GVs) Nucleopolyhedroviruses (NPVs)",
+      "level": 2,
+      "parent_code": "31",
+      "page": 14
+    },
+    {
+      "code": "32-GS-OMEGA-KAPPA-HXTX-HV1A-PEPTIDE",
+      "name": "GS-omega/kappa HXTX-Hv1a peptide",
+      "level": 2,
+      "parent_code": "32",
+      "page": 14
+    },
+    {
+      "code": "33-ACYNONAPYR",
+      "name": "Acynonapyr",
+      "level": 2,
+      "parent_code": "33",
+      "page": 14
+    },
+    {
+      "code": "34-FLOMETOQUIN",
+      "name": "Flometoquin",
+      "level": 2,
+      "parent_code": "34",
+      "page": 14
+    },
+    {
+      "code": "35-RIBONUCLEIC-ACIDS-RNA",
+      "name": "Ribonucleic Acids (RNA)",
+      "level": 2,
+      "parent_code": "35",
+      "page": 15
+    },
+    {
+      "code": "36-PYRIDAZINE-PYRAZOLECARBOXAMIDES",
+      "name": "Pyridazine pyrazolecarboxamides",
+      "level": 2,
+      "parent_code": "36",
+      "page": 15
+    },
+    {
+      "code": "37-OXAZOSULFYL",
+      "name": "Oxazosulfyl",
+      "level": 2,
+      "parent_code": "37",
+      "page": 15
+    },
+    {
+      "code": "3A",
+      "name": "Pyrethroids Pyrethrins",
+      "level": 2,
+      "parent_code": "3",
+      "page": 8
+    },
+    {
+      "code": "3B",
+      "name": "DDT Methoxychlor",
+      "level": 2,
+      "parent_code": "3",
+      "page": 8
+    },
+    {
+      "code": "4A",
+      "name": "Neonicotinoids",
+      "level": 2,
+      "parent_code": "4",
+      "page": 8
+    },
+    {
+      "code": "4B",
+      "name": "Nicotine",
+      "level": 2,
+      "parent_code": "4",
+      "page": 8
+    },
+    {
+      "code": "4C",
+      "name": "Sulfoximines",
+      "level": 2,
+      "parent_code": "4",
+      "page": 8
+    },
+    {
+      "code": "4D",
+      "name": "Butenolides",
+      "level": 2,
+      "parent_code": "4",
+      "page": 8
+    },
+    {
+      "code": "4E",
+      "name": "Mesoionics",
+      "level": 2,
+      "parent_code": "4",
+      "page": 8
+    },
+    {
+      "code": "4F",
+      "name": "Pyridylidenes",
+      "level": 2,
+      "parent_code": "4",
+      "page": 8
+    },
+    {
+      "code": "5-SPINOSYNS",
+      "name": "Spinosyns",
+      "level": 2,
+      "parent_code": "5",
+      "page": 8
+    },
+    {
+      "code": "6-AVERMECTINS-MILBEMYCINS",
+      "name": "Avermectins, Milbemycins",
+      "level": 2,
+      "parent_code": "6",
+      "page": 9
+    },
+    {
+      "code": "7A",
+      "name": "Juvenile hormone",
+      "level": 2,
+      "parent_code": "7",
+      "page": 9
+    },
+    {
+      "code": "7B",
+      "name": "Fenoxycarb",
+      "level": 2,
+      "parent_code": "7",
+      "page": 9
+    },
+    {
+      "code": "7C",
+      "name": "Pyriproxyfen",
+      "level": 2,
+      "parent_code": "7",
+      "page": 9
+    },
+    {
+      "code": "8A",
+      "name": "Alkyl halides",
+      "level": 2,
+      "parent_code": "8",
+      "page": 9
+    },
+    {
+      "code": "8B",
+      "name": "Chloropicrin",
+      "level": 2,
+      "parent_code": "8",
+      "page": 9
+    },
+    {
+      "code": "8C",
+      "name": "Fluorides",
+      "level": 2,
+      "parent_code": "8",
+      "page": 9
+    },
+    {
+      "code": "8D",
+      "name": "Borates",
+      "level": 2,
+      "parent_code": "8",
+      "page": 9
+    },
+    {
+      "code": "8E",
+      "name": "Tartar emetic",
+      "level": 2,
+      "parent_code": "8",
+      "page": 9
+    },
+    {
+      "code": "8F",
+      "name": "Methyl isothiocyanate generators",
+      "level": 2,
+      "parent_code": "8",
+      "page": 9
+    },
+    {
+      "code": "9B",
+      "name": "Pyridine azomethine derivatives",
+      "level": 2,
+      "parent_code": "9",
+      "page": 9
+    },
+    {
+      "code": "9D",
+      "name": "Pyropenes",
+      "level": 2,
+      "parent_code": "9",
+      "page": 9
+    },
+    {
+      "code": "UN-AZADIRACHTIN",
+      "name": "Azadirachtin",
+      "level": 2,
+      "parent_code": "UN",
+      "page": 15
+    },
+    {
+      "code": "10A:clofentezine",
+      "name": "Clofentezine",
+      "level": 3,
+      "parent_code": "10A",
+      "page": 10
+    },
+    {
+      "code": "10A:diflovidazin",
+      "name": "Diflovidazin",
+      "level": 3,
+      "parent_code": "10A",
+      "page": 10
+    },
+    {
+      "code": "10A:hexythiazox",
+      "name": "Hexythiazox",
+      "level": 3,
+      "parent_code": "10A",
+      "page": 10
+    },
+    {
+      "code": "10B:etoxazole",
+      "name": "Etoxazole",
+      "level": 3,
+      "parent_code": "10B",
+      "page": 10
+    },
+    {
+      "code": "11A:bacillus-thuringiensis-subsp-israelensis-bacillus-thuringiensis-subsp-aizawai-bacillus-thuringiensis-subsp-kurstaki-bacillus-thuringiensis-subsp-tenebrionis-b-t-crop-proteins-please-see-footnote-cry1ab",
+      "name": "Bacillus thuringiensis subsp. israelensis Bacillus thuringiensis subsp. aizawai Bacillus thuringiensis subsp. kurstaki Bacillus thuringiensis subsp. tenebrionis B.t. crop proteins: (* Please see footnote) Cry1Ab",
+      "level": 3,
+      "parent_code": "11A",
+      "page": 10
+    },
+    {
+      "code": "11A:cry1a-105",
+      "name": "Cry1A.105",
+      "level": 3,
+      "parent_code": "11A",
+      "page": 10
+    },
+    {
+      "code": "11A:cry1ac",
+      "name": "Cry1Ac",
+      "level": 3,
+      "parent_code": "11A",
+      "page": 10
+    },
+    {
+      "code": "11A:cry1fa",
+      "name": "Cry1Fa",
+      "level": 3,
+      "parent_code": "11A",
+      "page": 10
+    },
+    {
+      "code": "11A:cry2ab",
+      "name": "Cry2Ab",
+      "level": 3,
+      "parent_code": "11A",
+      "page": 10
+    },
+    {
+      "code": "11A:cry34ab1-cry35ab1",
+      "name": "Cry34Ab1/Cry35Ab1",
+      "level": 3,
+      "parent_code": "11A",
+      "page": 10
+    },
+    {
+      "code": "11A:cry3ab",
+      "name": "Cry3Ab",
+      "level": 3,
+      "parent_code": "11A",
+      "page": 10
+    },
+    {
+      "code": "11A:cry3bb",
+      "name": "Cry3Bb",
+      "level": 3,
+      "parent_code": "11A",
+      "page": 10
+    },
+    {
+      "code": "11A:mcry3a",
+      "name": "mCry3A",
+      "level": 3,
+      "parent_code": "11A",
+      "page": 10
+    },
+    {
+      "code": "11A:vip3a",
+      "name": "Vip3A",
+      "level": 3,
+      "parent_code": "11A",
+      "page": 10
+    },
+    {
+      "code": "11B:bacillus-sphaericus",
+      "name": "Bacillus sphaericus",
+      "level": 3,
+      "parent_code": "11B",
+      "page": 10
+    },
+    {
+      "code": "12A:diafenthiuron",
+      "name": "Diafenthiuron",
+      "level": 3,
+      "parent_code": "12A",
+      "page": 10
+    },
+    {
+      "code": "12B:azocyclotin",
+      "name": "Azocyclotin",
+      "level": 3,
+      "parent_code": "12B",
+      "page": 10
+    },
+    {
+      "code": "12B:cyhexatin",
+      "name": "Cyhexatin",
+      "level": 3,
+      "parent_code": "12B",
+      "page": 10
+    },
+    {
+      "code": "12B:fenbutatin-oxide",
+      "name": "Fenbutatin oxide",
+      "level": 3,
+      "parent_code": "12B",
+      "page": 10
+    },
+    {
+      "code": "12C:propargite",
+      "name": "Propargite",
+      "level": 3,
+      "parent_code": "12C",
+      "page": 10
+    },
+    {
+      "code": "12D:tetradifon",
+      "name": "Tetradifon",
+      "level": 3,
+      "parent_code": "12D",
+      "page": 10
+    },
+    {
+      "code": "13-PYRROLES-DINITROPHENOLS-SULFLURAMID:chlorfenapyr-dnoc-sulfluramid",
+      "name": "Chlorfenapyr DNOC Sulfluramid",
+      "level": 3,
+      "parent_code": "13-PYRROLES-DINITROPHENOLS-SULFLURAMID",
+      "page": 10
+    },
+    {
+      "code": "14-NEREISTOXIN-ANALOGUES:bensultap",
+      "name": "Bensultap",
+      "level": 3,
+      "parent_code": "14-NEREISTOXIN-ANALOGUES",
+      "page": 11
+    },
+    {
+      "code": "14-NEREISTOXIN-ANALOGUES:cartap-hydrochloride",
+      "name": "Cartap hydrochloride",
+      "level": 3,
+      "parent_code": "14-NEREISTOXIN-ANALOGUES",
+      "page": 11
+    },
+    {
+      "code": "14-NEREISTOXIN-ANALOGUES:thiocyclam",
+      "name": "Thiocyclam",
+      "level": 3,
+      "parent_code": "14-NEREISTOXIN-ANALOGUES",
+      "page": 11
+    },
+    {
+      "code": "14-NEREISTOXIN-ANALOGUES:thiosultap-sodium",
+      "name": "Thiosultap-sodium",
+      "level": 3,
+      "parent_code": "14-NEREISTOXIN-ANALOGUES",
+      "page": 11
+    },
+    {
+      "code": "15-BENZOYLUREAS:bistrifluron",
+      "name": "Bistrifluron",
+      "level": 3,
+      "parent_code": "15-BENZOYLUREAS",
+      "page": 11
+    },
+    {
+      "code": "15-BENZOYLUREAS:chlorfluazuron",
+      "name": "Chlorfluazuron",
+      "level": 3,
+      "parent_code": "15-BENZOYLUREAS",
+      "page": 11
+    },
+    {
+      "code": "15-BENZOYLUREAS:diflubenzuron",
+      "name": "Diflubenzuron",
+      "level": 3,
+      "parent_code": "15-BENZOYLUREAS",
+      "page": 11
+    },
+    {
+      "code": "15-BENZOYLUREAS:flucycloxuron",
+      "name": "Flucycloxuron",
+      "level": 3,
+      "parent_code": "15-BENZOYLUREAS",
+      "page": 11
+    },
+    {
+      "code": "15-BENZOYLUREAS:flufenoxuron",
+      "name": "Flufenoxuron",
+      "level": 3,
+      "parent_code": "15-BENZOYLUREAS",
+      "page": 11
+    },
+    {
+      "code": "15-BENZOYLUREAS:hexaflumuron",
+      "name": "Hexaflumuron",
+      "level": 3,
+      "parent_code": "15-BENZOYLUREAS",
+      "page": 11
+    },
+    {
+      "code": "15-BENZOYLUREAS:lufenuron",
+      "name": "Lufenuron",
+      "level": 3,
+      "parent_code": "15-BENZOYLUREAS",
+      "page": 11
+    },
+    {
+      "code": "15-BENZOYLUREAS:novaluron",
+      "name": "Novaluron",
+      "level": 3,
+      "parent_code": "15-BENZOYLUREAS",
+      "page": 11
+    },
+    {
+      "code": "15-BENZOYLUREAS:noviflumuron",
+      "name": "Noviflumuron",
+      "level": 3,
+      "parent_code": "15-BENZOYLUREAS",
+      "page": 11
+    },
+    {
+      "code": "15-BENZOYLUREAS:teflubenzuron",
+      "name": "Teflubenzuron",
+      "level": 3,
+      "parent_code": "15-BENZOYLUREAS",
+      "page": 11
+    },
+    {
+      "code": "15-BENZOYLUREAS:triflumuron",
+      "name": "Triflumuron",
+      "level": 3,
+      "parent_code": "15-BENZOYLUREAS",
+      "page": 11
+    },
+    {
+      "code": "16-BUPROFEZIN:buprofezin",
+      "name": "Buprofezin",
+      "level": 3,
+      "parent_code": "16-BUPROFEZIN",
+      "page": 11
+    },
+    {
+      "code": "17-CYROMAZINE:cyromazine",
+      "name": "Cyromazine",
+      "level": 3,
+      "parent_code": "17-CYROMAZINE",
+      "page": 11
+    },
+    {
+      "code": "18-DIACYLHYDRAZINES:chromafenozide",
+      "name": "Chromafenozide",
+      "level": 3,
+      "parent_code": "18-DIACYLHYDRAZINES",
+      "page": 11
+    },
+    {
+      "code": "18-DIACYLHYDRAZINES:halofenozide",
+      "name": "Halofenozide",
+      "level": 3,
+      "parent_code": "18-DIACYLHYDRAZINES",
+      "page": 11
+    },
+    {
+      "code": "18-DIACYLHYDRAZINES:methoxyfenozide",
+      "name": "Methoxyfenozide",
+      "level": 3,
+      "parent_code": "18-DIACYLHYDRAZINES",
+      "page": 11
+    },
+    {
+      "code": "18-DIACYLHYDRAZINES:tebufenozide",
+      "name": "Tebufenozide",
+      "level": 3,
+      "parent_code": "18-DIACYLHYDRAZINES",
+      "page": 11
+    },
+    {
+      "code": "19-AMITRAZ:amitraz",
+      "name": "Amitraz",
+      "level": 3,
+      "parent_code": "19-AMITRAZ",
+      "page": 12
+    },
+    {
+      "code": "1A:alanycarb",
+      "name": "Alanycarb",
+      "level": 3,
+      "parent_code": "1A",
+      "page": 7
+    },
+    {
+      "code": "1A:aldicarb",
+      "name": "Aldicarb",
+      "level": 3,
+      "parent_code": "1A",
+      "page": 7
+    },
+    {
+      "code": "1A:bendiocarb",
+      "name": "Bendiocarb",
+      "level": 3,
+      "parent_code": "1A",
+      "page": 7
+    },
+    {
+      "code": "1A:benfuracarb",
+      "name": "Benfuracarb",
+      "level": 3,
+      "parent_code": "1A",
+      "page": 7
+    },
+    {
+      "code": "1A:butocarboxim",
+      "name": "Butocarboxim",
+      "level": 3,
+      "parent_code": "1A",
+      "page": 7
+    },
+    {
+      "code": "1A:butoxycarboxim",
+      "name": "Butoxycarboxim",
+      "level": 3,
+      "parent_code": "1A",
+      "page": 7
+    },
+    {
+      "code": "1A:carbaryl",
+      "name": "Carbaryl",
+      "level": 3,
+      "parent_code": "1A",
+      "page": 7
+    },
+    {
+      "code": "1A:carbofuran",
+      "name": "Carbofuran",
+      "level": 3,
+      "parent_code": "1A",
+      "page": 7
+    },
+    {
+      "code": "1A:carbosulfan",
+      "name": "Carbosulfan",
+      "level": 3,
+      "parent_code": "1A",
+      "page": 7
+    },
+    {
+      "code": "1A:ethiofencarb",
+      "name": "Ethiofencarb",
+      "level": 3,
+      "parent_code": "1A",
+      "page": 7
+    },
+    {
+      "code": "1A:fenobucarb",
+      "name": "Fenobucarb",
+      "level": 3,
+      "parent_code": "1A",
+      "page": 7
+    },
+    {
+      "code": "1A:formetanate",
+      "name": "Formetanate",
+      "level": 3,
+      "parent_code": "1A",
+      "page": 7
+    },
+    {
+      "code": "1A:furathiocarb",
+      "name": "Furathiocarb",
+      "level": 3,
+      "parent_code": "1A",
+      "page": 7
+    },
+    {
+      "code": "1A:isoprocarb",
+      "name": "Isoprocarb",
+      "level": 3,
+      "parent_code": "1A",
+      "page": 7
+    },
+    {
+      "code": "1A:methiocarb",
+      "name": "Methiocarb",
+      "level": 3,
+      "parent_code": "1A",
+      "page": 7
+    },
+    {
+      "code": "1A:methomyl",
+      "name": "Methomyl",
+      "level": 3,
+      "parent_code": "1A",
+      "page": 7
+    },
+    {
+      "code": "1A:metolcarb",
+      "name": "Metolcarb",
+      "level": 3,
+      "parent_code": "1A",
+      "page": 7
+    },
+    {
+      "code": "1A:oxamyl",
+      "name": "Oxamyl",
+      "level": 3,
+      "parent_code": "1A",
+      "page": 7
+    },
+    {
+      "code": "1A:pirimicarb",
+      "name": "Pirimicarb",
+      "level": 3,
+      "parent_code": "1A",
+      "page": 7
+    },
+    {
+      "code": "1A:propoxur",
+      "name": "Propoxur",
+      "level": 3,
+      "parent_code": "1A",
+      "page": 7
+    },
+    {
+      "code": "1A:thiodicarb",
+      "name": "Thiodicarb",
+      "level": 3,
+      "parent_code": "1A",
+      "page": 7
+    },
+    {
+      "code": "1A:thiofanox",
+      "name": "Thiofanox",
+      "level": 3,
+      "parent_code": "1A",
+      "page": 7
+    },
+    {
+      "code": "1A:triazamate",
+      "name": "Triazamate",
+      "level": 3,
+      "parent_code": "1A",
+      "page": 7
+    },
+    {
+      "code": "1A:trimethacarb",
+      "name": "Trimethacarb",
+      "level": 3,
+      "parent_code": "1A",
+      "page": 7
+    },
+    {
+      "code": "1A:xmc",
+      "name": "XMC",
+      "level": 3,
+      "parent_code": "1A",
+      "page": 7
+    },
+    {
+      "code": "1A:xylylcarb",
+      "name": "Xylylcarb",
+      "level": 3,
+      "parent_code": "1A",
+      "page": 7
+    },
+    {
+      "code": "1B:acephate",
+      "name": "Acephate",
+      "level": 3,
+      "parent_code": "1B",
+      "page": 7
+    },
+    {
+      "code": "1B:azamethiphos",
+      "name": "Azamethiphos",
+      "level": 3,
+      "parent_code": "1B",
+      "page": 7
+    },
+    {
+      "code": "1B:azinphos-ethyl",
+      "name": "Azinphos-ethyl",
+      "level": 3,
+      "parent_code": "1B",
+      "page": 7
+    },
+    {
+      "code": "1B:azinphos-methyl",
+      "name": "Azinphos-methyl",
+      "level": 3,
+      "parent_code": "1B",
+      "page": 7
+    },
+    {
+      "code": "1B:cadusafos",
+      "name": "Cadusafos",
+      "level": 3,
+      "parent_code": "1B",
+      "page": 7
+    },
+    {
+      "code": "1B:chlorethoxyfos",
+      "name": "Chlorethoxyfos",
+      "level": 3,
+      "parent_code": "1B",
+      "page": 7
+    },
+    {
+      "code": "1B:chlorfenvinphos",
+      "name": "Chlorfenvinphos",
+      "level": 3,
+      "parent_code": "1B",
+      "page": 7
+    },
+    {
+      "code": "1B:chlormephos",
+      "name": "Chlormephos",
+      "level": 3,
+      "parent_code": "1B",
+      "page": 7
+    },
+    {
+      "code": "1B:chlorpyrifos",
+      "name": "Chlorpyrifos",
+      "level": 3,
+      "parent_code": "1B",
+      "page": 7
+    },
+    {
+      "code": "1B:chlorpyrifos-methyl",
+      "name": "Chlorpyrifos-methyl",
+      "level": 3,
+      "parent_code": "1B",
+      "page": 7
+    },
+    {
+      "code": "1B:coumaphos",
+      "name": "Coumaphos",
+      "level": 3,
+      "parent_code": "1B",
+      "page": 7
+    },
+    {
+      "code": "1B:cyanophos",
+      "name": "Cyanophos",
+      "level": 3,
+      "parent_code": "1B",
+      "page": 7
+    },
+    {
+      "code": "1B:demeton-s-methyl",
+      "name": "Demeton-S-methyl",
+      "level": 3,
+      "parent_code": "1B",
+      "page": 7
+    },
+    {
+      "code": "1B:diazinon",
+      "name": "Diazinon",
+      "level": 3,
+      "parent_code": "1B",
+      "page": 7
+    },
+    {
+      "code": "1B:dichlorvos-ddvp",
+      "name": "Dichlorvos/ DDVP",
+      "level": 3,
+      "parent_code": "1B",
+      "page": 7
+    },
+    {
+      "code": "1B:dicrotophos",
+      "name": "Dicrotophos",
+      "level": 3,
+      "parent_code": "1B",
+      "page": 7
+    },
+    {
+      "code": "1B:dimethoate",
+      "name": "Dimethoate",
+      "level": 3,
+      "parent_code": "1B",
+      "page": 7
+    },
+    {
+      "code": "1B:dimethylvinphos",
+      "name": "Dimethylvinphos",
+      "level": 3,
+      "parent_code": "1B",
+      "page": 7
+    },
+    {
+      "code": "1B:disulfoton",
+      "name": "Disulfoton",
+      "level": 3,
+      "parent_code": "1B",
+      "page": 7
+    },
+    {
+      "code": "1B:epn",
+      "name": "EPN",
+      "level": 3,
+      "parent_code": "1B",
+      "page": 7
+    },
+    {
+      "code": "1B:ethion",
+      "name": "Ethion",
+      "level": 3,
+      "parent_code": "1B",
+      "page": 7
+    },
+    {
+      "code": "1B:ethoprophos",
+      "name": "Ethoprophos",
+      "level": 3,
+      "parent_code": "1B",
+      "page": 7
+    },
+    {
+      "code": "1B:famphur",
+      "name": "Famphur",
+      "level": 3,
+      "parent_code": "1B",
+      "page": 7
+    },
+    {
+      "code": "1B:fenamiphos",
+      "name": "Fenamiphos",
+      "level": 3,
+      "parent_code": "1B",
+      "page": 7
+    },
+    {
+      "code": "1B:fenitrothion",
+      "name": "Fenitrothion",
+      "level": 3,
+      "parent_code": "1B",
+      "page": 7
+    },
+    {
+      "code": "1B:fenthion",
+      "name": "Fenthion",
+      "level": 3,
+      "parent_code": "1B",
+      "page": 7
+    },
+    {
+      "code": "1B:fosthiazate",
+      "name": "Fosthiazate",
+      "level": 3,
+      "parent_code": "1B",
+      "page": 7
+    },
+    {
+      "code": "1B:heptenophos",
+      "name": "Heptenophos",
+      "level": 3,
+      "parent_code": "1B",
+      "page": 7
+    },
+    {
+      "code": "1B:imicyafos",
+      "name": "Imicyafos",
+      "level": 3,
+      "parent_code": "1B",
+      "page": 7
+    },
+    {
+      "code": "1B:isofenphos",
+      "name": "Isofenphos",
+      "level": 3,
+      "parent_code": "1B",
+      "page": 7
+    },
+    {
+      "code": "1B:isopropyl-o-methoxyaminothiophosphoryl-salicylate",
+      "name": "Isopropyl O-(methoxyaminothiophosphoryl) salicylate",
+      "level": 3,
+      "parent_code": "1B",
+      "page": 7
+    },
+    {
+      "code": "1B:isoxathion",
+      "name": "Isoxathion",
+      "level": 3,
+      "parent_code": "1B",
+      "page": 7
+    },
+    {
+      "code": "1B:malathion",
+      "name": "Malathion",
+      "level": 3,
+      "parent_code": "1B",
+      "page": 7
+    },
+    {
+      "code": "1B:mecarbam",
+      "name": "Mecarbam",
+      "level": 3,
+      "parent_code": "1B",
+      "page": 7
+    },
+    {
+      "code": "1B:methamidophos",
+      "name": "Methamidophos",
+      "level": 3,
+      "parent_code": "1B",
+      "page": 7
+    },
+    {
+      "code": "1B:methidathion",
+      "name": "Methidathion",
+      "level": 3,
+      "parent_code": "1B",
+      "page": 7
+    },
+    {
+      "code": "1B:mevinphos",
+      "name": "Mevinphos",
+      "level": 3,
+      "parent_code": "1B",
+      "page": 7
+    },
+    {
+      "code": "1B:monocrotophos",
+      "name": "Monocrotophos",
+      "level": 3,
+      "parent_code": "1B",
+      "page": 7
+    },
+    {
+      "code": "1B:naled",
+      "name": "Naled",
+      "level": 3,
+      "parent_code": "1B",
+      "page": 7
+    },
+    {
+      "code": "1B:omethoate",
+      "name": "Omethoate",
+      "level": 3,
+      "parent_code": "1B",
+      "page": 7
+    },
+    {
+      "code": "1B:oxydemeton-methyl",
+      "name": "Oxydemeton-methyl",
+      "level": 3,
+      "parent_code": "1B",
+      "page": 7
+    },
+    {
+      "code": "1B:parathion",
+      "name": "Parathion",
+      "level": 3,
+      "parent_code": "1B",
+      "page": 7
+    },
+    {
+      "code": "1B:parathionmethyl",
+      "name": "Parathionmethyl",
+      "level": 3,
+      "parent_code": "1B",
+      "page": 7
+    },
+    {
+      "code": "1B:phenthoate",
+      "name": "Phenthoate",
+      "level": 3,
+      "parent_code": "1B",
+      "page": 7
+    },
+    {
+      "code": "1B:phorate",
+      "name": "Phorate",
+      "level": 3,
+      "parent_code": "1B",
+      "page": 7
+    },
+    {
+      "code": "1B:phosalone",
+      "name": "Phosalone",
+      "level": 3,
+      "parent_code": "1B",
+      "page": 7
+    },
+    {
+      "code": "1B:phosmet",
+      "name": "Phosmet",
+      "level": 3,
+      "parent_code": "1B",
+      "page": 7
+    },
+    {
+      "code": "1B:phosphamidon",
+      "name": "Phosphamidon",
+      "level": 3,
+      "parent_code": "1B",
+      "page": 7
+    },
+    {
+      "code": "1B:phoxim",
+      "name": "Phoxim",
+      "level": 3,
+      "parent_code": "1B",
+      "page": 7
+    },
+    {
+      "code": "1B:pirimiphosmethyl",
+      "name": "Pirimiphosmethyl",
+      "level": 3,
+      "parent_code": "1B",
+      "page": 7
+    },
+    {
+      "code": "1B:profenofos",
+      "name": "Profenofos",
+      "level": 3,
+      "parent_code": "1B",
+      "page": 7
+    },
+    {
+      "code": "1B:propetamphos",
+      "name": "Propetamphos",
+      "level": 3,
+      "parent_code": "1B",
+      "page": 7
+    },
+    {
+      "code": "1B:prothiofos",
+      "name": "Prothiofos",
+      "level": 3,
+      "parent_code": "1B",
+      "page": 7
+    },
+    {
+      "code": "1B:pyraclofos",
+      "name": "Pyraclofos",
+      "level": 3,
+      "parent_code": "1B",
+      "page": 7
+    },
+    {
+      "code": "1B:pyridaphenthion",
+      "name": "Pyridaphenthion",
+      "level": 3,
+      "parent_code": "1B",
+      "page": 7
+    },
+    {
+      "code": "1B:quinalphos",
+      "name": "Quinalphos",
+      "level": 3,
+      "parent_code": "1B",
+      "page": 7
+    },
+    {
+      "code": "1B:sulfotep",
+      "name": "Sulfotep",
+      "level": 3,
+      "parent_code": "1B",
+      "page": 7
+    },
+    {
+      "code": "1B:tebupirimfos",
+      "name": "Tebupirimfos",
+      "level": 3,
+      "parent_code": "1B",
+      "page": 7
+    },
+    {
+      "code": "1B:temephos",
+      "name": "Temephos",
+      "level": 3,
+      "parent_code": "1B",
+      "page": 7
+    },
+    {
+      "code": "1B:terbufos",
+      "name": "Terbufos",
+      "level": 3,
+      "parent_code": "1B",
+      "page": 7
+    },
+    {
+      "code": "1B:tetrachlorvinphos",
+      "name": "Tetrachlorvinphos",
+      "level": 3,
+      "parent_code": "1B",
+      "page": 7
+    },
+    {
+      "code": "1B:thiometon",
+      "name": "Thiometon",
+      "level": 3,
+      "parent_code": "1B",
+      "page": 7
+    },
+    {
+      "code": "1B:triazophos",
+      "name": "Triazophos",
+      "level": 3,
+      "parent_code": "1B",
+      "page": 7
+    },
+    {
+      "code": "1B:trichlorfon",
+      "name": "Trichlorfon",
+      "level": 3,
+      "parent_code": "1B",
+      "page": 7
+    },
+    {
+      "code": "1B:vamidothion",
+      "name": "Vamidothion",
+      "level": 3,
+      "parent_code": "1B",
+      "page": 7
+    },
+    {
+      "code": "20A:hydramethylnon",
+      "name": "Hydramethylnon",
+      "level": 3,
+      "parent_code": "20A",
+      "page": 12
+    },
+    {
+      "code": "20B:acequinocyl",
+      "name": "Acequinocyl",
+      "level": 3,
+      "parent_code": "20B",
+      "page": 12
+    },
+    {
+      "code": "20C:fluacrypyrim",
+      "name": "Fluacrypyrim",
+      "level": 3,
+      "parent_code": "20C",
+      "page": 12
+    },
+    {
+      "code": "20D:bifenazate",
+      "name": "Bifenazate",
+      "level": 3,
+      "parent_code": "20D",
+      "page": 12
+    },
+    {
+      "code": "21A:fenazaquin",
+      "name": "Fenazaquin",
+      "level": 3,
+      "parent_code": "21A",
+      "page": 12
+    },
+    {
+      "code": "21A:fenpyroximate",
+      "name": "Fenpyroximate",
+      "level": 3,
+      "parent_code": "21A",
+      "page": 12
+    },
+    {
+      "code": "21A:pyridaben",
+      "name": "Pyridaben",
+      "level": 3,
+      "parent_code": "21A",
+      "page": 12
+    },
+    {
+      "code": "21A:pyrimidifen",
+      "name": "Pyrimidifen",
+      "level": 3,
+      "parent_code": "21A",
+      "page": 12
+    },
+    {
+      "code": "21A:tebufenpyrad",
+      "name": "Tebufenpyrad",
+      "level": 3,
+      "parent_code": "21A",
+      "page": 12
+    },
+    {
+      "code": "21A:tolfenpyrad",
+      "name": "Tolfenpyrad",
+      "level": 3,
+      "parent_code": "21A",
+      "page": 12
+    },
+    {
+      "code": "21B:rotenone-derris-rotenone-derris",
+      "name": "Rotenone (Derris) Rotenone (Derris)",
+      "level": 3,
+      "parent_code": "21B",
+      "page": 12
+    },
+    {
+      "code": "22A:indoxacarb",
+      "name": "Indoxacarb",
+      "level": 3,
+      "parent_code": "22A",
+      "page": 12
+    },
+    {
+      "code": "22B:metaflumizone",
+      "name": "Metaflumizone",
+      "level": 3,
+      "parent_code": "22B",
+      "page": 12
+    },
+    {
+      "code": "23-TETRONIC-AND-TETRAMIC-ACID-DERIVATIVES:spidoxamat-spirodiclofen",
+      "name": "Spidoxamat Spirodiclofen",
+      "level": 3,
+      "parent_code": "23-TETRONIC-AND-TETRAMIC-ACID-DERIVATIVES",
+      "page": 13
+    },
+    {
+      "code": "23-TETRONIC-AND-TETRAMIC-ACID-DERIVATIVES:spiromesifen",
+      "name": "Spiromesifen",
+      "level": 3,
+      "parent_code": "23-TETRONIC-AND-TETRAMIC-ACID-DERIVATIVES",
+      "page": 13
+    },
+    {
+      "code": "23-TETRONIC-AND-TETRAMIC-ACID-DERIVATIVES:spiropidion",
+      "name": "Spiropidion",
+      "level": 3,
+      "parent_code": "23-TETRONIC-AND-TETRAMIC-ACID-DERIVATIVES",
+      "page": 13
+    },
+    {
+      "code": "23-TETRONIC-AND-TETRAMIC-ACID-DERIVATIVES:spirotetramat",
+      "name": "Spirotetramat",
+      "level": 3,
+      "parent_code": "23-TETRONIC-AND-TETRAMIC-ACID-DERIVATIVES",
+      "page": 13
+    },
+    {
+      "code": "24A:aluminium-phosphide",
+      "name": "Aluminium phosphide",
+      "level": 3,
+      "parent_code": "24A",
+      "page": 13
+    },
+    {
+      "code": "24A:calcium-phosphide",
+      "name": "Calcium phosphide",
+      "level": 3,
+      "parent_code": "24A",
+      "page": 13
+    },
+    {
+      "code": "24A:phosphine",
+      "name": "Phosphine",
+      "level": 3,
+      "parent_code": "24A",
+      "page": 13
+    },
+    {
+      "code": "24A:zinc-phosphide",
+      "name": "Zinc phosphide",
+      "level": 3,
+      "parent_code": "24A",
+      "page": 13
+    },
+    {
+      "code": "24B:calcium-cyanide",
+      "name": "Calcium cyanide",
+      "level": 3,
+      "parent_code": "24B",
+      "page": 13
+    },
+    {
+      "code": "24B:potassium-cyanide",
+      "name": "Potassium cyanide",
+      "level": 3,
+      "parent_code": "24B",
+      "page": 13
+    },
+    {
+      "code": "24B:sodium-cyanide",
+      "name": "Sodium cyanide",
+      "level": 3,
+      "parent_code": "24B",
+      "page": 13
+    },
+    {
+      "code": "25A:cyenopyrafen",
+      "name": "Cyenopyrafen",
+      "level": 3,
+      "parent_code": "25A",
+      "page": 13
+    },
+    {
+      "code": "25A:cyflumetofen",
+      "name": "Cyflumetofen",
+      "level": 3,
+      "parent_code": "25A",
+      "page": 13
+    },
+    {
+      "code": "25B:pyflubumide",
+      "name": "Pyflubumide",
+      "level": 3,
+      "parent_code": "25B",
+      "page": 13
+    },
+    {
+      "code": "28-DIAMIDES:chlorantraniliprole",
+      "name": "Chlorantraniliprole",
+      "level": 3,
+      "parent_code": "28-DIAMIDES",
+      "page": 13
+    },
+    {
+      "code": "28-DIAMIDES:cyantraniliprole",
+      "name": "Cyantraniliprole",
+      "level": 3,
+      "parent_code": "28-DIAMIDES",
+      "page": 13
+    },
+    {
+      "code": "28-DIAMIDES:cyclaniliprole-flubendiamide",
+      "name": "Cyclaniliprole Flubendiamide",
+      "level": 3,
+      "parent_code": "28-DIAMIDES",
+      "page": 13
+    },
+    {
+      "code": "28-DIAMIDES:tetraniliprole",
+      "name": "Tetraniliprole",
+      "level": 3,
+      "parent_code": "28-DIAMIDES",
+      "page": 13
+    },
+    {
+      "code": "29-FLONICAMID:flonicamid",
+      "name": "Flonicamid",
+      "level": 3,
+      "parent_code": "29-FLONICAMID",
+      "page": 13
+    },
+    {
+      "code": "2A:chlordane",
+      "name": "Chlordane",
+      "level": 3,
+      "parent_code": "2A",
+      "page": 7
+    },
+    {
+      "code": "2A:endosulfan",
+      "name": "Endosulfan",
+      "level": 3,
+      "parent_code": "2A",
+      "page": 7
+    },
+    {
+      "code": "2B:ethiprole",
+      "name": "Ethiprole",
+      "level": 3,
+      "parent_code": "2B",
+      "page": 7
+    },
+    {
+      "code": "2B:fipronil",
+      "name": "Fipronil",
+      "level": 3,
+      "parent_code": "2B",
+      "page": 7
+    },
+    {
+      "code": "30-ISOXAZOLINES-META-DIAMIDES:cyproflanilide",
+      "name": "Cyproflanilide",
+      "level": 3,
+      "parent_code": "30-ISOXAZOLINES-META-DIAMIDES",
+      "page": 14
+    },
+    {
+      "code": "30-ISOXAZOLINES-META-DIAMIDES:fluxametamide",
+      "name": "Fluxametamide",
+      "level": 3,
+      "parent_code": "30-ISOXAZOLINES-META-DIAMIDES",
+      "page": 14
+    },
+    {
+      "code": "30-ISOXAZOLINES-META-DIAMIDES:isocycloseram-broflanilide",
+      "name": "Isocycloseram Broflanilide",
+      "level": 3,
+      "parent_code": "30-ISOXAZOLINES-META-DIAMIDES",
+      "page": 14
+    },
+    {
+      "code": "31-GRANULOVIRUSES-GVS-NUCLEOPOLYHEDROVIRUSES-NPVS:cydia-pomonella-gv-thaumatotibia-leucotreta-gv-anticarsia-gemmatalis-mnpv-helicoverpa-armigera-npv",
+      "name": "Cydia pomonella GV Thaumatotibia leucotreta GV Anticarsia gemmatalis MNPV Helicoverpa armigera NPV",
+      "level": 3,
+      "parent_code": "31-GRANULOVIRUSES-GVS-NUCLEOPOLYHEDROVIRUSES-NPVS",
+      "page": 14
+    },
+    {
+      "code": "32-GS-OMEGA-KAPPA-HXTX-HV1A-PEPTIDE:gs-omega-kappa-hxtx-hv1a-peptide-gs-omega-kappa-hxtx-hv1a-peptide",
+      "name": "GS-omega/kappa HXTX-Hv1a peptide GS-omega/kappa HXTX-Hv1a peptide",
+      "level": 3,
+      "parent_code": "32-GS-OMEGA-KAPPA-HXTX-HV1A-PEPTIDE",
+      "page": 14
+    },
+    {
+      "code": "33-ACYNONAPYR:acynonapyr",
+      "name": "Acynonapyr",
+      "level": 3,
+      "parent_code": "33-ACYNONAPYR",
+      "page": 14
+    },
+    {
+      "code": "34-FLOMETOQUIN:flometoquin",
+      "name": "Flometoquin",
+      "level": 3,
+      "parent_code": "34-FLOMETOQUIN",
+      "page": 14
+    },
+    {
+      "code": "35-RIBONUCLEIC-ACIDS-RNA:ledprona-vadescana",
+      "name": "Ledprona Vadescana",
+      "level": 3,
+      "parent_code": "35-RIBONUCLEIC-ACIDS-RNA",
+      "page": 15
+    },
+    {
+      "code": "36-PYRIDAZINE-PYRAZOLECARBOXAMIDES:dimpropyridaz",
+      "name": "Dimpropyridaz",
+      "level": 3,
+      "parent_code": "36-PYRIDAZINE-PYRAZOLECARBOXAMIDES",
+      "page": 15
+    },
+    {
+      "code": "37-OXAZOSULFYL:oxazosulfyl",
+      "name": "Oxazosulfyl",
+      "level": 3,
+      "parent_code": "37-OXAZOSULFYL",
+      "page": 15
+    },
+    {
+      "code": "3A:1r-transisomers",
+      "name": "(1R)-transisomers]",
+      "level": 3,
+      "parent_code": "3A",
+      "page": 8
+    },
+    {
+      "code": "3A:acrinathrin",
+      "name": "Acrinathrin",
+      "level": 3,
+      "parent_code": "3A",
+      "page": 8
+    },
+    {
+      "code": "3A:allethrin",
+      "name": "Allethrin",
+      "level": 3,
+      "parent_code": "3A",
+      "page": 8
+    },
+    {
+      "code": "3A:alphacypermethrin",
+      "name": "alphaCypermethrin",
+      "level": 3,
+      "parent_code": "3A",
+      "page": 8
+    },
+    {
+      "code": "3A:beta-cypermethrin",
+      "name": "beta-Cypermethrin",
+      "level": 3,
+      "parent_code": "3A",
+      "page": 8
+    },
+    {
+      "code": "3A:betacyfluthrin",
+      "name": "betaCyfluthrin",
+      "level": 3,
+      "parent_code": "3A",
+      "page": 8
+    },
+    {
+      "code": "3A:bifenthrin",
+      "name": "Bifenthrin",
+      "level": 3,
+      "parent_code": "3A",
+      "page": 8
+    },
+    {
+      "code": "3A:bioallethrin",
+      "name": "Bioallethrin",
+      "level": 3,
+      "parent_code": "3A",
+      "page": 8
+    },
+    {
+      "code": "3A:bioallethrin-s-cyclopentenyl-isomer",
+      "name": "Bioallethrin S-cyclopentenyl isomer",
+      "level": 3,
+      "parent_code": "3A",
+      "page": 8
+    },
+    {
+      "code": "3A:bioresmethrin",
+      "name": "Bioresmethrin",
+      "level": 3,
+      "parent_code": "3A",
+      "page": 8
+    },
+    {
+      "code": "3A:cycloprothrin",
+      "name": "Cycloprothrin",
+      "level": 3,
+      "parent_code": "3A",
+      "page": 8
+    },
+    {
+      "code": "3A:cyfluthrin",
+      "name": "Cyfluthrin",
+      "level": 3,
+      "parent_code": "3A",
+      "page": 8
+    },
+    {
+      "code": "3A:cyhalothrin",
+      "name": "Cyhalothrin",
+      "level": 3,
+      "parent_code": "3A",
+      "page": 8
+    },
+    {
+      "code": "3A:cypermethrin",
+      "name": "Cypermethrin",
+      "level": 3,
+      "parent_code": "3A",
+      "page": 8
+    },
+    {
+      "code": "3A:cyphenothrin",
+      "name": "Cyphenothrin",
+      "level": 3,
+      "parent_code": "3A",
+      "page": 8
+    },
+    {
+      "code": "3A:d-cis-trans-allethrin",
+      "name": "d-cis-trans Allethrin",
+      "level": 3,
+      "parent_code": "3A",
+      "page": 8
+    },
+    {
+      "code": "3A:deltamethrin",
+      "name": "Deltamethrin",
+      "level": 3,
+      "parent_code": "3A",
+      "page": 8
+    },
+    {
+      "code": "3A:dtrans-allethrin",
+      "name": "dtrans Allethrin",
+      "level": 3,
+      "parent_code": "3A",
+      "page": 8
+    },
+    {
+      "code": "3A:empenthrin-ez-1r-isomers",
+      "name": "Empenthrin (EZ)- (1R)- isomers]",
+      "level": 3,
+      "parent_code": "3A",
+      "page": 8
+    },
+    {
+      "code": "3A:esfenvalerate",
+      "name": "Esfenvalerate",
+      "level": 3,
+      "parent_code": "3A",
+      "page": 8
+    },
+    {
+      "code": "3A:etofenprox",
+      "name": "Etofenprox",
+      "level": 3,
+      "parent_code": "3A",
+      "page": 8
+    },
+    {
+      "code": "3A:fenpropathrin",
+      "name": "Fenpropathrin",
+      "level": 3,
+      "parent_code": "3A",
+      "page": 8
+    },
+    {
+      "code": "3A:fenvalerate",
+      "name": "Fenvalerate",
+      "level": 3,
+      "parent_code": "3A",
+      "page": 8
+    },
+    {
+      "code": "3A:flucythrinate",
+      "name": "Flucythrinate",
+      "level": 3,
+      "parent_code": "3A",
+      "page": 8
+    },
+    {
+      "code": "3A:flumethrin",
+      "name": "Flumethrin",
+      "level": 3,
+      "parent_code": "3A",
+      "page": 8
+    },
+    {
+      "code": "3A:gamma-cyhalothrin",
+      "name": "gamma-Cyhalothrin",
+      "level": 3,
+      "parent_code": "3A",
+      "page": 8
+    },
+    {
+      "code": "3A:halfenprox",
+      "name": "Halfenprox",
+      "level": 3,
+      "parent_code": "3A",
+      "page": 8
+    },
+    {
+      "code": "3A:imiprothrin",
+      "name": "Imiprothrin",
+      "level": 3,
+      "parent_code": "3A",
+      "page": 8
+    },
+    {
+      "code": "3A:kadethrin",
+      "name": "Kadethrin",
+      "level": 3,
+      "parent_code": "3A",
+      "page": 8
+    },
+    {
+      "code": "3A:lambda-cyhalothrin",
+      "name": "lambda-Cyhalothrin",
+      "level": 3,
+      "parent_code": "3A",
+      "page": 8
+    },
+    {
+      "code": "3A:permethrin",
+      "name": "Permethrin",
+      "level": 3,
+      "parent_code": "3A",
+      "page": 8
+    },
+    {
+      "code": "3A:phenothrin-1r-transisomer",
+      "name": "Phenothrin [(1R)-transisomer]",
+      "level": 3,
+      "parent_code": "3A",
+      "page": 8
+    },
+    {
+      "code": "3A:prallethrin",
+      "name": "Prallethrin",
+      "level": 3,
+      "parent_code": "3A",
+      "page": 8
+    },
+    {
+      "code": "3A:pyrethrins-pyrethrum",
+      "name": "Pyrethrins (pyrethrum)",
+      "level": 3,
+      "parent_code": "3A",
+      "page": 8
+    },
+    {
+      "code": "3A:resmethrin",
+      "name": "Resmethrin",
+      "level": 3,
+      "parent_code": "3A",
+      "page": 8
+    },
+    {
+      "code": "3A:silafluofen",
+      "name": "Silafluofen",
+      "level": 3,
+      "parent_code": "3A",
+      "page": 8
+    },
+    {
+      "code": "3A:tau-fluvalinate",
+      "name": "tau-Fluvalinate",
+      "level": 3,
+      "parent_code": "3A",
+      "page": 8
+    },
+    {
+      "code": "3A:tefluthrin",
+      "name": "Tefluthrin",
+      "level": 3,
+      "parent_code": "3A",
+      "page": 8
+    },
+    {
+      "code": "3A:tetramethrin",
+      "name": "Tetramethrin",
+      "level": 3,
+      "parent_code": "3A",
+      "page": 8
+    },
+    {
+      "code": "3A:tetramethrin-1r-isomers",
+      "name": "Tetramethrin [(1R)-isomers]",
+      "level": 3,
+      "parent_code": "3A",
+      "page": 8
+    },
+    {
+      "code": "3A:thetacypermethrin",
+      "name": "thetacypermethrin",
+      "level": 3,
+      "parent_code": "3A",
+      "page": 8
+    },
+    {
+      "code": "3A:tralomethrin",
+      "name": "Tralomethrin",
+      "level": 3,
+      "parent_code": "3A",
+      "page": 8
+    },
+    {
+      "code": "3A:transfluthrin",
+      "name": "Transfluthrin",
+      "level": 3,
+      "parent_code": "3A",
+      "page": 8
+    },
+    {
+      "code": "3A:zeta-cypermethrin",
+      "name": "zeta-Cypermethrin",
+      "level": 3,
+      "parent_code": "3A",
+      "page": 8
+    },
+    {
+      "code": "3B:ddt-methoxychlor",
+      "name": "DDT Methoxychlor",
+      "level": 3,
+      "parent_code": "3B",
+      "page": 8
+    },
+    {
+      "code": "4A:acetamiprid",
+      "name": "Acetamiprid",
+      "level": 3,
+      "parent_code": "4A",
+      "page": 8
+    },
+    {
+      "code": "4A:clothianidin",
+      "name": "Clothianidin",
+      "level": 3,
+      "parent_code": "4A",
+      "page": 8
+    },
+    {
+      "code": "4A:dinotefuran",
+      "name": "Dinotefuran",
+      "level": 3,
+      "parent_code": "4A",
+      "page": 8
+    },
+    {
+      "code": "4A:imidacloprid",
+      "name": "Imidacloprid",
+      "level": 3,
+      "parent_code": "4A",
+      "page": 8
+    },
+    {
+      "code": "4A:nitenpyram",
+      "name": "Nitenpyram",
+      "level": 3,
+      "parent_code": "4A",
+      "page": 8
+    },
+    {
+      "code": "4A:thiacloprid",
+      "name": "Thiacloprid",
+      "level": 3,
+      "parent_code": "4A",
+      "page": 8
+    },
+    {
+      "code": "4A:thiamethoxam",
+      "name": "Thiamethoxam",
+      "level": 3,
+      "parent_code": "4A",
+      "page": 8
+    },
+    {
+      "code": "4B:nicotine",
+      "name": "Nicotine",
+      "level": 3,
+      "parent_code": "4B",
+      "page": 8
+    },
+    {
+      "code": "4C:sulfoxaflor",
+      "name": "Sulfoxaflor",
+      "level": 3,
+      "parent_code": "4C",
+      "page": 8
+    },
+    {
+      "code": "4D:flupyradifurone",
+      "name": "Flupyradifurone",
+      "level": 3,
+      "parent_code": "4D",
+      "page": 8
+    },
+    {
+      "code": "4E:dicloromezotiaz",
+      "name": "Dicloromezotiaz",
+      "level": 3,
+      "parent_code": "4E",
+      "page": 8
+    },
+    {
+      "code": "4E:fenmezoditiaz",
+      "name": "Fenmezoditiaz",
+      "level": 3,
+      "parent_code": "4E",
+      "page": 8
+    },
+    {
+      "code": "4E:triflumezopyrim",
+      "name": "Triflumezopyrim",
+      "level": 3,
+      "parent_code": "4E",
+      "page": 8
+    },
+    {
+      "code": "4F:flupyrimin",
+      "name": "Flupyrimin",
+      "level": 3,
+      "parent_code": "4F",
+      "page": 8
+    },
+    {
+      "code": "5-SPINOSYNS:spinetoram",
+      "name": "Spinetoram",
+      "level": 3,
+      "parent_code": "5-SPINOSYNS",
+      "page": 8
+    },
+    {
+      "code": "5-SPINOSYNS:spinosad",
+      "name": "Spinosad",
+      "level": 3,
+      "parent_code": "5-SPINOSYNS",
+      "page": 8
+    },
+    {
+      "code": "6-AVERMECTINS-MILBEMYCINS:abamectin",
+      "name": "Abamectin",
+      "level": 3,
+      "parent_code": "6-AVERMECTINS-MILBEMYCINS",
+      "page": 9
+    },
+    {
+      "code": "6-AVERMECTINS-MILBEMYCINS:emamectin-benzoate",
+      "name": "Emamectin benzoate",
+      "level": 3,
+      "parent_code": "6-AVERMECTINS-MILBEMYCINS",
+      "page": 9
+    },
+    {
+      "code": "6-AVERMECTINS-MILBEMYCINS:lepimectin",
+      "name": "Lepimectin",
+      "level": 3,
+      "parent_code": "6-AVERMECTINS-MILBEMYCINS",
+      "page": 9
+    },
+    {
+      "code": "6-AVERMECTINS-MILBEMYCINS:milbemectin",
+      "name": "Milbemectin",
+      "level": 3,
+      "parent_code": "6-AVERMECTINS-MILBEMYCINS",
+      "page": 9
+    },
+    {
+      "code": "7A:hydroprene",
+      "name": "Hydroprene",
+      "level": 3,
+      "parent_code": "7A",
+      "page": 9
+    },
+    {
+      "code": "7A:kinoprene",
+      "name": "Kinoprene",
+      "level": 3,
+      "parent_code": "7A",
+      "page": 9
+    },
+    {
+      "code": "7A:methoprene",
+      "name": "Methoprene",
+      "level": 3,
+      "parent_code": "7A",
+      "page": 9
+    },
+    {
+      "code": "7B:fenoxycarb",
+      "name": "Fenoxycarb",
+      "level": 3,
+      "parent_code": "7B",
+      "page": 9
+    },
+    {
+      "code": "7C:pyriproxyfen",
+      "name": "Pyriproxyfen",
+      "level": 3,
+      "parent_code": "7C",
+      "page": 9
+    },
+    {
+      "code": "8A:1",
+      "name": "1",
+      "level": 3,
+      "parent_code": "8A",
+      "page": 9
+    },
+    {
+      "code": "8A:3-dichloropropene",
+      "name": "3-Dichloropropene",
+      "level": 3,
+      "parent_code": "8A",
+      "page": 9
+    },
+    {
+      "code": "8A:methyl-bromide-and-other-alkyl-halides",
+      "name": "Methyl bromide and other alkyl halides",
+      "level": 3,
+      "parent_code": "8A",
+      "page": 9
+    },
+    {
+      "code": "8B:chloropicrin",
+      "name": "Chloropicrin",
+      "level": 3,
+      "parent_code": "8B",
+      "page": 9
+    },
+    {
+      "code": "8C:cryolite-sodium-aluminum-fluoride",
+      "name": "Cryolite (Sodium aluminum fluoride)",
+      "level": 3,
+      "parent_code": "8C",
+      "page": 9
+    },
+    {
+      "code": "8C:sulfuryl-fluoride",
+      "name": "Sulfuryl fluoride",
+      "level": 3,
+      "parent_code": "8C",
+      "page": 9
+    },
+    {
+      "code": "8D:borax",
+      "name": "Borax",
+      "level": 3,
+      "parent_code": "8D",
+      "page": 9
+    },
+    {
+      "code": "8D:boric-acid",
+      "name": "Boric acid",
+      "level": 3,
+      "parent_code": "8D",
+      "page": 9
+    },
+    {
+      "code": "8D:disodium-octaborate",
+      "name": "Disodium octaborate",
+      "level": 3,
+      "parent_code": "8D",
+      "page": 9
+    },
+    {
+      "code": "8D:sodium-borate",
+      "name": "Sodium borate",
+      "level": 3,
+      "parent_code": "8D",
+      "page": 9
+    },
+    {
+      "code": "8D:sodium-metaborate",
+      "name": "Sodium metaborate",
+      "level": 3,
+      "parent_code": "8D",
+      "page": 9
+    },
+    {
+      "code": "8E:tartar-emetic-tartar-emetic",
+      "name": "Tartar emetic Tartar emetic",
+      "level": 3,
+      "parent_code": "8E",
+      "page": 9
+    },
+    {
+      "code": "8F:dazomet",
+      "name": "Dazomet",
+      "level": 3,
+      "parent_code": "8F",
+      "page": 9
+    },
+    {
+      "code": "8F:metam",
+      "name": "Metam",
+      "level": 3,
+      "parent_code": "8F",
+      "page": 9
+    },
+    {
+      "code": "8F:methyl-isothiocyanate",
+      "name": "Methyl isothiocyanate",
+      "level": 3,
+      "parent_code": "8F",
+      "page": 9
+    },
+    {
+      "code": "9B:pymetrozine",
+      "name": "Pymetrozine",
+      "level": 3,
+      "parent_code": "9B",
+      "page": 9
+    },
+    {
+      "code": "9B:pyrifluquinazon",
+      "name": "Pyrifluquinazon",
+      "level": 3,
+      "parent_code": "9B",
+      "page": 9
+    },
+    {
+      "code": "9D:afidopyropen",
+      "name": "Afidopyropen",
+      "level": 3,
+      "parent_code": "9D",
+      "page": 9
+    },
+    {
+      "code": "UN-AZADIRACHTIN:azadirachtin-benzoximate-benzpyrimoxan-bromopropylate-chinomethionat-dicofol-lime-sulfur-mancozeb-pyridalyl-sulfur",
+      "name": "Azadirachtin Benzoximate Benzpyrimoxan Bromopropylate Chinomethionat Dicofol Lime sulfur Mancozeb Pyridalyl Sulfur",
+      "level": 3,
+      "parent_code": "UN-AZADIRACHTIN",
+      "page": 15
+    }
+  ]
+}
