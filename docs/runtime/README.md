@@ -23,6 +23,7 @@ The Rice governance track remains blocked pending qualified review. This runtime
 - storage-neutral record, source, and authority repository protocols.
 - a [constrained YAML candidate adapter](yaml-adapter.md) for schema version `1.0`, using synthetic inputs only.
 - a [deterministic validation engine](validation-engine.md) governed by the [Runtime Architecture Specifications](specifications/README.md).
+- [governed registry services](registry-services.md) for explicit candidate-identifier custody and source/authority lookup.
 
 The intentional public API is exported from `cpmoakb.domain`. Individual modules remain available for maintainers, but callers should prefer those package exports.
 

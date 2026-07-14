@@ -13,3 +13,4 @@ Future Runtime sprints SHOULD cite the RAS documents they implement and describe
 | [RAS-001](RAS-001-runtime-engineering-standard.md) | Active | Reusable Runtime Engineering constraints |
 | [RAS-002](RAS-002-validation-framework.md) | Active | Deterministic mechanical validation framework |
 | [RAS-003](RAS-003-adapter-contract.md) | Active | Representation-adapter boundary |
+| [RAS-004](RAS-004-registry-contract.md) | Active | Governed identity custody and reference registries |

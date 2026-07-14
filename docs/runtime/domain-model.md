@@ -52,6 +52,8 @@ The additive [deterministic validation engine](validation-engine.md) organizes g
 
 The protocols define ports, not adapters. `RecordRepository` supports governed save, lookup, existence, iteration, and supersession without destructive deletion. `SourceRepository` and `AuthorityRepository` support typed lookup and existence checks. No filesystem, YAML, SQLite, network, or in-memory production implementation is supplied.
 
+The separate [governed registry services](registry-services.md) provide explicit in-memory identity custody and immutable snapshots. Registries are not repository implementations: they do not persist, search, allocate production identifiers, or replace repository ports.
+
 ## Lifecycle meaning
 
 Accepted means repository governance accepted the item at its applicable gate. Published does not mean universally true, regulator-approved, diagnostically sufficient, safe, or suitable for a recommendation. The published enum value is reserved for future canonical models and is prohibited on current candidate records.
