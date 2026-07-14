@@ -2,6 +2,8 @@
 
 Roles are governance functions; no real person is assigned here. Where specialist verification is required, absence of a named qualified reviewer blocks the affected candidate and pilot release.
 
+Sprint-015D supplies a fillable [Reviewer Nomination Register](RICE_TRANCHE_A_REVIEWER_NOMINATION_REGISTER.md), a term-level [Review Assignment Matrix](RICE_TRANCHE_A_REVIEW_ASSIGNMENT_MATRIX.md), and a [Product Owner Action Guide](RICE_TRANCHE_A_PRODUCT_OWNER_ACTION_GUIDE.md). Those documents do not assign or authorize anyone. This matrix remains the controlling statement of required functions and present vacancies.
+
 ## Tranche A staffing register
 
 No repository evidence or Product Owner authorization identifies a named qualified assignee. `Acting` below recognizes only the documentation work performed under the stated Sprint-015B role; it does not satisfy candidate-content approval or separation of duty.
@@ -59,3 +61,5 @@ At minimum, no one individual may be the author, sole scientific reviewer, sole 
 ## Separation-of-duty minimum
 
 The curator may not be the sole approver of a candidate they authored. Taxonomic mappings require a Taxonomy Reviewer distinct from automated matching. Source rights approval cannot be inferred by a domain reviewer. Architecture approval cannot replace specialist approval. Chief Architect approval and Product Owner release decision are separate final gates. Conflicts of interest and combined roles must be disclosed in the review record.
+
+Use the assignment matrix for decision-specific author, primary, secondary, final, evidence, and escalation requirements. No individual may be the author, sole specialist reviewer, sole Evidence Reviewer, and final release approver for the same record set.
