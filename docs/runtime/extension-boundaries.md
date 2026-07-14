@@ -20,6 +20,8 @@ The Sprint-020R semantics and limits are documented in [Read-Only Query Services
 
 The Sprint-021R structure and non-inference policy are documented in [Traceable Explanation Services](explanation-services.md). Generative reasoning, diagnosis, recommendation, and scientific inference remain prohibited.
 
+Sprint-022R stabilizes Runtime API `0.1` through [contract tests](runtime-contract-suite.md) and an explicit [serialization boundary](serialization-boundary.md). It introduces no persistence or application orchestration.
+
 ## Prohibited coupling
 
 - Domain models must not import YAML or JSON-loading libraries.

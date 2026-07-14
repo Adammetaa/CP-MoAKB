@@ -27,6 +27,8 @@ The Rice governance track remains blocked pending qualified review. This runtime
 - [read-only query services](query-services.md) over explicit records and immutable registry snapshots.
 - [traceable explanation services](explanation-services.md) over explicit query, validation, evidence, and status facts.
 
+Runtime API stability is governed by [RAS-007](specifications/RAS-007-runtime-api-compatibility-contract.md), the [API manifest](runtime-api-manifest.md), and the [contract suite](runtime-contract-suite.md). Future changes use the [compatibility checklist](runtime-compatibility-checklist.md); [serialization remains explicitly deferred](serialization-boundary.md).
+
 The intentional public API is exported from `cpmoakb.domain`. Individual modules remain available for maintainers, but callers should prefer those package exports.
 
 ## Deferred capabilities

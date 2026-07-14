@@ -16,3 +16,4 @@ Future Runtime sprints SHOULD cite the RAS documents they implement and describe
 | [RAS-004](RAS-004-registry-contract.md) | Active | Governed identity custody and reference registries |
 | [RAS-005](RAS-005-query-service-contract.md) | Active | Deterministic read-only Runtime queries |
 | [RAS-006](RAS-006-explanation-service-contract.md) | Active | Structured traceable Runtime explanations |
+| [RAS-007](RAS-007-runtime-api-compatibility-contract.md) | Active | Runtime 0.1 public API compatibility |
