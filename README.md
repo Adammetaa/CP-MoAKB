@@ -14,6 +14,7 @@ The IRAC parser reads the retained official PDF into immutable `IRACDocument` an
 - `cpmoakb/validation/`: deterministic, read-only semantic validation.
 - `cpmoakb/exporters/`: explicit CSV projection using the frozen layouts.
 - `cpmoakb/database/` and `cpmoakb/loaders/`: separate schema/build and import utilities.
+- `cpmoakb/domain/`: generic, immutable, storage-neutral Runtime Core models and protocols.
 - `data/official/` and `references/`: registered source metadata and retained official material.
 - `tests/`: unit, canonical golden-baseline, and semantic integration tests.
 - `docs/`: governance, development, validation, and project context.
@@ -28,7 +29,7 @@ The planned v0.9.0 line focuses on developer experience, continuous integration,
 
 ## Knowledge Architecture
 
-The future-facing architecture is documented in [Product Vision](docs/PRODUCT_VISION.md), [Conceptual Domain Model](docs/DOMAIN_MODEL.md), [Ontology Foundation](docs/ontology/README.md), [Knowledge Identifier Strategy](docs/identifiers/README.md), [Controlled Vocabulary Governance](docs/vocabulary/README.md), [Canonical Master Data](docs/master-data/README.md), [Source Authority Framework](docs/source-authorities/README.md), [Knowledge Graph](docs/KNOWLEDGE_GRAPH.md), [Decision-Support Workflow](docs/DECISION_ENGINE.md), [Source Policy](docs/SOURCE_POLICY.md), [Evidence Levels](docs/EVIDENCE_LEVELS.md), [Field Knowledge Policy](docs/FIELD_KNOWLEDGE_POLICY.md), and [Strategic Roadmap 2.0](docs/ROADMAP_2.0.md). These documents are conceptual and do not change current runtime capabilities. Durable decisions are indexed in [Architecture Decision Records](docs/ARCHITECTURE_DECISIONS/README.md).
+The future-facing architecture is documented in [Product Vision](docs/PRODUCT_VISION.md), [Conceptual Domain Model](docs/DOMAIN_MODEL.md), [Ontology Foundation](docs/ontology/README.md), [Knowledge Identifier Strategy](docs/identifiers/README.md), [Controlled Vocabulary Governance](docs/vocabulary/README.md), [Canonical Master Data](docs/master-data/README.md), [Source Authority Framework](docs/source-authorities/README.md), [Runtime Core](docs/runtime/README.md), [Knowledge Graph](docs/KNOWLEDGE_GRAPH.md), [Decision-Support Workflow](docs/DECISION_ENGINE.md), [Source Policy](docs/SOURCE_POLICY.md), [Evidence Levels](docs/EVIDENCE_LEVELS.md), [Field Knowledge Policy](docs/FIELD_KNOWLEDGE_POLICY.md), and [Strategic Roadmap 2.0](docs/ROADMAP_2.0.md). Durable decisions are indexed in [Architecture Decision Records](docs/ARCHITECTURE_DECISIONS/README.md). Conceptual documents remain future-facing; the Runtime Core page states the narrow generic capabilities implemented today.
 
 ## Quick Start
 
