@@ -3,7 +3,7 @@
 ## Planned runtime sequence
 
 - **Sprint-017R:** the constrained YAML candidate adapter is implemented for generic synthetic schema `1.0`; it performs representation and domain construction only.
-- **Sprint-018R:** deterministic validation engine built on `Validator` and `ValidationResult`.
+- **Sprint-018R:** the deterministic validation engine is implemented using explicit profiles and `ValidationResult`.
 - **Sprint-019R:** candidate identifier and source registries with separately governed allocation and custody.
 - **Sprint-020R:** read-oriented query services over approved repository ports.
 - **Sprint-021R:** explanation services that preserve evidence, uncertainty, and non-recommendation boundaries.
@@ -11,6 +11,8 @@
 Each sprint requires its own architecture and Design Freeze review. This sequence does not authorize Rice authoring, production promotion, a storage technology, or implementation beyond the current sprint.
 
 The Sprint-017R adapter contract and restrictions are documented in [Constrained YAML Candidate Adapter](yaml-adapter.md). Value-state objects and YAML writing remain deferred.
+
+Reusable Runtime constraints are indexed in the [Runtime Architecture Specifications](specifications/README.md). Implementations must not silently diverge from an Active RAS.
 
 ## Prohibited coupling
 

@@ -46,6 +46,8 @@ Creation, review, and supersession are separate immutable primitives. Aggregate 
 
 `ValidationIssue` contains a stable code, severity, message, and optional path, record, and remediation. `ValidationResult` sorts issues deterministically, filters by severity, combines results, and is invalid only when an Error exists. `Validator` is a format-neutral protocol accepting a typed domain object and returning a result.
 
+The additive [deterministic validation engine](validation-engine.md) organizes generic mechanical rules into explicit profiles without changing these Runtime Core primitives. Mechanical validity never replaces scientific review.
+
 ## Repositories
 
 The protocols define ports, not adapters. `RecordRepository` supports governed save, lookup, existence, iteration, and supersession without destructive deletion. `SourceRepository` and `AuthorityRepository` support typed lookup and existence checks. No filesystem, YAML, SQLite, network, or in-memory production implementation is supplied.
