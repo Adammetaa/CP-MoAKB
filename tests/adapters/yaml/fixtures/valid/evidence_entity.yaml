@@ -1,0 +1,49 @@
+schema_version: "1.0"
+candidate_id: "CPM-CAND-E-980005"
+record_kind: "entity"
+domain_type: "SyntheticEvidenceConcept"
+lifecycle: "under_review"
+labels:
+  - language: "en"
+    text: "Synthetic Evidence Concept"
+    status: "sourced"
+    preferred: true
+    source_id: "synthetic-source-5"
+scope_note: "Fictional source and evidence example only."
+authorities:
+  - identifier: "fictional-office"
+    name: "Fictional Standards Office"
+    scope_note: "Synthetic descriptions only."
+    jurisdiction: "Example Jurisdiction"
+sources:
+  - identifier: "synthetic-source-5"
+    title: "Synthetic Reference Five"
+    issuing_organization: "Fictional Publisher"
+    source_type: "test publication"
+    canonical_locator: "https://example.invalid/source/5"
+    scope_note: "Synthetic evidence only."
+    publication_date: "2026-01-01"
+    accessed_date: "2026-01-05"
+    authority_ids:
+      - "fictional-office"
+    reuse_status_note: "Fictional material."
+evidence:
+  - identifier: "EV-SYN-5"
+    source_id: "synthetic-source-5"
+    locator: "section 5"
+    note: "Supports only the fictional test concept."
+    role: "primary"
+    language: "en"
+    reviewer_status: "pending"
+provenance:
+  creation:
+    created_at: "2026-01-05T10:00:00+00:00"
+    created_by: "synthetic-curator-role"
+  source_ids:
+    - "synthetic-source-5"
+  evidence_ids:
+    - "EV-SYN-5"
+  reviews:
+    - reviewed_at: "2026-01-06"
+      reviewer_role: "synthetic-reviewer-role"
+      decision_note: "Fictional review remains pending."

@@ -21,11 +21,12 @@ The Rice governance track remains blocked pending qualified review. This runtime
 - generic entity and relationship candidate records;
 - validation issues, results, and a validator protocol; and
 - storage-neutral record, source, and authority repository protocols.
+- a [constrained YAML candidate adapter](yaml-adapter.md) for schema version `1.0`, using synthetic inputs only.
 
 The intentional public API is exported from `cpmoakb.domain`. Individual modules remain available for maintainers, but callers should prefer those package exports.
 
 ## Deferred capabilities
 
-The Runtime Core does not load YAML or JSON, allocate identifiers, persist data, fetch sources, implement a graph, execute queries, diagnose, explain, recommend, or promote candidates. See [Extension Boundaries](extension-boundaries.md) for the planned runtime sequence and prohibited coupling.
+The Runtime Core domain remains representation-neutral. The separate YAML adapter loads its narrow schema, but neither layer loads JSON, allocates identifiers, persists data, fetches sources, implements a graph, executes queries, diagnoses, explains, recommends, or promotes candidates. See [Extension Boundaries](extension-boundaries.md) for the planned runtime sequence and prohibited coupling.
 
 For model details, see [Runtime Domain Model](domain-model.md).

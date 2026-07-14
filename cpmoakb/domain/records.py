@@ -11,6 +11,7 @@ from .exceptions import InvalidRecordError
 from .identifiers import CandidateIdentifier, ExternalIdentifier, SourceIdentifier
 from .labels import LabelSet
 from .provenance import Provenance
+from .sources import SourceReference
 
 
 def _nonempty(value: str, field: str) -> None:
@@ -63,6 +64,8 @@ class CandidateRecord:
     provenance: Provenance
     ambiguity_notes: tuple[str, ...] = ()
     external_identifiers: tuple[ExternalIdentifier, ...] = ()
+    authorities: tuple[AuthorityReference, ...] = ()
+    sources: tuple[SourceReference, ...] = ()
 
     def __post_init__(self) -> None:
         if self.identifier.kind is not self.record_kind:
@@ -93,6 +96,16 @@ class CandidateRecord:
                     key=lambda item: (item.authority, item.value),
                 )
             ),
+        )
+        object.__setattr__(
+            self,
+            "authorities",
+            tuple(sorted(set(self.authorities), key=lambda item: str(item.identifier))),
+        )
+        object.__setattr__(
+            self,
+            "sources",
+            tuple(sorted(set(self.sources), key=lambda item: str(item.identifier))),
         )
 
 

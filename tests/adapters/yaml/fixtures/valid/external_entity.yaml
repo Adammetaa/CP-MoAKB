@@ -1,0 +1,19 @@
+schema_version: "1.0"
+candidate_id: "CPM-CAND-E-980004"
+record_kind: "entity"
+domain_type: "SyntheticConcept"
+lifecycle: "accepted"
+labels:
+  - language: "en"
+    text: "Synthetic External Identity"
+    status: "provisional"
+    preferred: true
+scope_note: "Fictional external-identifier example only."
+provenance:
+  creation:
+    created_at: "2026-01-04"
+    created_by: "synthetic-curator-role"
+external_identifiers:
+  - authority: "fictional-authority"
+    value: "SYN-004"
+    resolver_uri: "https://example.invalid/id/SYN-004"

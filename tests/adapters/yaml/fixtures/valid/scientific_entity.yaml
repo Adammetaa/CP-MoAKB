@@ -1,0 +1,29 @@
+schema_version: "1.0"
+candidate_id: "CPM-CAND-E-980003"
+record_kind: "entity"
+domain_type: "SyntheticBiologicalConcept"
+lifecycle: "candidate"
+labels:
+  - language: "en"
+    text: "Synthetic Biological Concept"
+    status: "provisional"
+    preferred: true
+scope_note: "Fictional nomenclature example with no real biological referent."
+provenance:
+  creation:
+    created_at: "2026-01-03"
+    created_by: "synthetic-curator-role"
+scientific_name:
+  name: "Fictitia exemplaris"
+  authorship: "Example"
+  verification_status: "synthetic_unverified"
+  name_status: "fictional"
+  authority:
+    identifier: "fictional-taxonomy"
+    name: "Fictional Taxonomy Office"
+    scope_note: "Synthetic names only."
+    version: "test-1"
+    canonical_locator: "https://example.invalid/taxonomy"
+  external_identifier:
+    authority: "fictional-taxonomy"
+    value: "SYN-TAX-3"

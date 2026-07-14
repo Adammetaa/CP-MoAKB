@@ -1,0 +1,66 @@
+schema_version: "1.0"
+candidate_id: "CPM-CAND-E-980010"
+record_kind: "entity"
+domain_type: "SyntheticCompleteConcept"
+lifecycle: "superseded"
+labels:
+  - language: "en"
+    text: "Synthetic Complete Concept"
+    status: "editorial"
+    preferred: true
+    locale: "en-GB"
+    editorial_note: "Fictional editorial form."
+    ambiguity_note: "No real-world meaning."
+  - language: "en"
+    text: "Example Alternative"
+    status: "transliterated"
+    preferred: false
+scope_note: "Complete fictional representation used to verify field preservation."
+external_identifiers:
+  - authority: "fictional-authority"
+    value: "SYN-COMPLETE"
+authorities:
+  - identifier: "fictional-authority"
+    name: "Fictional Authority"
+    scope_note: "Synthetic concepts only."
+    version: "test-release"
+sources:
+  - identifier: "synthetic-complete-source"
+    title: "Complete Synthetic Reference"
+    issuing_organization: "Fictional Publisher"
+    source_type: "test publication"
+    canonical_locator: "https://example.invalid/complete"
+    scope_note: "Synthetic completeness testing only."
+    version: "test-edition"
+    archival_status: "fictional snapshot"
+evidence:
+  - identifier: "EV-COMPLETE"
+    source_id: "synthetic-complete-source"
+    locator: "fictional record 10"
+    note: "Synthetic support only."
+    role: "conflicting"
+    uncertainty_note: "Entire record is fictional."
+provenance:
+  creation:
+    created_at: "2026-01-10"
+    created_by: "synthetic-curator-role"
+  source_ids:
+    - "synthetic-complete-source"
+  evidence_ids:
+    - "EV-COMPLETE"
+  editorial_note: "Complete adapter fixture."
+  supersession:
+    predecessor_id: "CPM-CAND-E-980099"
+    change_reason: "Synthetic supersession scenario."
+  change_reason: "Fictional lifecycle test."
+ambiguity_notes:
+  - "Synthetic ambiguity retained."
+scientific_name:
+  name: "Fictitia completa"
+  authorship: "Example"
+  verification_status: "synthetic_unverified"
+  name_status: "fictional"
+classification:
+  - scheme: "fictional-scheme"
+    code: "SYN-10"
+    label: "Synthetic classification"

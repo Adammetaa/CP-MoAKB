@@ -1,0 +1,13 @@
+schema_version: "1.0"
+candidate_id: "CPM-CAND-R-981012"
+record_kind: "relationship"
+domain_type: "SyntheticAssociation"
+lifecycle: "candidate"
+labels:
+  - {language: "en", text: "Synthetic", status: "provisional", preferred: true}
+scope_note: "Fictional invalid fixture."
+provenance:
+  creation: {created_at: "2026-01-01", created_by: "synthetic-role"}
+subject_id: "CPM-CAND-E-981121"
+predicate: ""
+object_id: "CPM-CAND-E-981122"

@@ -38,7 +38,7 @@ Creation, review, and supersession are separate immutable primitives. Aggregate 
 
 ## Records and relationships
 
-`CandidateRecord` carries common non-production metadata and rejects `Published` lifecycle status. `EntityRecord` adds optional `ScientificName` and classification references while keeping `domain_type` open and extensible. `ScientificName` is authority-governed nomenclature, not a language label.
+`CandidateRecord` carries common non-production metadata, optional claim-scoped authority and source-reference tuples, and rejects `Published` lifecycle status. `EntityRecord` adds optional `ScientificName` and classification references while keeping `domain_type` open and extensible. `ScientificName` is authority-governed nomenclature, not a language label.
 
 `RelationshipRecord` requires a relationship candidate identifier, explicit subject, predicate, object, evidence-bearing common metadata, provenance, and optional context/uncertainty. Predicate text is retained as supplied; no graph, inverse, equivalence, transitivity, or causal inference is implemented.
 

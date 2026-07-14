@@ -1,0 +1,20 @@
+schema_version: "1.0"
+candidate_id: "CPM-CAND-R-980006"
+record_kind: "relationship"
+domain_type: "SyntheticAssociation"
+lifecycle: "candidate"
+labels:
+  - language: "en"
+    text: "Synthetic Association"
+    status: "provisional"
+    preferred: true
+scope_note: "Fictional non-causal relationship for adapter testing only."
+provenance:
+  creation:
+    created_at: "2026-01-06"
+    created_by: "synthetic-curator-role"
+subject_id: "CPM-CAND-E-980061"
+predicate: "synthetic:associated-with"
+object_id: "CPM-CAND-E-980062"
+context_note: "No graph or causal meaning is implied."
+uncertainty_note: "Fictional and unverified."

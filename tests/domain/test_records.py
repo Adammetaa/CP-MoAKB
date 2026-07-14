@@ -18,6 +18,8 @@ from cpmoakb.domain import (
     RecordKind,
     RecordLifecycle,
     ScientificName,
+    SourceIdentifier,
+    SourceReference,
 )
 
 
@@ -74,3 +76,34 @@ def test_entity_record_is_immutable():
     record = _synthetic_entity()
     with pytest.raises(FrozenInstanceError):
         record.domain_type = "Changed"  # type: ignore[misc]
+
+
+def test_candidate_can_retain_claim_scoped_authority_and_source_metadata():
+    record = _synthetic_entity()
+    authority = record.scientific_name.authority
+    source = SourceReference(
+        SourceIdentifier("synthetic-source"),
+        "Synthetic Reference",
+        "Fictional Publisher",
+        "test publication",
+        "https://example.invalid/source",
+        "Synthetic scope only.",
+    )
+
+    enriched = EntityRecord(
+        record.identifier,
+        record.record_kind,
+        record.domain_type,
+        record.lifecycle,
+        record.labels,
+        record.scope_note,
+        (source.identifier,),
+        record.evidence,
+        record.provenance,
+        scientific_name=record.scientific_name,
+        authorities=(authority,),
+        sources=(source,),
+    )
+
+    assert enriched.authorities == (authority,)
+    assert enriched.sources == (source,)

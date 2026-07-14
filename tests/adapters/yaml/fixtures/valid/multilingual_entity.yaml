@@ -1,0 +1,22 @@
+schema_version: "1.0"
+candidate_id: "CPM-CAND-E-980002"
+record_kind: "entity"
+domain_type: "SyntheticConcept"
+lifecycle: "under_review"
+labels:
+  - language: "en"
+    text: "Synthetic Multilingual Concept"
+    status: "editorial"
+    preferred: true
+    editorial_note: "Fictional editorial English form."
+  - language: "th"
+    text: "แนวคิดสังเคราะห์"
+    status: "provisional"
+    preferred: true
+    locale: "th-TH"
+    ambiguity_note: "ข้อความสมมติสำหรับการทดสอบเท่านั้น"
+scope_note: "Fictional multilingual entity for UTF-8 testing only."
+provenance:
+  creation:
+    created_at: "2026-01-02"
+    created_by: "synthetic-curator-role"

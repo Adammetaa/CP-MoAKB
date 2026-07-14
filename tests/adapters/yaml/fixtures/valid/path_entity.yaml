@@ -1,0 +1,15 @@
+schema_version: "1.0"
+candidate_id: "CPM-CAND-E-980009"
+record_kind: "entity"
+domain_type: "SyntheticPathConcept"
+lifecycle: "candidate"
+labels:
+  - language: "en"
+    text: "Synthetic Path Concept"
+    status: "provisional"
+    preferred: true
+scope_note: "Fictional explicit-path loading example only."
+provenance:
+  creation:
+    created_at: "2026-01-09"
+    created_by: "synthetic-curator-role"

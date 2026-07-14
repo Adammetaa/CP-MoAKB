@@ -1,0 +1,18 @@
+schema_version: "1.0"
+candidate_id: "CPM-CAND-E-980007"
+record_kind: "entity"
+domain_type: "SyntheticAmbiguousConcept"
+lifecycle: "candidate"
+labels:
+  - language: "en"
+    text: "Synthetic Ambiguous Concept"
+    status: "unresolved"
+    preferred: true
+    ambiguity_note: "Two fictional scopes remain disputed."
+scope_note: "Fictional ambiguity example only."
+provenance:
+  creation:
+    created_at: "2026-01-07"
+    created_by: "synthetic-curator-role"
+ambiguity_notes:
+  - "Synthetic scope A conflicts with synthetic scope B."
