@@ -15,3 +15,4 @@ Future Runtime sprints SHOULD cite the RAS documents they implement and describe
 | [RAS-003](RAS-003-adapter-contract.md) | Active | Representation-adapter boundary |
 | [RAS-004](RAS-004-registry-contract.md) | Active | Governed identity custody and reference registries |
 | [RAS-005](RAS-005-query-service-contract.md) | Active | Deterministic read-only Runtime queries |
+| [RAS-006](RAS-006-explanation-service-contract.md) | Active | Structured traceable Runtime explanations |

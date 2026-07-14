@@ -56,6 +56,8 @@ The separate [governed registry services](registry-services.md) provide explicit
 
 The [read-only query services](query-services.md) filter explicit record collections, repository iteration, and registry snapshots without mutating domain objects or inferring identity from labels.
 
+The [traceable explanation services](explanation-services.md) render structured facts and limitations from explicit Runtime objects without adding scientific or recommendation meaning.
+
 ## Lifecycle meaning
 
 Accepted means repository governance accepted the item at its applicable gate. Published does not mean universally true, regulator-approved, diagnostically sufficient, safe, or suitable for a recommendation. The published enum value is reserved for future canonical models and is prohibited on current candidate records.

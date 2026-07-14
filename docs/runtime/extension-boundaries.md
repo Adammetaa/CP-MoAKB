@@ -6,7 +6,7 @@
 - **Sprint-018R:** the deterministic validation engine is implemented using explicit profiles and `ValidationResult`.
 - **Sprint-019R:** governed candidate-identifier, source, and authority registries with explicit custody and immutable snapshots; allocation remains deferred.
 - **Sprint-020R:** deterministic read-only query services over explicit records, immutable registry snapshots, and approved repository iteration.
-- **Sprint-021R:** explanation services that preserve evidence, uncertainty, and non-recommendation boundaries.
+- **Sprint-021R:** structured explanation services that preserve query traceability, evidence, uncertainty, and non-inference boundaries.
 
 Each sprint requires its own architecture and Design Freeze review. This sequence does not authorize Rice authoring, production promotion, a storage technology, or implementation beyond the current sprint.
 
@@ -17,6 +17,8 @@ Reusable Runtime constraints are indexed in the [Runtime Architecture Specificat
 The Sprint-019R contract and boundaries are documented in [Governed Registry Services](registry-services.md). Persistence and remote registry adapters remain deferred.
 
 The Sprint-020R semantics and limits are documented in [Read-Only Query Services](query-services.md). Persistence, remote search, pagination, and graph traversal remain deferred.
+
+The Sprint-021R structure and non-inference policy are documented in [Traceable Explanation Services](explanation-services.md). Generative reasoning, diagnosis, recommendation, and scientific inference remain prohibited.
 
 ## Prohibited coupling
 

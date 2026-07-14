@@ -25,6 +25,7 @@ The Rice governance track remains blocked pending qualified review. This runtime
 - a [deterministic validation engine](validation-engine.md) governed by the [Runtime Architecture Specifications](specifications/README.md).
 - [governed registry services](registry-services.md) for explicit candidate-identifier custody and source/authority lookup.
 - [read-only query services](query-services.md) over explicit records and immutable registry snapshots.
+- [traceable explanation services](explanation-services.md) over explicit query, validation, evidence, and status facts.
 
 The intentional public API is exported from `cpmoakb.domain`. Individual modules remain available for maintainers, but callers should prefer those package exports.
 
