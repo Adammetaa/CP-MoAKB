@@ -6,8 +6,9 @@ Version: 1.0
 
 ## Purpose
 
-Establish the constitutional principles that every future CP-MoAKB knowledge
-proposal, review decision, publication, revision, and retirement MUST preserve.
+Apply the [Knowledge Constitution](constitution/knowledge-constitution.md) to
+authoring principles that every future CP-MoAKB knowledge proposal, review
+decision, publication, revision, and retirement MUST preserve.
 
 ## Scope
 
@@ -110,6 +111,7 @@ deferred when its evidence or authority is insufficient.
 ## Future Considerations
 
 Future KAS amendments may govern conflicts of interest, reviewer competence,
-formal change requests, or publication collections. They MUST preserve the
-principles above unless a superseding constitutional decision explicitly records
-the reason and migration impact.
+formal change requests, or publication collections. They MUST conform to the
+Knowledge Constitution. A KAS amendment MUST NOT amend or supersede the
+Constitution; constitutional change MUST follow the Constitution's separate
+amendment procedure.

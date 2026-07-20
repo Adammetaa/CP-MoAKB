@@ -137,18 +137,27 @@ GROUPS = {
         "release-security-checklist.md",
     ),
 }
+KNOWLEDGE_GOVERNANCE_DOCUMENTS = (
+    "docs/knowledge/constitution/README.md",
+    "docs/knowledge/constitution/knowledge-constitution.md",
+    "docs/knowledge/roadmap/knowledge-engineering-roadmap.md",
+)
 REQUIRED_DOCUMENTS = (
-    "README.md",
-    "CHANGELOG.md",
-    "CONTRIBUTING.md",
-    "SECURITY.md",
-    "docs/README.md",
-    "docs/glossary.md",
-    "examples/README.md",
-    "references/IRAC/retrieval.md",
-    "docs/runtime/specifications/RAS-014-documentation-developer-experience-and-knowledge-transfer-contract.md",
-    "docs/runtime/specifications/RAS-015-open-source-release-audit-and-publication-boundary-contract.md",
-) + tuple(f"docs/{group}/{name}" for group, names in GROUPS.items() for name in names)
+    (
+        "README.md",
+        "CHANGELOG.md",
+        "CONTRIBUTING.md",
+        "SECURITY.md",
+        "docs/README.md",
+        "docs/glossary.md",
+        "examples/README.md",
+        "references/IRAC/retrieval.md",
+        "docs/runtime/specifications/RAS-014-documentation-developer-experience-and-knowledge-transfer-contract.md",
+        "docs/runtime/specifications/RAS-015-open-source-release-audit-and-publication-boundary-contract.md",
+    )
+    + KNOWLEDGE_GOVERNANCE_DOCUMENTS
+    + tuple(f"docs/{group}/{name}" for group, names in GROUPS.items() for name in names)
+)
 LINK_PATTERN = re.compile(r"(?<!!)\[[^\]]+\]\(([^)]+)\)")
 MACHINE_PATTERNS = (
     re.compile(r"(?i)\b[A-Z]:\\"),
@@ -320,6 +329,37 @@ def verify() -> tuple[Path, ...]:
                 failures.append(
                     f"KAS missing required section: {relative} -> {section}"
                 )
+    constitution = (
+        ROOT / "docs/knowledge/constitution/knowledge-constitution.md"
+    ).read_text(encoding="utf-8")
+    for authority in (
+        "ADR-005",
+        "ADR-006",
+        "ADR-007",
+        "ADR-008",
+        "ADR-009",
+        "RAS-001 through RAS-015",
+        "Design Freeze",
+        "Source Policy",
+        "Publication Boundary",
+    ):
+        if authority not in constitution:
+            failures.append(f"Knowledge Constitution missing authority: {authority}")
+    roadmap = (
+        ROOT / "docs/knowledge/roadmap/knowledge-engineering-roadmap.md"
+    ).read_text(encoding="utf-8")
+    for number in range(32, 40):
+        if f"Sprint-{number:03d}K" not in roadmap:
+            failures.append(f"Knowledge roadmap missing Sprint-{number:03d}K")
+    for phase in (
+        "Governance work",
+        "Authoring preparation",
+        "Pilot knowledge authoring",
+        "Domain population",
+        "Future implementation mapping",
+    ):
+        if phase not in roadmap:
+            failures.append(f"Knowledge roadmap missing phase: {phase}")
     release_manifest = (
         ROOT / "docs/release/release-candidate-manifest.json"
     ).read_text(encoding="utf-8")

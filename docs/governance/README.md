@@ -12,8 +12,10 @@ record accepted durable decisions; RAS documents define reusable Runtime
 requirements; manifests enumerate governed surfaces; tests and scripts verify
 implementation. Where no direct ADR-to-RAS relationship exists, the maps say so.
 
-[Knowledge Authoring Standards](../knowledge/README.md) form a separate normative
-family for knowledge authoring, evidence, citations, terminology, semantic
-relationships, and lifecycle. KAS governs knowledge meaning and review; RAS
+The [Knowledge Constitution](../knowledge/constitution/knowledge-constitution.md)
+is the highest authority within knowledge governance. The subordinate
+[Knowledge Authoring Standards](../knowledge/README.md) govern knowledge
+authoring, evidence, citations, terminology, semantic relationships, and
+lifecycle. The Constitution and KAS govern knowledge meaning and review; RAS
 governs software. A requirement crossing that boundary needs both knowledge
 governance and a separately approved engineering scope.

@@ -13,8 +13,16 @@ documents primarily extend earlier RAS contracts and do not claim a direct ADR
 that is absent. See the authoritative [ADR index](../ARCHITECTURE_DECISIONS/README.md)
 and [RAS index](../runtime/specifications/README.md).
 
-The [KAS index](../knowledge/README.md) applies ADR-001 and ADR-002 evidence and
-separation principles, ADR-003 and ADR-005 implementation-neutral ontology
-boundaries, ADR-006 identity governance, and ADR-007 terminology governance to
-future knowledge authoring. KAS does not supersede those decisions or create an
-implementation contract.
+The [Knowledge Constitution](../knowledge/constitution/knowledge-constitution.md)
+is the highest authority within knowledge governance, and the
+[KAS index](../knowledge/README.md) applies it to future authoring. Neither
+authority supersedes ADRs or creates an implementation contract.
+
+ADR-008 remains the authority for canonical master-data prerequisites and for
+claim-, jurisdiction-, version-, and time-scoped source assessment; official
+source authority is not universal truth. ADR-009 remains the authority for the
+constrained YAML candidate-record format of the Rice pilot. The Constitution and
+KAS do not duplicate that format, approve candidate content, or generalize it
+into a knowledge schema. RAS-001 through RAS-015 remain the separate normative
+Runtime contract family. Design Freeze, Source Policy, and the Publication
+Boundary retain authority in their named scopes.
