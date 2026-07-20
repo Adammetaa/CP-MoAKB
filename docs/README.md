@@ -13,7 +13,7 @@ implemented engineering behavior from conceptual future knowledge work.
 | Release reviewers | [Release handbook](release/README.md) | Prepare and verify without publishing |
 | Knowledge authors and reviewers | [Knowledge governance](knowledge/README.md) | Use the Constitution, KGS, KAS, and planning-only roadmap |
 | Knowledge-governance contributors | [Governance maps](governance/README.md) | Relate decisions, KAS, RAS, and review |
-| Product and UX reviewers | [Knowledge Explorer prototype](../prototype/knowledge-explorer/README.md) | Review product vision, navigation, responsive screens, and fictional mock content |
+| Product and UX reviewers | [Knowledge Explorer prototype](../prototype/knowledge-explorer/README.md) | Review product vision, fictional mock content, and the prepared but not-yet-live Pages preview |
 
 Additional entry points are the [architecture book](architecture/README.md),
 [project scope and FAQ](project/README.md), [concept guides](concepts/README.md),
@@ -23,6 +23,10 @@ Additional entry points are the [architecture book](architecture/README.md),
 [Knowledge Authoring Standards](knowledge/README.md), and
 [Knowledge Explorer prototype](../prototype/knowledge-explorer/README.md), and
 [executable examples](../examples/README.md).
+
+The [Knowledge Explorer deployment guide](../prototype/knowledge-explorer/docs/deployment.md)
+documents the owner-controlled GitHub Pages preview workflow. Repository
+presence does not mean the preview is deployed or live.
 
 Authoritative versions live in implementation constants and package metadata;
 public symbols live in the static Runtime API manifest. Documentation summarizes

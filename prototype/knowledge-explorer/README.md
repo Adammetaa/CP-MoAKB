@@ -29,10 +29,22 @@ HTML, CSS, and JavaScript.
 - [User personas](docs/personas.md)
 - [Responsive wireframes](docs/wireframes.md)
 - [Visual design system](docs/design-system.md)
+- [GitHub Pages preview deployment](docs/deployment.md)
 
 ## Local build
 
-The zero-dependency build script validates required pages, mock-data boundaries,
-links, accessibility landmarks, and prototype disclaimers, then copies the
-static source into ignored `dist/knowledge-explorer/` output. It does not start
-or create a production service.
+The zero-dependency build script validates required pages, portable links,
+indexing and mock-data boundaries, accessibility landmarks, and prototype
+disclaimers. It assembles an allowlisted Pages artifact under ignored
+`dist/pages-root/`; it does not start or create a production service.
+
+Deployment identity MUST be supplied from a real Git commit. For a local build,
+set `DEPLOY_COMMIT` to `git rev-parse HEAD`, `BUILD_TIMESTAMP` to that commit's
+ISO commit time, and `PACKAGE_VERSION` to `0.1.0`, then run the build script with
+Node.js. Run the artifact verifier and subpath smoke test afterward. The
+[deployment guide](docs/deployment.md) contains platform-neutral examples and
+the owner-controlled publication procedure.
+
+The prepared workflow does not make the preview live by repository presence
+alone. It requires owner approval, a push to `main`, and GitHub Pages configured
+to use GitHub Actions.

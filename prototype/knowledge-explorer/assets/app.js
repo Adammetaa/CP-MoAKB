@@ -33,8 +33,21 @@ const footer = document.querySelector("[data-site-footer]");
 if (footer) {
   footer.innerHTML = `
     <div><strong>CP-MoAKB Knowledge Explorer</strong><p>Product-vision prototype · no production knowledge or Runtime.</p></div>
-    <div class="footer-links"><a href="governance.html">Governance</a><a href="components.html">Components</a><a href="about.html">About</a></div>`;
+    <div><div class="footer-links"><a href="governance.html">Governance</a><a href="components.html">Components</a><a href="about.html">About</a></div><small data-deployment>Preview deployment identity unavailable locally.</small></div>`;
 }
+
+const loadDeployment = async () => {
+  try {
+    const response = await fetch("deployment.json");
+    if (!response.ok) return;
+    const metadata = await response.json();
+    if (metadata.deployment_mode !== "preview" || metadata.status !== "fictional-placeholder") return;
+    const target = document.querySelector("[data-deployment]");
+    if (target) target.textContent = `Preview ${String(metadata.commit).slice(0, 12)} · ${metadata.build_timestamp} · package ${metadata.package_version}`;
+  } catch {
+    // Deployment metadata exists only in the validated Pages artifact.
+  }
+};
 
 document.querySelectorAll("[data-search-form]").forEach((form) => {
   form.addEventListener("submit", (event) => {
@@ -139,3 +152,4 @@ loadData().then((data) => {
   if (["concept", "components"].includes(page)) initConcept(data);
   initDetail(data);
 });
+loadDeployment();

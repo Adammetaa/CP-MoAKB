@@ -27,6 +27,7 @@ def test_knowledge_explorer_deliverables_are_complete() -> None:
         "prototype/knowledge-explorer/docs/personas.md",
         "prototype/knowledge-explorer/docs/wireframes.md",
         "prototype/knowledge-explorer/docs/design-system.md",
+        "prototype/knowledge-explorer/docs/deployment.md",
     )
     for relative in KNOWLEDGE_EXPLORER_DOCUMENTS:
         assert (ROOT / relative).is_file()
@@ -40,6 +41,7 @@ def test_every_screen_is_static_accessible_and_boundary_labeled() -> None:
         assert "<main" in text
         assert "data-page=" in text
         assert "Prototype · fictional placeholder content" in text
+        assert '<meta name="robots" content="noindex,nofollow">' in text
         assert "assets/styles.css" in text
         assert "assets/app.js" in text
         assert "login" not in text.casefold()

@@ -143,6 +143,8 @@ Use the [documentation home](docs/README.md) to navigate by audience:
 - [Governance maps](docs/governance/README.md)
 - [Knowledge Constitution, Governance, and Authoring Standards](docs/knowledge/README.md)
 - [Knowledge Explorer product-vision prototype](prototype/knowledge-explorer/README.md)
+  and its [prepared GitHub Pages preview](prototype/knowledge-explorer/docs/deployment.md)
+  (not deployed or live)
 - [Concepts and glossary](docs/concepts/README.md)
 - [Release preparation](docs/release/README.md)
 

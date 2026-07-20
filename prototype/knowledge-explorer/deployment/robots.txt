@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /CP-MoAKB/
+Disallow: /CP-MoAKB/knowledge-explorer/
