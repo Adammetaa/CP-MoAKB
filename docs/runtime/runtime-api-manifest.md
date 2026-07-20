@@ -4,7 +4,7 @@
 
 Only symbols intentionally listed in each package's `__all__` are public. Internal helpers are excluded. “Stable for Runtime 0.1” protects the documented import and behavior under RAS-007; “Experimental” remains public and cannot be removed silently, but its extension surface requires additional review before being declared stable.
 
-The manifest contains 132 package-symbol entries: 114 Stable for Runtime 0.1 and 18 Experimental. Re-exports from both adapter packages are recorded separately because each import path is a compatibility surface.
+The manifest contains 144 package-symbol entries: 126 Stable for Runtime 0.1 and 18 Experimental. Re-exports from both adapter packages are recorded separately because each import path is a compatibility surface. The additive serialization exports are backward compatible under RAS-007 and governed by RAS-008; Runtime API remains `0.1`.
 
 | Package | Symbol | Category | Stability | Purpose | Compatibility notes |
 | --- | --- | --- | --- | --- | --- |
@@ -140,5 +140,17 @@ The manifest contains 132 package-symbol entries: 114 Stable for Runtime 0.1 and
 | `cpmoakb.explain` | `build_unavailable_explanation` | function | Experimental | Performs the documented build unavailable explanation operation. | Import is preserved; behavioral expansion requires architecture review. |
 | `cpmoakb.explain` | `build_validation_issue_explanation` | function | Experimental | Performs the documented build validation issue explanation operation. | Import is preserved; behavioral expansion requires architecture review. |
 | `cpmoakb.explain` | `render_explanation` | function | Stable for Runtime 0.1 | Performs the documented render explanation operation. | Import, documented behavior, exceptions, and deterministic ordering are protected. |
+| `cpmoakb.serialization` | `JsonScalar` | type alias | Stable for Runtime 0.1 | Describes a JSON scalar projection value. | Additive and backward compatible; type meaning is protected. |
+| `cpmoakb.serialization` | `JsonValue` | type alias | Stable for Runtime 0.1 | Describes a recursively JSON-compatible projection value. | Additive and backward compatible; type meaning is protected. |
+| `cpmoakb.serialization` | `ProjectionContractError` | exception | Stable for Runtime 0.1 | Rejects malformed projected values and envelopes. | Additive and backward compatible; typed failure behavior is protected. |
+| `cpmoakb.serialization` | `RUNTIME_JSON_PROJECTION_VERSION` | constant | Stable for Runtime 0.1 | Exposes independent projection schema version `1.0`. | Additive and backward compatible; independent from Runtime and YAML versions. |
+| `cpmoakb.serialization` | `SerializationError` | exception | Stable for Runtime 0.1 | Base projection-boundary error. | Additive and backward compatible; exception hierarchy is protected. |
+| `cpmoakb.serialization` | `UnsupportedProjectionTypeError` | exception | Stable for Runtime 0.1 | Rejects unsupported Runtime targets. | Additive and backward compatible; no generic fallback may replace it. |
+| `cpmoakb.serialization` | `project_query_result` | function | Stable for Runtime 0.1 | Projects query criteria and ordered match traceability. | Additive and backward compatible; field mapping and ordering are protected. |
+| `cpmoakb.serialization` | `project_registry_snapshot` | function | Stable for Runtime 0.1 | Projects supported immutable registry snapshots. | Additive and backward compatible; variant mappings and ordering are protected. |
+| `cpmoakb.serialization` | `project_runtime_value` | function | Stable for Runtime 0.1 | Dispatches across the closed supported target categories. | Additive and backward compatible; arbitrary target handling is prohibited. |
+| `cpmoakb.serialization` | `project_structured_explanation` | function | Stable for Runtime 0.1 | Projects structured explanations without rendering. | Additive and backward compatible; structure and ordering are protected. |
+| `cpmoakb.serialization` | `project_validation_result` | function | Stable for Runtime 0.1 | Projects supported validation results or homogeneous issue collections. | Additive and backward compatible; explicit fields and ordering are protected. |
+| `cpmoakb.serialization` | `to_canonical_json` | function | Stable for Runtime 0.1 | Encodes a supported target or valid envelope as canonical JSON text. | Additive and backward compatible; Unicode, key ordering, separators, and failures are protected. |
 
 No Internal helper appears in this public manifest. The machine-readable conformance copy is static in `tests/contracts/_api_manifest.py`; it is manually governed and is not generated through reflection.

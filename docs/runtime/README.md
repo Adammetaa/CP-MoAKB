@@ -26,13 +26,14 @@ The Rice governance track remains blocked pending qualified review. This runtime
 - [governed registry services](registry-services.md) for explicit candidate-identifier custody and source/authority lookup.
 - [read-only query services](query-services.md) over explicit records and immutable registry snapshots.
 - [traceable explanation services](explanation-services.md) over explicit query, validation, evidence, and status facts.
+- a [deterministic output-only JSON projection](json-projection.md) for selected immutable Runtime results.
 
-Runtime API stability is governed by [RAS-007](specifications/RAS-007-runtime-api-compatibility-contract.md), the [API manifest](runtime-api-manifest.md), and the [contract suite](runtime-contract-suite.md). Future changes use the [compatibility checklist](runtime-compatibility-checklist.md); [serialization remains explicitly deferred](serialization-boundary.md).
+Runtime API stability is governed by [RAS-007](specifications/RAS-007-runtime-api-compatibility-contract.md), the [API manifest](runtime-api-manifest.md), and the [contract suite](runtime-contract-suite.md). Future changes use the [compatibility checklist](runtime-compatibility-checklist.md); [RAS-008](specifications/RAS-008-runtime-json-projection-contract.md) governs the narrow output projection and the remaining unsupported serialization capabilities stay explicit at the [serialization boundary](serialization-boundary.md).
 
 The intentional public API is exported from `cpmoakb.domain`. Individual modules remain available for maintainers, but callers should prefer those package exports.
 
 ## Deferred capabilities
 
-The Runtime Core domain remains representation-neutral. The separate YAML adapter loads its narrow schema, but neither layer loads JSON, allocates identifiers, persists data, fetches sources, implements a graph, executes queries, diagnoses, explains, recommends, or promotes candidates. See [Extension Boundaries](extension-boundaries.md) for the planned runtime sequence and prohibited coupling.
+The Runtime Core domain remains representation-neutral. The separate YAML adapter loads its narrow schema, and the projection package emits selected output structures; no layer parses JSON, deserializes projected values, guarantees round trips, allocates identifiers, persists data, writes projection files, exposes HTTP/CLI operations, diagnoses, recommends, or promotes candidates. See [Extension Boundaries](extension-boundaries.md) for prohibited coupling.
 
 For model details, see [Runtime Domain Model](domain-model.md).

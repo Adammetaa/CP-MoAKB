@@ -15,6 +15,8 @@ Future Runtime changes MUST review this checklist:
 - [ ] Explanation structure or renderer output changed.
 - [ ] Dependency direction changed.
 - [ ] Runtime version impact classified.
+- [ ] JSON projection schema, kind, field mapping, canonical encoding, or ordering changed.
+- [ ] Projection version impact classified independently from Runtime and YAML versions.
 - [ ] Documentation and API manifest updated.
 - [ ] Contract tests updated without weakening the prior guarantee.
 - [ ] Deprecation documents behavior window and replacement.

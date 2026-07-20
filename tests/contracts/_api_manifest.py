@@ -147,6 +147,20 @@ PUBLIC_API_EXPORTS: dict[str, tuple[str, ...]] = {
         "build_validation_issue_explanation",
         "render_explanation",
     ),
+    "cpmoakb.serialization": (
+        "JsonScalar",
+        "JsonValue",
+        "ProjectionContractError",
+        "RUNTIME_JSON_PROJECTION_VERSION",
+        "SerializationError",
+        "UnsupportedProjectionTypeError",
+        "project_query_result",
+        "project_registry_snapshot",
+        "project_runtime_value",
+        "project_structured_explanation",
+        "project_validation_result",
+        "to_canonical_json",
+    ),
 }
 
 EXPERIMENTAL_EXPORTS: frozenset[tuple[str, str]] = frozenset(

@@ -22,6 +22,8 @@ The Sprint-021R structure and non-inference policy are documented in [Traceable 
 
 Sprint-022R stabilizes Runtime API `0.1` through [contract tests](runtime-contract-suite.md) and an explicit [serialization boundary](serialization-boundary.md). It introduces no persistence or application orchestration.
 
+Sprint-023R adds the [output-only JSON projection](json-projection.md) governed by RAS-008. It introduces no JSON input, deserialization, round trip, persistence, file writer, HTTP, CLI, automatic orchestration, or scientific inference.
+
 ## Prohibited coupling
 
 - Domain models must not import YAML or JSON-loading libraries.
@@ -32,6 +34,7 @@ Sprint-022R stabilizes Runtime API `0.1` through [contract tests](runtime-contra
 - Candidate records must not be treated as production records or automatically converted to canonical identifiers.
 - Labels must not be used as identity keys or automatic equivalence evidence.
 - Relationships must not gain causal, diagnostic, regulatory, safety, or recommendation meaning from wording alone.
+- Lower Runtime layers must not import `cpmoakb.serialization`; projection may depend on their intentional public values only.
 
 ## Adapter direction
 

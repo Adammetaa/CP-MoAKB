@@ -17,3 +17,4 @@ Future Runtime sprints SHOULD cite the RAS documents they implement and describe
 | [RAS-005](RAS-005-query-service-contract.md) | Active | Deterministic read-only Runtime queries |
 | [RAS-006](RAS-006-explanation-service-contract.md) | Active | Structured traceable Runtime explanations |
 | [RAS-007](RAS-007-runtime-api-compatibility-contract.md) | Active | Runtime 0.1 public API compatibility |
+| [RAS-008](RAS-008-runtime-json-projection-contract.md) | Active | Deterministic output-only Runtime JSON projection |
