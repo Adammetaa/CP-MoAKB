@@ -4,7 +4,7 @@
 
 Only symbols intentionally listed in each package's `__all__` are public. Internal helpers are excluded. “Stable for Runtime 0.1” protects the documented import and behavior under RAS-007; “Experimental” remains public and cannot be removed silently, but its extension surface requires additional review before being declared stable.
 
-The manifest contains 165 package-symbol entries: 147 Stable for Runtime 0.1 and 18 Experimental. Re-exports from both adapter packages are recorded separately because each import path is a compatibility surface. The additive serialization, application, HTTP, CLI, distribution-version, and composition exports are backward compatible under RAS-007 and governed by RAS-008 through RAS-012; Runtime API remains `0.1`.
+The manifest contains 165 package-symbol entries: 147 Stable for Runtime 0.1 and 18 Experimental. Re-exports from both adapter packages are recorded separately because each import path is a compatibility surface. The additive serialization, application, HTTP, CLI, distribution-version, and composition exports are backward compatible under RAS-007 and governed by RAS-008 through RAS-012; Runtime API remains `0.1`. Sprint-028R/RAS-013 adds repository security evidence and no public symbol, signature, behavior, or version change.
 
 | Package | Symbol | Category | Stability | Purpose | Compatibility notes |
 | --- | --- | --- | --- | --- | --- |

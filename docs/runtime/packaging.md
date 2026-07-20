@@ -22,6 +22,12 @@ core-without-FastAPI, HTTP-extra, installed-location, and `pip check` behavior.
 Artifacts are local verification outputs and are not committed, published to
 PyPI, tagged, or released by this contract.
 
+The release-readiness verifier additionally validates Apache-2.0 license bytes,
+metadata and version agreement, the static public manifest, dependency and
+workflow policy, tracked sensitive/generated-file exclusions, and optionally the
+built distribution. The only tracked CSV allowlist is the three frozen
+source-governance fixtures under `validation/`; they are not build outputs.
+
 CI fixes `SOURCE_DATE_EPOCH` to the ZIP-compatible Unix epoch `315532800`, which
 makes repeated wheel bytes stable. Setuptools source distributions retain some
 unavoidable generated-member timestamps, so verification compares their

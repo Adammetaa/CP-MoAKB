@@ -30,12 +30,15 @@ The Rice governance track remains blocked pending qualified review. This runtime
 - a [transport-neutral application service](application-service.md) for approved read-only query, explanation, and projection composition.
 - a [minimal read-only HTTP adapter](http-api.md) requiring an injected application service.
 - a [minimal reference CLI consumer](cli.md) with explicit service and stream injection.
+- a [safe packaging and explicit composition boundary](packaging.md) with no default data.
+- a [security and release-readiness contract](specifications/RAS-013-runtime-security-and-release-readiness-contract.md) backed by deterministic repository verifiers.
 
 Runtime API stability is governed by [RAS-007](specifications/RAS-007-runtime-api-compatibility-contract.md), the [API manifest](runtime-api-manifest.md), and the [contract suite](runtime-contract-suite.md). Future changes use the [compatibility checklist](runtime-compatibility-checklist.md); [RAS-008](specifications/RAS-008-runtime-json-projection-contract.md) governs the narrow output projection and the remaining unsupported serialization capabilities stay explicit at the [serialization boundary](serialization-boundary.md).
 
 [RAS-009](specifications/RAS-009-runtime-application-service-contract.md) governs the application facade. Transports use this facade for its supported operations.
 [RAS-010](specifications/RAS-010-runtime-http-transport-contract.md) governs the first HTTP adapter. It is library-first and includes no server, CLI, persistence, deployment stack, or hidden data source.
 [RAS-011](specifications/RAS-011-runtime-cli-transport-contract.md) governs the library-first CLI consumer. Executable packaging remains deferred until a safe composition root exists.
+[RAS-012](specifications/RAS-012-runtime-packaging-and-composition-contract.md) governs packaging and explicit composition. [RAS-013](specifications/RAS-013-runtime-security-and-release-readiness-contract.md) adds the security model, threat model, dependency and workflow controls, artifact policy, and release evidence without changing public behavior.
 
 The intentional public API is exported from `cpmoakb.domain`. Individual modules remain available for maintainers, but callers should prefer those package exports.
 

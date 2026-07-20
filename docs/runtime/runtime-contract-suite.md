@@ -5,6 +5,12 @@ composition, architecture, and package-data policy. CI additionally builds twice
 runs the governed artifact verifier, then verifies editable, wheel, source, and
 HTTP-extra installations plus `pip check` without importing from the source tree.
 
+`tests/security` covers the AST prohibition set, exact exclusions and allowlists,
+transport confidentiality and bounds, exact dependency pins, immutable action
+references, minimal workflow permissions, authoritative versions, and the static
+release evidence. `scripts/verify_security_contract.py` and
+`scripts/verify_release_readiness.py` are deterministic, read-only gates.
+
 The contract suite protects Runtime API version `0.1` across explicit layers:
 
 ```text
@@ -21,7 +27,7 @@ Equivalent scenarios run repeatedly and compare validation results, snapshots, q
 The governed type-check scope is:
 
 ```shell
-python -m mypy --explicit-package-bases --disable-error-code import-untyped cpmoakb/runtime_api.py cpmoakb/domain cpmoakb/adapters cpmoakb/validation cpmoakb/registries cpmoakb/query cpmoakb/explain cpmoakb/serialization cpmoakb/application cpmoakb/http_api cpmoakb/cli tests/contracts tests/application tests/serialization tests/http_api tests/cli
+python -m mypy --explicit-package-bases --disable-error-code import-untyped --cache-dir=/dev/null cpmoakb/runtime_api.py cpmoakb/domain cpmoakb/adapters cpmoakb/validation cpmoakb/registries cpmoakb/query cpmoakb/explain cpmoakb/serialization cpmoakb/application cpmoakb/http_api cpmoakb/cli cpmoakb/composition tests/contracts tests/application tests/serialization tests/http_api tests/cli tests/packaging tests/security scripts
 ```
 
 Only the third-party `import-untyped` diagnostic is disabled. The accepted legacy validation import path reaches the pandas-based legacy parser, for which the repository has no installed pandas stubs. All Runtime type diagnostics remain enabled; no Runtime file or package is excluded.

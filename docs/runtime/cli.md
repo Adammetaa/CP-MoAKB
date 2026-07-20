@@ -14,6 +14,12 @@ run_cli(argv, runtime_application_service, stdout, stderr) -> int
 
 All dependencies are explicit. The CLI does not use implicit process arguments or streams, load data, discover files, own registries, read configuration or environment variables, or access networks.
 
+Argument values are bounded before application dispatch. Parser, application,
+Runtime, dependency, and unexpected failures use fixed codes and messages and do
+not echo exception text, paths, representations, or tracebacks. Deployments must
+provide any authentication, access control, audit sink, or rate policy outside
+this reference consumer.
+
 Commands are `version`, `query`, and `query-and-explain`. Query options are `--domain-type`, `--label-text`, `--label-scope`, `--language`, `--locale`, `--match-mode`, and `--predicate`. Query-and-explain additionally requires `--match-index`.
 
 Fictional library arguments:

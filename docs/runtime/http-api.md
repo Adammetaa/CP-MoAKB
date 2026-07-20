@@ -14,6 +14,12 @@ The query endpoint returns the existing RAS-008 query projection. Query-and-expl
 
 Errors use stable machine codes and generic messages. Invalid transport bodies are 422; invalid application match selection is 400; dependency and unexpected failures are 500. Exception messages, reprs, tracebacks, module names, and paths are not exposed.
 
+Request strings are bounded, model coercion and unknown fields are rejected, and
+the match index is bounded from 0 through 10,000. Unsupported paths and methods
+remain outside the application surface. Authentication, authorization, rate
+limiting, TLS termination, proxy limits, and deployment logging are explicitly
+the responsibility of a separately reviewed deployment boundary.
+
 Interactive Swagger and ReDoc pages are disabled to avoid remote UI assets; `/openapi.json` documents only approved routes. No ASGI server, CLI, deployment stack, registry/data ownership, persistence, startup I/O, authentication, CORS expansion, diagnosis, recommendation, ranking, confidence, or scientific inference is included.
 
 The [reference CLI](cli.md) is a separate sibling transport. It does not call HTTP routes or import HTTP framework internals; it shares only public version information and the application facade boundary.

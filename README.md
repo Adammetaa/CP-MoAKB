@@ -66,6 +66,16 @@ provided. See [installation](docs/runtime/installation.md),
 [packaging](docs/runtime/packaging.md), and
 [composition](docs/runtime/composition.md).
 
+## Security and release readiness
+
+Security reports follow [SECURITY.md](SECURITY.md). The governed
+[security model](docs/security/security-model.md),
+[threat model](docs/security/threat-model.md), and
+[release-readiness checklist](docs/release/release-readiness-checklist.md)
+define the supported boundary. CI runs repository-owned AST security and release
+verifiers; neither verification nor a successful build publishes, tags, or
+creates a release. Publication always requires a separate explicit approval.
+
 ## Testing
 
 Run the complete read-only test suite with:
@@ -75,6 +85,13 @@ python -m pytest -q
 ```
 
 GitHub Actions runs lint, governed formatting, and this test command on Python 3.11 and Python 3.12 for pushes to `main` and pull requests targeting `main`, then verifies that no prohibited artifacts were created.
+
+Run the focused static gates locally with:
+
+```shell
+python scripts/verify_security_contract.py
+python scripts/verify_release_readiness.py
+```
 
 ## Semantic Validation
 

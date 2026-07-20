@@ -1,0 +1,47 @@
+{
+  "schema": "cpmoakb-release-readiness",
+  "schema_version": "1.0",
+  "package": {
+    "distribution": "cp-moakb",
+    "import_package": "cpmoakb",
+    "version": "0.1.0",
+    "supported_python": ["3.11", "3.12"],
+    "license": "Apache-2.0",
+    "version_source": "cpmoakb/_version.py"
+  },
+  "contracts": {
+    "runtime": "0.1",
+    "yaml": "1.0",
+    "projection": "1.0",
+    "application": "0.1",
+    "http": "0.1",
+    "cli": "0.1",
+    "composition": "0.1"
+  },
+  "required_ci_jobs": [
+    "Python 3.11",
+    "Python 3.12",
+    "Security and release readiness",
+    "Distribution contract"
+  ],
+  "forbidden_artifact_patterns": [
+    "*.csv",
+    "*.db",
+    "*.sqlite",
+    "*.sqlite3",
+    "*.pdf",
+    "**/.git/**",
+    "**/__pycache__/**",
+    "**/.mypy_cache/**",
+    "**/.pytest_cache/**",
+    "**/.ruff_cache/**",
+    "tests/**",
+    "references/**"
+  ],
+  "publication": {
+    "github_release_created": false,
+    "pypi_published": false,
+    "release_tag_created": false,
+    "explicit_final_approval_required": true
+  }
+}

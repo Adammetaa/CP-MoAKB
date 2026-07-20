@@ -17,3 +17,8 @@ plugin mechanism. It imports only approved public query, explanation, and
 application boundaries. Synthetic examples in tests are fictional and are not
 packaged knowledge. Future loaders, deployments, data distributions, and
 production composition belong to separately governed boundaries.
+
+The security contract statically rejects environment access, plugin or module
+discovery, filesystem discovery, network clients, subprocesses, and shell calls
+in the governed Runtime surface. Composition therefore cannot acquire hidden
+configuration or authority during import or factory execution.

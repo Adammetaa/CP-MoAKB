@@ -29,6 +29,8 @@ Future Runtime changes MUST review this checklist:
 - [ ] HTTP API version impact classified independently from other Runtime versions.
 - [ ] CLI command, argument, output, newline, error, exit-code, or injection contract changed.
 - [ ] CLI API version impact classified independently from other Runtime versions.
+- [ ] Security boundary, threat model, dependency pins, action pins, artifact policy, or release evidence changed.
+- [ ] Security and release-readiness verifiers updated without broadening an allowlist silently.
 - [ ] Documentation and API manifest updated.
 - [ ] Contract tests updated without weakening the prior guarantee.
 - [ ] Deprecation documents behavior window and replacement.

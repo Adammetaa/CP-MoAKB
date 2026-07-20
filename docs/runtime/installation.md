@@ -24,3 +24,8 @@ all governed services.
 Package version `0.1.0` describes the distribution. It does not replace Runtime
 API `0.1`, YAML schema `1.0`, JSON projection `1.0`, Application API `0.1`, HTTP
 API `0.1`, CLI API `0.1`, or Composition API `0.1`.
+
+No installer receives credentials or release authority. Exact pins and the
+supported Python range are checked by the release-readiness verifier. Review
+[the dependency policy](../security/dependency-policy.md) before changing any
+pin; vulnerability remediation requires evidence and full regression checks.

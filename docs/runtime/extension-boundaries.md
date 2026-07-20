@@ -30,6 +30,8 @@ Sprint-025R adds the [minimal read-only HTTP adapter](http-api.md) governed by R
 
 Sprint-026R adds the [minimal reference CLI consumer](cli.md) governed by RAS-011. It has explicit arguments, service, and streams but no console entry point, composition root, data loading, persistence, registry ownership, or scientific inference.
 
+Sprint-027R adds governed packaging and the explicit composition factory under RAS-012. Sprint-028R adds repository-level security and release-readiness evidence under RAS-013. Neither sprint authorizes data discovery, credentials, publishing, deployment, authentication, or new runtime operations.
+
 ## Prohibited coupling
 
 Packaging and composition add one further rule: lower Runtime layers do not
@@ -48,6 +50,7 @@ code are prohibited by RAS-012.
 - Relationships must not gain causal, diagnostic, regulatory, safety, or recommendation meaning from wording alone.
 - Lower Runtime layers must not import `cpmoakb.serialization`; projection may depend on their intentional public values only.
 - Domain, adapters, validation, registries, query, explain, serialization, and legacy layers must not import `cpmoakb.application`.
+- Runtime layers must not add dynamic import, subprocess, shell, environment, network, filesystem-discovery, or unsafe deserialization behavior. The narrow frozen legacy exclusion and validation diagnostic rendering exception are explicitly verified by `scripts/verify_security_contract.py`.
 
 ## Adapter direction
 
