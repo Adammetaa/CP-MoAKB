@@ -28,6 +28,8 @@ Sprint-024R adds the [transport-neutral Runtime application service](application
 
 Sprint-025R adds the [minimal read-only HTTP adapter](http-api.md) governed by RAS-010. It is an injected library boundary with no server launch, data ownership, persistence, CLI, authentication, deployment stack, or scientific inference.
 
+Sprint-026R adds the [minimal reference CLI consumer](cli.md) governed by RAS-011. It has explicit arguments, service, and streams but no console entry point, composition root, data loading, persistence, registry ownership, or scientific inference.
+
 ## Prohibited coupling
 
 - Domain models must not import YAML or JSON-loading libraries.
@@ -47,4 +49,4 @@ Future loaders and repositories may depend on `cpmoakb.domain`. The domain packa
 
 The existing IRAC parser/exporter pipeline remains separate. Any future integration must be explicit and must not alter frozen behavior merely to reuse the Runtime Core.
 
-HTTP is now represented only by `cpmoakb.http_api`; future CLI or web transports remain separate adapters. Transports must depend on `cpmoakb.application` rather than coordinate Query, Explanation, or Serialization internals.
+HTTP and CLI are separate sibling adapters in `cpmoakb.http_api` and `cpmoakb.cli`; future web transports remain separate. Transports must depend on `cpmoakb.application` rather than coordinate Query, Explanation, or Serialization internals.

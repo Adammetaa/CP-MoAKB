@@ -20,3 +20,4 @@ Future Runtime sprints SHOULD cite the RAS documents they implement and describe
 | [RAS-008](RAS-008-runtime-json-projection-contract.md) | Active | Deterministic output-only Runtime JSON projection |
 | [RAS-009](RAS-009-runtime-application-service-contract.md) | Active | Transport-neutral Runtime application-service facade |
 | [RAS-010](RAS-010-runtime-http-transport-contract.md) | Active | Minimal read-only Runtime HTTP transport |
+| [RAS-011](RAS-011-runtime-cli-transport-contract.md) | Active | Minimal deterministic reference CLI transport |

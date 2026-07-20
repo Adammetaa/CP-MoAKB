@@ -21,6 +21,8 @@ Future Runtime changes MUST review this checklist:
 - [ ] Application API version impact classified independently from Runtime, YAML, and projection versions.
 - [ ] HTTP endpoint, request bound, response, error, OpenAPI, factory, or dependency contract changed.
 - [ ] HTTP API version impact classified independently from other Runtime versions.
+- [ ] CLI command, argument, output, newline, error, exit-code, or injection contract changed.
+- [ ] CLI API version impact classified independently from other Runtime versions.
 - [ ] Documentation and API manifest updated.
 - [ ] Contract tests updated without weakening the prior guarantee.
 - [ ] Deprecation documents behavior window and replacement.

@@ -12,4 +12,6 @@ Existing typed Query, Explanation, and Serialization errors propagate. Applicati
 
 This package itself provides no transport, CLI, persistence, file or database access, JSON deserialization, registry mutation, YAML orchestration, authentication, async work, diagnosis, recommendation, ranking, confidence scoring, or scientific inference. The separate [HTTP adapter](http-api.md) calls this facade rather than coordinating internal modules.
 
+The separate [reference CLI](cli.md) also consumes canonical application responses directly. Both transports require an explicitly injected facade and neither owns data or registries.
+
 The normative contract is [RAS-009](specifications/RAS-009-runtime-application-service-contract.md).

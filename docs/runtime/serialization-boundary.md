@@ -10,4 +10,6 @@ The [Runtime application service](application-service.md) may compose existing q
 
 The [HTTP adapter](http-api.md) returns these approved projections as JSON responses without reparsing canonical JSON or redefining projection fields. HTTP request validation creates only application query requests; it is not JSON-to-domain deserialization and provides no round trip.
 
+The [reference CLI](cli.md) writes the application facade’s canonical JSON strings directly for projected commands. Its static version document contains only governed version strings; the CLI does not serialize Runtime objects or define another projection mapping.
+
 Registry snapshots and structured explanations have an explicit output projection, but their Python shape is still not itself a wire format. Projection does not reconstruct domain objects and creates no storage or exchange transport. Sprint-023R adds no parser, writer, migration, database, or persistence layer.

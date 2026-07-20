@@ -29,16 +29,18 @@ The Rice governance track remains blocked pending qualified review. This runtime
 - a [deterministic output-only JSON projection](json-projection.md) for selected immutable Runtime results.
 - a [transport-neutral application service](application-service.md) for approved read-only query, explanation, and projection composition.
 - a [minimal read-only HTTP adapter](http-api.md) requiring an injected application service.
+- a [minimal reference CLI consumer](cli.md) with explicit service and stream injection.
 
 Runtime API stability is governed by [RAS-007](specifications/RAS-007-runtime-api-compatibility-contract.md), the [API manifest](runtime-api-manifest.md), and the [contract suite](runtime-contract-suite.md). Future changes use the [compatibility checklist](runtime-compatibility-checklist.md); [RAS-008](specifications/RAS-008-runtime-json-projection-contract.md) governs the narrow output projection and the remaining unsupported serialization capabilities stay explicit at the [serialization boundary](serialization-boundary.md).
 
-[RAS-009](specifications/RAS-009-runtime-application-service-contract.md) governs the application facade. Transports use this facade for its supported operations; no CLI adapter exists.
+[RAS-009](specifications/RAS-009-runtime-application-service-contract.md) governs the application facade. Transports use this facade for its supported operations.
 [RAS-010](specifications/RAS-010-runtime-http-transport-contract.md) governs the first HTTP adapter. It is library-first and includes no server, CLI, persistence, deployment stack, or hidden data source.
+[RAS-011](specifications/RAS-011-runtime-cli-transport-contract.md) governs the library-first CLI consumer. Executable packaging remains deferred until a safe composition root exists.
 
 The intentional public API is exported from `cpmoakb.domain`. Individual modules remain available for maintainers, but callers should prefer those package exports.
 
 ## Deferred capabilities
 
-The Runtime Core domain remains representation-neutral. The separate YAML adapter loads its narrow schema, and the projection package emits selected output structures; no layer parses JSON, deserializes projected values, guarantees round trips, allocates identifiers, persists data, writes projection files, exposes HTTP/CLI operations, diagnoses, recommends, or promotes candidates. See [Extension Boundaries](extension-boundaries.md) for prohibited coupling.
+The Runtime Core domain remains representation-neutral. Separate HTTP and CLI adapters expose only approved read-only application operations; no layer deserializes projected values, guarantees round trips, allocates identifiers, persists data, writes projection files, diagnoses, recommends, or promotes candidates. See [Extension Boundaries](extension-boundaries.md) for prohibited coupling.
 
 For model details, see [Runtime Domain Model](domain-model.md).

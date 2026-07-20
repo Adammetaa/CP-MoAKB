@@ -23,7 +23,7 @@ def test_stability_manifest_is_bounded_to_public_symbols() -> None:
         for symbol in symbols
     }
     assert EXPERIMENTAL_EXPORTS <= public
-    assert len(public) == 160
+    assert len(public) == 162
     assert len(EXPERIMENTAL_EXPORTS) == 18
 
 

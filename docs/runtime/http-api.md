@@ -10,6 +10,8 @@ Errors use stable machine codes and generic messages. Invalid transport bodies a
 
 Interactive Swagger and ReDoc pages are disabled to avoid remote UI assets; `/openapi.json` documents only approved routes. No ASGI server, CLI, deployment stack, registry/data ownership, persistence, startup I/O, authentication, CORS expansion, diagnosis, recommendation, ranking, confidence, or scientific inference is included.
 
+The [reference CLI](cli.md) is a separate sibling transport. It does not call HTTP routes or import HTTP framework internals; it shares only public version information and the application facade boundary.
+
 Fictional example:
 
 ```json

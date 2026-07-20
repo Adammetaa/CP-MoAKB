@@ -181,6 +181,10 @@ PUBLIC_API_EXPORTS: dict[str, tuple[str, ...]] = {
         "RUNTIME_HTTP_API_VERSION",
         "create_http_app",
     ),
+    "cpmoakb.cli": (
+        "RUNTIME_CLI_API_VERSION",
+        "run_cli",
+    ),
 }
 
 EXPERIMENTAL_EXPORTS: frozenset[tuple[str, str]] = frozenset(
