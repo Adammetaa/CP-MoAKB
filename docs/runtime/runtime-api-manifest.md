@@ -4,7 +4,7 @@
 
 Only symbols intentionally listed in each package's `__all__` are public. Internal helpers are excluded. “Stable for Runtime 0.1” protects the documented import and behavior under RAS-007; “Experimental” remains public and cannot be removed silently, but its extension surface requires additional review before being declared stable.
 
-The manifest contains 144 package-symbol entries: 126 Stable for Runtime 0.1 and 18 Experimental. Re-exports from both adapter packages are recorded separately because each import path is a compatibility surface. The additive serialization exports are backward compatible under RAS-007 and governed by RAS-008; Runtime API remains `0.1`.
+The manifest contains 157 package-symbol entries: 139 Stable for Runtime 0.1 and 18 Experimental. Re-exports from both adapter packages are recorded separately because each import path is a compatibility surface. The additive serialization and application exports are backward compatible under RAS-007 and governed by RAS-008 and RAS-009; Runtime API remains `0.1`.
 
 | Package | Symbol | Category | Stability | Purpose | Compatibility notes |
 | --- | --- | --- | --- | --- | --- |
@@ -152,5 +152,18 @@ The manifest contains 144 package-symbol entries: 126 Stable for Runtime 0.1 and
 | `cpmoakb.serialization` | `project_structured_explanation` | function | Stable for Runtime 0.1 | Projects structured explanations without rendering. | Additive and backward compatible; structure and ordering are protected. |
 | `cpmoakb.serialization` | `project_validation_result` | function | Stable for Runtime 0.1 | Projects supported validation results or homogeneous issue collections. | Additive and backward compatible; explicit fields and ordering are protected. |
 | `cpmoakb.serialization` | `to_canonical_json` | function | Stable for Runtime 0.1 | Encodes a supported target or valid envelope as canonical JSON text. | Additive and backward compatible; Unicode, key ordering, separators, and failures are protected. |
+| `cpmoakb.application` | `ApplicationContractError` | exception | Stable for Runtime 0.1 | Rejects invalid application request or match-selection contracts. | Additive and backward compatible; typed contract behavior is protected. |
+| `cpmoakb.application` | `ApplicationDependencyError` | exception | Stable for Runtime 0.1 | Wraps untyped injected projection dependency defects. | Additive and backward compatible; exception chaining is protected. |
+| `cpmoakb.application` | `ApplicationServiceError` | exception | Stable for Runtime 0.1 | Base application-service error. | Additive and backward compatible; exception hierarchy is protected. |
+| `cpmoakb.application` | `ExplainQueryRequest` | request | Stable for Runtime 0.1 | Selects one explicit match from an existing query result for explanation. | Additive and backward compatible; immutability and explicit indexing are protected. |
+| `cpmoakb.application` | `ExplainQueryResponse` | response | Stable for Runtime 0.1 | Returns one structured query-match explanation. | Additive and backward compatible; response structure is protected. |
+| `cpmoakb.application` | `ProjectedApplicationResponse` | response | Stable for Runtime 0.1 | Returns an isolated application projection and canonical JSON. | Additive and backward compatible; envelope and alias isolation are protected. |
+| `cpmoakb.application` | `QueryAndExplainRequest` | request | Stable for Runtime 0.1 | Composes a query request with explicit match selection. | Additive and backward compatible; immutability and composition are protected. |
+| `cpmoakb.application` | `QueryAndExplainResponse` | response | Stable for Runtime 0.1 | Retains query result and structured explanation. | Additive and backward compatible; response structure is protected. |
+| `cpmoakb.application` | `QueryRecordsRequest` | request | Stable for Runtime 0.1 | Composes existing typed query criteria. | Additive and backward compatible; arbitrary payloads remain prohibited. |
+| `cpmoakb.application` | `QueryRecordsResponse` | response | Stable for Runtime 0.1 | Retains the delegated query result. | Additive and backward compatible; response structure is protected. |
+| `cpmoakb.application` | `RUNTIME_APPLICATION_API_VERSION` | constant | Stable for Runtime 0.1 | Exposes independent application API version `0.1`. | Additive and backward compatible; independent version value is protected. |
+| `cpmoakb.application` | `RuntimeApplicationService` | service | Stable for Runtime 0.1 | Orchestrates the four closed read-only application operations. | Additive and backward compatible; delegation, statelessness, and error policy are protected. |
+| `cpmoakb.application` | `UnsupportedApplicationRequestError` | exception | Stable for Runtime 0.1 | Rejects unsupported application request objects. | Additive and backward compatible; no dynamic request dispatch may replace it. |
 
 No Internal helper appears in this public manifest. The machine-readable conformance copy is static in `tests/contracts/_api_manifest.py`; it is manually governed and is not generated through reflection.

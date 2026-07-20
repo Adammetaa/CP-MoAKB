@@ -161,6 +161,21 @@ PUBLIC_API_EXPORTS: dict[str, tuple[str, ...]] = {
         "project_validation_result",
         "to_canonical_json",
     ),
+    "cpmoakb.application": (
+        "ApplicationContractError",
+        "ApplicationDependencyError",
+        "ApplicationServiceError",
+        "ExplainQueryRequest",
+        "ExplainQueryResponse",
+        "ProjectedApplicationResponse",
+        "QueryAndExplainRequest",
+        "QueryAndExplainResponse",
+        "QueryRecordsRequest",
+        "QueryRecordsResponse",
+        "RUNTIME_APPLICATION_API_VERSION",
+        "RuntimeApplicationService",
+        "UnsupportedApplicationRequestError",
+    ),
 }
 
 EXPERIMENTAL_EXPORTS: frozenset[tuple[str, str]] = frozenset(

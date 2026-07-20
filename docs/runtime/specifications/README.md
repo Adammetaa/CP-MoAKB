@@ -18,3 +18,4 @@ Future Runtime sprints SHOULD cite the RAS documents they implement and describe
 | [RAS-006](RAS-006-explanation-service-contract.md) | Active | Structured traceable Runtime explanations |
 | [RAS-007](RAS-007-runtime-api-compatibility-contract.md) | Active | Runtime 0.1 public API compatibility |
 | [RAS-008](RAS-008-runtime-json-projection-contract.md) | Active | Deterministic output-only Runtime JSON projection |
+| [RAS-009](RAS-009-runtime-application-service-contract.md) | Active | Transport-neutral Runtime application-service facade |

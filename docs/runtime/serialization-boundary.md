@@ -6,4 +6,6 @@ The [Runtime JSON projection](json-projection.md) now provides a narrow canonica
 
 No JSON parser, object deserializer, YAML output, canonical domain round trip, persistence format, file writer, HTTP adapter, or CLI exists. A future input or persistence boundary requires its own schema and security review. Persistence MUST NOT pickle arbitrary Runtime objects, and untrusted Python object formats MUST NOT be deserialized.
 
+The [Runtime application service](application-service.md) may compose existing query and explanation projections into its own deterministic output envelope. This is still output-only: it adds no parser, reconstruction, writer, transport, or persistence behavior, and it does not alter the nested RAS-008 envelopes.
+
 Registry snapshots and structured explanations have an explicit output projection, but their Python shape is still not itself a wire format. Projection does not reconstruct domain objects and creates no storage or exchange transport. Sprint-023R adds no parser, writer, migration, database, or persistence layer.

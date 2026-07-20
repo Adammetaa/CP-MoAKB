@@ -24,6 +24,8 @@ Sprint-022R stabilizes Runtime API `0.1` through [contract tests](runtime-contra
 
 Sprint-023R adds the [output-only JSON projection](json-projection.md) governed by RAS-008. It introduces no JSON input, deserialization, round trip, persistence, file writer, HTTP, CLI, automatic orchestration, or scientific inference.
 
+Sprint-024R adds the [transport-neutral Runtime application service](application-service.md) governed by RAS-009. It coordinates only existing query, query-match explanation, and projection calls; it introduces no transport, persistence, registry mutation, validation orchestration, diagnosis, or recommendation.
+
 ## Prohibited coupling
 
 - Domain models must not import YAML or JSON-loading libraries.
@@ -35,9 +37,12 @@ Sprint-023R adds the [output-only JSON projection](json-projection.md) governed 
 - Labels must not be used as identity keys or automatic equivalence evidence.
 - Relationships must not gain causal, diagnostic, regulatory, safety, or recommendation meaning from wording alone.
 - Lower Runtime layers must not import `cpmoakb.serialization`; projection may depend on their intentional public values only.
+- Domain, adapters, validation, registries, query, explain, serialization, and legacy layers must not import `cpmoakb.application`.
 
 ## Adapter direction
 
 Future loaders and repositories may depend on `cpmoakb.domain`. The domain package must not depend on them. Format errors should be translated into domain values or validation issues at the adapter boundary; format-specific dictionaries must not become the primary domain model.
 
 The existing IRAC parser/exporter pipeline remains separate. Any future integration must be explicit and must not alter frozen behavior merely to reuse the Runtime Core.
+
+Future HTTP, CLI, or web transports remain separate adapters. Where their use case is covered, they should depend on `cpmoakb.application` rather than coordinate Query, Explanation, or Serialization internals.
