@@ -5,7 +5,16 @@ ROOT = Path(__file__).parents[2]
 
 def test_manifest_explicitly_excludes_sensitive_and_non_runtime_roots() -> None:
     manifest = (ROOT / "MANIFEST.in").read_text(encoding="utf-8")
-    for root in (".github", "data", "docs", "references", "tests", "tmp", "validation"):
+    for root in (
+        ".github",
+        "data",
+        "docs",
+        "examples",
+        "references",
+        "tests",
+        "tmp",
+        "validation",
+    ):
         assert f"prune {root}" in manifest
     for suffix in ("*.csv", "*.db", "*.pdf", "*.sqlite", "*.sqlite3"):
         assert suffix in manifest

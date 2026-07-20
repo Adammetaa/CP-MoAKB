@@ -1,0 +1,32 @@
+# Glossary
+
+- **Adapter:** explicit translation between an external representation and domain values.
+- **Application service:** transport-neutral facade coordinating approved read-only operations.
+- **Authority:** identified organization or body scoped to a claim or reference.
+- **Candidate:** non-production record awaiting governance; not implied truth.
+- **Canonical:** governed representation or identity, not merely the most common label.
+- **Composition:** explicit construction of a facade from caller-owned services.
+- **Contract:** documented, tested behavior with change governance.
+- **Deterministic:** equivalent explicit inputs produce equivalent ordered outputs and failures.
+- **Domain:** storage- and transport-neutral value model.
+- **Evidence:** source-linked support with scope and provenance; not a conclusion.
+- **Explanation:** structured trace of supplied facts, matches, and limitations.
+- **Frozen:** protected from change within the active scope without new approval.
+- **Identifier:** stable identity token governed separately from labels.
+- **Lifecycle:** explicit record state; candidate status is not publication.
+- **Manifest:** static governed inventory used for conformance verification.
+- **Observation:** recorded occurrence or statement before evidence assessment.
+- **Ontology:** conceptual structure of entities and relationships, not a database choice.
+- **Projection:** output-only mapping of approved Runtime results to JSON values.
+- **Provenance:** explicit account of creation, source, review, and supersession.
+- **Query:** deterministic filtering of supplied records; not ranking.
+- **Registry:** explicit custody or reference lookup over in-memory governed state.
+- **Runtime:** the generic implemented domain-to-transport engineering contracts.
+- **Schema:** versioned structural input or output contract.
+- **Serialization:** closed deterministic output encoding; not arbitrary object conversion.
+- **Source:** identified material supporting a claim or candidate.
+- **Transport:** HTTP or CLI adapter over the application facade.
+- **Unavailable:** a requested explanation cannot be produced from supplied facts.
+- **Unknown:** value is not established; it must not be guessed.
+- **Validation:** deterministic mechanical contract checking, not scientific acceptance.
+- **Vocabulary:** governed terms, labels, synonyms, and lifecycle rules.

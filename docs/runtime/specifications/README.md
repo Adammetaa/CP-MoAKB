@@ -23,3 +23,4 @@ Future Runtime sprints SHOULD cite the RAS documents they implement and describe
 | [RAS-011](RAS-011-runtime-cli-transport-contract.md) | Active | Minimal deterministic reference CLI transport |
 | [RAS-012](RAS-012-runtime-packaging-and-composition-contract.md) | Active | Governed packaging, installation, and explicit composition |
 | [RAS-013](RAS-013-runtime-security-and-release-readiness-contract.md) | Active | Runtime security and release-readiness hardening |
+| [RAS-014](RAS-014-documentation-developer-experience-and-knowledge-transfer-contract.md) | Active | Documentation, developer experience, examples, and knowledge transfer |

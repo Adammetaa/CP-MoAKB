@@ -32,6 +32,10 @@ Sprint-026R adds the [minimal reference CLI consumer](cli.md) governed by RAS-01
 
 Sprint-027R adds governed packaging and the explicit composition factory under RAS-012. Sprint-028R adds repository-level security and release-readiness evidence under RAS-013. Neither sprint authorizes data discovery, credentials, publishing, deployment, authentication, or new runtime operations.
 
+Sprint-029R adds the documentation architecture and repository-only executable
+examples governed by RAS-014. Examples exercise public contracts but are not
+packaged API, extension plugins, default data, or authority for new behavior.
+
 ## Prohibited coupling
 
 Packaging and composition add one further rule: lower Runtime layers do not

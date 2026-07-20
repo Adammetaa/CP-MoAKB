@@ -1,0 +1,1 @@
+"""Serialization example package."""

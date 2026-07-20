@@ -6,6 +6,10 @@ Only symbols intentionally listed in each package's `__all__` are public. Intern
 
 The manifest contains 165 package-symbol entries: 147 Stable for Runtime 0.1 and 18 Experimental. Re-exports from both adapter packages are recorded separately because each import path is a compatibility surface. The additive serialization, application, HTTP, CLI, distribution-version, and composition exports are backward compatible under RAS-007 and governed by RAS-008 through RAS-012; Runtime API remains `0.1`. Sprint-028R/RAS-013 adds repository security evidence and no public symbol, signature, behavior, or version change.
 
+Sprint-029R/RAS-014 adds documentation, repository-only examples, and offline
+verification. Examples are excluded from distributions and introduce no public
+symbol, signature, behavior, or version change.
+
 | Package | Symbol | Category | Stability | Purpose | Compatibility notes |
 | --- | --- | --- | --- | --- | --- |
 | `cpmoakb` | `__version__` | constant | Stable for Runtime 0.1 | Exposes distribution package version `0.1.0`. | Additive and backward compatible; independent from every Runtime contract version. |

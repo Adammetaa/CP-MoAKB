@@ -2,115 +2,167 @@
 
 [![CI](https://github.com/Adammetaa/CP-MoAKB/actions/workflows/ci.yml/badge.svg)](https://github.com/Adammetaa/CP-MoAKB/actions/workflows/ci.yml)
 
-CP-MoAKB is a source-oriented pipeline for parsing and validating the official IRAC Mode of Action Classification Scheme.
+CP-MoAKB is **Explainable Agricultural Knowledge Infrastructure**: a governed,
+deterministic, read-only Python platform for representing, validating, querying,
+explaining, and projecting explicitly supplied knowledge records.
 
-## Architecture Overview
+## Why it exists
 
-The IRAC parser reads the retained official PDF into immutable `IRACDocument` and `IRACNode` objects. The semantic validator checks those in-memory objects without filesystem access. CSV export is an explicit, separate operation, while the SQLite builder and ZIP/XLSX import utility remain independent of the parser-validation flow.
+Agricultural knowledge systems need traceable sources, stable identity, explicit
+authority, and inspectable transformations before they can safely support more
+advanced products. CP-MoAKB builds that engineering foundation. Its doctrine is
+summarized as knowledge before intelligence, evidence before conclusion,
+explainability before automation, determinism before convenience, and contracts
+before code.
 
-## Repository Structure
+The permanent conceptual boundary is:
 
-- `cpmoakb/parsers/`: PDF parsing and immutable hierarchy models.
-- `cpmoakb/validation/`: deterministic, read-only semantic validation.
-- `cpmoakb/exporters/`: explicit CSV projection using the frozen layouts.
-- `cpmoakb/database/` and `cpmoakb/loaders/`: separate schema/build and import utilities.
-- `cpmoakb/domain/`: generic, immutable, storage-neutral Runtime Core models and protocols.
-- `data/official/` and `references/`: registered source metadata and retained official material.
-- `tests/`: unit, canonical golden-baseline, and semantic integration tests.
-- `docs/`: governance, development, validation, and project context.
+> Observation is not evidence; evidence is not knowledge; knowledge is not
+> diagnosis; diagnosis is not recommendation; recommendation is not decision;
+> decision is not action; action is not outcome.
 
-## Release Status
+## Current scope
 
-The current release baseline is v0.8.0. The `main` branch may contain reviewed work intended for a later release; a feature is not considered released until it is included in a published release or tag.
+The repository currently provides:
 
-## Roadmap
+- immutable domain objects and constrained YAML adaptation;
+- deterministic validation, registries, read-only query, and explanation;
+- closed JSON projection and a transport-neutral application service;
+- explicit composition with caller-supplied services;
+- injected HTTP and library-first CLI adapters;
+- governed packaging, security, compatibility, and release verification; and
+- a retained legacy IRAC parsing/export path kept separate from Runtime Core.
 
-The planned v0.9.0 line focuses on developer experience, continuous integration, and lightweight issue governance. Dataset-version, parser, exporter, validator-rule, and schema work remains subject to official-source review and Design Freeze approval. GitHub Issues and milestones are the source of truth for scoped future work.
+Package `0.1.0` supports Python `>=3.11,<3.13` (3.11 and 3.12). The project is an alpha engineering
+platform. No package release, GitHub Release, or release tag is created merely by
+merging repository work.
 
-## Knowledge Architecture
+## What it does not do
 
-The future-facing architecture is documented in [Product Vision](docs/PRODUCT_VISION.md), [Conceptual Domain Model](docs/DOMAIN_MODEL.md), [Ontology Foundation](docs/ontology/README.md), [Knowledge Identifier Strategy](docs/identifiers/README.md), [Controlled Vocabulary Governance](docs/vocabulary/README.md), [Canonical Master Data](docs/master-data/README.md), [Source Authority Framework](docs/source-authorities/README.md), [Runtime Core](docs/runtime/README.md), [Knowledge Graph](docs/KNOWLEDGE_GRAPH.md), [Decision-Support Workflow](docs/DECISION_ENGINE.md), [Source Policy](docs/SOURCE_POLICY.md), [Evidence Levels](docs/EVIDENCE_LEVELS.md), [Field Knowledge Policy](docs/FIELD_KNOWLEDGE_POLICY.md), and [Strategic Roadmap 2.0](docs/ROADMAP_2.0.md). Durable decisions are indexed in [Architecture Decision Records](docs/ARCHITECTURE_DECISIONS/README.md). Conceptual documents remain future-facing; the Runtime Core page states the narrow generic capabilities implemented today.
+CP-MoAKB is not an agricultural diagnosis, recommendation, pesticide-selection,
+ranking, confidence-scoring, AI, or LLM system. It is not a production web
+service, database-backed application, complete knowledge corpus, or substitute
+for experts, regulators, or agronomists. The installed distribution bundles no
+usable agricultural knowledge base; examples are deliberately fictional.
 
-## Quick Start
+## Architecture
 
-```python
-from cpmoakb.parsers.irac_parser import parse_irac_pdf
-from cpmoakb.validation import validate_irac_document
-
-document = parse_irac_pdf("IRAC-MoA-Classification.pdf")
-findings = validate_irac_document(document)
+```mermaid
+flowchart LR
+    A["Explicit candidate input"] --> B["Domain and validation"]
+    B --> C["Registries and read-only query"]
+    C --> D["Structured explanation"]
+    C --> E["Application service"]
+    D --> E
+    E --> F["JSON projection"]
+    E --> G["Injected HTTP adapter"]
+    E --> H["Library-first CLI adapter"]
 ```
 
-The parser and semantic validator operate in memory and do not write CSV or SQLite files.
+Nothing in this flow discovers data, creates a default registry, opens a
+database, or fetches a network resource. See the [architecture book](docs/architecture/README.md)
+and [Runtime documentation](docs/runtime/README.md).
 
-## Development Setup
+## Installation
 
-CP-MoAKB tests Python 3.11 and Python 3.12 with pinned open-source development dependencies. Follow the [development guide](docs/DEVELOPMENT.md) to create a virtual environment and install `requirements-dev.txt`. Contribution and data-governance rules are in [CONTRIBUTING.md](CONTRIBUTING.md).
-
-## Installation and explicit composition
-
-The distribution is `cp-moakb`; the import package is `cpmoakb`. Package release
-version `0.1.0` supports Python 3.11 and 3.12 and is independent from the Runtime
-contract versions. Install the base package with `pip install cp-moakb`, the
-optional FastAPI transport with `pip install "cp-moakb[http]"`, or a development
-checkout with `pip install -e ".[dev]"`.
-
-An installation contains software contracts, not a default knowledge base.
-Callers must create governed `QueryService` and `ExplanationService` instances
-and pass them to `cpmoakb.composition.create_runtime_application_service`.
-Nothing discovers YAML, loads official data, constructs registries, or accesses a
-network automatically. The CLI remains library-first and the HTTP adapter remains
-an injected app factory; no console command, server command, persistence,
-diagnosis, recommendation, ranking, confidence score, or scientific inference is
-provided. See [installation](docs/runtime/installation.md),
-[packaging](docs/runtime/packaging.md), and
-[composition](docs/runtime/composition.md).
-
-## Security and release readiness
-
-Security reports follow [SECURITY.md](SECURITY.md). The governed
-[security model](docs/security/security-model.md),
-[threat model](docs/security/threat-model.md), and
-[release-readiness checklist](docs/release/release-readiness-checklist.md)
-define the supported boundary. CI runs repository-owned AST security and release
-verifiers; neither verification nor a successful build publishes, tags, or
-creates a release. Publication always requires a separate explicit approval.
-
-## Testing
-
-Run the complete read-only test suite with:
+The project is not represented here as published on PyPI. From a clone, create a
+supported environment and install the local source:
 
 ```shell
-python -m pytest -q
+python -m pip install .
+python -m pip install ".[http]"  # only for HTTP integration
 ```
 
-GitHub Actions runs lint, governed formatting, and this test command on Python 3.11 and Python 3.12 for pushes to `main` and pull requests targeting `main`, then verifies that no prohibited artifacts were created.
-
-Run the focused static gates locally with:
+Contributors install the exact governed development set:
 
 ```shell
-python scripts/verify_security_contract.py
-python scripts/verify_release_readiness.py
+python -m pip install -r requirements-dev.txt
 ```
 
-## Semantic Validation
+See [installation](docs/getting-started/installation.md) for editable and built
+artifact paths.
 
-`validate_irac_document(document)` applies generic deterministic semantic checks to an existing in-memory document. `validate_irac_v11_5(document)` adds canonical v11.5 count checks. See [IRAC Semantic Validation](docs/VALIDATION.md) for rules and limitations.
+## Quick start
 
-## IRAC parser and CSV export
-
-The IRAC parser reads an official IRAC Mode of Action Classification Scheme PDF
-without relying on fixed page numbers. It returns normalized, in-memory objects
-only; it does not use SQLite or the Import Engine.
+This minimal offline example queries one fictional record through explicit
+composition:
 
 ```python
-from cpmoakb.exporters.csv_exporter import export_irac_csv
-from cpmoakb.parsers.irac_parser import parse_irac_pdf
+from cpmoakb.adapters.yaml import load_candidate_yaml
+from cpmoakb.application import QueryRecordsRequest
+from cpmoakb.composition import create_runtime_application_service
+from cpmoakb.explain import ExplanationService
+from cpmoakb.query import QueryService
 
-document = parse_irac_pdf("IRAC-MoA-Classification.pdf")
-paths = export_irac_csv(document, "build/irac")
+record = load_candidate_yaml("""schema_version: "1.0"
+candidate_id: "CPM-CAND-E-990001"
+record_kind: "entity"
+domain_type: "SyntheticConcept"
+lifecycle: "candidate"
+labels:
+  - language: "en"
+    text: "Fictional Widget"
+    status: "provisional"
+    preferred: true
+scope_note: "Synthetic quick-start record only."
+provenance:
+  creation:
+    created_at: "2026-01-01"
+    created_by: "synthetic-example-role"
+""")
+service = create_runtime_application_service(
+    query_service=QueryService.from_records((record,)),
+    explanation_service=ExplanationService(),
+)
+response = service.query_and_project(
+    QueryRecordsRequest.from_values(label_text="Fictional Widget")
+)
+print(response.canonical_json)
 ```
 
-`paths` contains the generated `MoA_Group.csv`, `Chemical_Class.csv`, and
-`Active_Ingredient.csv` paths. The CSV columns follow the frozen CP-MoAKB
-knowledge model; this export does not alter the database schema.
+The output is canonical JSON containing one traceable match; it contains no
+recommendation or inferred conclusion. Continue with the
+[quick start](docs/getting-started/quick-start.md).
+
+## Examples
+
+The [examples index](examples/README.md) covers minimal construction, querying,
+query-and-explain, serialization, composition, HTTP injection, CLI embedding,
+application embedding, deterministic testing, and extension boundaries. Every
+executable example runs offline and is verified in CI.
+
+## Documentation
+
+Use the [documentation home](docs/README.md) to navigate by audience:
+
+- [Getting started](docs/getting-started/quick-start.md)
+- [Architecture](docs/architecture/README.md)
+- [Public API handbook](docs/api/README.md)
+- [Contributor handbook](docs/contributing/README.md)
+- [Maintainer handbook](docs/maintainers/README.md)
+- [Governance maps](docs/governance/README.md)
+- [Concepts and glossary](docs/concepts/README.md)
+- [Release preparation](docs/release/README.md)
+
+## Compatibility
+
+| Surface | Version |
+| --- | --- |
+| Distribution | `0.1.0` |
+| Runtime API | `0.1` |
+| YAML schema | `1.0` |
+| JSON projection | `1.0` |
+| Application, HTTP, CLI, Composition APIs | `0.1` each |
+
+These values are summarized for navigation; implementation constants and the
+[public API manifest](docs/runtime/runtime-api-manifest.md) remain authoritative.
+
+## Security, contributing, roadmap, and license
+
+Report vulnerabilities privately as described in [SECURITY.md](SECURITY.md).
+Development and governance expectations are in [CONTRIBUTING.md](CONTRIBUTING.md).
+Current capability and future vision are separated in the
+[project roadmap](docs/project/roadmap.md). Future knowledge authoring remains
+subject to source, scientific, architecture, and product governance.
+
+CP-MoAKB is licensed under [Apache-2.0](LICENSE).

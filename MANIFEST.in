@@ -6,6 +6,7 @@ include cpmoakb/database/schema.sql
 prune .github
 prune data
 prune docs
+prune examples
 prune references
 prune scripts
 prune tests

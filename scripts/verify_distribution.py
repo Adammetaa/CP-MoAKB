@@ -47,6 +47,7 @@ FORBIDDEN_PARTS = frozenset(
         ".ruff_cache",
         ".venv",
         "__pycache__",
+        "examples",
         "references",
         "tests",
         "tmp",
@@ -88,7 +89,8 @@ def _reject_forbidden(names: tuple[str, ...]) -> None:
         if lowered.endswith(FORBIDDEN_SUFFIXES):
             raise DistributionContractError(f"forbidden artifact file: {name}")
         if any(
-            part.casefold() in {"data", "docs", "validation"} for part in path.parts[:1]
+            part.casefold() in {"data", "docs", "examples", "validation"}
+            for part in path.parts[:1]
         ):
             raise DistributionContractError(f"forbidden top-level source path: {name}")
 

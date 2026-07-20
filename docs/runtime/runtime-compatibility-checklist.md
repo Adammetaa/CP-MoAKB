@@ -31,6 +31,7 @@ Future Runtime changes MUST review this checklist:
 - [ ] CLI API version impact classified independently from other Runtime versions.
 - [ ] Security boundary, threat model, dependency pins, action pins, artifact policy, or release evidence changed.
 - [ ] Security and release-readiness verifiers updated without broadening an allowlist silently.
+- [ ] Public API handbook, examples, capability claims, links, and version summaries remain accurate under RAS-014.
 - [ ] Documentation and API manifest updated.
 - [ ] Contract tests updated without weakening the prior guarantee.
 - [ ] Deprecation documents behavior window and replacement.

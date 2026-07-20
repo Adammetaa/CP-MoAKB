@@ -1,0 +1,88 @@
+{
+  "schema": "cpmoakb-examples",
+  "schema_version": "1.0",
+  "examples": [
+    {
+      "id": "minimal",
+      "directory": "examples/minimal",
+      "module": "examples.minimal.example",
+      "required_extra": "core",
+      "expected_exit": 0,
+      "expected_output": "CPM-CAND-E-990001 Fictional Widget\n",
+      "public_apis": ["cpmoakb.adapters.yaml", "cpmoakb.domain"]
+    },
+    {
+      "id": "query",
+      "directory": "examples/query",
+      "module": "examples.query.example",
+      "required_extra": "core",
+      "expected_exit": 0,
+      "expected_output": "matches=1\nCPM-CAND-E-990001 labels.preferred Fictional Widget\n",
+      "public_apis": ["cpmoakb.query"]
+    },
+    {
+      "id": "query-and-explain",
+      "directory": "examples/query_and_explain",
+      "module": "examples.query_and_explain.example",
+      "required_extra": "core",
+      "expected_exit": 0,
+      "expected_output": "operation=query-and-explain matches=1 explanation=query_match\n",
+      "public_apis": ["cpmoakb.application", "cpmoakb.composition", "cpmoakb.explain", "cpmoakb.query"]
+    },
+    {
+      "id": "serialization",
+      "directory": "examples/serialization",
+      "module": "examples.serialization.example",
+      "required_extra": "core",
+      "expected_exit": 0,
+      "expected_contains": ["\"kind\":\"query-result\"", "\"record_identifier\":\"CPM-CAND-E-990001\""],
+      "public_apis": ["cpmoakb.query", "cpmoakb.serialization"]
+    },
+    {
+      "id": "composition",
+      "directory": "examples/composition",
+      "module": "examples.composition.example",
+      "required_extra": "core",
+      "expected_exit": 0,
+      "expected_output": "composition=0.1 application=0.1 matches=0\n",
+      "public_apis": ["cpmoakb.application", "cpmoakb.composition", "cpmoakb.explain", "cpmoakb.query"]
+    },
+    {
+      "id": "http",
+      "directory": "examples/http",
+      "module": "examples.http.example",
+      "required_extra": "http",
+      "expected_exit": 0,
+      "expected_output": "GET /health\nGET,HEAD /openapi.json\nPOST /v1/query\nPOST /v1/query-and-explain\n",
+      "public_apis": ["cpmoakb.composition", "cpmoakb.http_api"]
+    },
+    {
+      "id": "cli",
+      "directory": "examples/cli",
+      "module": "examples.cli.example",
+      "required_extra": "core",
+      "expected_exit": 0,
+      "expected_output": "{\"application_api_version\":\"0.1\",\"cli_api_version\":\"0.1\",\"http_api_version\":\"0.1\",\"projection_version\":\"1.0\",\"runtime_api_version\":\"0.1\"}\nexit=0\n",
+      "public_apis": ["cpmoakb.cli", "cpmoakb.composition"]
+    },
+    {
+      "id": "embedding",
+      "directory": "examples/embedding",
+      "module": "examples.embedding.example",
+      "required_extra": "core",
+      "expected_exit": 0,
+      "expected_output": "embedded_records=1 matches=1\n",
+      "public_apis": ["cpmoakb.application", "cpmoakb.composition"]
+    },
+    {
+      "id": "testing",
+      "directory": "examples/testing",
+      "module": "examples.testing.example",
+      "required_extra": "core",
+      "expected_exit": 0,
+      "expected_output": "deterministic=true matches=1\n",
+      "public_apis": ["cpmoakb.query", "cpmoakb.serialization"]
+    }
+  ],
+  "documentation_only": ["examples/extension_boundary"]
+}

@@ -8,7 +8,7 @@ variables, or a network for version calculation.
 The wheel contains Python modules, distribution metadata, the Apache-2.0 license,
 and the existing SQL schema required by the explicitly invoked legacy database
 builder. The schema is package data, not a database or persistence session. The
-wheel excludes repository documentation, tests, workflows, official data,
+wheel excludes repository documentation, executable examples, tests, workflows, official data,
 references, PDFs, CSV outputs, SQLite artifacts, caches, local configuration,
 virtual environments, and temporary files. The source distribution adds only the
 README and build inputs needed to rebuild that same package; it applies the same

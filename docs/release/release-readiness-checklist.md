@@ -13,6 +13,7 @@ no transient Git SHA.
       full suite pass.
 - [ ] Dependency/advisory and action-provenance reviews are complete.
 - [ ] Security and release-readiness scripts pass without network access.
+- [ ] Documentation tests, link/version/capability verification, and every governed executable example pass offline.
 - [ ] Wheel and sdist build twice; wheel bytes, content lists, and metadata are stable,
       and normalized sdist contents are stable.
 - [ ] Artifact manifests exclude forbidden files and contain required metadata.

@@ -54,7 +54,7 @@ jobs:
           cpmoakb/serialization cpmoakb/application cpmoakb/http_api cpmoakb/cli
           cpmoakb/composition tests/contracts tests/application
           tests/serialization tests/http_api tests/cli tests/packaging
-          tests/security scripts
+          tests/security tests/documentation examples scripts
           --exclude cpmoakb/validation/irac_validator.py
 
       - name: Run governed type checks
@@ -68,7 +68,7 @@ jobs:
           cpmoakb/serialization cpmoakb/application cpmoakb/http_api cpmoakb/cli
           cpmoakb/composition tests/contracts tests/application
           tests/serialization tests/http_api tests/cli tests/packaging
-          tests/security scripts
+          tests/security tests/documentation examples scripts
 
       - name: Run test suite
         run: python -m pytest -q
@@ -137,11 +137,50 @@ jobs:
         if: always()
         run: git diff --exit-code && test -z "$(git status --porcelain --untracked-files=all)"
 
+  documentation:
+    name: Documentation and Examples
+    needs: test
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      PYTHONDONTWRITEBYTECODE: "1"
+      PYTEST_ADDOPTS: "-p no:cacheprovider"
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+        with:
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements-dev.txt
+
+      - name: Install pre-resolved development dependencies
+        run: python -m pip install -r requirements-dev.txt
+
+      - name: Run documentation contract tests
+        run: python -m pytest tests/documentation -q
+
+      - name: Verify documentation
+        run: python scripts/verify_documentation.py
+
+      - name: Verify executable examples
+        run: python scripts/verify_examples.py
+
+      - name: Verify documentation checks were read-only
+        if: always()
+        run: git diff --exit-code && test -z "$(git status --porcelain --untracked-files=all)"
+
   packaging:
     name: Distribution contract
     needs:
       - test
       - security
+      - documentation
     runs-on: ubuntu-latest
     timeout-minutes: 15
     env:

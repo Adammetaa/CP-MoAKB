@@ -11,6 +11,11 @@ references, minimal workflow permissions, authoritative versions, and the static
 release evidence. `scripts/verify_security_contract.py` and
 `scripts/verify_release_readiness.py` are deterministic, read-only gates.
 
+`tests/documentation` and the documentation/example verifiers protect required
+audience entry points, relative links, version and capability claims, public API
+coverage, RAS traceability, machine-neutral content, exact example inventory, and
+deterministic offline execution under RAS-014.
+
 The contract suite protects Runtime API version `0.1` across explicit layers:
 
 ```text
