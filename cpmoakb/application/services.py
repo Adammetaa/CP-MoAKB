@@ -86,6 +86,26 @@ class RuntimeApplicationService:
         explanation = self._explain_at(request.query_result, request.match_index)
         return ExplainQueryResponse(explanation, request.match_index)
 
+    def query_and_project(
+        self, request: QueryRecordsRequest
+    ) -> ProjectedApplicationResponse:
+        if not isinstance(request, QueryRecordsRequest):
+            raise UnsupportedApplicationRequestError(
+                "query_and_project requires QueryRecordsRequest"
+            )
+        response = self.query_records(request)
+        try:
+            projection = self._query_projector(response.query_result)
+        except SerializationError:
+            raise
+        except (TypeError, ValueError) as error:
+            raise ApplicationDependencyError(
+                "projection dependency failed its application contract"
+            ) from error
+        return ProjectedApplicationResponse(
+            projection, _canonical_json_value(projection)
+        )
+
     def query_and_explain(
         self, request: QueryAndExplainRequest
     ) -> QueryAndExplainResponse:
@@ -123,7 +143,7 @@ class RuntimeApplicationService:
             "query": query,
             "explanation": explanation,
         }
-        canonical_json = _canonical_application_json(projection)
+        canonical_json = _canonical_json_value(projection)
         return ProjectedApplicationResponse(projection, canonical_json)
 
     def _explain_at(self, result: QueryResult, match_index: int) -> Explanation:
@@ -134,7 +154,7 @@ class RuntimeApplicationService:
         )
 
 
-def _canonical_application_json(projection: dict[str, JsonValue]) -> str:
+def _canonical_json_value(projection: dict[str, JsonValue]) -> str:
     try:
         return json.dumps(
             projection,

@@ -28,10 +28,12 @@ The Rice governance track remains blocked pending qualified review. This runtime
 - [traceable explanation services](explanation-services.md) over explicit query, validation, evidence, and status facts.
 - a [deterministic output-only JSON projection](json-projection.md) for selected immutable Runtime results.
 - a [transport-neutral application service](application-service.md) for approved read-only query, explanation, and projection composition.
+- a [minimal read-only HTTP adapter](http-api.md) requiring an injected application service.
 
 Runtime API stability is governed by [RAS-007](specifications/RAS-007-runtime-api-compatibility-contract.md), the [API manifest](runtime-api-manifest.md), and the [contract suite](runtime-contract-suite.md). Future changes use the [compatibility checklist](runtime-compatibility-checklist.md); [RAS-008](specifications/RAS-008-runtime-json-projection-contract.md) governs the narrow output projection and the remaining unsupported serialization capabilities stay explicit at the [serialization boundary](serialization-boundary.md).
 
-[RAS-009](specifications/RAS-009-runtime-application-service-contract.md) governs the application facade. Future transports should use this facade for its supported operations; no HTTP or CLI adapter exists.
+[RAS-009](specifications/RAS-009-runtime-application-service-contract.md) governs the application facade. Transports use this facade for its supported operations; no CLI adapter exists.
+[RAS-010](specifications/RAS-010-runtime-http-transport-contract.md) governs the first HTTP adapter. It is library-first and includes no server, CLI, persistence, deployment stack, or hidden data source.
 
 The intentional public API is exported from `cpmoakb.domain`. Individual modules remain available for maintainers, but callers should prefer those package exports.
 

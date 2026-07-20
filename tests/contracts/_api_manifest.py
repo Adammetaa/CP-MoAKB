@@ -175,6 +175,11 @@ PUBLIC_API_EXPORTS: dict[str, tuple[str, ...]] = {
         "RUNTIME_APPLICATION_API_VERSION",
         "RuntimeApplicationService",
         "UnsupportedApplicationRequestError",
+        "classify_application_error",
+    ),
+    "cpmoakb.http_api": (
+        "RUNTIME_HTTP_API_VERSION",
+        "create_http_app",
     ),
 }
 

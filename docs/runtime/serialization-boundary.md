@@ -8,4 +8,6 @@ No JSON parser, object deserializer, YAML output, canonical domain round trip, p
 
 The [Runtime application service](application-service.md) may compose existing query and explanation projections into its own deterministic output envelope. This is still output-only: it adds no parser, reconstruction, writer, transport, or persistence behavior, and it does not alter the nested RAS-008 envelopes.
 
+The [HTTP adapter](http-api.md) returns these approved projections as JSON responses without reparsing canonical JSON or redefining projection fields. HTTP request validation creates only application query requests; it is not JSON-to-domain deserialization and provides no round trip.
+
 Registry snapshots and structured explanations have an explicit output projection, but their Python shape is still not itself a wire format. Projection does not reconstruct domain objects and creates no storage or exchange transport. Sprint-023R adds no parser, writer, migration, database, or persistence layer.

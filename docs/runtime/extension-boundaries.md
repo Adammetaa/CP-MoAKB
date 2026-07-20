@@ -26,6 +26,8 @@ Sprint-023R adds the [output-only JSON projection](json-projection.md) governed 
 
 Sprint-024R adds the [transport-neutral Runtime application service](application-service.md) governed by RAS-009. It coordinates only existing query, query-match explanation, and projection calls; it introduces no transport, persistence, registry mutation, validation orchestration, diagnosis, or recommendation.
 
+Sprint-025R adds the [minimal read-only HTTP adapter](http-api.md) governed by RAS-010. It is an injected library boundary with no server launch, data ownership, persistence, CLI, authentication, deployment stack, or scientific inference.
+
 ## Prohibited coupling
 
 - Domain models must not import YAML or JSON-loading libraries.
@@ -45,4 +47,4 @@ Future loaders and repositories may depend on `cpmoakb.domain`. The domain packa
 
 The existing IRAC parser/exporter pipeline remains separate. Any future integration must be explicit and must not alter frozen behavior merely to reuse the Runtime Core.
 
-Future HTTP, CLI, or web transports remain separate adapters. Where their use case is covered, they should depend on `cpmoakb.application` rather than coordinate Query, Explanation, or Serialization internals.
+HTTP is now represented only by `cpmoakb.http_api`; future CLI or web transports remain separate adapters. Transports must depend on `cpmoakb.application` rather than coordinate Query, Explanation, or Serialization internals.

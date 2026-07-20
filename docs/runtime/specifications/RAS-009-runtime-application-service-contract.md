@@ -15,6 +15,7 @@ The application API version is `0.1`, exposed as `RUNTIME_APPLICATION_API_VERSIO
 The closed operation set is:
 
 - `query_records`: apply an existing `QueryCriteria` through an injected public `QueryService` and return its `QueryResult`.
+- `query_and_project`: query and return the unchanged RAS-008 query-result projection.
 - `explain_query_result`: select an explicit zero-based match from an existing `QueryResult`, call `ExplanationService.explain_query_match`, and return its structured `Explanation`.
 - `query_and_explain`: perform the preceding operations in order.
 - `query_explain_and_project`: compose the existing RAS-008 query and structured-explanation projections in the application envelope.
@@ -24,6 +25,8 @@ The explicit `match_index` MUST be a non-negative integer and MUST identify an e
 ## Requests and responses
 
 Requests and structured responses MUST be immutable, transport-neutral, typed compositions of existing public Runtime values. They MUST NOT accept arbitrary dictionaries, untyped payloads, HTTP fields, user identity, generated time, random request IDs, environment data, or executable predicates.
+
+`QueryRecordsRequest.from_values` MAY construct the approved primitive query subset for transports. It MUST create the existing `QueryCriteria` and MUST NOT add matching semantics.
 
 Structured responses retain `QueryResult` and `Explanation`; JSON dictionaries MUST NOT replace them internally. Projected responses MUST isolate mutable JSON-compatible containers from dependencies and callers. No response contains traceback text, status codes, headers, URLs, or private service state.
 

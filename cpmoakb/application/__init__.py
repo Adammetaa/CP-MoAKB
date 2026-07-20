@@ -5,6 +5,7 @@ from .errors import (
     ApplicationDependencyError,
     ApplicationServiceError,
     UnsupportedApplicationRequestError,
+    classify_application_error,
 )
 from .requests import ExplainQueryRequest, QueryAndExplainRequest, QueryRecordsRequest
 from .responses import (
@@ -29,4 +30,5 @@ __all__ = [
     "RUNTIME_APPLICATION_API_VERSION",
     "RuntimeApplicationService",
     "UnsupportedApplicationRequestError",
+    "classify_application_error",
 ]

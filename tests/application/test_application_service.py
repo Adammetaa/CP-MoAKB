@@ -83,6 +83,21 @@ def test_query_delegates_and_equals_direct_deterministic_result() -> None:
     )
 
 
+def test_transport_safe_query_values_and_query_projection_reuse_existing_contract() -> (
+    None
+):
+    service = _service()
+    request = QueryRecordsRequest.from_values(
+        label_text="Fictional Unicode ข้อมูล",
+        label_scope="any",
+        match_mode="exact",
+    )
+    structured = service.query_records(request).query_result
+    projected = service.query_and_project(request)
+    assert projected.projection == project_query_result(structured)
+    assert "Fictional Unicode ข้อมูล" in projected.canonical_json
+
+
 def test_explain_delegates_and_preserves_renderer_output() -> None:
     query_result = _service().query_records(_request().query).query_result
     tracking = TrackingExplanationService()

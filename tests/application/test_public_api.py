@@ -31,6 +31,7 @@ def test_version_and_public_exports_are_exact() -> None:
         "RUNTIME_APPLICATION_API_VERSION",
         "RuntimeApplicationService",
         "UnsupportedApplicationRequestError",
+        "classify_application_error",
     }
 
 
