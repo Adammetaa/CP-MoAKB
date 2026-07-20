@@ -15,3 +15,8 @@ def test_only_governed_sql_schema_is_declared_as_package_data() -> None:
     pyproject = (ROOT / "pyproject.toml").read_text(encoding="utf-8")
     assert '"cpmoakb.database" = ["schema.sql"]' in pyproject
     assert "include-package-data = false" in pyproject
+
+
+def test_ci_type_check_does_not_create_cache_databases() -> None:
+    workflow = (ROOT / ".github" / "workflows" / "ci.yml").read_text(encoding="utf-8")
+    assert "--no-incremental" in workflow
