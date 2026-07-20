@@ -60,7 +60,7 @@ jobs:
         run: >-
           python -m mypy --explicit-package-bases
           --disable-error-code import-untyped
-          --no-incremental
+          --cache-dir=/dev/null
           --exclude cpmoakb/validation/irac_validator.py
           cpmoakb/runtime_api.py cpmoakb/domain cpmoakb/adapters
           cpmoakb/validation cpmoakb/registries cpmoakb/query cpmoakb/explain

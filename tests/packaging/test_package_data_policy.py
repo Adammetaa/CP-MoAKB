@@ -17,6 +17,7 @@ def test_only_governed_sql_schema_is_declared_as_package_data() -> None:
     assert "include-package-data = false" in pyproject
 
 
-def test_ci_type_check_does_not_create_cache_databases() -> None:
+def test_ci_type_check_writes_cache_to_null_device() -> None:
     workflow = (ROOT / ".github" / "workflows" / "ci.yml").read_text(encoding="utf-8")
-    assert "--no-incremental" in workflow
+    assert "--cache-dir=/dev/null" in workflow
+    assert "--no-incremental" not in workflow
