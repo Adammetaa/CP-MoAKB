@@ -1,0 +1,129 @@
+{
+  "meta": {
+    "status": "fictional-placeholder",
+    "version": "prototype-0.1",
+    "disclaimer": "Navigation demonstration only; not agricultural knowledge, diagnosis, recommendation, or production data."
+  },
+  "statistics": [
+    { "value": "24", "label": "placeholder concepts" },
+    { "value": "12", "label": "mock evidence links" },
+    { "value": "6", "label": "fictional sources" },
+    { "value": "0", "label": "production records" }
+  ],
+  "concepts": [
+    {
+      "id": "mock-concept-rice-blast",
+      "title": "Rice Blast",
+      "type": "Disease concept demonstration",
+      "status": "Placeholder — not reviewed",
+      "definition": "Fictional interface copy showing where a reviewed, scoped definition would appear. It is not an agricultural assertion.",
+      "scientificName": "Placeholder scientific name — not asserted",
+      "authority": "Fictional Plant Health Authority",
+      "evidence": "Mock evidence record E-001",
+      "lifecycle": "Prototype only",
+      "relationships": [
+        { "predicate": "demonstrates relationship to", "target": "Placeholder rice canopy concept" },
+        { "predicate": "has mock evidence", "target": "Evidence record E-001" },
+        { "predicate": "attributed in prototype to", "target": "Fictional Plant Health Authority" }
+      ]
+    },
+    {
+      "id": "mock-concept-growth-stage",
+      "title": "Rice growth stage placeholder",
+      "type": "Growth stage demonstration",
+      "status": "Placeholder — not reviewed",
+      "definition": "Demonstrates a future concept summary and lifecycle badge without asserting a growth-stage definition.",
+      "authority": "No real authority assigned",
+      "evidence": "No real evidence assigned",
+      "lifecycle": "Prototype only"
+    },
+    {
+      "id": "mock-concept-plant-structure",
+      "title": "Plant structure placeholder",
+      "type": "Anatomy demonstration",
+      "status": "Placeholder — not reviewed",
+      "definition": "Demonstrates domain browsing and relationship navigation using deliberately non-substantive copy.",
+      "authority": "No real authority assigned",
+      "evidence": "No real evidence assigned",
+      "lifecycle": "Prototype only"
+    },
+    {
+      "id": "mock-concept-observation",
+      "title": "Observation trait placeholder",
+      "type": "Observation demonstration",
+      "status": "Placeholder — not reviewed",
+      "definition": "Shows that observations, evidence, knowledge, and diagnosis remain separate interface layers.",
+      "authority": "Knowledge Constitution boundary",
+      "evidence": "Mock evidence record E-002",
+      "lifecycle": "Prototype only"
+    }
+  ],
+  "evidence": [
+    {
+      "id": "E-001",
+      "title": "Mock evidence record E-001",
+      "level": "Demonstration only",
+      "status": "Placeholder — no evidentiary value",
+      "supports": "Interface placement for claim-scoped support",
+      "source": "Demonstration Bulletin 000",
+      "locator": "Example section 1 — fictional",
+      "limitations": "Contains no scientific evidence and supports no agricultural claim."
+    },
+    {
+      "id": "E-002",
+      "title": "Mock evidence record E-002",
+      "level": "Demonstration only",
+      "status": "Placeholder — no evidentiary value",
+      "supports": "Interface placement for uncertainty and conflict",
+      "source": "Prototype Methods Note 000",
+      "locator": "Example paragraph 2 — fictional",
+      "limitations": "Created solely to demonstrate navigation."
+    }
+  ],
+  "sources": [
+    {
+      "id": "mock-source-000",
+      "title": "Demonstration Bulletin 000",
+      "authority": "Fictional Plant Health Authority",
+      "publication": "Prototype edition · no publication status",
+      "checksum": "sha256: placeholder-not-a-real-checksum",
+      "status": "Fictional placeholder",
+      "scope": "UI demonstration only",
+      "relatedConcepts": ["Rice Blast", "Observation trait placeholder"]
+    },
+    {
+      "id": "mock-source-001",
+      "title": "Prototype Methods Note 000",
+      "authority": "No external authority",
+      "publication": "Unpublished mock item",
+      "checksum": "sha256: placeholder-not-a-real-checksum-2",
+      "status": "Fictional placeholder",
+      "scope": "Evidence-card demonstration only",
+      "relatedConcepts": ["Observation trait placeholder"]
+    }
+  ],
+  "authorities": [
+    {
+      "id": "mock-authority-000",
+      "name": "Fictional Plant Health Authority",
+      "status": "Placeholder — not a real organization",
+      "scope": "Demonstrates claim-scoped authority presentation",
+      "jurisdiction": "Fictional jurisdiction",
+      "versionContext": "Prototype only",
+      "limitations": "Has no scientific, regulatory, or publication authority."
+    }
+  ],
+  "domains": [
+    "Rice",
+    "Growth Stage",
+    "Plant Structure",
+    "Disease",
+    "Insect",
+    "Weed",
+    "Abiotic",
+    "Pathogen",
+    "IRAC",
+    "FRAC",
+    "HRAC"
+  ]
+}

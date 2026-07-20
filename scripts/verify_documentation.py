@@ -151,6 +151,13 @@ KNOWLEDGE_GOVERNANCE_STANDARDS = (
     "docs/knowledge/governance/KGS-005-publication-governance.md",
     "docs/knowledge/governance/KGS-006-audit-and-transparency.md",
 )
+KNOWLEDGE_EXPLORER_DOCUMENTS = (
+    "prototype/knowledge-explorer/README.md",
+    "prototype/knowledge-explorer/docs/information-architecture.md",
+    "prototype/knowledge-explorer/docs/personas.md",
+    "prototype/knowledge-explorer/docs/wireframes.md",
+    "prototype/knowledge-explorer/docs/design-system.md",
+)
 REQUIRED_DOCUMENTS = (
     (
         "README.md",
@@ -166,6 +173,7 @@ REQUIRED_DOCUMENTS = (
     )
     + KNOWLEDGE_GOVERNANCE_DOCUMENTS
     + KNOWLEDGE_GOVERNANCE_STANDARDS
+    + KNOWLEDGE_EXPLORER_DOCUMENTS
     + tuple(f"docs/{group}/{name}" for group, names in GROUPS.items() for name in names)
 )
 LINK_PATTERN = re.compile(r"(?<!!)\[[^\]]+\]\(([^)]+)\)")

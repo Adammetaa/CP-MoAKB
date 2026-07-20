@@ -13,6 +13,7 @@ implemented engineering behavior from conceptual future knowledge work.
 | Release reviewers | [Release handbook](release/README.md) | Prepare and verify without publishing |
 | Knowledge authors and reviewers | [Knowledge governance](knowledge/README.md) | Use the Constitution, KGS, KAS, and planning-only roadmap |
 | Knowledge-governance contributors | [Governance maps](governance/README.md) | Relate decisions, KAS, RAS, and review |
+| Product and UX reviewers | [Knowledge Explorer prototype](../prototype/knowledge-explorer/README.md) | Review product vision, navigation, responsive screens, and fictional mock content |
 
 Additional entry points are the [architecture book](architecture/README.md),
 [project scope and FAQ](project/README.md), [concept guides](concepts/README.md),
@@ -20,6 +21,7 @@ Additional entry points are the [architecture book](architecture/README.md),
 [Knowledge Constitution](knowledge/constitution/knowledge-constitution.md),
 [Knowledge Governance Standards](knowledge/governance/README.md),
 [Knowledge Authoring Standards](knowledge/README.md), and
+[Knowledge Explorer prototype](../prototype/knowledge-explorer/README.md), and
 [executable examples](../examples/README.md).
 
 Authoritative versions live in implementation constants and package metadata;

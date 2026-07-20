@@ -142,6 +142,7 @@ Use the [documentation home](docs/README.md) to navigate by audience:
 - [Maintainer handbook](docs/maintainers/README.md)
 - [Governance maps](docs/governance/README.md)
 - [Knowledge Constitution, Governance, and Authoring Standards](docs/knowledge/README.md)
+- [Knowledge Explorer product-vision prototype](prototype/knowledge-explorer/README.md)
 - [Concepts and glossary](docs/concepts/README.md)
 - [Release preparation](docs/release/README.md)
 

@@ -1,0 +1,9 @@
+{
+  "name": "cp-moakb-knowledge-explorer-prototype",
+  "version": "0.0.0-private",
+  "private": true,
+  "description": "Static product-vision prototype for the CP-MoAKB Knowledge Explorer",
+  "scripts": {
+    "build": "node scripts/build.mjs"
+  }
+}
