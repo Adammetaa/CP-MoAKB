@@ -12,6 +12,12 @@ This handbook prepares and verifies a candidate; it does not publish anything.
 - [Publication boundary](publication-boundary.md)
 - [Readiness checklist](release-readiness-checklist.md)
 - [Compatibility audit](compatibility-audit.md)
+- [Open-source release audit](open-source-release-audit.md)
+- [Release candidate checklist](release-candidate-checklist.md)
+- [Release notes 0.1.0](release-notes-0.1.0.md)
+- [License and attribution audit](license-and-attribution-audit.md)
+- [GitHub Release draft material](github-release-draft.md)
+- [Publication runbook](publication-runbook.md)
 
 Security review uses the [release security checklist](../security/release-security-checklist.md).
 Tags, GitHub Releases, and package publication require separate explicit approval.

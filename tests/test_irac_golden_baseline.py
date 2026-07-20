@@ -6,8 +6,9 @@ import hashlib
 import json
 from pathlib import Path
 
-from cpmoakb.parsers.irac_parser import parse_irac_pdf
+import pytest
 
+from cpmoakb.parsers.irac_parser import parse_irac_pdf
 
 ROOT = Path(__file__).resolve().parents[1]
 MANIFEST = ROOT / "data" / "official" / "IRAC" / "source_manifest.yaml"
@@ -36,6 +37,15 @@ def _sha256(path: Path) -> str:
     return digest.hexdigest()
 
 
+def _registered_source(identity: dict[str, object]) -> Path:
+    source = ROOT / str(identity["source_path"])
+    if not source.is_file():
+        pytest.skip(
+            "official publication is not distributed; follow references/IRAC/retrieval.md"
+        )
+    return source
+
+
 def _node_records(document) -> list[dict[str, object]]:
     return sorted(
         (
@@ -61,21 +71,25 @@ def _node_records(document) -> list[dict[str, object]]:
 def test_registered_source_matches_golden_identity():
     manifest = _read_scalar_yaml(MANIFEST)
     identity = _read_scalar_yaml(GOLDEN_DIR / "source_identity.yaml")
-    source = ROOT / identity["source_path"]
+    source = _registered_source(identity)
 
     assert source.is_file(), f"Registered canonical source is missing: {source}"
     assert identity["classification_version"] == manifest["classification_version"]
     assert identity["source_path"] == manifest["source_path"]
     assert identity["sha256"] == manifest["sha256"]
     assert identity["file_size_bytes"] == manifest["file_size_bytes"]
-    assert _sha256(source) == identity["sha256"], "Canonical IRAC PDF SHA-256 differs from the golden identity."
-    assert source.stat().st_size == identity["file_size_bytes"], "Canonical IRAC PDF size differs from the golden identity."
+    assert (
+        _sha256(source) == identity["sha256"]
+    ), "Canonical IRAC PDF SHA-256 differs from the golden identity."
+    assert (
+        source.stat().st_size == identity["file_size_bytes"]
+    ), "Canonical IRAC PDF size differs from the golden identity."
 
 
 def test_registered_source_parser_counts_match_golden_baseline():
     identity = _read_scalar_yaml(GOLDEN_DIR / "source_identity.yaml")
     expected = _read_scalar_yaml(GOLDEN_DIR / "expected_counts.yaml")
-    document = parse_irac_pdf(ROOT / identity["source_path"])
+    document = parse_irac_pdf(_registered_source(identity))
     actual = {
         "total_nodes": len(document.nodes),
         "moa_groups": sum(node.level == 1 for node in document.nodes),
@@ -83,14 +97,24 @@ def test_registered_source_parser_counts_match_golden_baseline():
         "active_ingredients": sum(node.level == 3 for node in document.nodes),
     }
 
-    assert document.version == identity["classification_version"], "Parsed IRAC version differs from the golden identity."
-    assert actual == expected, "Parsed IRAC node counts differ from the golden baseline."
+    assert (
+        document.version == identity["classification_version"]
+    ), "Parsed IRAC version differs from the golden identity."
+    assert (
+        actual == expected
+    ), "Parsed IRAC node counts differ from the golden baseline."
 
 
 def test_registered_source_parser_hierarchy_matches_golden_baseline():
     identity = _read_scalar_yaml(GOLDEN_DIR / "source_identity.yaml")
-    expected = json.loads((GOLDEN_DIR / "expected_hierarchy.json").read_text(encoding="utf-8"))
-    document = parse_irac_pdf(ROOT / identity["source_path"])
+    expected = json.loads(
+        (GOLDEN_DIR / "expected_hierarchy.json").read_text(encoding="utf-8")
+    )
+    document = parse_irac_pdf(_registered_source(identity))
 
-    assert document.version == expected["classification_version"], "Parsed IRAC version differs from the golden hierarchy."
-    assert _node_records(document) == expected["nodes"], "Parsed IRAC hierarchy differs from the golden baseline."
+    assert (
+        document.version == expected["classification_version"]
+    ), "Parsed IRAC version differs from the golden hierarchy."
+    assert (
+        _node_records(document) == expected["nodes"]
+    ), "Parsed IRAC hierarchy differs from the golden baseline."

@@ -10,7 +10,7 @@ from scripts.verify_release_readiness import (
 
 
 def test_repository_release_readiness_contract_passes() -> None:
-    assert len(verify()) == 9
+    assert len(verify()) == 13
 
 
 def test_versions_and_narrow_allowlists_are_exact() -> None:

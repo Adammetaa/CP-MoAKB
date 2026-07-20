@@ -42,7 +42,14 @@ IDs are deterministic IRAC/version-scoped export values.  The exporter only writ
 
 ## Validation Workflow
 
-A standalone validator exists at `tools/validate_irac.py`.  It locates an IRAC v11.5 PDF below the repository root (preferring the `docs/` copy), parses it, exports the three IRAC CSVs to `validation/`, and writes `validation/VALIDATION_REPORT.md`.  It checks missing names/parents, duplicate names within each level, and unresolved parsed parent references.  It does not load CSVs into SQLite, enforce all database constraints, compare against a remote source, or provide a reusable validation API.
+A standalone validator exists at `tools/validate_irac.py`. After the developer
+follows the governed [IRAC retrieval instructions](../references/IRAC/retrieval.md),
+it locates the verified local IRAC v11.5 PDF, parses it, exports the three IRAC
+CSVs to `validation/`, and writes `validation/VALIDATION_REPORT.md`. It checks
+missing names/parents, duplicate names within each level, and unresolved parsed
+parent references. It does not load CSVs into SQLite, enforce all database
+constraints, compare against a remote source, or provide a reusable validation
+API.
 
 The tests exercise parser hierarchy/version handling and CSV export fields/IDs.  The import-engine and SQLite-builder test modules currently only import their functions; they do not invoke them.
 
@@ -55,7 +62,9 @@ Do not alter `cpmoakb/database/schema.sql`, use `tools/generate_schema.py` to re
 ## Repository Conventions
 
 - Store incoming canonical source material only under `data/official/`, with IRAC material under `data/official/IRAC/`.
-- Retain source/reference PDFs under their existing locations unless an approved change says otherwise.
+- Never track official reference publications without documented redistribution
+  rights. Retain identity, provenance, checksums, retrieval instructions, and
+  deterministic expectations instead.
 - Do not commit generated databases, caches, temporary files, environment files, or generated CSVs for this sprint.
 - Keep tests under `tests/`; keep maintenance scripts under `tools/`.
 
@@ -64,7 +73,8 @@ Do not alter `cpmoakb/database/schema.sql`, use `tools/generate_schema.py` to re
 - The parser is designed around the current IRAC document forms.  Its appendix scan includes pages 24--28 as a fallback in addition to detecting the descriptor heading, so a materially reorganized official PDF may need approved parser work.
 - If a parsed class references a group that has no appendix descriptor, the parser creates a fallback group name of `IRAC group <code>` with page `0`.
 - Validation checks parsed-node relationships and names, not a database import or all source-provenance metadata.
-- The repository includes duplicate IRAC v11.5 PDFs in `docs/` and `references/IRAC/`; the validator explicitly prefers the `docs/` copy.
+- Source-dependent parser regression and golden regeneration require the locally
+  retrieved, checksum-verified IRAC v11.5 PDF; the publication is not bundled.
 
 ## Explicitly Frozen Components
 

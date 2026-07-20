@@ -38,6 +38,10 @@ REQUIRED_DOCUMENTS = (
     "docs/release/compatibility-audit.md",
     "docs/runtime/specifications/RAS-013-runtime-security-and-release-readiness-contract.md",
     "release/release-readiness.json",
+    "docs/release/release-candidate-manifest.json",
+    "docs/release/open-source-release-audit.md",
+    "docs/release/license-and-attribution-audit.md",
+    "references/IRAC/retrieval.md",
 )
 ALLOWED_FROZEN_CSV = frozenset(
     {
@@ -222,6 +226,10 @@ def _verify_tracked_files(failures: list[str]) -> None:
             failures.append(f"tracked generated/cache path: {name}")
         if lowered.endswith((".db", ".sqlite", ".sqlite3", ".pyc", ".pyo")):
             failures.append(f"tracked generated artifact: {name}")
+        if lowered.endswith(
+            (".doc", ".docx", ".pdf", ".ppt", ".pptx", ".xls", ".xlsx", ".zip")
+        ):
+            failures.append(f"tracked official/publication file type: {name}")
         if lowered.endswith(".csv") and name not in ALLOWED_FROZEN_CSV:
             failures.append(f"unapproved tracked CSV: {name}")
         if path.name.casefold() in {

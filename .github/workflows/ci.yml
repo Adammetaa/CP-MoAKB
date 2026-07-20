@@ -55,6 +55,7 @@ jobs:
           cpmoakb/composition tests/contracts tests/application
           tests/serialization tests/http_api tests/cli tests/packaging
           tests/security tests/documentation examples scripts
+          tests/release_candidate
           --exclude cpmoakb/validation/irac_validator.py
 
       - name: Run governed type checks
@@ -69,6 +70,7 @@ jobs:
           cpmoakb/composition tests/contracts tests/application
           tests/serialization tests/http_api tests/cli tests/packaging
           tests/security tests/documentation examples scripts
+          tests/release_candidate
 
       - name: Run test suite
         run: python -m pytest -q
@@ -98,6 +100,45 @@ jobs:
           )
 
           exit "$status"
+
+  release-candidate:
+    name: Release Candidate Audit
+    needs:
+      - test
+      - security
+      - documentation
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      PYTHONDONTWRITEBYTECODE: "1"
+      PYTEST_ADDOPTS: "-p no:cacheprovider"
+      RUFF_NO_CACHE: "true"
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+        with:
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements-dev.txt
+
+      - name: Install pre-resolved development dependencies
+        run: python -m pip install -r requirements-dev.txt
+
+      - name: Run release-candidate tests
+        run: python -m pytest tests/release_candidate -q
+
+      - name: Verify prepared release candidate
+        run: python scripts/verify_release_candidate.py --require-clean
+
+      - name: Verify audit remained read-only
+        if: always()
+        run: git diff --exit-code && test -z "$(git status --porcelain --untracked-files=all)"
 
   security:
     name: Security and release readiness
@@ -181,6 +222,7 @@ jobs:
       - test
       - security
       - documentation
+      - release-candidate
     runs-on: ubuntu-latest
     timeout-minutes: 15
     env:
@@ -215,6 +257,9 @@ jobs:
 
       - name: Verify release artifact security
         run: python scripts/verify_release_readiness.py --dist-dir dist
+
+      - name: Verify release candidate artifacts and installation
+        run: python scripts/verify_release_candidate.py --dist-dir dist
 
       - name: Verify isolated installation paths
         run: python scripts/verify_installation.py --dist-dir dist

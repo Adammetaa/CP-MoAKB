@@ -22,6 +22,7 @@
     "Python 3.11",
     "Python 3.12",
     "Security and release readiness",
+    "Release Candidate Audit",
     "Distribution contract"
   ],
   "forbidden_artifact_patterns": [

@@ -112,6 +112,12 @@ GROUPS = {
         "publication-boundary.md",
         "release-readiness-checklist.md",
         "compatibility-audit.md",
+        "open-source-release-audit.md",
+        "release-candidate-checklist.md",
+        "release-notes-0.1.0.md",
+        "license-and-attribution-audit.md",
+        "github-release-draft.md",
+        "publication-runbook.md",
     ),
     "security": (
         "README.md",
@@ -123,12 +129,15 @@ GROUPS = {
 }
 REQUIRED_DOCUMENTS = (
     "README.md",
+    "CHANGELOG.md",
     "CONTRIBUTING.md",
     "SECURITY.md",
     "docs/README.md",
     "docs/glossary.md",
     "examples/README.md",
+    "references/IRAC/retrieval.md",
     "docs/runtime/specifications/RAS-014-documentation-developer-experience-and-knowledge-transfer-contract.md",
+    "docs/runtime/specifications/RAS-015-open-source-release-audit-and-publication-boundary-contract.md",
 ) + tuple(f"docs/{group}/{name}" for group, names in GROUPS.items() for name in names)
 LINK_PATTERN = re.compile(r"(?<!!)\[[^\]]+\]\(([^)]+)\)")
 MACHINE_PATTERNS = (
@@ -273,6 +282,51 @@ def verify() -> tuple[Path, ...]:
     for number in range(1, 15):
         if f"RAS-{number:03d}" not in ras_index:
             failures.append(f"RAS index missing RAS-{number:03d}")
+    if "RAS-015" not in ras_index:
+        failures.append("RAS index missing RAS-015")
+    release_manifest = (
+        ROOT / "docs/release/release-candidate-manifest.json"
+    ).read_text(encoding="utf-8")
+    if '"publication_status": "not_published"' not in release_manifest:
+        failures.append("release candidate publication status mismatch")
+    release_documents = tuple(
+        ROOT / name
+        for name in (
+            "CHANGELOG.md",
+            "docs/release/open-source-release-audit.md",
+            "docs/release/release-candidate-checklist.md",
+            "docs/release/release-notes-0.1.0.md",
+            "docs/release/license-and-attribution-audit.md",
+            "docs/release/github-release-draft.md",
+            "docs/release/publication-runbook.md",
+        )
+    )
+    release_text = "\n".join(
+        path.read_text(encoding="utf-8") for path in release_documents
+    )
+    if (
+        "not_published" not in release_text
+        or "not published" not in release_text.casefold()
+    ):
+        failures.append("release documents do not preserve unpublished state")
+    if "<owner-approved-tag>" not in release_text:
+        failures.append("GitHub Release draft lost owner-approved tag boundary")
+    if "Private vulnerability reporting" not in (ROOT / "SECURITY.md").read_text(
+        encoding="utf-8"
+    ):
+        failures.append("security reporting authority mismatch")
+    source_manifest = (ROOT / "data/official/IRAC/source_manifest.yaml").read_text(
+        encoding="utf-8"
+    )
+    retrieval = (ROOT / "references/IRAC/retrieval.md").read_text(encoding="utf-8")
+    checksum = "74641b0f56bcfb46574fd0dc815ee136170af66385950ad61045a0692ea750d6"
+    if checksum not in source_manifest or checksum not in retrieval:
+        failures.append("IRAC retrieval checksum authority mismatch")
+    if (
+        'redistribution_status: "prohibited_without_verified_rights"'
+        not in source_manifest
+    ):
+        failures.append("official-reference redistribution boundary mismatch")
     if failures:
         raise DocumentationVerificationError(
             "documentation verification failures:\n" + "\n".join(sorted(set(failures)))

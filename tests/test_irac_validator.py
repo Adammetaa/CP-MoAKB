@@ -6,10 +6,11 @@ import hashlib
 import json
 from pathlib import Path
 
+import pytest
+
 from cpmoakb.parsers.irac_parser import parse_irac_pdf
 from cpmoakb.parsers.models import IRACDocument, IRACNode
 from cpmoakb.validation import validate_irac_document, validate_irac_v11_5
-
 
 ROOT = Path(__file__).resolve().parents[1]
 MANIFEST = ROOT / "data" / "official" / "IRAC" / "source_manifest.yaml"
@@ -56,7 +57,9 @@ def test_valid_document_has_no_semantic_findings():
 def test_duplicate_node_identifier_is_reported():
     document = _document(*_valid_nodes(), IRACNode("1A", "Other class", 2, "1", 2))
 
-    assert "node.identifier_duplicate" in {finding.rule_id for finding in validate_irac_document(document)}
+    assert "node.identifier_duplicate" in {
+        finding.rule_id for finding in validate_irac_document(document)
+    }
 
 
 def test_missing_parent_is_reported():
@@ -64,9 +67,10 @@ def test_missing_parent_is_reported():
 
     findings = validate_irac_document(document)
 
-    assert [(finding.rule_id, finding.node_identifier, finding.parent_identifier) for finding in findings] == [
-        ("parent.not_found", "1A", "missing")
-    ]
+    assert [
+        (finding.rule_id, finding.node_identifier, finding.parent_identifier)
+        for finding in findings
+    ] == [("parent.not_found", "1A", "missing")]
 
 
 def test_invalid_parent_level_is_reported():
@@ -75,7 +79,9 @@ def test_invalid_parent_level_is_reported():
         IRACNode("1A:item", "Ingredient", 3, "1", 1),
     )
 
-    assert [finding.rule_id for finding in validate_irac_document(document)] == ["parent.level_invalid"]
+    assert [finding.rule_id for finding in validate_irac_document(document)] == [
+        "parent.level_invalid"
+    ]
 
 
 def test_self_parent_and_cycle_are_reported():
@@ -85,8 +91,12 @@ def test_self_parent_and_cycle_are_reported():
         IRACNode("B", "Class B", 2, "A", 1),
     )
 
-    assert "parent.self_reference" in {finding.rule_id for finding in validate_irac_document(self_parent)}
-    assert "parent.cycle" in {finding.rule_id for finding in validate_irac_document(cycle)}
+    assert "parent.self_reference" in {
+        finding.rule_id for finding in validate_irac_document(self_parent)
+    }
+    assert "parent.cycle" in {
+        finding.rule_id for finding in validate_irac_document(cycle)
+    }
 
 
 def test_duplicate_semantic_record_is_scoped_to_parent():
@@ -98,7 +108,11 @@ def test_duplicate_semantic_record_is_scoped_to_parent():
         IRACNode("2A", "Same class", 2, "2", 1),
     )
 
-    semantic = [finding for finding in validate_irac_document(document) if finding.rule_id.startswith("semantic.")]
+    semantic = [
+        finding
+        for finding in validate_irac_document(document)
+        if finding.rule_id.startswith("semantic.")
+    ]
 
     assert [(finding.rule_id, finding.parent_identifier) for finding in semantic] == [
         ("semantic.class_duplicate", "1")
@@ -133,12 +147,25 @@ def test_registered_irac_v11_5_source_passes_semantic_and_count_validation():
     expected_counts = _read_scalar_yaml(GOLDEN_DIR / "expected_counts.yaml")
     source = ROOT / identity["source_path"]
 
+    if not source.is_file():
+        pytest.skip(
+            "official publication is not distributed; follow references/IRAC/retrieval.md"
+        )
+
     assert identity["source_path"] == manifest["source_path"]
     assert identity["sha256"] == manifest["sha256"] == _sha256(source)
-    assert identity["file_size_bytes"] == manifest["file_size_bytes"] == source.stat().st_size
+    assert (
+        identity["file_size_bytes"]
+        == manifest["file_size_bytes"]
+        == source.stat().st_size
+    )
 
     document = parse_irac_pdf(source)
-    assert identity["classification_version"] == manifest["classification_version"] == document.version
+    assert (
+        identity["classification_version"]
+        == manifest["classification_version"]
+        == document.version
+    )
     actual_counts = {
         "total_nodes": len(document.nodes),
         "moa_groups": sum(node.level == 1 for node in document.nodes),

@@ -31,6 +31,24 @@ dist-*/
 *.sqlite
 *.sqlite3
 
+# Locally retrieved official reference publications (metadata remains tracked)
+data/official/**/*.pdf
+data/official/**/*.doc
+data/official/**/*.docx
+data/official/**/*.xls
+data/official/**/*.xlsx
+data/official/**/*.ppt
+data/official/**/*.pptx
+data/official/**/*.zip
+references/**/*.pdf
+references/**/*.doc
+references/**/*.docx
+references/**/*.xls
+references/**/*.xlsx
+references/**/*.ppt
+references/**/*.pptx
+references/**/*.zip
+
 # IDE
 .vscode/
 .idea/

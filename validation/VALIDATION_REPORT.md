@@ -1,6 +1,7 @@
 # IRAC Parser Validation Report
 
-- Source PDF: `docs/IRAC_MoA_Classification_v11.5_Feb2026.pdf`
+- Source identity: IRAC Mode of Action Classification Scheme v11.5
+- Source publication: not distributed; retrieve and checksum-verify locally
 - IRAC version: 11.5
 - Parsed groups: 42
 - Parsed chemical classes: 64

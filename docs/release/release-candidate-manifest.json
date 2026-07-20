@@ -1,0 +1,54 @@
+{
+  "schema": "cpmoakb-release-candidate",
+  "schema_version": "1.0",
+  "baseline_commit": "8b5d7a3473d02c6ab796046f8d761e8aa95227eb",
+  "release_identity": "initial-open-source-release-candidate",
+  "package": {
+    "distribution": "cp-moakb",
+    "import_package": "cpmoakb",
+    "version": "0.1.0",
+    "supported_python": ">=3.11,<3.13",
+    "license": "Apache-2.0"
+  },
+  "contracts": {
+    "runtime": "0.1",
+    "yaml": "1.0",
+    "projection": "1.0",
+    "application": "0.1",
+    "http": "0.1",
+    "cli": "0.1",
+    "composition": "0.1"
+  },
+  "public_api_manifest_entries": 165,
+  "governed_markdown_documents": 231,
+  "examples": {
+    "executable": 9,
+    "documentation_only": 1
+  },
+  "expected_artifacts": [
+    "cp_moakb-0.1.0-py3-none-any.whl",
+    "cp_moakb-0.1.0.tar.gz"
+  ],
+  "required_verification_commands": [
+    "python -m ruff check .",
+    "python -m pytest tests/release_candidate -q",
+    "python -m pytest -q",
+    "python scripts/verify_security_contract.py",
+    "python scripts/verify_release_readiness.py",
+    "python scripts/verify_documentation.py",
+    "python scripts/verify_examples.py",
+    "python scripts/verify_release_candidate.py",
+    "python scripts/verify_distribution.py --dist-dir dist --compare-dir dist-repeat",
+    "python scripts/verify_installation.py --dist-dir dist",
+    "python scripts/verify_release_candidate.py --dist-dir dist"
+  ],
+  "approval_required_actions": [
+    "release_candidate_acceptance",
+    "version_and_tag_decision",
+    "git_tag_creation",
+    "github_release_creation",
+    "artifact_upload",
+    "package_index_publication"
+  ],
+  "publication_status": "not_published"
+}

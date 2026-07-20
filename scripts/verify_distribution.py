@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import tarfile
 import zipfile
 from email.parser import BytesParser
@@ -80,6 +81,29 @@ def _normalized_names(names: Iterable[str], *, sdist: bool) -> tuple[str, ...]:
     return tuple(sorted(normalized))
 
 
+def _wheel_digests(archive: zipfile.ZipFile) -> tuple[tuple[str, str], ...]:
+    return tuple(
+        sorted(
+            (name, hashlib.sha256(archive.read(name)).hexdigest())
+            for name in archive.namelist()
+            if not name.endswith("/")
+        )
+    )
+
+
+def _sdist_digests(archive: tarfile.TarFile) -> tuple[tuple[str, str], ...]:
+    values: list[tuple[str, str]] = []
+    for member in archive.getmembers():
+        if not member.isfile():
+            continue
+        extracted = archive.extractfile(member)
+        if extracted is None:
+            raise DistributionContractError("unable to read sdist member")
+        normalized = PurePosixPath(*PurePosixPath(member.name).parts[1:]).as_posix()
+        values.append((normalized, hashlib.sha256(extracted.read()).hexdigest()))
+    return tuple(sorted(values))
+
+
 def _reject_forbidden(names: tuple[str, ...]) -> None:
     for name in names:
         path = PurePosixPath(name)
@@ -124,18 +148,28 @@ def _verify_metadata(raw: bytes) -> None:
         raise DistributionContractError("production server dependency is prohibited")
 
 
-def verify(directory: Path) -> tuple[tuple[str, ...], tuple[str, ...], bytes]:
+def verify(
+    directory: Path,
+) -> tuple[
+    tuple[str, ...],
+    tuple[str, ...],
+    bytes,
+    tuple[tuple[str, str], ...],
+    tuple[tuple[str, str], ...],
+]:
     """Return stable content lists after verifying one wheel and one sdist."""
 
     wheel, sdist = _artifacts(directory)
     with zipfile.ZipFile(wheel) as archive:
         wheel_names = _normalized_names(archive.namelist(), sdist=False)
         metadata = _wheel_metadata(archive)
+        wheel_digests = _wheel_digests(archive)
     with tarfile.open(sdist, mode="r:gz") as archive:
         sdist_names = _normalized_names(
             (member.name for member in archive.getmembers() if member.isfile()),
             sdist=True,
         )
+        sdist_digests = _sdist_digests(archive)
 
     _reject_forbidden(wheel_names)
     _reject_forbidden(sdist_names)
@@ -151,7 +185,7 @@ def verify(directory: Path) -> tuple[tuple[str, ...], tuple[str, ...], bytes]:
     if not required_sdist <= set(sdist_names):
         raise DistributionContractError("sdist is missing required source files")
     _verify_metadata(metadata)
-    return wheel_names, sdist_names, metadata
+    return wheel_names, sdist_names, metadata, wheel_digests, sdist_digests
 
 
 def main() -> int:
@@ -164,7 +198,7 @@ def main() -> int:
         comparison = verify(arguments.compare_dir)
         if primary != comparison:
             raise DistributionContractError(
-                "repeated build content lists or metadata are not deterministic"
+                "repeated build paths, metadata, or member content are not deterministic"
             )
     print(f"verified wheel files: {len(primary[0])}")
     print(f"verified sdist files: {len(primary[1])}")
