@@ -32,9 +32,10 @@ the next.
 
 ### Sprint-032K — Knowledge Governance Standards
 
-This sprint SHOULD define subordinate governance standards, authority roles,
-change control, and conflict handling under the Constitution. It MUST NOT amend
-the Constitution or duplicate accepted ADR decisions.
+This sprint defines subordinate governance standards, authority roles, change
+control, and conflict handling under the Constitution. Its resulting KGS family
+MUST NOT amend the Constitution or duplicate accepted ADR decisions. Completion
+of Sprint-032K MUST NOT authorize a later roadmap sprint.
 
 ### Sprint-033K — Knowledge Editorial Handbook
 

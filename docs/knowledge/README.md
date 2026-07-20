@@ -20,6 +20,14 @@ create, approve, publish, or reinterpret any record or dataset.
 The roadmap is planning documentation only. It does not authorize a sprint,
 source, record, dataset, schema, Runtime change, or publication.
 
+## Knowledge Governance Standards
+
+The [Knowledge Governance Standards](governance/README.md) govern people,
+appointments, boards, review authority, conflict management, publication
+authority, accountability, and auditability. KGS governs who may act and decide;
+KAS governs what authored knowledge must satisfy. Both are subordinate to the
+Constitution.
+
 ## Index
 
 | Standard | Status | Version | Governs |
@@ -35,8 +43,9 @@ source, record, dataset, schema, Runtime change, or publication.
 ## Authority and Relationships
 
 The Constitution governs the KAS family and subordinate knowledge policies.
-KAS-001 applies constitutional principles to authoring; it is not itself the
-Constitution and MUST NOT amend or supersede it.
+KGS governs people and decisions, while KAS-001 applies constitutional principles
+to authoring. Neither family is itself the Constitution, and neither MUST amend
+or supersede it.
 
 Accepted [Architecture Decision Records](../ARCHITECTURE_DECISIONS/README.md)
 remain authoritative for durable architectural decisions. The Constitution and
@@ -73,11 +82,11 @@ package publication. Knowledge acceptance MUST NOT imply publication approval.
 
 ## KAS Governance
 
-A KAS amendment requires a scoped proposal, impact analysis, cross-reference
-review, and explicit knowledge-governance approval. Material semantic changes
-require a new document version and migration guidance. Prior versions and
-supersession links MUST remain auditable. Editorial corrections MAY retain the
-version only when they change no normative meaning.
+A KAS or KGS amendment requires a scoped proposal, impact analysis,
+cross-reference review, and explicit knowledge-governance approval. Material
+semantic changes require a new document version and migration guidance. Prior
+versions and supersession links MUST remain auditable. Editorial corrections MAY
+retain the version only when they change no normative meaning.
 
 This family creates no agricultural content, approved terminology, ontology,
 dataset, recommendation, diagnosis, inference, or publication event.

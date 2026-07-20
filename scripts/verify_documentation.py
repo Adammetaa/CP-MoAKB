@@ -142,6 +142,15 @@ KNOWLEDGE_GOVERNANCE_DOCUMENTS = (
     "docs/knowledge/constitution/knowledge-constitution.md",
     "docs/knowledge/roadmap/knowledge-engineering-roadmap.md",
 )
+KNOWLEDGE_GOVERNANCE_STANDARDS = (
+    "docs/knowledge/governance/README.md",
+    "docs/knowledge/governance/KGS-001-knowledge-governance-model.md",
+    "docs/knowledge/governance/KGS-002-roles-and-responsibilities.md",
+    "docs/knowledge/governance/KGS-003-review-process.md",
+    "docs/knowledge/governance/KGS-004-conflict-management.md",
+    "docs/knowledge/governance/KGS-005-publication-governance.md",
+    "docs/knowledge/governance/KGS-006-audit-and-transparency.md",
+)
 REQUIRED_DOCUMENTS = (
     (
         "README.md",
@@ -156,6 +165,7 @@ REQUIRED_DOCUMENTS = (
         "docs/runtime/specifications/RAS-015-open-source-release-audit-and-publication-boundary-contract.md",
     )
     + KNOWLEDGE_GOVERNANCE_DOCUMENTS
+    + KNOWLEDGE_GOVERNANCE_STANDARDS
     + tuple(f"docs/{group}/{name}" for group, names in GROUPS.items() for name in names)
 )
 LINK_PATTERN = re.compile(r"(?<!!)\[[^\]]+\]\(([^)]+)\)")
@@ -360,6 +370,33 @@ def verify() -> tuple[Path, ...]:
     ):
         if phase not in roadmap:
             failures.append(f"Knowledge roadmap missing phase: {phase}")
+    kgs_index = (ROOT / "docs/knowledge/governance/README.md").read_text(
+        encoding="utf-8"
+    )
+    for number in range(1, 7):
+        if f"KGS-{number:03d}" not in kgs_index:
+            failures.append(f"KGS index missing KGS-{number:03d}")
+    kgs_sections = (
+        "## Purpose",
+        "## Scope",
+        "## Out of Scope",
+        "## Definitions",
+        "## Normative Language",
+        "## Governance Rules",
+        "## Examples",
+        "## Non-examples",
+        "## Reviewer Notes",
+        "## Future Work",
+    )
+    for relative in KNOWLEDGE_GOVERNANCE_STANDARDS[1:]:
+        text = (ROOT / relative).read_text(encoding="utf-8")
+        if "Status: Active" not in text or "Version: 1.0" not in text:
+            failures.append(f"KGS status or version mismatch: {relative}")
+        for section in kgs_sections:
+            if section not in text:
+                failures.append(
+                    f"KGS missing required section: {relative} -> {section}"
+                )
     release_manifest = (
         ROOT / "docs/release/release-candidate-manifest.json"
     ).read_text(encoding="utf-8")
