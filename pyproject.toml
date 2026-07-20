@@ -1,0 +1,55 @@
+[build-system]
+requires = ["setuptools==83.0.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "cp-moakb"
+dynamic = ["version"]
+description = "Deterministic runtime contracts and source-oriented knowledge tooling"
+readme = "README.md"
+requires-python = ">=3.11,<3.13"
+license = "Apache-2.0"
+license-files = ["LICENSE"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+]
+dependencies = [
+  "pandas==3.0.3",
+  "pdfplumber==0.11.10",
+  "PyYAML==6.0.3",
+]
+
+[project.optional-dependencies]
+http = ["fastapi==0.139.2"]
+dev = [
+  "black==26.5.1",
+  "build==1.5.0",
+  "fastapi==0.139.2",
+  "httpx2==2.7.0",
+  "mypy==2.2.0",
+  "packaging==26.2",
+  "pre-commit==4.6.0",
+  "pytest==9.1.1",
+  "ruff==0.15.20",
+  "setuptools==83.0.0",
+  "types-PyYAML==6.0.12.20260518",
+]
+
+[project.urls]
+Repository = "https://github.com/Adammetaa/CP-MoAKB"
+
+[tool.setuptools]
+include-package-data = false
+
+[tool.setuptools.dynamic]
+version = {attr = "cpmoakb._version.__version__"}
+
+[tool.setuptools.packages.find]
+include = ["cpmoakb*"]
+namespaces = true
+
+[tool.setuptools.package-data]
+"cpmoakb.database" = ["schema.sql"]

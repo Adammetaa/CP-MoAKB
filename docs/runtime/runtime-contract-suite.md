@@ -1,5 +1,10 @@
 # Runtime Contract Suite
 
+`tests/packaging` covers metadata, public imports, dependency isolation,
+composition, architecture, and package-data policy. CI additionally builds twice,
+runs the governed artifact verifier, then verifies editable, wheel, source, and
+HTTP-extra installations plus `pip check` without importing from the source tree.
+
 The contract suite protects Runtime API version `0.1` across explicit layers:
 
 ```text

@@ -19,6 +19,12 @@ venv/
 .coverage
 htmlcov/
 
+# Python distributions
+build/
+dist/
+dist-*/
+*.egg-info/
+
 # Generated datasets and databases
 *.csv
 *.db

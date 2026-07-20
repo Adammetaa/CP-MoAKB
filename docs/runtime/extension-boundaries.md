@@ -32,6 +32,12 @@ Sprint-026R adds the [minimal reference CLI consumer](cli.md) governed by RAS-01
 
 ## Prohibited coupling
 
+Packaging and composition add one further rule: lower Runtime layers do not
+import `cpmoakb.composition`, and composition imports only approved public query,
+explanation, and application boundaries. Plugin discovery, dynamic factories,
+default registries, automatic loaders, and packaging-helper imports from Runtime
+code are prohibited by RAS-012.
+
 - Domain models must not import YAML or JSON-loading libraries.
 - Domain models and repository protocols must not import SQLite, an ORM, or database adapters.
 - Domain models must not depend on web clients or fetch live sources.

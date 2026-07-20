@@ -1,5 +1,11 @@
 # Runtime Compatibility Change Checklist
 
+For packaging changes, also confirm distribution version and metadata,
+`cpmoakb.__version__`, Composition API `0.1`, optional HTTP isolation, deterministic
+artifact manifests, clean installed imports, and RAS-012 package-data exclusions.
+Package release versions never imply a change to Runtime, YAML, projection,
+Application, HTTP, or CLI contract versions.
+
 Future Runtime changes MUST review this checklist:
 
 - [ ] Public symbol added and classified in the manifest.

@@ -18,8 +18,7 @@ from cpmoakb.serialization import RUNTIME_JSON_PROJECTION_VERSION
 
 from .errors import error_response
 from .models import QueryAndExplainHttpRequest, QueryHttpRequest
-
-RUNTIME_HTTP_API_VERSION = "0.1"
+from .version import RUNTIME_HTTP_API_VERSION
 
 
 def create_http_app(

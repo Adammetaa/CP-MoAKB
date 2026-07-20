@@ -1,6 +1,7 @@
 """Small, static, manually governed public API manifest for contract tests."""
 
 PUBLIC_API_EXPORTS: dict[str, tuple[str, ...]] = {
+    "cpmoakb": ("__version__",),
     "cpmoakb.domain": (
         "AuthorityIdentifier",
         "AuthorityReference",
@@ -184,6 +185,10 @@ PUBLIC_API_EXPORTS: dict[str, tuple[str, ...]] = {
     "cpmoakb.cli": (
         "RUNTIME_CLI_API_VERSION",
         "run_cli",
+    ),
+    "cpmoakb.composition": (
+        "RUNTIME_COMPOSITION_API_VERSION",
+        "create_runtime_application_service",
     ),
 }
 

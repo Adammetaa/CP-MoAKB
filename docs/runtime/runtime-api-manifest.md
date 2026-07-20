@@ -4,10 +4,11 @@
 
 Only symbols intentionally listed in each package's `__all__` are public. Internal helpers are excluded. “Stable for Runtime 0.1” protects the documented import and behavior under RAS-007; “Experimental” remains public and cannot be removed silently, but its extension surface requires additional review before being declared stable.
 
-The manifest contains 162 package-symbol entries: 144 Stable for Runtime 0.1 and 18 Experimental. Re-exports from both adapter packages are recorded separately because each import path is a compatibility surface. The additive serialization, application, HTTP, and CLI exports are backward compatible under RAS-007 and governed by RAS-008 through RAS-011; Runtime API remains `0.1`.
+The manifest contains 165 package-symbol entries: 147 Stable for Runtime 0.1 and 18 Experimental. Re-exports from both adapter packages are recorded separately because each import path is a compatibility surface. The additive serialization, application, HTTP, CLI, distribution-version, and composition exports are backward compatible under RAS-007 and governed by RAS-008 through RAS-012; Runtime API remains `0.1`.
 
 | Package | Symbol | Category | Stability | Purpose | Compatibility notes |
 | --- | --- | --- | --- | --- | --- |
+| `cpmoakb` | `__version__` | constant | Stable for Runtime 0.1 | Exposes distribution package version `0.1.0`. | Additive and backward compatible; independent from every Runtime contract version. |
 | `cpmoakb.domain` | `AuthorityIdentifier` | model | Stable for Runtime 0.1 | Provides the public AuthorityIdentifier model. | Import, documented behavior, exceptions, and deterministic ordering are protected. |
 | `cpmoakb.domain` | `AuthorityReference` | model | Stable for Runtime 0.1 | Provides the public AuthorityReference model. | Import, documented behavior, exceptions, and deterministic ordering are protected. |
 | `cpmoakb.domain` | `AuthorityRepository` | protocol | Experimental | Provides the public AuthorityRepository protocol. | Import is preserved; behavioral expansion requires architecture review. |
@@ -170,5 +171,7 @@ The manifest contains 162 package-symbol entries: 144 Stable for Runtime 0.1 and
 | `cpmoakb.http_api` | `create_http_app` | function | Stable for Runtime 0.1 | Creates an independent read-only HTTP app from an injected application facade. | Additive and backward compatible; factory, route, error, and dependency contracts are protected. |
 | `cpmoakb.cli` | `RUNTIME_CLI_API_VERSION` | constant | Stable for Runtime 0.1 | Exposes independent CLI API version `0.1`. | Additive and backward compatible; independent version value is protected. |
 | `cpmoakb.cli` | `run_cli` | function | Stable for Runtime 0.1 | Executes one read-only CLI command with explicit service and streams. | Additive and backward compatible; arguments, output, error, exit-code, and injection contracts are protected. |
+| `cpmoakb.composition` | `RUNTIME_COMPOSITION_API_VERSION` | constant | Stable for Runtime 0.1 | Exposes independent composition API version `0.1`. | Additive and backward compatible; independent version value is protected. |
+| `cpmoakb.composition` | `create_runtime_application_service` | function | Stable for Runtime 0.1 | Creates a new facade from caller-supplied public services. | Keyword-only dependencies, statelessness, and typed application failures are protected. |
 
 No Internal helper appears in this public manifest. The machine-readable conformance copy is static in `tests/contracts/_api_manifest.py`; it is manually governed and is not generated through reflection.

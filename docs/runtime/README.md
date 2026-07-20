@@ -41,6 +41,11 @@ The intentional public API is exported from `cpmoakb.domain`. Individual modules
 
 ## Deferred capabilities
 
+Installation is governed by [RAS-012](specifications/RAS-012-runtime-packaging-and-composition-contract.md).
+The installed distribution contains no default knowledge base; consumers use the
+[explicit composition boundary](composition.md). Packaging, deployment, and data
+distribution remain distinct governance concerns.
+
 The Runtime Core domain remains representation-neutral. Separate HTTP and CLI adapters expose only approved read-only application operations; no layer deserializes projected values, guarantees round trips, allocates identifiers, persists data, writes projection files, diagnoses, recommends, or promotes candidates. See [Extension Boundaries](extension-boundaries.md) for prohibited coupling.
 
 For model details, see [Runtime Domain Model](domain-model.md).

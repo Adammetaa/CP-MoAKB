@@ -77,3 +77,23 @@ def test_runtime_has_no_prohibited_external_dependencies() -> None:
     assert not any(
         fragment in name.lower() for name in combined for fragment in prohibited
     )
+
+
+def test_composition_direction_is_narrow_and_lower_layers_do_not_import_it() -> None:
+    composition_imports = package_imports("composition")
+    assert {name for name in composition_imports if name.startswith("cpmoakb.")} <= {
+        "cpmoakb.application",
+        "cpmoakb.explain",
+        "cpmoakb.query",
+    }
+    for package in (
+        "domain",
+        "adapters",
+        "validation",
+        "registries",
+        "query",
+        "explain",
+        "serialization",
+        "application",
+    ):
+        assert "cpmoakb.composition" not in package_imports(package)

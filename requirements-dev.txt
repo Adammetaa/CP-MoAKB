@@ -9,3 +9,6 @@ ruff==0.15.20
 types-PyYAML==6.0.12.20260518
 fastapi==0.139.2
 httpx2==2.7.0
+build==1.5.0
+packaging==26.2
+setuptools==83.0.0

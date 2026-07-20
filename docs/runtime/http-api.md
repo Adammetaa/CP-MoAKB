@@ -1,5 +1,11 @@
 # Minimal Read-only HTTP API
 
+FastAPI is available through the optional `http` extra. The package boundary is
+lazy so base, application, composition, and CLI imports do not require FastAPI.
+There is no default app or server executable: callers install the extra, compose
+a `RuntimeApplicationService`, and pass it to `create_http_app`. HTTP API remains
+`0.1` and no host, port, authentication, or persistence policy is introduced.
+
 `cpmoakb.http_api` is a library-first FastAPI `0.139.2` transport over an explicitly injected `RuntimeApplicationService`. Its independent HTTP API version is `0.1`.
 
 The factory exposes `GET /health`, `POST /v1/query`, `POST /v1/query-and-explain`, and static `/openapi.json`. Query bodies accept a strict, bounded subset of existing query criteria. Unknown fields, coercion, arrays, arbitrary nested objects, paths, and URLs are rejected. Query-and-explain requires one explicit bounded `match_index`.

@@ -1,5 +1,11 @@
 # Minimal Reference CLI Consumer
 
+Packaging intentionally defines no console entry point. `run_cli(...)` remains a
+library-first function requiring an explicitly composed
+`RuntimeApplicationService` and caller-owned streams. Installation performs no
+file discovery, data loading, registry construction, or network access. CLI API
+remains `0.1`.
+
 `cpmoakb.cli` is a deterministic, read-only, library-first consumer of `RuntimeApplicationService`. Its independent CLI API version is `0.1`.
 
 ```python

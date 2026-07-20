@@ -47,6 +47,25 @@ The parser and semantic validator operate in memory and do not write CSV or SQLi
 
 CP-MoAKB tests Python 3.11 and Python 3.12 with pinned open-source development dependencies. Follow the [development guide](docs/DEVELOPMENT.md) to create a virtual environment and install `requirements-dev.txt`. Contribution and data-governance rules are in [CONTRIBUTING.md](CONTRIBUTING.md).
 
+## Installation and explicit composition
+
+The distribution is `cp-moakb`; the import package is `cpmoakb`. Package release
+version `0.1.0` supports Python 3.11 and 3.12 and is independent from the Runtime
+contract versions. Install the base package with `pip install cp-moakb`, the
+optional FastAPI transport with `pip install "cp-moakb[http]"`, or a development
+checkout with `pip install -e ".[dev]"`.
+
+An installation contains software contracts, not a default knowledge base.
+Callers must create governed `QueryService` and `ExplanationService` instances
+and pass them to `cpmoakb.composition.create_runtime_application_service`.
+Nothing discovers YAML, loads official data, constructs registries, or accesses a
+network automatically. The CLI remains library-first and the HTTP adapter remains
+an injected app factory; no console command, server command, persistence,
+diagnosis, recommendation, ranking, confidence score, or scientific inference is
+provided. See [installation](docs/runtime/installation.md),
+[packaging](docs/runtime/packaging.md), and
+[composition](docs/runtime/composition.md).
+
 ## Testing
 
 Run the complete read-only test suite with:

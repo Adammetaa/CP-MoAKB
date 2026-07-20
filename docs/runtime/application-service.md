@@ -1,5 +1,10 @@
 # Runtime Application Service
 
+Installed consumers obtain this facade through the optional convenience boundary
+`create_runtime_application_service(query_service=..., explanation_service=...)`.
+RAS-012 adds no defaults and does not change the constructor or Application API
+`0.1`; callers continue to own every meaningful dependency.
+
 `cpmoakb.application` is the transport-neutral boundary for approved read-only query and query-explanation use cases. Its independent application API version is `0.1`.
 
 `RuntimeApplicationService` receives existing `QueryService` and `ExplanationService` instances. It can query records, project a query through `query_and_project`, explain an explicitly selected query match, combine those operations, or compose their existing RAS-008 projections in a deterministic application envelope. It never copies query matching or explanation-building logic.

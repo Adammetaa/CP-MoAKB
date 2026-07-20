@@ -1,5 +1,9 @@
 # Runtime Serialization Boundary
 
+RAS-012 does not change projection schema `1.0`. Composition uses the existing
+`RuntimeApplicationService` defaults for the two governed projectors; no package
+metadata or build helper enters projection envelopes.
+
 The candidate YAML adapter is input-only. It maps strict schema version `1.0` into domain objects; it is not a canonical Runtime serializer and does not define round-trip output.
 
 The [Runtime JSON projection](json-projection.md) now provides a narrow canonical output representation for selected validation, registry snapshot, query result, and structured explanation values. Its explicit schema is governed by [RAS-008](specifications/RAS-008-runtime-json-projection-contract.md). `repr()` remains diagnostic output, not serialization, and dataclass field order remains outside the wire contract.
