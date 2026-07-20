@@ -100,6 +100,16 @@ GROUPS = {
         "roadmap.md",
         "future-vision.md",
     ),
+    "knowledge": (
+        "README.md",
+        "KAS-001-knowledge-authoring-principles.md",
+        "KAS-002-knowledge-record-standard.md",
+        "KAS-003-evidence-standard.md",
+        "KAS-004-citation-standard.md",
+        "KAS-005-terminology-standard.md",
+        "KAS-006-relationship-standard.md",
+        "KAS-007-knowledge-lifecycle.md",
+    ),
     "release": (
         "README.md",
         "release-handbook.md",
@@ -284,6 +294,32 @@ def verify() -> tuple[Path, ...]:
             failures.append(f"RAS index missing RAS-{number:03d}")
     if "RAS-015" not in ras_index:
         failures.append("RAS index missing RAS-015")
+    kas_index = (ROOT / "docs" / "knowledge" / "README.md").read_text(encoding="utf-8")
+    for number in range(1, 8):
+        if f"KAS-{number:03d}" not in kas_index:
+            failures.append(f"KAS index missing KAS-{number:03d}")
+    kas_sections = (
+        "## Purpose",
+        "## Scope",
+        "## Out of Scope",
+        "## Normative Language",
+        "## Definitions",
+        "## Governance Rules",
+        "## Examples",
+        "## Non-examples",
+        "## Reviewer Notes",
+        "## Future Considerations",
+    )
+    for name in GROUPS["knowledge"][1:]:
+        relative = f"docs/knowledge/{name}"
+        text = (ROOT / relative).read_text(encoding="utf-8")
+        if "Status: Active" not in text or "Version: 1.0" not in text:
+            failures.append(f"KAS status or version mismatch: {relative}")
+        for section in kas_sections:
+            if section not in text:
+                failures.append(
+                    f"KAS missing required section: {relative} -> {section}"
+                )
     release_manifest = (
         ROOT / "docs/release/release-candidate-manifest.json"
     ).read_text(encoding="utf-8")

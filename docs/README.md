@@ -11,12 +11,14 @@ implemented engineering behavior from conceptual future knowledge work.
 | Maintainers | [Maintainer handbook](maintainers/README.md) | Preserve contracts and prepare releases |
 | Security reviewers | [Security documentation](security/README.md) | Review threats, dependencies, and reporting |
 | Release reviewers | [Release handbook](release/README.md) | Prepare and verify without publishing |
-| Knowledge-governance contributors | [Governance maps](governance/README.md) | Separate decisions, contracts, and knowledge review |
+| Knowledge authors and reviewers | [Knowledge Authoring Standards](knowledge/README.md) | Author, evidence, review, and govern knowledge |
+| Knowledge-governance contributors | [Governance maps](governance/README.md) | Relate decisions, KAS, RAS, and review |
 
 Additional entry points are the [architecture book](architecture/README.md),
 [project scope and FAQ](project/README.md), [concept guides](concepts/README.md),
 [glossary](glossary.md), [Runtime contracts](runtime/specifications/README.md),
-and [executable examples](../examples/README.md).
+[Knowledge Authoring Standards](knowledge/README.md), and
+[executable examples](../examples/README.md).
 
 Authoritative versions live in implementation constants and package metadata;
 public symbols live in the static Runtime API manifest. Documentation summarizes

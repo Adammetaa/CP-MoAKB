@@ -10,6 +10,9 @@
 | RAS-012 | packaging and composition | artifact/install/composition tests |
 | RAS-013 | security and release readiness | security tests and repository verifiers |
 | RAS-014 | documentation, examples, knowledge transfer | documentation tests and verifiers |
+| RAS-015 | release audit and publication boundary | release-candidate tests and verifier |
+| KAS-001–007 | knowledge authoring, records, evidence, citations, terms, relationships, lifecycle | KAS index, cross-references, and documentation verifier |
 
-Each RAS is versioned independently from Runtime and package versions. The index,
-not this summary, is authoritative for status and exact scope.
+Each RAS is versioned independently from Runtime and package versions. KAS
+document versions govern knowledge standards independently from software. Their
+respective indexes, not this summary, are authoritative for status and scope.
