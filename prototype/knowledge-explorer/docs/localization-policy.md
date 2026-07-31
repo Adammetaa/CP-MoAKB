@@ -84,6 +84,15 @@ and therefore requires separate scientific and governance authority.
 **UI translation does not make a term an accepted CP-MoAKB vocabulary term.**
 No translation in this sprint is authoritative agricultural knowledge.
 
+## 11. English social-preview asset
+
+`assets/og.png` is intentionally retained as an English CP-MoAKB and
+Knowledge Explorer brand and social-preview asset. The retained English image
+does not make the interface English-first, is not authoritative terminology,
+and does not override Thai-first HTML, metadata, navigation, or user-interface
+copy. Changing this image or adding localized social-preview assets requires
+separate product approval.
+
 ## Review notes
 
 - Thai and English dictionaries MUST have identical key structures.

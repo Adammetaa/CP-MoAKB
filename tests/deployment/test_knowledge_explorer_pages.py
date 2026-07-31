@@ -95,8 +95,21 @@ def test_root_landing_and_robots_policy_are_governed() -> None:
     landing = (PROTOTYPE / "deployment" / "root-index.html").read_text(encoding="utf-8")
     robots = (PROTOTYPE / "deployment" / "robots.txt").read_text(encoding="utf-8")
 
+    assert '<html lang="th">' in landing
+    assert re.search(r"<title>[^<]*[ก-๙]", landing)
+    assert re.search(r"<h1>[^<]*[ก-๙]", landing)
     assert 'href="knowledge-explorer/"' in landing
-    assert "fictional placeholder content" in landing
+    assert 'href="https://github.com/Adammetaa/CP-MoAKB"' in landing
+    for boundary in (
+        "ตัวอย่างต้นแบบ",
+        "เนื้อหาสมมติ",
+        "ไม่ใช่ระบบ",
+        "ไม่ใช่คำวินิจฉัยหรือคำแนะนำ",
+    ):
+        assert boundary in landing
+    assert "<script" not in landing
+    assert 'http-equiv="refresh"' not in landing.casefold()
+    assert not re.search(r"(?:window\.)?location\s*=", landing)
     assert 'content="index,follow"' in landing
     assert "Disallow: /CP-MoAKB/knowledge-explorer/" in robots
 
@@ -130,6 +143,7 @@ def test_artifact_verifier_has_exact_allowlist_and_prohibited_capability_checks(
         "prohibited local or sensitive text",
     ):
         assert boundary in verifier
+    assert "exactly 19 approved files" in verifier
     for prohibited in (
         "sessionStorage",
         "WebSocket",

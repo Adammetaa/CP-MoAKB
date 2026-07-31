@@ -32,6 +32,7 @@ export const verifyArtifact = async (root) => {
   const resolvedRoot = resolve(root);
   const files = await walk(resolvedRoot);
   const relativeFiles = files.map((path) => relative(resolvedRoot, path).split(sep).join("/"));
+  if (relativeFiles.length !== 19 || approved.size !== 19) throw new Error("Pages artifact must contain exactly 19 approved files");
   const unexpected = relativeFiles.filter((path) => !approved.has(path));
   const missing = [...approved].filter((path) => !relativeFiles.includes(path));
   if (unexpected.length || missing.length) {
@@ -62,9 +63,14 @@ export const verifyArtifact = async (root) => {
     throw new Error("Deployment metadata is unsafe or incomplete");
   }
   const landing = await readFile(resolve(resolvedRoot, "index.html"), "utf8");
-  if (!landing.includes('href="knowledge-explorer/"') || !landing.includes("fictional placeholder content")) {
-    throw new Error("Pages root landing page is missing its Explorer link or prototype boundary");
+  for (const requirement of ['<html lang="th">', 'href="knowledge-explorer/"', 'href="https://github.com/Adammetaa/CP-MoAKB"', "ตัวอย่างต้นแบบ", "เนื้อหาสมมติ", "ไม่ใช่ระบบ", "ไม่ใช่คำวินิจฉัยหรือคำแนะนำ"]) {
+    if (!landing.includes(requirement)) throw new Error(`Pages root landing page is missing Thai-first requirement: ${requirement}`);
   }
+  const landingTitle = landing.match(/<title>(.*?)<\/title>/s)?.[1] ?? "";
+  const landingHeading = landing.match(/<h1>(.*?)<\/h1>/s)?.[1] ?? "";
+  const landingNarrative = landing.match(/<h1>.*?<\/h1>\s*<p>(.*?)<\/p>/s)?.[1] ?? "";
+  if (!/[\u0E00-\u0E7F]/.test(landingTitle) || !/[\u0E00-\u0E7F]/.test(landingHeading) || !/[\u0E00-\u0E7F]/.test(landingNarrative)) throw new Error("Pages root landing page is not Thai-first");
+  if (/<script\b|http-equiv\s*=\s*["']refresh|(?:window\.)?location\s*=/i.test(landing)) throw new Error("Pages root landing page must remain JavaScript-free with no automatic redirect");
   const robots = await readFile(resolve(resolvedRoot, "robots.txt"), "utf8");
   if (!robots.includes("Disallow: /CP-MoAKB/knowledge-explorer/")) throw new Error("robots.txt does not block Explorer indexing");
   return relativeFiles.sort();

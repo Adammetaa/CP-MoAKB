@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import hashlib
 import re
 from pathlib import Path
 
@@ -20,6 +21,13 @@ PAGES = (
     "about.html",
     "components.html",
 )
+STATIC_NAVIGATION = {
+    "index.html": "หน้าแรก",
+    "search.html": "ค้นหา",
+    "browse.html": "เรียกดู",
+    "governance.html": "ธรรมาภิบาลองค์ความรู้",
+    "about.html": "เกี่ยวกับโครงการ",
+}
 
 
 def _catalog(language: str) -> dict[str, object]:
@@ -76,6 +84,55 @@ def test_every_page_exposes_shared_language_switcher_header() -> None:
     app = (PROTOTYPE / "assets" / "app.js").read_text(encoding="utf-8")
     assert 'class="language-switcher"' in app
     assert 'data-language="th"' in app
+
+
+def test_every_page_has_working_thai_static_navigation_before_javascript() -> None:
+    for page in PAGES:
+        text = (PROTOTYPE / page).read_text(encoding="utf-8")
+        header = re.search(
+            r"<header[^>]*data-site-header[^>]*>(.*?)</header>", text, re.DOTALL
+        )
+        assert header and header[1].strip()
+        for href, label in STATIC_NAVIGATION.items():
+            assert f'href="{href}"' in header[1]
+            assert label in header[1]
+        assert "CP-MoAKB" in header[1]
+        assert "Knowledge Explorer" in header[1]
+        assert "ไทย" in header[1] and "EN" in header[1]
+        current_links = re.findall(r'<a[^>]*aria-current="page"[^>]*>', header[1])
+        if page in STATIC_NAVIGATION:
+            assert len(current_links) == 1
+            assert f'href="{page}"' in current_links[0]
+        else:
+            assert not current_links
+        for target in re.findall(r'href="([^"]+)"', header[1]):
+            assert not target.startswith(("/", "http://", "https://"))
+            assert ".." not in target
+    app = (PROTOTYPE / "assets" / "app.js").read_text(encoding="utf-8")
+    assert "header.innerHTML" in app
+
+
+def test_critical_no_javascript_fallbacks_are_nonempty_and_fictional() -> None:
+    required = {
+        "index.html": ("data-stats", "data-latest-concepts", "data-latest-sources"),
+        "search.html": ("data-results",),
+        "concept.html": ("data-relationships",),
+    }
+    for page, attributes in required.items():
+        text = (PROTOTYPE / page).read_text(encoding="utf-8")
+        for attribute in attributes:
+            match = re.search(
+                rf"<([a-z0-9]+)[^>]*\b{attribute}\b[^>]*>(.*?)</\1>",
+                text,
+                re.DOTALL | re.IGNORECASE,
+            )
+            assert match and match[2].strip()
+    home = (PROTOTYPE / "index.html").read_text(encoding="utf-8")
+    search = (PROTOTYPE / "search.html").read_text(encoding="utf-8")
+    concept = (PROTOTYPE / "concept.html").read_text(encoding="utf-8")
+    assert "ข้อมูลสมมติ" in home and "ไม่ใช่คำวินิจฉัยหรือคำแนะนำ" in home
+    assert "JavaScript" in search and "ไม่มีคำวินิจฉัยหรือคำแนะนำ" in search
+    assert "ความสัมพันธ์สมมติ" in concept
 
 
 def test_translation_catalogs_have_identical_complete_keys() -> None:
@@ -212,6 +269,21 @@ def test_localization_policy_separates_ui_from_knowledge_translation() -> None:
         "No translation in this sprint is authoritative agricultural knowledge",
     ):
         assert requirement in policy
+
+
+def test_english_social_preview_exception_is_governed_and_asset_is_unchanged() -> None:
+    policy = (PROTOTYPE / "docs" / "localization-policy.md").read_text(encoding="utf-8")
+    for requirement in (
+        "assets/og.png",
+        "English CP-MoAKB",
+        "does not make the interface English-first",
+        "not authoritative terminology",
+        "does not override Thai-first HTML",
+        "separate product approval",
+    ):
+        assert requirement in policy
+    digest = hashlib.sha256((PROTOTYPE / "assets" / "og.png").read_bytes()).hexdigest()
+    assert digest == "d1eea3c5de4123cb52c3176795e524896c985bf621408bfca579f3f11659ebf0"
 
 
 def test_artifact_allowlist_contains_only_approved_localization_files() -> None:

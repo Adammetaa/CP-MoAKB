@@ -4,6 +4,13 @@ import { fileURLToPath } from "node:url";
 
 const root = resolve(import.meta.dirname, "..");
 const pages = ["index.html", "search.html", "browse.html", "concept.html", "evidence.html", "source.html", "authority.html", "governance.html", "about.html", "components.html"];
+const requiredNavigation = new Map([
+  ["index.html", "หน้าแรก"],
+  ["search.html", "ค้นหา"],
+  ["browse.html", "เรียกดู"],
+  ["governance.html", "ธรรมาภิบาลองค์ความรู้"],
+  ["about.html", "เกี่ยวกับโครงการ"],
+]);
 const protectedIdentifiers = ["IRAC", "FRAC", "HRAC", "BBCH", "Scientific name", "Taxonomy", "Ontology", "Lifecycle"];
 
 const detectDuplicateKeys = (text, label) => {
@@ -107,6 +114,11 @@ const findUnkeyedVisibleText = (html) => {
   return failures;
 };
 
+const contentForAttribute = (html, attribute) => {
+  const escaped = attribute.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return html.match(new RegExp(`<([a-z0-9]+)[^>]*\\b${escaped}(?:="[^"]*")?[^>]*>([\\s\\S]*?)<\\/\\1>`, "i"))?.[2]?.trim() ?? "";
+};
+
 export const verifyLocalization = async () => {
   const thaiCatalog = await readCatalog("th");
   const englishCatalog = await readCatalog("en");
@@ -129,6 +141,19 @@ export const verifyLocalization = async () => {
     const description = html.match(/<meta name="description" content="([^"]+)"/)?.[1] ?? "";
     if (!/[\u0E00-\u0E7F]/.test(title) || !/[\u0E00-\u0E7F]/.test(description)) failures.push(`${page}: Thai-first metadata missing`);
     if (!html.includes('data-i18n="prototype.notice"')) failures.push(`${page}: localized prototype notice missing`);
+    const header = contentForAttribute(html, "data-site-header");
+    if (!header) failures.push(`${page}: static site header is empty`);
+    if (!/[\u0E00-\u0E7F]/.test(header)) failures.push(`${page}: static site header is not Thai-first`);
+    for (const [href, label] of requiredNavigation) {
+      if (!header.includes(`href="${href}"`) || !header.includes(label)) failures.push(`${page}: static navigation is missing ${label} (${href})`);
+    }
+    if (requiredNavigation.has(page) && !new RegExp(`<a[^>]*href="${page}"[^>]*aria-current="page"`).test(header)) failures.push(`${page}: static current-page navigation semantics missing`);
+    const heading = html.match(/<h1[^>]*>([\s\S]*?)<\/h1>/i)?.[1]?.replace(/<[^>]+>/g, "").trim() ?? "";
+    if (!/[\u0E00-\u0E7F]/.test(heading)) failures.push(`${page}: nonempty Thai main heading missing`);
+    for (const match of html.matchAll(/>([^<>]+)</g)) {
+      const visible = match[1].trim();
+      if (/^[a-z0-9_-]+(?:\.[a-z0-9_.-]+)+$/i.test(visible) && !visibleLiteralAllowed(visible)) failures.push(`${page}: raw translation key is visible: ${visible}`);
+    }
     for (const match of html.matchAll(/data-i18n(?:-placeholder|-aria-label)?="([^"]+)"/g)) {
       usedKeys.add(match[1]);
       if (!thai.has(match[1]) || !english.has(match[1])) failures.push(`${page}: incomplete translation key ${match[1]}`);
@@ -137,6 +162,29 @@ export const verifyLocalization = async () => {
       if (!/data-i18n-aria-label="[^"]+"/.test(match[0])) failures.push(`${page}: visible ARIA label is not localized`);
     }
     for (const literal of findUnkeyedVisibleText(html)) failures.push(`${page}: unkeyed visible UI text: ${literal}`);
+  }
+
+  for (const [page, attributes] of new Map([
+    ["index.html", ["data-stats", "data-latest-concepts", "data-latest-sources"]],
+    ["search.html", ["data-results"]],
+    ["concept.html", ["data-relationships"]],
+  ])) {
+    const html = await readFile(resolve(root, page), "utf8");
+    for (const attribute of attributes) if (!contentForAttribute(html, attribute)) failures.push(`${page}: static fallback ${attribute} is empty`);
+  }
+
+  const landing = await readFile(resolve(root, "deployment", "root-index.html"), "utf8");
+  if (!landing.includes('<html lang="th">')) failures.push("root landing: Thai document language missing");
+  if (!/[\u0E00-\u0E7F]/.test(landing.match(/<title>(.*?)<\/title>/s)?.[1] ?? "") || !/[\u0E00-\u0E7F]/.test(landing.match(/<h1>(.*?)<\/h1>/s)?.[1] ?? "")) failures.push("root landing: Thai-first title or heading missing");
+  for (const requirement of ['href="knowledge-explorer/"', 'href="https://github.com/Adammetaa/CP-MoAKB"', "ตัวอย่างต้นแบบ", "เนื้อหาสมมติ", "ไม่ใช่ระบบ", "ไม่ใช่คำวินิจฉัยหรือคำแนะนำ"]) {
+    if (!landing.includes(requirement)) failures.push(`root landing: missing ${requirement}`);
+  }
+  if (/<script\b|http-equiv\s*=\s*["']refresh|(?:window\.)?location\s*=/i.test(landing)) failures.push("root landing: automatic redirect or JavaScript found");
+  if (/[A-Z]:\\|file:\/\/|\/(?:home|Users)\//i.test(landing)) failures.push("root landing: local filesystem path found");
+
+  const policy = await readFile(resolve(root, "docs", "localization-policy.md"), "utf8");
+  for (const requirement of ["assets/og.png", "English CP-MoAKB", "does not make the interface English-first", "not authoritative terminology", "does not override Thai-first HTML", "separate product approval"]) {
+    if (!policy.includes(requirement)) failures.push(`localization policy: missing social-preview rule: ${requirement}`);
   }
 
   const app = await readFile(resolve(root, "assets", "app.js"), "utf8");
