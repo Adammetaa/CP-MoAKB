@@ -1,129 +1,126 @@
 {
   "meta": {
     "status": "fictional-placeholder",
-    "version": "prototype-0.1",
-    "disclaimer": "Navigation demonstration only; not agricultural knowledge, diagnosis, recommendation, or production data."
+    "version": "prototype-0.2",
+    "disclaimer": "Navigation demonstration only; not agricultural knowledge, diagnosis, recommendation, or production data.",
+    "localizationDisclaimer": {
+      "th": "คำแปลทั้งหมดเป็นข้อความส่วนติดต่อของต้นแบบ ไม่ใช่คำศัพท์เกษตรที่ CP-MoAKB รับรอง",
+      "en": "All translations are prototype interface copy, not accepted CP-MoAKB agricultural vocabulary."
+    }
   },
   "statistics": [
-    { "value": "24", "label": "placeholder concepts" },
-    { "value": "12", "label": "mock evidence links" },
-    { "value": "6", "label": "fictional sources" },
-    { "value": "0", "label": "production records" }
+    { "value": "24", "label": { "th": "แนวคิดสมมติ", "en": "placeholder concepts" } },
+    { "value": "12", "label": { "th": "ลิงก์หลักฐานสมมติ", "en": "mock evidence links" } },
+    { "value": "6", "label": { "th": "แหล่งข้อมูลสมมติ", "en": "fictional sources" } },
+    { "value": "0", "label": { "th": "ระเบียนสำหรับใช้งานจริง", "en": "production records" } }
   ],
   "concepts": [
     {
-      "id": "mock-concept-rice-blast",
-      "title": "Rice Blast",
-      "type": "Disease concept demonstration",
-      "status": "Placeholder — not reviewed",
-      "definition": "Fictional interface copy showing where a reviewed, scoped definition would appear. It is not an agricultural assertion.",
+      "id": "mock-concept-a",
+      "title": { "th": "แนวคิดตัวอย่าง ก", "en": "Placeholder Concept A" },
+      "type": { "th": "การสาธิตแนวคิดโรค (Disease)", "en": "Disease concept demonstration" },
+      "status": "fictional-placeholder",
+      "definition": { "th": "ข้อความส่วนติดต่อสมมติที่แสดงตำแหน่งของคำนิยามที่ผ่านการทบทวนและมีขอบเขต โดยไม่ยืนยันข้อกล่าวอ้างทางการเกษตร", "en": "Fictional interface copy showing where a reviewed, scoped definition would appear. It asserts no agricultural claim." },
       "scientificName": "Placeholder scientific name — not asserted",
-      "authority": "Fictional Plant Health Authority",
-      "evidence": "Mock evidence record E-001",
-      "lifecycle": "Prototype only",
+      "authority": { "th": "หน่วยงานสุขภาพพืชสมมติ", "en": "Fictional Plant Health Authority" },
+      "evidence": { "th": "ระเบียนหลักฐานสมมติ E-001", "en": "Mock evidence record E-001" },
+      "lifecycle": { "th": "ต้นแบบเท่านั้น", "en": "Prototype only" },
       "relationships": [
-        { "predicate": "demonstrates relationship to", "target": "Placeholder rice canopy concept" },
-        { "predicate": "has mock evidence", "target": "Evidence record E-001" },
-        { "predicate": "attributed in prototype to", "target": "Fictional Plant Health Authority" }
+        { "predicate": { "th": "สาธิตความสัมพันธ์กับ", "en": "demonstrates relationship to" }, "target": { "th": "แนวคิดตัวอย่าง ข", "en": "Placeholder Concept B" } },
+        { "predicate": { "th": "มีหลักฐานสมมติ", "en": "has mock evidence" }, "target": { "th": "ระเบียนหลักฐาน E-001", "en": "Evidence record E-001" } },
+        { "predicate": { "th": "ระบุหน่วยงานสมมติ", "en": "attributed in prototype to" }, "target": { "th": "หน่วยงานสุขภาพพืชสมมติ", "en": "Fictional Plant Health Authority" } }
       ]
     },
     {
       "id": "mock-concept-growth-stage",
-      "title": "Rice growth stage placeholder",
-      "type": "Growth stage demonstration",
-      "status": "Placeholder — not reviewed",
-      "definition": "Demonstrates a future concept summary and lifecycle badge without asserting a growth-stage definition.",
-      "authority": "No real authority assigned",
-      "evidence": "No real evidence assigned",
-      "lifecycle": "Prototype only"
+      "title": { "th": "แนวคิดระยะการเจริญเติบโตตัวอย่าง", "en": "Growth Stage Placeholder Concept" },
+      "type": { "th": "การสาธิตระยะการเจริญเติบโต (Growth Stage)", "en": "Growth Stage demonstration" },
+      "status": "fictional-placeholder",
+      "definition": { "th": "สาธิตบทสรุปแนวคิดและป้ายวงจรชีวิตโดยไม่ให้คำนิยามทางการเกษตร", "en": "Demonstrates a concept summary and lifecycle badge without asserting an agricultural definition." },
+      "authority": { "th": "ไม่มีหน่วยงานอ้างอิงจริง", "en": "No real authority assigned" },
+      "evidence": { "th": "ไม่มีหลักฐานจริง", "en": "No real evidence assigned" },
+      "lifecycle": { "th": "ต้นแบบเท่านั้น", "en": "Prototype only" }
     },
     {
       "id": "mock-concept-plant-structure",
-      "title": "Plant structure placeholder",
-      "type": "Anatomy demonstration",
-      "status": "Placeholder — not reviewed",
-      "definition": "Demonstrates domain browsing and relationship navigation using deliberately non-substantive copy.",
-      "authority": "No real authority assigned",
-      "evidence": "No real evidence assigned",
-      "lifecycle": "Prototype only"
+      "title": { "th": "แนวคิดโครงสร้างพืชตัวอย่าง", "en": "Plant Structure Placeholder Concept" },
+      "type": { "th": "การสาธิตโครงสร้างพืช (Plant Structure)", "en": "Plant Structure demonstration" },
+      "status": "fictional-placeholder",
+      "definition": { "th": "สาธิตการเรียกดูโดเมนด้วยข้อความที่ไม่มีสาระความรู้ทางการเกษตร", "en": "Demonstrates domain browsing using deliberately non-substantive interface copy." },
+      "authority": { "th": "ไม่มีหน่วยงานอ้างอิงจริง", "en": "No real authority assigned" },
+      "evidence": { "th": "ไม่มีหลักฐานจริง", "en": "No real evidence assigned" },
+      "lifecycle": { "th": "ต้นแบบเท่านั้น", "en": "Prototype only" }
     },
     {
       "id": "mock-concept-observation",
-      "title": "Observation trait placeholder",
-      "type": "Observation demonstration",
-      "status": "Placeholder — not reviewed",
-      "definition": "Shows that observations, evidence, knowledge, and diagnosis remain separate interface layers.",
-      "authority": "Knowledge Constitution boundary",
-      "evidence": "Mock evidence record E-002",
-      "lifecycle": "Prototype only"
+      "title": { "th": "แนวคิดลักษณะการสังเกตตัวอย่าง", "en": "Observation Trait Placeholder Concept" },
+      "type": { "th": "การสาธิตการสังเกต", "en": "Observation demonstration" },
+      "status": "fictional-placeholder",
+      "definition": { "th": "แสดงว่าการสังเกต หลักฐาน องค์ความรู้ และคำวินิจฉัยเป็นชั้นส่วนติดต่อที่แยกจากกัน", "en": "Shows that observations, evidence, knowledge, and diagnosis remain separate interface layers." },
+      "authority": { "th": "ขอบเขต Knowledge Constitution", "en": "Knowledge Constitution boundary" },
+      "evidence": { "th": "ระเบียนหลักฐานสมมติ E-002", "en": "Mock evidence record E-002" },
+      "lifecycle": { "th": "ต้นแบบเท่านั้น", "en": "Prototype only" }
     }
   ],
   "evidence": [
     {
       "id": "E-001",
-      "title": "Mock evidence record E-001",
-      "level": "Demonstration only",
-      "status": "Placeholder — no evidentiary value",
-      "supports": "Interface placement for claim-scoped support",
-      "source": "Demonstration Bulletin 000",
-      "locator": "Example section 1 — fictional",
-      "limitations": "Contains no scientific evidence and supports no agricultural claim."
+      "title": { "th": "ระเบียนหลักฐานสมมติ E-001", "en": "Mock evidence record E-001" },
+      "level": { "th": "เพื่อการสาธิตเท่านั้น", "en": "Demonstration only" },
+      "status": "fictional-placeholder",
+      "supports": { "th": "ตำแหน่งส่วนติดต่อสำหรับการสนับสนุนตามข้อกล่าวอ้าง", "en": "Interface placement for claim-scoped support" },
+      "source": { "th": "เอกสารสาธิต 000", "en": "Demonstration Bulletin 000" },
+      "locator": { "th": "ส่วนตัวอย่าง 1 · สมมติ", "en": "Example section 1 · fictional" },
+      "limitations": { "th": "ไม่มีหลักฐานวิทยาศาสตร์และไม่สนับสนุนข้อกล่าวอ้างทางการเกษตร", "en": "Contains no scientific evidence and supports no agricultural claim." }
     },
     {
       "id": "E-002",
-      "title": "Mock evidence record E-002",
-      "level": "Demonstration only",
-      "status": "Placeholder — no evidentiary value",
-      "supports": "Interface placement for uncertainty and conflict",
-      "source": "Prototype Methods Note 000",
-      "locator": "Example paragraph 2 — fictional",
-      "limitations": "Created solely to demonstrate navigation."
+      "title": { "th": "ระเบียนหลักฐานสมมติ E-002", "en": "Mock evidence record E-002" },
+      "level": { "th": "เพื่อการสาธิตเท่านั้น", "en": "Demonstration only" },
+      "status": "fictional-placeholder",
+      "supports": { "th": "ตำแหน่งส่วนติดต่อสำหรับความไม่แน่นอนและความขัดแย้ง", "en": "Interface placement for uncertainty and conflict" },
+      "source": { "th": "บันทึกวิธีการสมมติ 000", "en": "Prototype Methods Note 000" },
+      "locator": { "th": "ย่อหน้าตัวอย่าง 2 · สมมติ", "en": "Example paragraph 2 · fictional" },
+      "limitations": { "th": "สร้างขึ้นเพื่อสาธิตการนำทางเท่านั้น", "en": "Created solely to demonstrate navigation." }
     }
   ],
   "sources": [
     {
       "id": "mock-source-000",
-      "title": "Demonstration Bulletin 000",
-      "authority": "Fictional Plant Health Authority",
-      "publication": "Prototype edition · no publication status",
+      "title": { "th": "เอกสารสาธิต 000", "en": "Demonstration Bulletin 000" },
+      "authority": { "th": "หน่วยงานสุขภาพพืชสมมติ", "en": "Fictional Plant Health Authority" },
+      "publication": { "th": "ฉบับต้นแบบ · ไม่มีสถานะการเผยแพร่", "en": "Prototype edition · no publication status" },
       "checksum": "sha256: placeholder-not-a-real-checksum",
-      "status": "Fictional placeholder",
-      "scope": "UI demonstration only",
-      "relatedConcepts": ["Rice Blast", "Observation trait placeholder"]
+      "status": "fictional-placeholder",
+      "scope": { "th": "เพื่อสาธิตส่วนติดต่อเท่านั้น", "en": "UI demonstration only" },
+      "relatedConcepts": [
+        { "th": "แนวคิดตัวอย่าง ก", "en": "Placeholder Concept A" },
+        { "th": "แนวคิดลักษณะการสังเกตสมมติ", "en": "Observation trait placeholder" }
+      ]
     },
     {
       "id": "mock-source-001",
-      "title": "Prototype Methods Note 000",
-      "authority": "No external authority",
-      "publication": "Unpublished mock item",
+      "title": { "th": "บันทึกวิธีการสมมติ 000", "en": "Prototype Methods Note 000" },
+      "authority": { "th": "ไม่มีหน่วยงานอ้างอิงภายนอก", "en": "No external authority" },
+      "publication": { "th": "รายการสมมติที่ยังไม่เผยแพร่", "en": "Unpublished mock item" },
       "checksum": "sha256: placeholder-not-a-real-checksum-2",
-      "status": "Fictional placeholder",
-      "scope": "Evidence-card demonstration only",
-      "relatedConcepts": ["Observation trait placeholder"]
+      "status": "fictional-placeholder",
+      "scope": { "th": "เพื่อสาธิตการ์ดหลักฐานเท่านั้น", "en": "Evidence-card demonstration only" },
+      "relatedConcepts": [
+        { "th": "แนวคิดลักษณะการสังเกตสมมติ", "en": "Observation trait placeholder" }
+      ]
     }
   ],
   "authorities": [
     {
       "id": "mock-authority-000",
-      "name": "Fictional Plant Health Authority",
-      "status": "Placeholder — not a real organization",
-      "scope": "Demonstrates claim-scoped authority presentation",
-      "jurisdiction": "Fictional jurisdiction",
-      "versionContext": "Prototype only",
-      "limitations": "Has no scientific, regulatory, or publication authority."
+      "name": { "th": "หน่วยงานสุขภาพพืชสมมติ", "en": "Fictional Plant Health Authority" },
+      "status": "fictional-placeholder",
+      "scope": { "th": "สาธิตการแสดงอำนาจตามขอบเขตข้อกล่าวอ้าง", "en": "Demonstrates claim-scoped authority presentation" },
+      "jurisdiction": { "th": "เขตอำนาจสมมติ", "en": "Fictional jurisdiction" },
+      "versionContext": "prototype-0.2",
+      "limitations": { "th": "ไม่มีอำนาจทางวิทยาศาสตร์ กฎระเบียบ หรือการเผยแพร่", "en": "Has no scientific, regulatory, or publication authority." }
     }
   ],
-  "domains": [
-    "Rice",
-    "Growth Stage",
-    "Plant Structure",
-    "Disease",
-    "Insect",
-    "Weed",
-    "Abiotic",
-    "Pathogen",
-    "IRAC",
-    "FRAC",
-    "HRAC"
-  ]
+  "domains": ["Rice", "Growth Stage", "Plant Structure", "Disease", "Insect", "Weed", "Abiotic Disorder", "Pathogen", "IRAC", "FRAC", "HRAC", "BBCH"]
 }

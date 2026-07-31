@@ -108,6 +108,7 @@ def test_artifact_verifier_has_exact_allowlist_and_prohibited_capability_checks(
         encoding="utf-8"
     )
     build = (PROTOTYPE / "scripts" / "build.mjs").read_text(encoding="utf-8")
+    app = (PROTOTYPE / "assets" / "app.js").read_text(encoding="utf-8")
 
     for page in PAGES:
         assert page in verifier
@@ -117,6 +118,8 @@ def test_artifact_verifier_has_exact_allowlist_and_prohibited_capability_checks(
         "knowledge-explorer/assets/styles.css",
         "knowledge-explorer/assets/og.png",
         "knowledge-explorer/assets/data/mock-knowledge.json",
+        "knowledge-explorer/assets/i18n/th.json",
+        "knowledge-explorer/assets/i18n/en.json",
     ):
         assert approved in verifier
     for boundary in (
@@ -128,7 +131,6 @@ def test_artifact_verifier_has_exact_allowlist_and_prohibited_capability_checks(
     ):
         assert boundary in verifier
     for prohibited in (
-        "localStorage",
         "sessionStorage",
         "WebSocket",
         "EventSource",
@@ -136,6 +138,8 @@ def test_artifact_verifier_has_exact_allowlist_and_prohibited_capability_checks(
         "analytics",
     ):
         assert prohibited in build
+    assert "storage?.getItem(storageKey)" in app
+    assert "storage?.setItem(storageKey, nextLanguage)" in app
 
 
 def test_deployment_metadata_uses_real_workflow_identity() -> None:

@@ -45,12 +45,15 @@ try {
       }
     }
   }
-  for (const asset of ["assets/styles.css", "assets/app.js", "assets/og.png", "assets/data/mock-knowledge.json", "deployment.json"]) {
+  for (const asset of ["assets/styles.css", "assets/app.js", "assets/og.png", "assets/data/mock-knowledge.json", "assets/i18n/th.json", "assets/i18n/en.json", "deployment.json"]) {
     const response = await fetch(`${base}knowledge-explorer/${asset}`);
     if (!response.ok) throw new Error(`${asset} failed with ${response.status}`);
   }
   const mock = await (await fetch(`${base}knowledge-explorer/assets/data/mock-knowledge.json`)).json();
   if (mock.meta?.status !== "fictional-placeholder") throw new Error("Mock data boundary failed");
+  const thai = await (await fetch(`${base}knowledge-explorer/assets/i18n/th.json`)).json();
+  const english = await (await fetch(`${base}knowledge-explorer/assets/i18n/en.json`)).json();
+  if (!thai.nav?.home || !english.nav?.home) throw new Error("Bilingual navigation dictionaries failed");
   console.log(`Repository-subpath smoke test passed: ${pages.length} Explorer pages and all required assets`);
 } finally {
   await new Promise((resolveClosed, reject) => server.close((error) => error ? reject(error) : resolveClosed()));

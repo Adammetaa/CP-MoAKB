@@ -5,6 +5,8 @@
   "description": "Static product-vision prototype for the CP-MoAKB Knowledge Explorer",
   "scripts": {
     "build": "node scripts/build.mjs",
+    "verify:localization": "node scripts/verify-localization.mjs",
+    "verify:behavior": "node scripts/verify-localization-behavior.mjs",
     "verify:artifact": "node scripts/verify-pages-artifact.mjs dist/pages-root",
     "smoke": "node scripts/smoke-test.mjs"
   }

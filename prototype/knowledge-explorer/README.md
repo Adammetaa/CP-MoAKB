@@ -4,6 +4,11 @@ This dependency-free static prototype demonstrates the intended product
 experience of CP-MoAKB. It is product vision, information architecture, UX, UI,
 navigation, and fictional placeholder data—not production software.
 
+The interface is Thai-first and bilingual. Thai is the deterministic first-visit
+default; a visible control switches to English and stores only that safe display
+preference in the browser. The site remains usable when browser storage is
+unavailable.
+
 ## Prototype boundaries
 
 - No backend, Runtime, database, API, authentication, login, persistence, AI,
@@ -30,6 +35,7 @@ HTML, CSS, and JavaScript.
 - [Responsive wireframes](docs/wireframes.md)
 - [Visual design system](docs/design-system.md)
 - [GitHub Pages preview deployment](docs/deployment.md)
+- [Localization and scientific-terminology policy](docs/localization-policy.md)
 
 ## Local build
 

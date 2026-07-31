@@ -158,6 +158,7 @@ KNOWLEDGE_EXPLORER_DOCUMENTS = (
     "prototype/knowledge-explorer/docs/wireframes.md",
     "prototype/knowledge-explorer/docs/design-system.md",
     "prototype/knowledge-explorer/docs/deployment.md",
+    "prototype/knowledge-explorer/docs/localization-policy.md",
 )
 REQUIRED_DOCUMENTS = (
     (

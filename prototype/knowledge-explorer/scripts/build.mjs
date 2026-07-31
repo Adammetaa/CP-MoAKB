@@ -2,6 +2,7 @@ import { cp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
 
 import { verifyArtifact } from "./verify-pages-artifact.mjs";
+import { verifyLocalization } from "./verify-localization.mjs";
 
 const root = resolve(import.meta.dirname, "..");
 const output = resolve(root, "dist", "pages-root");
@@ -55,11 +56,12 @@ for (const page of pages) {
 }
 
 const appText = await readFile(resolve(root, "assets", "app.js"), "utf8");
-for (const prohibited of ["localStorage", "sessionStorage", "WebSocket", "EventSource", "document.cookie", "analytics"]) {
+for (const prohibited of ["sessionStorage", "WebSocket", "EventSource", "document.cookie", "analytics"]) {
   if (appText.includes(prohibited)) failures.push(`app.js contains prohibited capability: ${prohibited}`);
 }
+if (!appText.includes("storage?.getItem(storageKey)") || !appText.includes("storage?.setItem(storageKey, nextLanguage)")) failures.push("app.js is missing safe language-preference persistence");
 for (const request of appText.matchAll(/fetch\("([^"]+)"\)/g)) {
-  if (!["assets/data/mock-knowledge.json", "deployment.json"].includes(request[1])) {
+  if (!["assets/i18n/th.json", "assets/i18n/en.json", "assets/data/mock-knowledge.json", "deployment.json"].includes(request[1])) {
     failures.push(`app.js fetches an unapproved resource: ${request[1]}`);
   }
 }
@@ -69,6 +71,8 @@ const data = JSON.parse(dataText);
 if (data.meta?.status !== "fictional-placeholder") failures.push("mock dataset must declare fictional-placeholder status");
 if (!data.meta?.disclaimer?.includes("not agricultural knowledge")) failures.push("mock dataset disclaimer is missing");
 if (failures.length) throw new Error(`Prototype validation failed:\n${failures.join("\n")}`);
+
+await verifyLocalization();
 
 await rm(resolve(root, "dist"), { recursive: true, force: true });
 await mkdir(explorerOutput, { recursive: true });

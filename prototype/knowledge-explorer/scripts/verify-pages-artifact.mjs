@@ -12,6 +12,8 @@ const approved = new Set([
   "knowledge-explorer/assets/styles.css",
   "knowledge-explorer/assets/og.png",
   "knowledge-explorer/assets/data/mock-knowledge.json",
+  "knowledge-explorer/assets/i18n/th.json",
+  "knowledge-explorer/assets/i18n/en.json",
 ]);
 
 const walk = async (directory) => {
@@ -52,6 +54,9 @@ export const verifyArtifact = async (root) => {
   }
   const mock = JSON.parse(await readFile(resolve(resolvedRoot, "knowledge-explorer", "assets", "data", "mock-knowledge.json"), "utf8"));
   if (mock.meta?.status !== "fictional-placeholder") throw new Error("Deployed mock data lost fictional-placeholder status");
+  const thai = JSON.parse(await readFile(resolve(resolvedRoot, "knowledge-explorer", "assets", "i18n", "th.json"), "utf8"));
+  const english = JSON.parse(await readFile(resolve(resolvedRoot, "knowledge-explorer", "assets", "i18n", "en.json"), "utf8"));
+  if (!thai.prototype?.notice || !english.prototype?.notice) throw new Error("Deployed localization dictionaries lost prototype notices");
   const metadata = JSON.parse(await readFile(resolve(resolvedRoot, "knowledge-explorer", "deployment.json"), "utf8"));
   if (metadata.deployment_mode !== "preview" || metadata.status !== "fictional-placeholder" || !/^[0-9a-f]{40}$/.test(metadata.commit)) {
     throw new Error("Deployment metadata is unsafe or incomplete");

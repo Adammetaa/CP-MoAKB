@@ -28,6 +28,7 @@ def test_knowledge_explorer_deliverables_are_complete() -> None:
         "prototype/knowledge-explorer/docs/wireframes.md",
         "prototype/knowledge-explorer/docs/design-system.md",
         "prototype/knowledge-explorer/docs/deployment.md",
+        "prototype/knowledge-explorer/docs/localization-policy.md",
     )
     for relative in KNOWLEDGE_EXPLORER_DOCUMENTS:
         assert (ROOT / relative).is_file()
@@ -62,7 +63,7 @@ def test_mock_dataset_is_explicitly_fictional_and_minimal() -> None:
     assert len(data["evidence"]) == 2
     assert len(data["sources"]) == 2
     assert len(data["authorities"]) == 1
-    assert all("Placeholder" in item["status"] for item in data["concepts"])
+    assert all(item["status"] == "fictional-placeholder" for item in data["concepts"])
 
 
 def test_required_personas_flows_components_and_responsive_design_are_documented() -> (

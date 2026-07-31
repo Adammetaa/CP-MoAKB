@@ -1,61 +1,30 @@
-const page = document.body.dataset.page || "home";
+const storageKey = "cp-moakb-explorer-language";
+const supportedLanguages = new Set(["th", "en"]);
+const page = typeof document === "undefined" ? "home" : document.body.dataset.page || "home";
+let messages = {};
+let knowledgeData = null;
+let activeFilter = "all";
 
-const navItems = [
-  ["home", "Home", "index.html"],
-  ["search", "Search", "search.html"],
-  ["browse", "Browse", "browse.html"],
-  ["governance", "Governance", "governance.html"],
-  ["about", "About", "about.html"],
-];
-
-const header = document.querySelector("[data-site-header]");
-if (header) {
-  header.innerHTML = `
-    <a class="brand" href="index.html" aria-label="CP-MoAKB Knowledge Explorer home">
-      <span class="brand-mark" aria-hidden="true">CP</span>
-      <span><strong>CP-MoAKB</strong><small>Knowledge Explorer</small></span>
-    </a>
-    <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
-    <nav id="site-nav" class="site-nav" aria-label="Primary navigation">
-      ${navItems.map(([key, label, href]) => `<a href="${href}" ${page === key ? 'aria-current="page"' : ""}>${label}</a>`).join("")}
-    </nav>
-    <a class="header-cta" href="search.html">Explore knowledge</a>`;
-  const toggle = header.querySelector(".menu-toggle");
-  const nav = header.querySelector(".site-nav");
-  toggle?.addEventListener("click", () => {
-    const open = toggle.getAttribute("aria-expanded") === "true";
-    toggle.setAttribute("aria-expanded", String(!open));
-    nav.classList.toggle("is-open", !open);
-  });
-}
-
-const footer = document.querySelector("[data-site-footer]");
-if (footer) {
-  footer.innerHTML = `
-    <div><strong>CP-MoAKB Knowledge Explorer</strong><p>Product-vision prototype · no production knowledge or Runtime.</p></div>
-    <div><div class="footer-links"><a href="governance.html">Governance</a><a href="components.html">Components</a><a href="about.html">About</a></div><small data-deployment>Preview deployment identity unavailable locally.</small></div>`;
-}
-
-const loadDeployment = async () => {
+const readLanguagePreference = (storage) => {
   try {
-    const response = await fetch("deployment.json");
-    if (!response.ok) return;
-    const metadata = await response.json();
-    if (metadata.deployment_mode !== "preview" || metadata.status !== "fictional-placeholder") return;
-    const target = document.querySelector("[data-deployment]");
-    if (target) target.textContent = `Preview ${String(metadata.commit).slice(0, 12)} · ${metadata.build_timestamp} · package ${metadata.package_version}`;
+    const storedLanguage = storage?.getItem(storageKey);
+    return supportedLanguages.has(storedLanguage) ? storedLanguage : "th";
   } catch {
-    // Deployment metadata exists only in the validated Pages artifact.
+    return "th";
   }
 };
 
-document.querySelectorAll("[data-search-form]").forEach((form) => {
-  form.addEventListener("submit", (event) => {
-    event.preventDefault();
-    const query = new FormData(form).get("q")?.toString().trim() || "placeholder";
-    window.location.href = `search.html?q=${encodeURIComponent(query)}`;
-  });
-});
+const writeLanguagePreference = (storage, nextLanguage) => {
+  if (!supportedLanguages.has(nextLanguage)) return false;
+  try {
+    storage?.setItem(storageKey, nextLanguage);
+    return Boolean(storage);
+  } catch {
+    return false;
+  }
+};
+
+let language = readLanguagePreference(typeof window === "undefined" ? null : window.localStorage);
 
 const escapeHtml = (value) => String(value)
   .replaceAll("&", "&amp;")
@@ -64,92 +33,267 @@ const escapeHtml = (value) => String(value)
   .replaceAll('"', "&quot;")
   .replaceAll("'", "&#039;");
 
-const loadData = async () => {
+const resolveKey = (object, key) => key.split(".").reduce((value, part) => value?.[part], object);
+
+const translateCatalog = (catalogs, locale, key, replacements = {}) => {
+  const value = resolveKey(catalogs[locale], key);
+  if (typeof value !== "string") throw new Error(`Missing ${locale} translation key: ${key}`);
+  return Object.entries(replacements).reduce(
+    (text, [name, replacement]) => text.replaceAll(`{${name}}`, String(replacement)),
+    value,
+  );
+};
+
+const t = (key, replacements = {}) => {
+  return translateCatalog(messages, language, key, replacements);
+};
+
+const languageToggleState = (locale) => ({
+  th: locale === "th",
+  en: locale === "en",
+});
+
+const applyDocumentLanguage = (documentElement, locale) => {
+  documentElement.lang = supportedLanguages.has(locale) ? locale : "th";
+};
+
+const localized = (value) => {
+  if (value && typeof value === "object" && !Array.isArray(value)) return value[language] ?? value.en ?? "";
+  return value ?? "";
+};
+
+const applyTranslations = () => {
+  applyDocumentLanguage(document.documentElement, language);
+  document.querySelectorAll("[data-i18n]").forEach((element) => {
+    element.textContent = t(element.dataset.i18n);
+  });
+  document.querySelectorAll("[data-i18n-placeholder]").forEach((element) => {
+    element.setAttribute("placeholder", t(element.dataset.i18nPlaceholder));
+  });
+  document.querySelectorAll("[data-i18n-aria-label]").forEach((element) => {
+    element.setAttribute("aria-label", t(element.dataset.i18nAriaLabel));
+  });
+  document.title = t(`meta.${page}.title`);
+  const description = document.querySelector('meta[name="description"]');
+  if (description) description.setAttribute("content", t(`meta.${page}.description`));
+};
+
+const navItems = [
+  ["home", "nav.home", "index.html"],
+  ["search", "nav.search", "search.html"],
+  ["browse", "nav.browse", "browse.html"],
+  ["governance", "nav.governance", "governance.html"],
+  ["about", "nav.about", "about.html"],
+];
+
+const renderHeader = () => {
+  const header = document.querySelector("[data-site-header]");
+  if (!header) return;
+  header.innerHTML = `
+    <a class="brand" href="index.html" aria-label="${escapeHtml(t("nav.brandLabel"))}">
+      <span class="brand-mark" aria-hidden="true">CP</span>
+      <span><strong>CP-MoAKB</strong><small>Knowledge Explorer</small></span>
+    </a>
+    <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">${escapeHtml(t("nav.menu"))}</button>
+    <nav id="site-nav" class="site-nav" aria-label="${escapeHtml(t("nav.primaryLabel"))}">
+      ${navItems.map(([key, label, href]) => `<a href="${href}" ${page === key ? 'aria-current="page"' : ""}>${escapeHtml(t(label))}</a>`).join("")}
+    </nav>
+    <div class="language-switcher" role="group" aria-label="${escapeHtml(t("language.label"))}">
+      <button type="button" data-language="th" lang="th" aria-pressed="${language === "th"}" aria-label="${escapeHtml(t("language.thai"))}">ไทย</button>
+      <span aria-hidden="true">|</span>
+      <button type="button" data-language="en" lang="en" aria-pressed="${language === "en"}" aria-label="${escapeHtml(t("language.english"))}">EN</button>
+    </div>
+    <a class="header-cta" href="search.html">${escapeHtml(t("nav.explore"))}</a>`;
+
+  const menuToggle = header.querySelector(".menu-toggle");
+  const nav = header.querySelector(".site-nav");
+  menuToggle?.addEventListener("click", () => {
+    const open = menuToggle.getAttribute("aria-expanded") === "true";
+    menuToggle.setAttribute("aria-expanded", String(!open));
+    nav?.classList.toggle("is-open", !open);
+  });
+  header.querySelectorAll("[data-language]").forEach((button) => {
+    button.addEventListener("click", () => setLanguage(button.dataset.language));
+  });
+};
+
+const renderFooter = () => {
+  const footer = document.querySelector("[data-site-footer]");
+  if (!footer) return;
+  footer.innerHTML = `
+    <div><strong>CP-MoAKB Knowledge Explorer</strong><p>${escapeHtml(t("prototype.footer"))}</p></div>
+    <div><div class="footer-links"><a href="governance.html">${escapeHtml(t("nav.governance"))}</a><a href="components.html">${escapeHtml(t("components.eyebrow"))}</a><a href="about.html">${escapeHtml(t("nav.about"))}</a></div><small data-deployment>${escapeHtml(t("prototype.deploymentUnavailable"))}</small></div>`;
+};
+
+const setLanguage = (nextLanguage) => {
+  if (!supportedLanguages.has(nextLanguage) || nextLanguage === language) return;
+  language = nextLanguage;
+  writeLanguagePreference(window.localStorage, language);
+  renderPage();
+  document.dispatchEvent(new CustomEvent("explorer:language", { detail: { language } }));
+};
+
+const loadDeployment = async () => {
   try {
-    const response = await fetch("assets/data/mock-knowledge.json");
-    if (!response.ok) throw new Error("Mock data unavailable");
-    return await response.json();
-  } catch {
-    document.querySelectorAll("[data-live-region]").forEach((region) => {
-      region.textContent = "Mock data needs a local static server to load.";
+    const response = await fetch("deployment.json");
+    if (!response.ok) return;
+    const metadata = await response.json();
+    if (metadata.deployment_mode !== "preview" || metadata.status !== "fictional-placeholder") return;
+    const target = document.querySelector("[data-deployment]");
+    if (target) target.textContent = t("prototype.deployment", {
+      commit: String(metadata.commit).slice(0, 12),
+      timestamp: metadata.build_timestamp,
+      version: metadata.package_version,
     });
-    return null;
+  } catch {
+    // Deployment metadata exists only in the validated Pages artifact.
   }
 };
 
 const conceptCard = (concept) => `
   <article class="card concept-card">
-    <div class="card-meta"><span class="tag tag-placeholder">Placeholder</span><span>${escapeHtml(concept.type)}</span></div>
-    <h3><a href="concept.html">${escapeHtml(concept.title)}</a></h3>
-    <p>${escapeHtml(concept.definition)}</p>
-    <div class="card-footer"><span class="lifecycle-dot"></span>${escapeHtml(concept.lifecycle)}<a href="concept.html">View concept <span aria-hidden="true">→</span></a></div>
+    <div class="card-meta"><span class="tag tag-placeholder">${escapeHtml(t("data.placeholder"))}</span><span>${escapeHtml(localized(concept.type))}</span></div>
+    <h3><a href="concept.html">${escapeHtml(localized(concept.title))}</a></h3>
+    <p>${escapeHtml(localized(concept.definition))}</p>
+    <div class="card-footer"><span class="lifecycle-dot"></span>${escapeHtml(localized(concept.lifecycle))}<a href="concept.html">${escapeHtml(t("data.viewConcept"))} <span aria-hidden="true">→</span></a></div>
   </article>`;
 
-const initHome = (data) => {
+const renderHome = () => {
+  if (!knowledgeData) return;
   const stats = document.querySelector("[data-stats]");
-  if (stats) stats.innerHTML = data.statistics.map((item) => `<div class="stat"><strong>${escapeHtml(item.value)}</strong><span>${escapeHtml(item.label)}</span></div>`).join("");
+  if (stats) {
+    stats.setAttribute("aria-label", t("data.statisticsLabel"));
+    stats.innerHTML = knowledgeData.statistics.map((item) => `<div class="stat"><strong>${escapeHtml(item.value)}</strong><span>${escapeHtml(localized(item.label))}</span></div>`).join("");
+  }
   const latest = document.querySelector("[data-latest-concepts]");
-  if (latest) latest.innerHTML = data.concepts.slice(0, 3).map(conceptCard).join("");
+  if (latest) latest.innerHTML = knowledgeData.concepts.slice(0, 3).map(conceptCard).join("");
   const sources = document.querySelector("[data-latest-sources]");
-  if (sources) sources.innerHTML = data.sources.map((source) => `<a class="source-row" href="source.html"><span class="source-icon">S</span><span><strong>${escapeHtml(source.title)}</strong><small>${escapeHtml(source.authority)}</small></span><span aria-hidden="true">→</span></a>`).join("");
+  if (sources) sources.innerHTML = knowledgeData.sources.map((source) => `<a class="source-row" href="source.html"><span class="source-icon">S</span><span><strong>${escapeHtml(localized(source.title))}</strong><small>${escapeHtml(localized(source.authority))}</small></span><span aria-hidden="true">→</span></a>`).join("");
 };
 
-const initSearch = (data) => {
-  const params = new URLSearchParams(window.location.search);
+const searchableText = (item) => JSON.stringify(item).toLocaleLowerCase();
+
+const searchKnowledge = (data, query = "", filter = "all") => {
+  const normalizedQuery = query.trim().toLocaleLowerCase();
+  return [
+    ...data.concepts.map((item) => ({ ...item, resultType: "concept", href: "concept.html" })),
+    ...data.evidence.map((item) => ({ ...item, resultType: "evidence", href: "evidence.html", definition: item.limitations, lifecycle: item.status })),
+    ...data.sources.map((item) => ({ ...item, resultType: "source", href: "source.html", definition: item.scope, lifecycle: item.status })),
+  ].filter((item) => (filter === "all" || item.resultType === filter) && (!normalizedQuery || searchableText(item).includes(normalizedQuery)));
+};
+
+const localizedResultCount = (catalogs, locale, count) => (
+  count === 1
+    ? translateCatalog(catalogs, locale, "search.countOne")
+    : translateCatalog(catalogs, locale, "search.count", { count })
+);
+
+const renderSearch = () => {
+  if (!knowledgeData) return;
   const input = document.querySelector("[data-search-input]");
-  if (input) input.value = params.get("q") || "rice";
-  const results = document.querySelector("[data-results]");
+  const query = input?.value ?? "";
+  const items = searchKnowledge(knowledgeData, query, activeFilter);
   const count = document.querySelector("[data-result-count]");
-  const filters = [...document.querySelectorAll("[data-filter]")];
-  const render = (type = "all") => {
-    const items = [
-      ...data.concepts.map((item) => ({ ...item, resultType: "Concept" })),
-      ...data.evidence.map((item) => ({ ...item, resultType: "Evidence", definition: item.limitations, lifecycle: item.status })),
-      ...data.sources.map((item) => ({ ...item, resultType: "Source", definition: item.scope, lifecycle: item.status })),
-    ].filter((item) => type === "all" || item.resultType.toLowerCase() === type);
-    if (count) count.textContent = `${items.length} fictional placeholder results`;
-    if (results) results.innerHTML = items.map((item) => `<article class="result-card"><span class="tag tag-${item.resultType.toLowerCase()}">${item.resultType}</span><div><h3><a href="${item.resultType.toLowerCase()}.html">${escapeHtml(item.title)}</a></h3><p>${escapeHtml(item.definition)}</p><small>${escapeHtml(item.lifecycle)}</small></div><span class="result-arrow" aria-hidden="true">→</span></article>`).join("");
-  };
-  filters.forEach((button) => button.addEventListener("click", () => {
-    filters.forEach((item) => item.setAttribute("aria-pressed", "false"));
-    button.setAttribute("aria-pressed", "true");
-    render(button.dataset.filter);
-  }));
-  render();
+  if (count) count.textContent = localizedResultCount(messages, language, items.length);
+  const results = document.querySelector("[data-results]");
+  if (!results) return;
+  if (!items.length) {
+    results.innerHTML = `<div class="empty-state" role="status">${escapeHtml(t("search.empty"))}</div>`;
+    return;
+  }
+  results.innerHTML = items.map((item) => `<article class="result-card"><span class="tag tag-${item.resultType}">${escapeHtml(t(`data.${item.resultType}`))}</span><div><h3><a href="${item.href}">${escapeHtml(localized(item.title))}</a></h3><p>${escapeHtml(localized(item.definition))}</p><small>${escapeHtml(localized(item.lifecycle))}</small></div><span class="result-arrow" aria-hidden="true">→</span></article>`).join("");
 };
 
-const initConcept = (data) => {
-  const concept = data.concepts[0];
-  document.querySelectorAll("[data-concept-title]").forEach((el) => { el.textContent = concept.title; });
+const renderConcept = () => {
+  if (!knowledgeData) return;
+  const concept = knowledgeData.concepts[0];
+  document.querySelectorAll("[data-concept-title]").forEach((element) => { element.textContent = localized(concept.title); });
   const definition = document.querySelector("[data-concept-definition]");
-  if (definition) definition.textContent = concept.definition;
+  if (definition) definition.textContent = localized(concept.definition);
   const relationships = document.querySelector("[data-relationships]");
-  if (relationships) relationships.innerHTML = concept.relationships.map((item) => `<a class="relationship-chip" href="${item.target.includes("Evidence") ? "evidence.html" : item.target.includes("Authority") ? "authority.html" : "concept.html"}"><span>${escapeHtml(item.predicate)}</span><strong>${escapeHtml(item.target)}</strong></a>`).join("");
+  if (relationships) relationships.innerHTML = concept.relationships.map((item) => `<a class="relationship-chip" href="${item.target.en.includes("Evidence") ? "evidence.html" : item.target.en.includes("Authority") ? "authority.html" : "concept.html"}"><span>${escapeHtml(localized(item.predicate))}</span><strong>${escapeHtml(localized(item.target))}</strong></a>`).join("");
 };
 
-const initDetail = (data) => {
-  const evidence = data.evidence[0];
-  document.querySelectorAll("[data-evidence-title]").forEach((el) => { el.textContent = evidence.title; });
-  const source = data.sources[0];
-  document.querySelectorAll("[data-source-title]").forEach((el) => { el.textContent = source.title; });
-  const authority = data.authorities[0];
-  document.querySelectorAll("[data-authority-title]").forEach((el) => { el.textContent = authority.name; });
+const renderDetails = () => {
+  if (!knowledgeData) return;
+  const evidence = knowledgeData.evidence[0];
+  document.querySelectorAll("[data-evidence-title]").forEach((element) => { element.textContent = localized(evidence.title); });
+  const source = knowledgeData.sources[0];
+  document.querySelectorAll("[data-source-title]").forEach((element) => { element.textContent = localized(source.title); });
+  const authority = knowledgeData.authorities[0];
+  document.querySelectorAll("[data-authority-title]").forEach((element) => { element.textContent = localized(authority.name); });
 };
 
-document.querySelectorAll("[data-tab]").forEach((tab) => {
-  tab.addEventListener("click", () => {
-    const group = tab.closest("[data-tabs]");
-    group?.querySelectorAll("[data-tab]").forEach((item) => item.setAttribute("aria-selected", "false"));
-    tab.setAttribute("aria-selected", "true");
-    document.getElementById(tab.getAttribute("aria-controls"))?.scrollIntoView({ behavior: "smooth", block: "start" });
+const renderPage = () => {
+  applyTranslations();
+  renderHeader();
+  renderFooter();
+  renderHome();
+  renderSearch();
+  renderConcept();
+  renderDetails();
+  loadDeployment();
+};
+
+const bindInteractions = () => {
+  document.querySelectorAll("[data-search-form]").forEach((form) => {
+    form.addEventListener("submit", (event) => {
+      event.preventDefault();
+      if (page === "search") renderSearch();
+      else {
+        const query = new FormData(form).get("q")?.toString().trim() ?? "";
+        window.location.href = `search.html?q=${encodeURIComponent(query)}`;
+      }
+    });
   });
+  document.querySelectorAll("[data-filter]").forEach((button) => {
+    button.addEventListener("click", () => {
+      activeFilter = button.dataset.filter;
+      document.querySelectorAll("[data-filter]").forEach((item) => item.setAttribute("aria-pressed", String(item === button)));
+      renderSearch();
+    });
+  });
+  document.querySelectorAll("[data-tab]").forEach((tab) => {
+    tab.addEventListener("click", () => {
+      const group = tab.closest("[data-tabs]");
+      group?.querySelectorAll("[data-tab]").forEach((item) => item.setAttribute("aria-selected", String(item === tab)));
+      document.getElementById(tab.getAttribute("aria-controls"))?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  });
+};
+
+const initialize = async () => {
+  const [thaiResponse, englishResponse, dataResponse] = await Promise.all([
+    fetch("assets/i18n/th.json"),
+    fetch("assets/i18n/en.json"),
+    fetch("assets/data/mock-knowledge.json"),
+  ]);
+  if (!thaiResponse.ok || !englishResponse.ok) throw new Error("Localization dictionaries unavailable");
+  messages = { th: await thaiResponse.json(), en: await englishResponse.json() };
+  if (dataResponse.ok) knowledgeData = await dataResponse.json();
+  const params = new URLSearchParams(window.location.search);
+  const searchInput = document.querySelector("[data-search-input]");
+  if (searchInput) searchInput.value = params.get("q") ?? "";
+  bindInteractions();
+  renderPage();
+};
+
+globalThis.__explorerLocalization = Object.freeze({
+  applyDocumentLanguage,
+  languageToggleState,
+  localizedResultCount,
+  readLanguagePreference,
+  searchKnowledge,
+  storageKey,
+  translateCatalog,
+  writeLanguagePreference,
 });
 
-loadData().then((data) => {
-  if (!data) return;
-  if (page === "home") initHome(data);
-  if (page === "search") initSearch(data);
-  if (["concept", "components"].includes(page)) initConcept(data);
-  initDetail(data);
-});
-loadDeployment();
+if (typeof document !== "undefined" && !globalThis.__EXPLORER_TEST__) {
+  initialize().catch(() => {
+    applyDocumentLanguage(document.documentElement, "th");
+    document.querySelectorAll("[data-live-region]").forEach((region) => {
+      region.textContent = "ต้องเปิดผ่านเซิร์ฟเวอร์สถิติเพื่อโหลดข้อมูลสมมติ";
+    });
+  });
+}

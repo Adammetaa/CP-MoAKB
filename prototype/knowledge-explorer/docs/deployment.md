@@ -75,7 +75,10 @@ pages-root/
         ├── app.js
         ├── styles.css
         ├── og.png
-        └── data/mock-knowledge.json
+        ├── data/mock-knowledge.json
+        └── i18n/
+            ├── th.json
+            └── en.json
 ```
 
 The verifier rejects missing or unexpected files, symbolic links, local paths,
@@ -83,6 +86,11 @@ credentials, secret expressions, private-key material, absent prototype notices,
 unsafe deployment metadata, or mock data without `fictional-placeholder`
 status. Repository source, Python packages, test fixtures, official references,
 and internal release evidence are not copied.
+
+The two deterministic localization dictionaries are the only additional
+deployable files. The browser loads them from the same repository subpath; no
+localization network service, package, cookie, analytics capability, or
+external font is used.
 
 ## Deployment Identity
 
