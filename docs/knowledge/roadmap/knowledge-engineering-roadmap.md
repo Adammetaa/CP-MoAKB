@@ -52,12 +52,24 @@ approval.
 
 ## Planned Authoring Preparation
 
-### Sprint-035K — Canonical Knowledge Authoring Templates
+### Sprint-035K — Knowledge Editorial Handbook delivery
+
+The owner separately authorized Sprint-035K to deliver the operational handbook
+originally described as a future editorial-handbook capability. The delivered
+family remains subordinate guidance for source intake, evidence extraction,
+candidate preparation, specialist review, and publication readiness. This status
+note does not alter the planning-only nature of the roadmap, authorize content,
+or imply completion of the canonical-template work below.
+
+### Earlier Sprint-035K planning entry — Canonical Knowledge Authoring Templates
 
 This sprint SHOULD prepare implementation-neutral authoring templates for human
 review. Templates MUST NOT be schemas, Runtime contracts, candidate data,
 production identifiers, or authority to populate a domain. If work intersects
 ADR-009's Rice pilot YAML format, ADR-009 MUST remain the format authority.
+The scheduling label is retained as roadmap history; this work was not delivered
+by the separately authorized Sprint-035K editorial-handbook scope and requires a
+new owner scheduling decision before implementation.
 
 ## Planned Pilot Knowledge Authoring
 

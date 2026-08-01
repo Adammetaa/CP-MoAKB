@@ -28,6 +28,14 @@ authority, accountability, and auditability. KGS governs who may act and decide;
 KAS governs what authored knowledge must satisfy. Both are subordinate to the
 Constitution.
 
+## Knowledge Editorial Handbook
+
+The [Knowledge Editorial Handbook](editorial/README.md) translates the
+Constitution, KAS, and KGS into practical human workflows, guides, review
+instruments, and fictional examples. It governs editorial practice only. It MUST
+NOT create a schema, Runtime behavior, accepted terminology, agricultural
+knowledge, or publication authority.
+
 ## Index
 
 | Standard | Status | Version | Governs |

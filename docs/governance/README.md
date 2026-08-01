@@ -21,3 +21,8 @@ authoring, evidence, citations, terminology, semantic relationships, and
 lifecycle. KGS and KAS govern knowledge work; RAS governs software. A requirement
 crossing that boundary needs both knowledge governance and a separately approved
 engineering scope.
+
+The subordinate [Knowledge Editorial Handbook](../knowledge/editorial/README.md)
+provides human operating procedures and review instruments. It creates no new
+authority and MUST defer to the Constitution, KAS, KGS, scoped ADR/RAS authority,
+Design Freeze, Source Policy, and Publication Boundary.

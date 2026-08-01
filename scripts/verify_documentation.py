@@ -160,6 +160,34 @@ KNOWLEDGE_EXPLORER_DOCUMENTS = (
     "prototype/knowledge-explorer/docs/deployment.md",
     "prototype/knowledge-explorer/docs/localization-policy.md",
 )
+KNOWLEDGE_EDITORIAL_DOCUMENTS = (
+    "docs/knowledge/editorial/README.md",
+    "docs/knowledge/editorial/knowledge-editorial-handbook.md",
+    "docs/knowledge/editorial/workflows/source-intake-workflow.md",
+    "docs/knowledge/editorial/workflows/evidence-extraction-workflow.md",
+    "docs/knowledge/editorial/workflows/knowledge-candidate-workflow.md",
+    "docs/knowledge/editorial/workflows/terminology-workflow.md",
+    "docs/knowledge/editorial/workflows/relationship-workflow.md",
+    "docs/knowledge/editorial/workflows/review-and-revision-workflow.md",
+    "docs/knowledge/editorial/workflows/publication-readiness-workflow.md",
+    "docs/knowledge/editorial/guides/writing-definitions.md",
+    "docs/knowledge/editorial/guides/writing-scope-and-exclusions.md",
+    "docs/knowledge/editorial/guides/handling-conflicting-evidence.md",
+    "docs/knowledge/editorial/guides/handling-uncertainty-and-unknowns.md",
+    "docs/knowledge/editorial/guides/multilingual-authoring.md",
+    "docs/knowledge/editorial/guides/rights-and-redistribution-review.md",
+    "docs/knowledge/editorial/guides/corrections-deprecation-and-supersession.md",
+    "docs/knowledge/editorial/checklists/author-checklist.md",
+    "docs/knowledge/editorial/checklists/scientific-review-checklist.md",
+    "docs/knowledge/editorial/checklists/evidence-review-checklist.md",
+    "docs/knowledge/editorial/checklists/terminology-review-checklist.md",
+    "docs/knowledge/editorial/checklists/ontology-review-checklist.md",
+    "docs/knowledge/editorial/checklists/governance-review-checklist.md",
+    "docs/knowledge/editorial/checklists/publication-readiness-checklist.md",
+    "docs/knowledge/editorial/examples/README.md",
+    "docs/knowledge/editorial/examples/fictional-good-example.md",
+    "docs/knowledge/editorial/examples/fictional-bad-example.md",
+)
 REQUIRED_DOCUMENTS = (
     (
         "README.md",
@@ -176,6 +204,7 @@ REQUIRED_DOCUMENTS = (
     + KNOWLEDGE_GOVERNANCE_DOCUMENTS
     + KNOWLEDGE_GOVERNANCE_STANDARDS
     + KNOWLEDGE_EXPLORER_DOCUMENTS
+    + KNOWLEDGE_EDITORIAL_DOCUMENTS
     + tuple(f"docs/{group}/{name}" for group, names in GROUPS.items() for name in names)
 )
 LINK_PATTERN = re.compile(r"(?<!!)\[[^\]]+\]\(([^)]+)\)")
@@ -406,6 +435,34 @@ def verify() -> tuple[Path, ...]:
             if section not in text:
                 failures.append(
                     f"KGS missing required section: {relative} -> {section}"
+                )
+    editorial_sections = (
+        "## Purpose",
+        "## Scope",
+        "## Out of Scope",
+        "## Authority",
+        "## Definitions",
+        "## Responsibilities",
+        "## Procedure",
+        "## Required Inputs",
+        "## Required Outputs",
+        "## Review Points",
+        "## Failure Modes",
+        "## Examples",
+        "## Non-examples",
+        "## Escalation",
+        "## Audit Requirements",
+        "## Change Control",
+        "## Future Considerations",
+    )
+    for relative in KNOWLEDGE_EDITORIAL_DOCUMENTS[1:23]:
+        text = (ROOT / relative).read_text(encoding="utf-8")
+        if "Status: Active" not in text or "Version: 1.0" not in text:
+            failures.append(f"editorial status or version mismatch: {relative}")
+        for section in editorial_sections:
+            if section not in text:
+                failures.append(
+                    f"editorial document missing required section: {relative} -> {section}"
                 )
     release_manifest = (
         ROOT / "docs/release/release-candidate-manifest.json"
