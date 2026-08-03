@@ -242,6 +242,41 @@ KNOWLEDGE_TEMPLATE_DOCUMENTS = (
     "docs/knowledge/templates/examples/fictional-complete-package.md",
     "docs/knowledge/templates/examples/fictional-incomplete-package.md",
 )
+KNOWLEDGE_WORKSPACE_DOCUMENTS = (
+    "docs/knowledge/workspace/README.md",
+    "docs/knowledge/workspace/knowledge-workspace-blueprint.md",
+    "docs/knowledge/workspace/vision/workspace-vision.md",
+    "docs/knowledge/workspace/vision/explorer-and-lab-boundary.md",
+    "docs/knowledge/workspace/vision/design-principles.md",
+    "docs/knowledge/workspace/information-architecture/workspace-site-map.md",
+    "docs/knowledge/workspace/information-architecture/queue-and-inbox-model.md",
+    "docs/knowledge/workspace/information-architecture/object-navigation-model.md",
+    "docs/knowledge/workspace/roles/role-based-workspaces.md",
+    "docs/knowledge/workspace/roles/visibility-and-action-matrix.md",
+    "docs/knowledge/workspace/roles/handoff-and-ownership-model.md",
+    "docs/knowledge/workspace/workflows/end-to-end-knowledge-pipeline.md",
+    "docs/knowledge/workspace/workflows/exception-and-lifecycle-journeys.md",
+    "docs/knowledge/workspace/screens/screen-blueprints.md",
+    "docs/knowledge/workspace/components/workspace-component-library.md",
+    "docs/knowledge/workspace/components/status-and-lifecycle-components.md",
+    "docs/knowledge/workspace/components/review-and-finding-components.md",
+    "docs/knowledge/workspace/components/evidence-and-traceability-components.md",
+    "docs/knowledge/workspace/collaboration/discussion-and-comment-model.md",
+    "docs/knowledge/workspace/collaboration/revision-and-comparison-model.md",
+    "docs/knowledge/workspace/collaboration/disagreement-and-conflict-model.md",
+    "docs/knowledge/workspace/collaboration/notification-and-task-model.md",
+    "docs/knowledge/workspace/governance/authority-and-permission-boundary.md",
+    "docs/knowledge/workspace/governance/audit-and-retention-model.md",
+    "docs/knowledge/workspace/governance/safety-and-non-inference-boundary.md",
+    "docs/knowledge/workspace/governance/publication-boundary-integration.md",
+    "docs/knowledge/workspace/wireframes/README.md",
+    "docs/knowledge/workspace/wireframes/desktop-wireframes.md",
+    "docs/knowledge/workspace/wireframes/tablet-wireframes.md",
+    "docs/knowledge/workspace/wireframes/mobile-wireframes.md",
+    "docs/knowledge/workspace/examples/README.md",
+    "docs/knowledge/workspace/examples/fictional-author-journey.md",
+    "docs/knowledge/workspace/examples/fictional-reviewer-journey.md",
+)
 REQUIRED_DOCUMENTS = (
     (
         "README.md",
@@ -261,6 +296,7 @@ REQUIRED_DOCUMENTS = (
     + KNOWLEDGE_EDITORIAL_DOCUMENTS
     + KNOWLEDGE_REVIEW_DOCUMENTS
     + KNOWLEDGE_TEMPLATE_DOCUMENTS
+    + KNOWLEDGE_WORKSPACE_DOCUMENTS
     + tuple(f"docs/{group}/{name}" for group, names in GROUPS.items() for name in names)
 )
 LINK_PATTERN = re.compile(r"(?<!!)\[[^\]]+\]\(([^)]+)\)")
@@ -574,6 +610,26 @@ def verify() -> tuple[Path, ...]:
                 failures.append(
                     f"template document missing required section: {relative} -> {section}"
                 )
+    for relative in KNOWLEDGE_WORKSPACE_DOCUMENTS:
+        text = (ROOT / relative).read_text(encoding="utf-8")
+        if "Status:" not in text or "Version:" not in text:
+            failures.append(f"workspace status or version missing: {relative}")
+    workspace_blueprint = (ROOT / KNOWLEDGE_WORKSPACE_DOCUMENTS[1]).read_text(
+        encoding="utf-8"
+    )
+    for boundary in (
+        "Knowledge Lab",
+        "Explorer",
+        "Knowledge Constitution",
+        "ADR-005 through ADR-009",
+        "RAS-001 through RAS-015",
+        "Design Freeze",
+        "Publication Boundary",
+        "No automatic inference",
+        "Every arrow is a human-governed handoff",
+    ):
+        if boundary not in workspace_blueprint:
+            failures.append(f"workspace blueprint missing boundary: {boundary}")
     release_manifest = (
         ROOT / "docs/release/release-candidate-manifest.json"
     ).read_text(encoding="utf-8")

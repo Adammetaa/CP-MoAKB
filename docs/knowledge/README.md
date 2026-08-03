@@ -52,6 +52,16 @@ lifecycle, and package preparation. They are subordinate to all knowledge
 authorities and MUST NOT be interpreted as schemas, records, executable forms,
 scientific validation, acceptance, or publication authorization.
 
+## Knowledge Workspace Blueprint
+
+The [Knowledge Workspace Blueprint](workspace/README.md) describes a possible
+future Knowledge Lab for governed human authoring, review, revision, acceptance
+handoff, release preparation, and audit visibility. It is a subordinate product
+design artifact: it creates no application, schema, permission, workflow
+automation, knowledge record, scientific authority, acceptance, or publication.
+Knowledge Explorer remains the read-side concept; Knowledge Lab is the proposed
+write-and-review side.
+
 ## Index
 
 | Standard | Status | Version | Governs |

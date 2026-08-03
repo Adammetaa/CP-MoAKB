@@ -105,11 +105,22 @@ knowledge.
 The scheduling label is retained as roadmap history; the pilot was not delivered
 by the separately authorized template sprint and requires a new owner decision.
 
-### Sprint-038K — Observation Trait Framework
+### Sprint-038K — Knowledge Workspace Blueprint delivery
+
+The owner separately authorized Sprint-038K to deliver a documentation-only
+blueprint for a possible future Knowledge Lab. The blueprint separates the
+Explorer read side from a human-governed authoring and review side and defines
+no application, schema, persistence, permission, automation, agricultural
+knowledge, acceptance event, or publication behavior.
+
+### Earlier Sprint-038K planning entry — Observation Trait Framework
 
 This sprint MAY propose governance for describing observable traits while
 preserving the separation among observation, evidence, knowledge, and reasoning.
 It MUST NOT create an inference, scoring, or diagnostic framework.
+The scheduling label is retained as roadmap history; this work was not delivered
+by the separately authorized workspace-blueprint scope and requires a new owner
+decision before implementation.
 
 ### Sprint-039K — Symptom and Sign Framework
 
@@ -117,6 +128,25 @@ This sprint MAY propose governance for distinguishing symptoms and signs as
 descriptive concepts. It MUST NOT connect those descriptions to causal
 confirmation, diagnosis, treatment, recommendation, ranking, or automated
 decision-making.
+
+## Possible Future Sequence
+
+The following sequence is planning documentation only. It creates no sprint
+authorization, implementation commitment, data, schema, application, deployment,
+or publication event.
+
+- **Sprint-039U — Static Knowledge Lab UI Prototype:** MAY explore static,
+  non-functional screens based on the blueprint after separate owner approval.
+- **Sprint-040K — Knowledge File Organization and Workspace Mapping:** MAY map
+  governed human documents to a repository-neutral organization without choosing
+  persistence or defining a schema.
+- **Sprint-041K — Knowledge Identity Strategy:** MAY propose identity questions
+  under ADR-006 and existing identifier authority without creating identifiers.
+- **Sprint-042K — Knowledge Lifecycle Operations:** MAY document operational
+  questions under KAS and KGS without implementing workflows or changing states.
+- **Sprint-043K — Rice Growth Stage Pilot:** MAY be considered only as a
+  separately authorized, bounded candidate-authoring pilot; this roadmap does not
+  authorize agricultural content or domain population.
 
 ## Later Gates
 

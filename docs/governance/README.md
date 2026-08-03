@@ -35,3 +35,9 @@ a majority to override a competent unresolved scientific or rights blocker.
 The [Canonical Knowledge Authoring Templates](../knowledge/templates/README.md)
 apply those controls as human documents. Template completion MUST NOT create
 scientific validity, acceptance, publication authority, or an implementation schema.
+
+The [Knowledge Workspace Blueprint](../knowledge/workspace/README.md) is a
+subordinate, documentation-only product design for a possible future Knowledge
+Lab. It may illustrate how governed roles, templates, reviews, findings, and
+publication handoffs could be presented, but it creates no permission,
+authority, schema, workflow automation, acceptance, or publication behavior.
