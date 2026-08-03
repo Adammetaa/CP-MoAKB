@@ -215,6 +215,33 @@ KNOWLEDGE_REVIEW_DOCUMENTS = (
     "docs/knowledge/review/examples/fictional-passing-review.md",
     "docs/knowledge/review/examples/fictional-blocked-review.md",
 )
+KNOWLEDGE_TEMPLATE_DOCUMENTS = (
+    "docs/knowledge/templates/README.md",
+    "docs/knowledge/templates/template-governance.md",
+    "docs/knowledge/templates/authoring/source-nomination-template.md",
+    "docs/knowledge/templates/authoring/evidence-item-template.md",
+    "docs/knowledge/templates/authoring/concept-candidate-template.md",
+    "docs/knowledge/templates/authoring/terminology-candidate-template.md",
+    "docs/knowledge/templates/authoring/relationship-candidate-template.md",
+    "docs/knowledge/templates/authoring/unresolved-issue-template.md",
+    "docs/knowledge/templates/review/review-finding-template.md",
+    "docs/knowledge/templates/review/review-decision-template.md",
+    "docs/knowledge/templates/review/conflict-of-interest-template.md",
+    "docs/knowledge/templates/review/review-completion-template.md",
+    "docs/knowledge/templates/review/final-acceptance-template.md",
+    "docs/knowledge/templates/lifecycle/correction-template.md",
+    "docs/knowledge/templates/lifecycle/revision-template.md",
+    "docs/knowledge/templates/lifecycle/deprecation-template.md",
+    "docs/knowledge/templates/lifecycle/supersession-template.md",
+    "docs/knowledge/templates/lifecycle/retirement-template.md",
+    "docs/knowledge/templates/lifecycle/publication-readiness-template.md",
+    "docs/knowledge/templates/packages/source-evidence-package-template.md",
+    "docs/knowledge/templates/packages/candidate-review-package-template.md",
+    "docs/knowledge/templates/packages/knowledge-release-package-template.md",
+    "docs/knowledge/templates/examples/README.md",
+    "docs/knowledge/templates/examples/fictional-complete-package.md",
+    "docs/knowledge/templates/examples/fictional-incomplete-package.md",
+)
 REQUIRED_DOCUMENTS = (
     (
         "README.md",
@@ -233,6 +260,7 @@ REQUIRED_DOCUMENTS = (
     + KNOWLEDGE_EXPLORER_DOCUMENTS
     + KNOWLEDGE_EDITORIAL_DOCUMENTS
     + KNOWLEDGE_REVIEW_DOCUMENTS
+    + KNOWLEDGE_TEMPLATE_DOCUMENTS
     + tuple(f"docs/{group}/{name}" for group, names in GROUPS.items() for name in names)
 )
 LINK_PATTERN = re.compile(r"(?<!!)\[[^\]]+\]\(([^)]+)\)")
@@ -518,6 +546,33 @@ def verify() -> tuple[Path, ...]:
             if section not in text:
                 failures.append(
                     f"review document missing required section: {relative} -> {section}"
+                )
+    template_sections = (
+        "## Purpose",
+        "## Scope",
+        "## Out of Scope",
+        "## Authority",
+        "## When to Use",
+        "## Who Completes It",
+        "## Required Inputs",
+        "## Template Fields",
+        "## Completion Rules",
+        "## Prohibited Content",
+        "## Review Requirements",
+        "## Failure Modes",
+        "## Example",
+        "## Non-example",
+        "## Audit and Retention",
+        "## Change Control",
+    )
+    for relative in KNOWLEDGE_TEMPLATE_DOCUMENTS:
+        text = (ROOT / relative).read_text(encoding="utf-8")
+        if "Status:" not in text or "Version: 1.0" not in text:
+            failures.append(f"template status or version mismatch: {relative}")
+        for section in template_sections:
+            if section not in text:
+                failures.append(
+                    f"template document missing required section: {relative} -> {section}"
                 )
     release_manifest = (
         ROOT / "docs/release/release-candidate-manifest.json"

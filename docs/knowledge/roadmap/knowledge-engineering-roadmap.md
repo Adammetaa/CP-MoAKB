@@ -89,12 +89,21 @@ The scheduling label is retained as roadmap history; the pilot was not delivered
 by the separately authorized review-framework sprint and requires a new owner
 scheduling decision.
 
-### Sprint-037K — Rice Plant Anatomy Pilot
+### Sprint-037K — Canonical Knowledge Authoring Templates delivery
+
+The owner separately authorized Sprint-037K to deliver implementation-neutral
+human templates for authoring, review, lifecycle, and package preparation. The
+delivery defines no schema, machine type, candidate data, agricultural knowledge,
+acceptance event, or publication authority.
+
+### Earlier Sprint-037K planning entry — Rice Plant Anatomy Pilot
 
 This sprint MAY propose a separately authorized, bounded candidate-authoring
 exercise concerning anatomy concepts. It MUST preserve identity, terminology,
 ontology, evidence, and conflict boundaries and MUST NOT populate production
 knowledge.
+The scheduling label is retained as roadmap history; the pilot was not delivered
+by the separately authorized template sprint and requires a new owner decision.
 
 ### Sprint-038K — Observation Trait Framework
 

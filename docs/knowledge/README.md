@@ -44,6 +44,14 @@ conflict handling, escalation, audit evidence, and human review instruments. It
 is subordinate to the Constitution, KAS, KGS, and Editorial Handbook and MUST
 NOT create truth, scores, schemas, software workflow, acceptance, or publication.
 
+## Canonical Knowledge Authoring Templates
+
+The [Canonical Knowledge Authoring Templates](templates/README.md) provide
+implementation-neutral human documents for source, evidence, candidate, review,
+lifecycle, and package preparation. They are subordinate to all knowledge
+authorities and MUST NOT be interpreted as schemas, records, executable forms,
+scientific validation, acceptance, or publication authorization.
+
 ## Index
 
 | Standard | Status | Version | Governs |

@@ -31,3 +31,7 @@ The [Knowledge Review Framework](../knowledge/review/README.md) supplies
 competence-separated review instruments and non-numeric decision rules under
 those same authorities. It MUST NOT redistribute KGS decision authority or allow
 a majority to override a competent unresolved scientific or rights blocker.
+
+The [Canonical Knowledge Authoring Templates](../knowledge/templates/README.md)
+apply those controls as human documents. Template completion MUST NOT create
+scientific validity, acceptance, publication authority, or an implementation schema.
