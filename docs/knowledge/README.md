@@ -34,6 +34,18 @@ publication event. ADR-006 remains the identity-governance authority, ADR-008
 remains the canonical master-data sequencing and source-authority decision, and
 ADR-009 remains the Rice-pilot candidate YAML authority.
 
+## Knowledge Object Model
+
+The [Knowledge Object Model](object-model/README.md) applies the Asset
+Architecture to fifteen non-overlapping conceptual object classes. It separates
+scientific meaning, evidence and provenance, review and governance, lifecycle
+and publication, representation, and Package Membership while preserving exact
+identity, version, reference, ownership, and audit responsibilities.
+
+The Object Model is conceptual architecture only. It MUST NOT be treated as a
+schema, class hierarchy, API payload, validation model, graph implementation,
+Runtime behavior, identifier allocation, knowledge content, or publication.
+
 ## Knowledge Governance Standards
 
 The [Knowledge Governance Standards](governance/README.md) govern people,

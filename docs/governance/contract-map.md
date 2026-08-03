@@ -13,6 +13,7 @@
 | RAS-015 | release audit and publication boundary | release-candidate tests and verifier |
 | Knowledge Constitution | highest authority within knowledge governance; cross-authority boundaries and amendment rules | Constitution, navigation, cross-references, and documentation verifier |
 | Knowledge Asset Architecture | canonical, implementation-neutral asset, package, identity, version, reference, representation, repository, and ownership invariants | architecture document family, focused documentation tests, and documentation verifier |
+| Knowledge Object Model | fifteen conceptual object responsibilities, reference/version/lifecycle boundaries, governed graphs, and view mappings | object-model family, fictional networks, focused documentation tests, and documentation verifier |
 | KAS-001–007 | subordinate knowledge authoring, records, evidence, citations, terms, relationships, lifecycle | KAS index, cross-references, and documentation verifier |
 
 Each RAS is versioned independently from Runtime and package versions. The

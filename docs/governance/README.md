@@ -43,6 +43,12 @@ to the Constitution and accepted ADRs. Later knowledge design MUST conform to it
 but it MUST NOT be treated as a Runtime contract, schema, storage design, or
 generalization of ADR-009.
 
+The subordinate [Knowledge Object Model](../knowledge/object-model/README.md)
+defines non-overlapping responsibilities for scientific meaning, evidence,
+authority, review, decision, lifecycle, publication, representation, and package
+membership objects. Its diagrams are conceptual references, not graph edges or
+inference authority.
+
 The [Knowledge Workspace Blueprint](../knowledge/workspace/README.md) is a
 subordinate, documentation-only product design for a possible future Knowledge
 Lab. It may illustrate how governed roles, templates, reviews, findings, and

@@ -49,3 +49,10 @@ master data, agricultural knowledge, controlled vocabulary, ontology content,
 production identifier, file organization mandate, serialization, database,
 graph, API, application, inference, diagnosis, recommendation, AI, publication,
 or release.
+
+## Subordinate Object Model
+
+The [Knowledge Object Model](../object-model/README.md) applies these invariants
+to the conceptual objects inside and around an Asset. It MUST conform to this
+architecture and MUST NOT turn its object classes into a schema, Runtime model,
+or physical implementation.

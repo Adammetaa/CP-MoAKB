@@ -11,7 +11,7 @@ implemented engineering behavior from conceptual future knowledge work.
 | Maintainers | [Maintainer handbook](maintainers/README.md) | Preserve contracts and prepare releases |
 | Security reviewers | [Security documentation](security/README.md) | Review threats, dependencies, and reporting |
 | Release reviewers | [Release handbook](release/README.md) | Prepare and verify without publishing |
-| Knowledge architects, authors, and reviewers | [Knowledge Asset Architecture](knowledge/architecture/README.md) | Understand canonical assets, packages, identity, versions, representations, and ownership boundaries |
+| Knowledge architects, authors, and reviewers | [Knowledge Object Model](knowledge/object-model/README.md) | Understand conceptual object responsibilities inside and around canonical Knowledge Assets |
 | Knowledge-governance contributors | [Governance maps](governance/README.md) | Relate decisions, KAS, RAS, and review |
 | Product and UX reviewers | [Knowledge Explorer prototype](../prototype/knowledge-explorer/README.md) | Review product vision, fictional mock content, and the prepared but not-yet-live Pages preview |
 | Workspace product reviewers | [Knowledge Lab prototype](../prototype/knowledge-lab/README.md) | Test the Thai-first static authoring and review experience with fictional placeholders |
@@ -26,6 +26,7 @@ Additional entry points are the [architecture book](architecture/README.md),
 [Knowledge Review Framework](knowledge/review/README.md),
 [Canonical Knowledge Authoring Templates](knowledge/templates/README.md),
 [Knowledge Asset Architecture](knowledge/architecture/README.md),
+[Knowledge Object Model](knowledge/object-model/README.md),
 [Knowledge Workspace Blueprint](knowledge/workspace/README.md),
 [Knowledge Explorer prototype](../prototype/knowledge-explorer/README.md),
 [Knowledge Lab prototype](../prototype/knowledge-lab/README.md), and

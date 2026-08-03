@@ -25,6 +25,12 @@ implementation-neutral. It does not choose identifier syntax under ADR-006,
 weaken claim-scoped authority under ADR-008, or generalize the ADR-009 Rice-pilot
 candidate format.
 
+The [Knowledge Object Model](../knowledge/object-model/README.md) is subordinate
+to the Asset Architecture and applies those decisions to distinct conceptual
+objects. Its Source and Evidence objects preserve ADR-008 claim-scoped authority;
+its identity and version responsibilities preserve ADR-006; and it neither
+duplicates nor generalizes ADR-009's physical candidate format.
+
 ADR-008 remains the authority for canonical master-data prerequisites and for
 claim-, jurisdiction-, version-, and time-scoped source assessment; official
 source authority is not universal truth. ADR-009 remains the authority for the

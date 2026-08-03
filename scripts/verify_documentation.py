@@ -149,6 +149,37 @@ KNOWLEDGE_ARCHITECTURE_DOCUMENTS = (
     "docs/knowledge/architecture/identity-version-reference-and-namespace-model.md",
     "docs/knowledge/architecture/representation-repository-and-evolution-model.md",
 )
+KNOWLEDGE_OBJECT_MODEL_DOCUMENTS = (
+    "docs/knowledge/object-model/README.md",
+    "docs/knowledge/object-model/knowledge-object-model.md",
+    "docs/knowledge/object-model/object-classes/source-object.md",
+    "docs/knowledge/object-model/object-classes/evidence-object.md",
+    "docs/knowledge/object-model/object-classes/claim-object.md",
+    "docs/knowledge/object-model/object-classes/concept-object.md",
+    "docs/knowledge/object-model/object-classes/terminology-object.md",
+    "docs/knowledge/object-model/object-classes/relationship-object.md",
+    "docs/knowledge/object-model/object-classes/authority-object.md",
+    "docs/knowledge/object-model/object-classes/review-object.md",
+    "docs/knowledge/object-model/object-classes/finding-object.md",
+    "docs/knowledge/object-model/object-classes/decision-object.md",
+    "docs/knowledge/object-model/object-classes/unresolved-issue-object.md",
+    "docs/knowledge/object-model/object-classes/lifecycle-event-object.md",
+    "docs/knowledge/object-model/object-classes/publication-record-object.md",
+    "docs/knowledge/object-model/object-classes/representation-object.md",
+    "docs/knowledge/object-model/object-classes/package-membership-object.md",
+    "docs/knowledge/object-model/models/object-boundary-model.md",
+    "docs/knowledge/object-model/models/object-reference-model.md",
+    "docs/knowledge/object-model/models/object-versioning-model.md",
+    "docs/knowledge/object-model/models/canonical-and-supporting-objects.md",
+    "docs/knowledge/object-model/models/object-lifecycle-responsibility.md",
+    "docs/knowledge/object-model/graphs/scientific-meaning-graph.md",
+    "docs/knowledge/object-model/graphs/evidence-traceability-graph.md",
+    "docs/knowledge/object-model/graphs/review-and-decision-graph.md",
+    "docs/knowledge/object-model/graphs/publication-and-representation-graph.md",
+    "docs/knowledge/object-model/examples/README.md",
+    "docs/knowledge/object-model/examples/fictional-complete-object-network.md",
+    "docs/knowledge/object-model/examples/fictional-invalid-object-network.md",
+)
 KNOWLEDGE_GOVERNANCE_STANDARDS = (
     "docs/knowledge/governance/README.md",
     "docs/knowledge/governance/KGS-001-knowledge-governance-model.md",
@@ -307,6 +338,7 @@ REQUIRED_DOCUMENTS = (
     )
     + KNOWLEDGE_GOVERNANCE_DOCUMENTS
     + KNOWLEDGE_ARCHITECTURE_DOCUMENTS
+    + KNOWLEDGE_OBJECT_MODEL_DOCUMENTS
     + KNOWLEDGE_GOVERNANCE_STANDARDS
     + KNOWLEDGE_EXPLORER_DOCUMENTS
     + KNOWLEDGE_LAB_DOCUMENTS

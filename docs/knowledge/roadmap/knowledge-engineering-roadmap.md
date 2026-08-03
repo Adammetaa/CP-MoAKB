@@ -155,8 +155,15 @@ acceptance authority, deployment, or publication.
   Workspace Mapping:** MAY still be considered only through a separately
   authorized future scope. This delivery does not prescribe file organization
   or persistence and does not silently complete that earlier planning item.
-- **Sprint-041K — Knowledge Identity Strategy:** MAY propose identity questions
-  under ADR-006 and existing identifier authority without creating identifiers.
+- **Sprint-041K — Knowledge Object Model delivery:** the owner separately
+  authorized a conceptual model for fifteen distinct object responsibilities,
+  cross-object references and versions, lifecycle custody, governed graphs,
+  view mapping, and fictional networks. It creates no schema, Runtime mapping,
+  physical identity, agricultural content, inference, or publication.
+- **Earlier Sprint-041K planning entry — Knowledge Identity Strategy:** MAY still
+  be considered only through a separately authorized future scope under ADR-006.
+  This delivery creates no production identifiers and does not silently complete
+  that earlier planning item.
 - **Sprint-042K — Knowledge Lifecycle Operations:** MAY document operational
   questions under KAS and KGS without implementing workflows or changing states.
 - **Sprint-043K — Rice Growth Stage Pilot:** MAY be considered only as a
