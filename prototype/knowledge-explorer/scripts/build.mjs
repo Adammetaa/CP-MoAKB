@@ -7,6 +7,8 @@ import { verifyLocalization } from "./verify-localization.mjs";
 const root = resolve(import.meta.dirname, "..");
 const output = resolve(root, "dist", "pages-root");
 const explorerOutput = resolve(output, "knowledge-explorer");
+const labRoot = resolve(root, "..", "knowledge-lab");
+const labOutput = resolve(output, "knowledge-lab");
 const pages = [
   "index.html",
   "search.html",
@@ -17,6 +19,23 @@ const pages = [
   "authority.html",
   "governance.html",
   "about.html",
+  "components.html",
+];
+const labPages = [
+  "index.html",
+  "tasks.html",
+  "inbox.html",
+  "sources.html",
+  "evidence.html",
+  "candidates.html",
+  "candidate-detail.html",
+  "review-queue.html",
+  "review-detail.html",
+  "findings.html",
+  "acceptance.html",
+  "release-package.html",
+  "audit.html",
+  "governance.html",
   "components.html",
 ];
 
@@ -76,6 +95,7 @@ await verifyLocalization();
 
 await rm(resolve(root, "dist"), { recursive: true, force: true });
 await mkdir(explorerOutput, { recursive: true });
+await mkdir(labOutput, { recursive: true });
 await cp(resolve(root, "deployment", "root-index.html"), resolve(output, "index.html"));
 await cp(resolve(root, "deployment", "robots.txt"), resolve(output, "robots.txt"));
 for (const page of pages) await cp(resolve(root, page), resolve(explorerOutput, page));
@@ -86,7 +106,33 @@ await writeFile(
   "utf8",
 );
 
+const labDeploymentBoundary = `
+  <aside class="boundary deployment-boundary" data-deployment-boundary>
+    <span aria-hidden="true">!</span>
+    <div><strong>Static prototype · Fictional placeholder content</strong>
+    <p>No real permissions · No workflow execution · Candidate is not accepted knowledge · Acceptance is not publication · No diagnosis or recommendation</p></div>
+  </aside>
+  <nav class="actions preview-links" aria-label="ลิงก์ตัวอย่างต้นแบบ">
+    <a class="button secondary" href="/CP-MoAKB/">หน้าหลักโครงการ</a>
+    <a class="button secondary" href="/CP-MoAKB/knowledge-explorer/">เปิด Knowledge Explorer</a>
+  </nav>`;
+for (const page of labPages) {
+  const source = await readFile(resolve(labRoot, page), "utf8");
+  if (!source.includes("</main>")) throw new Error(`Knowledge Lab page has no main boundary: ${page}`);
+  await writeFile(
+    resolve(labOutput, page),
+    source.replace("</main>", `${labDeploymentBoundary}</main>`),
+    "utf8",
+  );
+}
+await cp(resolve(labRoot, "assets"), resolve(labOutput, "assets"), { recursive: true });
+await writeFile(
+  resolve(labOutput, "deployment.json"),
+  `${JSON.stringify({ deployment_mode: "preview", prototype: "knowledge-lab", commit, package_version: packageVersion, status: "fictional-placeholder" }, null, 2)}\n`,
+  "utf8",
+);
+
 const files = await verifyArtifact(output);
-console.log(`Knowledge Explorer Pages artifact built: ${pages.length} Explorer pages, ${files.length} approved files`);
+console.log(`Combined Pages artifact built: ${pages.length} Explorer pages, ${labPages.length} Lab pages, ${files.length} approved files`);
 console.log(`Deployment identity: ${commit}`);
 console.log("Boundary verified: fictional placeholder content; no backend or Runtime");

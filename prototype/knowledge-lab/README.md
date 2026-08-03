@@ -77,6 +77,11 @@ links, boundaries, roles, finding classes, mock-data safety, dependencies,
 subpath-safe assets, API count, and protected engineering paths. Node verification
 checks the same static artifact before a build or smoke test.
 
+The [Pages preview integration guide](docs/deployment.md) documents the prepared
+combined artifact, intended URL, workflow triggers, metadata, indexing,
+verification, rollback, and owner-controlled deployment boundary. Its presence
+does not mean the preview is deployed.
+
 ## Explorer Relationship
 
 Knowledge Lab represents the proposed unpublished write/review side. Knowledge

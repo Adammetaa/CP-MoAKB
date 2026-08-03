@@ -2,11 +2,20 @@ import { lstat, readFile, readdir } from "node:fs/promises";
 import { extname, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 
-const pages = ["index.html", "search.html", "browse.html", "concept.html", "evidence.html", "source.html", "authority.html", "governance.html", "about.html", "components.html"];
+const explorerPages = [
+  "index.html", "search.html", "browse.html", "concept.html", "evidence.html",
+  "source.html", "authority.html", "governance.html", "about.html", "components.html",
+];
+const labPages = [
+  "index.html", "tasks.html", "inbox.html", "sources.html", "evidence.html",
+  "candidates.html", "candidate-detail.html", "review-queue.html", "review-detail.html",
+  "findings.html", "acceptance.html", "release-package.html", "audit.html",
+  "governance.html", "components.html",
+];
 const approved = new Set([
   "index.html",
   "robots.txt",
-  ...pages.map((page) => `knowledge-explorer/${page}`),
+  ...explorerPages.map((page) => `knowledge-explorer/${page}`),
   "knowledge-explorer/deployment.json",
   "knowledge-explorer/assets/app.js",
   "knowledge-explorer/assets/styles.css",
@@ -14,6 +23,13 @@ const approved = new Set([
   "knowledge-explorer/assets/data/mock-knowledge.json",
   "knowledge-explorer/assets/i18n/th.json",
   "knowledge-explorer/assets/i18n/en.json",
+  ...labPages.map((page) => `knowledge-lab/${page}`),
+  "knowledge-lab/deployment.json",
+  "knowledge-lab/assets/app.js",
+  "knowledge-lab/assets/styles.css",
+  "knowledge-lab/assets/data/mock-workspace.json",
+  "knowledge-lab/assets/i18n/th.json",
+  "knowledge-lab/assets/i18n/en.json",
 ]);
 
 const walk = async (directory) => {
@@ -32,47 +48,128 @@ export const verifyArtifact = async (root) => {
   const resolvedRoot = resolve(root);
   const files = await walk(resolvedRoot);
   const relativeFiles = files.map((path) => relative(resolvedRoot, path).split(sep).join("/"));
-  if (relativeFiles.length !== 19 || approved.size !== 19) throw new Error("Pages artifact must contain exactly 19 approved files");
+  if (relativeFiles.length !== 40 || approved.size !== 40) {
+    throw new Error("Pages artifact must contain exactly 40 approved files");
+  }
   const unexpected = relativeFiles.filter((path) => !approved.has(path));
   const missing = [...approved].filter((path) => !relativeFiles.includes(path));
   if (unexpected.length || missing.length) {
     throw new Error(`Pages artifact boundary mismatch\nUnexpected: ${unexpected.join(", ") || "none"}\nMissing: ${missing.join(", ") || "none"}`);
   }
 
-  for (const file of files) {
-    if (![".html", ".js", ".css", ".json", ".txt"].includes(extname(file))) continue;
-    const text = await readFile(file, "utf8");
-    for (const pattern of [/[A-Z]:\\/i, /file:\/\//i, /localhost/i, /127\.0\.0\.1/, /\$\{\{\s*secrets\./i, /BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY/]) {
-      if (pattern.test(text)) throw new Error(`Pages artifact contains prohibited local or sensitive text: ${relative(resolvedRoot, file)}`);
+  for (const path of relativeFiles) {
+    if (/(?:^|\/)(?:docs?|tests?|scripts?|cpmoakb|references|node[_]modules)(?:\/|$)/i.test(path)) {
+      throw new Error(`Pages artifact exposes repository source: ${path}`);
+    }
+    if (/\.(?:pdf|csv|db|sqlite|sqlite3|map|py|pyc|md|yaml|yml)$/i.test(path)) {
+      throw new Error(`Pages artifact contains prohibited source or generated material: ${path}`);
+    }
+    if (/(?:package\.json|package-lock\.json|pyproject\.toml)$/i.test(path)) {
+      throw new Error(`Pages artifact contains package metadata: ${path}`);
     }
   }
 
-  for (const page of pages) {
+  for (const file of files) {
+    if (![".html", ".js", ".css", ".json", ".txt"].includes(extname(file))) continue;
+    const text = await readFile(file, "utf8");
+    for (const pattern of [
+      /[A-Z]:\\/i,
+      /file:\/\//i,
+      /localhost/i,
+      /127\.0\.0\.1/,
+      /\$\{\{\s*secrets\./i,
+      /BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY/,
+    ]) {
+      if (pattern.test(text)) {
+        throw new Error(`Pages artifact contains prohibited local or sensitive text: ${relative(resolvedRoot, file)}`);
+      }
+    }
+  }
+
+  for (const page of explorerPages) {
     const text = await readFile(resolve(resolvedRoot, "knowledge-explorer", page), "utf8");
     if (!text.includes("Prototype · fictional placeholder content") || !text.includes('content="noindex,nofollow"')) {
       throw new Error(`Explorer page lost public prototype or indexing boundary: ${page}`);
     }
   }
-  const mock = JSON.parse(await readFile(resolve(resolvedRoot, "knowledge-explorer", "assets", "data", "mock-knowledge.json"), "utf8"));
-  if (mock.meta?.status !== "fictional-placeholder") throw new Error("Deployed mock data lost fictional-placeholder status");
+  const explorerMock = JSON.parse(await readFile(resolve(resolvedRoot, "knowledge-explorer", "assets", "data", "mock-knowledge.json"), "utf8"));
+  if (explorerMock.meta?.status !== "fictional-placeholder") throw new Error("Explorer mock data lost fictional-placeholder status");
   const thai = JSON.parse(await readFile(resolve(resolvedRoot, "knowledge-explorer", "assets", "i18n", "th.json"), "utf8"));
   const english = JSON.parse(await readFile(resolve(resolvedRoot, "knowledge-explorer", "assets", "i18n", "en.json"), "utf8"));
-  if (!thai.prototype?.notice || !english.prototype?.notice) throw new Error("Deployed localization dictionaries lost prototype notices");
-  const metadata = JSON.parse(await readFile(resolve(resolvedRoot, "knowledge-explorer", "deployment.json"), "utf8"));
-  if (metadata.deployment_mode !== "preview" || metadata.status !== "fictional-placeholder" || !/^[0-9a-f]{40}$/.test(metadata.commit)) {
-    throw new Error("Deployment metadata is unsafe or incomplete");
+  if (!thai.prototype?.notice || !english.prototype?.notice) throw new Error("Explorer localization dictionaries lost prototype notices");
+  const explorerMetadata = JSON.parse(await readFile(resolve(resolvedRoot, "knowledge-explorer", "deployment.json"), "utf8"));
+  if (explorerMetadata.deployment_mode !== "preview" || explorerMetadata.status !== "fictional-placeholder" || !/^[0-9a-f]{40}$/.test(explorerMetadata.commit)) {
+    throw new Error("Explorer deployment metadata is unsafe or incomplete");
   }
+
+  for (const page of labPages) {
+    const text = await readFile(resolve(resolvedRoot, "knowledge-lab", page), "utf8");
+    for (const requirement of [
+      '<meta name="robots" content="noindex,nofollow">',
+      "data-prototype-boundary",
+      "data-deployment-boundary",
+      "Static prototype",
+      "Fictional placeholder content",
+      "No real permissions",
+      "No workflow execution",
+      "Candidate is not accepted knowledge",
+      "Acceptance is not publication",
+      "No diagnosis or recommendation",
+      'href="/CP-MoAKB/"',
+      'href="/CP-MoAKB/knowledge-explorer/"',
+    ]) {
+      if (!text.includes(requirement)) {
+        throw new Error(`Knowledge Lab page lost deployment boundary: ${page} -> ${requirement}`);
+      }
+    }
+    for (const script of text.matchAll(/<script[^>]+src="([^"]+)"/g)) {
+      if (script[1] !== "assets/app.js") {
+        throw new Error(`Knowledge Lab page contains external script: ${page} -> ${script[1]}`);
+      }
+    }
+  }
+  const labMock = JSON.parse(await readFile(resolve(resolvedRoot, "knowledge-lab", "assets", "data", "mock-workspace.json"), "utf8"));
+  if (labMock.meta?.status !== "fictional-placeholder") throw new Error("Knowledge Lab mock metadata lost fictional-placeholder status");
+  for (const [name, records] of Object.entries(labMock)) {
+    if (name === "meta") continue;
+    if (!Array.isArray(records) || !records.every((record) => record.status === "fictional-placeholder")) {
+      throw new Error(`Knowledge Lab deployed mock records are unsafe: ${name}`);
+    }
+  }
+  const labMetadata = JSON.parse(await readFile(resolve(resolvedRoot, "knowledge-lab", "deployment.json"), "utf8"));
+  if (JSON.stringify(Object.keys(labMetadata).sort()) !== JSON.stringify(["commit", "deployment_mode", "package_version", "prototype", "status"])) {
+    throw new Error("Knowledge Lab deployment metadata contains unexpected fields");
+  }
+  if (labMetadata.deployment_mode !== "preview" || labMetadata.prototype !== "knowledge-lab" || labMetadata.package_version !== "0.1.0" || labMetadata.status !== "fictional-placeholder" || !/^[0-9a-f]{40}$/.test(labMetadata.commit)) {
+    throw new Error("Knowledge Lab deployment metadata is unsafe or incomplete");
+  }
+
   const landing = await readFile(resolve(resolvedRoot, "index.html"), "utf8");
-  for (const requirement of ['<html lang="th">', 'href="knowledge-explorer/"', 'href="https://github.com/Adammetaa/CP-MoAKB"', "ตัวอย่างต้นแบบ", "เนื้อหาสมมติ", "ไม่ใช่ระบบ", "ไม่ใช่คำวินิจฉัยหรือคำแนะนำ"]) {
+  for (const requirement of [
+    '<html lang="th">',
+    'href="knowledge-explorer/"',
+    'href="knowledge-lab/"',
+    'href="https://github.com/Adammetaa/CP-MoAKB"',
+    "ตัวอย่างต้นแบบ",
+    "เนื้อหาสมมติ",
+    "ไม่ใช่ระบบ",
+    "ไม่ใช่คำวินิจฉัยหรือคำแนะนำ",
+    "สำหรับอ่านและสำรวจองค์ความรู้ที่ได้รับอนุมัติ",
+    "ต้นแบบพื้นที่สร้าง ตรวจ และพิจารณา Knowledge Candidate",
+  ]) {
     if (!landing.includes(requirement)) throw new Error(`Pages root landing page is missing Thai-first requirement: ${requirement}`);
   }
   const landingTitle = landing.match(/<title>(.*?)<\/title>/s)?.[1] ?? "";
   const landingHeading = landing.match(/<h1>(.*?)<\/h1>/s)?.[1] ?? "";
-  const landingNarrative = landing.match(/<h1>.*?<\/h1>\s*<p>(.*?)<\/p>/s)?.[1] ?? "";
-  if (!/[\u0E00-\u0E7F]/.test(landingTitle) || !/[\u0E00-\u0E7F]/.test(landingHeading) || !/[\u0E00-\u0E7F]/.test(landingNarrative)) throw new Error("Pages root landing page is not Thai-first");
-  if (/<script\b|http-equiv\s*=\s*["']refresh|(?:window\.)?location\s*=/i.test(landing)) throw new Error("Pages root landing page must remain JavaScript-free with no automatic redirect");
+  if (!/[\u0E00-\u0E7F]/.test(landingTitle) || !/[\u0E00-\u0E7F]/.test(landingHeading)) {
+    throw new Error("Pages root landing page is not Thai-first");
+  }
+  if (/<script\b|http-equiv\s*=\s*["']refresh|(?:window\.)?location\s*=/i.test(landing)) {
+    throw new Error("Pages root landing page must remain JavaScript-free with no automatic redirect");
+  }
   const robots = await readFile(resolve(resolvedRoot, "robots.txt"), "utf8");
   if (!robots.includes("Disallow: /CP-MoAKB/knowledge-explorer/")) throw new Error("robots.txt does not block Explorer indexing");
+  if (!robots.includes("Disallow: /CP-MoAKB/knowledge-lab/")) throw new Error("robots.txt does not block Knowledge Lab indexing");
   return relativeFiles.sort();
 };
 

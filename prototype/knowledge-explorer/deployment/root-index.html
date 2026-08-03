@@ -4,17 +4,25 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="index,follow">
-  <meta name="description" content="หน้าตัวอย่างต้นแบบภาษาไทยของโครงการ CP-MoAKB และ Knowledge Explorer ซึ่งใช้เนื้อหาสมมติและไม่ใช่ระบบสำหรับใช้งานจริง">
-  <title>ตัวอย่างต้นแบบ CP-MoAKB Knowledge Explorer</title>
+  <meta name="description" content="หน้าตัวอย่างต้นแบบภาษาไทยของ CP-MoAKB พร้อมทางเข้าสู่ Knowledge Explorer และ Knowledge Lab ซึ่งใช้เนื้อหาสมมติและไม่ใช่ระบบใช้งานจริง">
+  <title>ตัวอย่างต้นแบบ CP-MoAKB · Explorer และ Knowledge Lab</title>
   <style>
-    :root { color-scheme: light; font-family: Inter, system-ui, sans-serif; color: #13251d; background: #f6f4ed; }
-    body { margin: 0; min-height: 100vh; display: grid; place-items: center; }
-    main { width: min(680px, calc(100% - 40px)); padding: 48px; border: 1px solid #d8d9cf; border-radius: 20px; background: #fffdf8; box-shadow: 0 18px 60px rgba(19,37,29,.08); }
-    h1 { margin: 0 0 16px; font: 500 clamp(40px, 8vw, 68px)/1 Georgia, serif; }
+    :root { color-scheme: light; font-family: system-ui, "Leelawadee UI", Tahoma, sans-serif; color: #13251d; background: #f3f1e9; }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100vh; display: grid; place-items: center; padding: 32px 0; }
+    main { width: min(920px, calc(100% - 40px)); padding: clamp(28px, 6vw, 56px); border: 1px solid #d8d9cf; border-radius: 22px; background: #fffdf8; box-shadow: 0 18px 60px rgba(19,37,29,.08); }
+    h1 { margin: 0 0 16px; font-size: clamp(38px, 7vw, 66px); line-height: 1.05; }
+    h2 { margin: 0 0 10px; font-size: 24px; }
     p { color: #5e6b64; line-height: 1.7; }
-    a { color: #1d6b4f; font-weight: 750; text-underline-offset: 3px; }
-    .notice { margin: 28px 0; padding: 16px; border-left: 4px solid #9a4d2e; background: #f7e6de; color: #6d3b28; }
-    .actions { display: flex; flex-wrap: wrap; gap: 18px; }
+    a { color: #175e47; font-weight: 750; text-underline-offset: 3px; }
+    a:focus-visible { outline: 3px solid #175ca6; outline-offset: 4px; }
+    .notice { margin: 26px 0; padding: 17px; border-left: 4px solid #9a4d2e; border-radius: 4px 12px 12px 4px; background: #f7e6de; color: #6d3b28; }
+    .paths { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin: 28px 0; }
+    .path { display: flex; flex-direction: column; min-height: 210px; padding: 22px; border: 1px solid #d8d9cf; border-radius: 16px; background: #f8f8f3; }
+    .path p { margin-bottom: 20px; }
+    .path a { margin-top: auto; min-height: 44px; display: inline-flex; align-items: center; }
+    .repository { margin-top: 24px; }
+    @media (max-width: 680px) { .paths { grid-template-columns: 1fr; } }
   </style>
 </head>
 <body>
@@ -22,8 +30,20 @@
     <p>CP-MoAKB · ตัวอย่างโครงการสาธารณะ</p>
     <h1>หลักฐานมาก่อนองค์ความรู้</h1>
     <p>CP-MoAKB เป็นโครงการโอเพนซอร์สที่พัฒนารากฐานวิศวกรรมแบบกำหนดผลแน่นอนและธรรมาภิบาลองค์ความรู้</p>
-    <div class="notice"><strong>ประกาศต้นแบบ:</strong> Knowledge Explorer เป็นตัวอย่างต้นแบบที่ใช้เนื้อหาสมมติ ไม่ใช่ระบบหรือองค์ความรู้สำหรับใช้งานจริง และไม่ใช่คำวินิจฉัยหรือคำแนะนำ</div>
-    <div class="actions"><a href="knowledge-explorer/">เปิด Knowledge Explorer</a><a href="https://github.com/Adammetaa/CP-MoAKB">ดู repository บน GitHub</a></div>
+    <div class="notice"><strong>ประกาศต้นแบบ:</strong> หน้านี้เชื่อมไปยังตัวอย่างต้นแบบที่ใช้เนื้อหาสมมติ ไม่ใช่ระบบสำหรับใช้งานจริง ไม่ใช่ซอฟต์แวร์เวิร์กโฟลว์ และไม่ใช่คำวินิจฉัยหรือคำแนะนำ</div>
+    <div class="paths">
+      <section class="path">
+        <h2>Knowledge Explorer</h2>
+        <p>สำหรับอ่านและสำรวจองค์ความรู้ที่ได้รับอนุมัติในประสบการณ์ต้นแบบแบบ read-side</p>
+        <a href="knowledge-explorer/">เปิด Knowledge Explorer</a>
+      </section>
+      <section class="path">
+        <h2>Knowledge Lab</h2>
+        <p>ต้นแบบพื้นที่สร้าง ตรวจ และพิจารณา Knowledge Candidate ด้วยข้อมูลสมมติ ไม่มีสิทธิ์จริงและไม่ดำเนินเวิร์กโฟลว์</p>
+        <a href="knowledge-lab/">เปิด Knowledge Lab</a>
+      </section>
+    </div>
+    <p class="repository"><a href="https://github.com/Adammetaa/CP-MoAKB">ดู repository บน GitHub</a></p>
   </main>
 </body>
 </html>

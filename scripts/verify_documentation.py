@@ -166,6 +166,7 @@ KNOWLEDGE_LAB_DOCUMENTS = (
     "prototype/knowledge-lab/docs/interaction-model.md",
     "prototype/knowledge-lab/docs/prototype-boundaries.md",
     "prototype/knowledge-lab/docs/design-system.md",
+    "prototype/knowledge-lab/docs/deployment.md",
 )
 KNOWLEDGE_EDITORIAL_DOCUMENTS = (
     "docs/knowledge/editorial/README.md",

@@ -54,7 +54,7 @@ def test_required_pages_and_documents_exist() -> None:
     assert len(PAGES) == 15
     for page in PAGES:
         assert (PROTOTYPE / page).is_file()
-    assert len(KNOWLEDGE_LAB_DOCUMENTS) == 5
+    assert len(KNOWLEDGE_LAB_DOCUMENTS) == 6
     for relative in KNOWLEDGE_LAB_DOCUMENTS:
         assert (ROOT / relative).is_file()
 
@@ -276,7 +276,7 @@ def test_accessibility_and_mobile_static_rules_exist() -> None:
 
 
 def test_documentation_count_and_public_api_are_unchanged() -> None:
-    assert len(verify()) == 370
+    assert len(verify()) == 371
     assert sum(len(exports) for exports in PUBLIC_API_EXPORTS.values()) == 165
 
 

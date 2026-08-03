@@ -42,6 +42,7 @@ def test_pages_workflow_exists_and_has_scoped_triggers() -> None:
     assert "push:" in text
     assert "branches:\n      - main" in text
     assert '"prototype/knowledge-explorer/**"' in text
+    assert '"prototype/knowledge-lab/**"' in text
     assert "workflow_dispatch:" in text
 
 
@@ -99,6 +100,7 @@ def test_root_landing_and_robots_policy_are_governed() -> None:
     assert re.search(r"<title>[^<]*[ก-๙]", landing)
     assert re.search(r"<h1>[^<]*[ก-๙]", landing)
     assert 'href="knowledge-explorer/"' in landing
+    assert 'href="knowledge-lab/"' in landing
     assert 'href="https://github.com/Adammetaa/CP-MoAKB"' in landing
     for boundary in (
         "ตัวอย่างต้นแบบ",
@@ -112,6 +114,7 @@ def test_root_landing_and_robots_policy_are_governed() -> None:
     assert not re.search(r"(?:window\.)?location\s*=", landing)
     assert 'content="index,follow"' in landing
     assert "Disallow: /CP-MoAKB/knowledge-explorer/" in robots
+    assert "Disallow: /CP-MoAKB/knowledge-lab/" in robots
 
 
 def test_artifact_verifier_has_exact_allowlist_and_prohibited_capability_checks() -> (
@@ -143,7 +146,7 @@ def test_artifact_verifier_has_exact_allowlist_and_prohibited_capability_checks(
         "prohibited local or sensitive text",
     ):
         assert boundary in verifier
-    assert "exactly 19 approved files" in verifier
+    assert "exactly 40 approved files" in verifier
     for prohibited in (
         "sessionStorage",
         "WebSocket",
