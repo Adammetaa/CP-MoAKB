@@ -11,7 +11,7 @@ implemented engineering behavior from conceptual future knowledge work.
 | Maintainers | [Maintainer handbook](maintainers/README.md) | Preserve contracts and prepare releases |
 | Security reviewers | [Security documentation](security/README.md) | Review threats, dependencies, and reporting |
 | Release reviewers | [Release handbook](release/README.md) | Prepare and verify without publishing |
-| Knowledge authors and reviewers | [Knowledge editorial handbook](knowledge/editorial/README.md) | Follow governed human workflows, guides, checklists, and fictional examples |
+| Knowledge authors and reviewers | [Knowledge review framework](knowledge/review/README.md) | Apply competence-separated review types, findings, decisions, and human gates |
 | Knowledge-governance contributors | [Governance maps](governance/README.md) | Relate decisions, KAS, RAS, and review |
 | Product and UX reviewers | [Knowledge Explorer prototype](../prototype/knowledge-explorer/README.md) | Review product vision, fictional mock content, and the prepared but not-yet-live Pages preview |
 
@@ -22,6 +22,7 @@ Additional entry points are the [architecture book](architecture/README.md),
 [Knowledge Governance Standards](knowledge/governance/README.md),
 [Knowledge Authoring Standards](knowledge/README.md), and
 [Knowledge Editorial Handbook](knowledge/editorial/README.md),
+[Knowledge Review Framework](knowledge/review/README.md),
 [Knowledge Explorer prototype](../prototype/knowledge-explorer/README.md), and
 [executable examples](../examples/README.md).
 

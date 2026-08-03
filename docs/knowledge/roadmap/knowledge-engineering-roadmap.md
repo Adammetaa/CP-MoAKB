@@ -73,11 +73,21 @@ new owner scheduling decision before implementation.
 
 ## Planned Pilot Knowledge Authoring
 
-### Sprint-036K — Rice Growth Stage Pilot
+### Sprint-036K — Knowledge Review Framework delivery
+
+The owner separately authorized Sprint-036K to deliver the human-governed review
+framework originally planned as a future review capability. This delivery
+standardizes competence, findings, decisions, acceptance gates, escalation, and
+audit evidence without creating knowledge content, scores, schemas, or software.
+
+### Earlier Sprint-036K planning entry — Rice Growth Stage Pilot
 
 This sprint MAY propose a separately authorized, bounded candidate-authoring
 exercise concerning growth-stage concepts. It MUST NOT create or approve records
 under this roadmap, claim completeness, or imply diagnosis or recommendation.
+The scheduling label is retained as roadmap history; the pilot was not delivered
+by the separately authorized review-framework sprint and requires a new owner
+scheduling decision.
 
 ### Sprint-037K — Rice Plant Anatomy Pilot
 

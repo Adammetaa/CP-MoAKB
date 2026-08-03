@@ -26,3 +26,8 @@ The subordinate [Knowledge Editorial Handbook](../knowledge/editorial/README.md)
 provides human operating procedures and review instruments. It creates no new
 authority and MUST defer to the Constitution, KAS, KGS, scoped ADR/RAS authority,
 Design Freeze, Source Policy, and Publication Boundary.
+
+The [Knowledge Review Framework](../knowledge/review/README.md) supplies
+competence-separated review instruments and non-numeric decision rules under
+those same authorities. It MUST NOT redistribute KGS decision authority or allow
+a majority to override a competent unresolved scientific or rights blocker.

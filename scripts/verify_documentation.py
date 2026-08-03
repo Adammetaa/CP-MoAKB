@@ -188,6 +188,33 @@ KNOWLEDGE_EDITORIAL_DOCUMENTS = (
     "docs/knowledge/editorial/examples/fictional-good-example.md",
     "docs/knowledge/editorial/examples/fictional-bad-example.md",
 )
+KNOWLEDGE_REVIEW_DOCUMENTS = (
+    "docs/knowledge/review/README.md",
+    "docs/knowledge/review/knowledge-review-framework.md",
+    "docs/knowledge/review/review-types/scientific-review.md",
+    "docs/knowledge/review/review-types/evidence-review.md",
+    "docs/knowledge/review/review-types/terminology-review.md",
+    "docs/knowledge/review/review-types/ontology-review.md",
+    "docs/knowledge/review/review-types/governance-review.md",
+    "docs/knowledge/review/review-types/rights-review.md",
+    "docs/knowledge/review/review-types/publication-readiness-review.md",
+    "docs/knowledge/review/decisions/finding-classification.md",
+    "docs/knowledge/review/decisions/acceptance-criteria.md",
+    "docs/knowledge/review/decisions/decision-record.md",
+    "docs/knowledge/review/decisions/escalation-and-appeal.md",
+    "docs/knowledge/review/decisions/emergency-correction-review.md",
+    "docs/knowledge/review/competence/reviewer-competence-framework.md",
+    "docs/knowledge/review/competence/independence-and-recusal.md",
+    "docs/knowledge/review/competence/conflict-of-interest-declaration.md",
+    "docs/knowledge/review/instruments/review-matrix.md",
+    "docs/knowledge/review/instruments/finding-log.md",
+    "docs/knowledge/review/instruments/evidence-package-checklist.md",
+    "docs/knowledge/review/instruments/review-completion-record.md",
+    "docs/knowledge/review/instruments/final-acceptance-gate.md",
+    "docs/knowledge/review/examples/README.md",
+    "docs/knowledge/review/examples/fictional-passing-review.md",
+    "docs/knowledge/review/examples/fictional-blocked-review.md",
+)
 REQUIRED_DOCUMENTS = (
     (
         "README.md",
@@ -205,6 +232,7 @@ REQUIRED_DOCUMENTS = (
     + KNOWLEDGE_GOVERNANCE_STANDARDS
     + KNOWLEDGE_EXPLORER_DOCUMENTS
     + KNOWLEDGE_EDITORIAL_DOCUMENTS
+    + KNOWLEDGE_REVIEW_DOCUMENTS
     + tuple(f"docs/{group}/{name}" for group, names in GROUPS.items() for name in names)
 )
 LINK_PATTERN = re.compile(r"(?<!!)\[[^\]]+\]\(([^)]+)\)")
@@ -463,6 +491,33 @@ def verify() -> tuple[Path, ...]:
             if section not in text:
                 failures.append(
                     f"editorial document missing required section: {relative} -> {section}"
+                )
+    review_sections = (
+        "## Purpose",
+        "## Scope",
+        "## Out of Scope",
+        "## Authority",
+        "## Definitions",
+        "## Required Inputs",
+        "## Procedure",
+        "## Decision Rules",
+        "## Responsibilities",
+        "## Failure Modes",
+        "## Escalation",
+        "## Audit Requirements",
+        "## Examples",
+        "## Non-examples",
+        "## Change Control",
+        "## Future Considerations",
+    )
+    for relative in KNOWLEDGE_REVIEW_DOCUMENTS:
+        text = (ROOT / relative).read_text(encoding="utf-8")
+        if "Status:" not in text or "Version: 1.0" not in text:
+            failures.append(f"review status or version mismatch: {relative}")
+        for section in review_sections:
+            if section not in text:
+                failures.append(
+                    f"review document missing required section: {relative} -> {section}"
                 )
     release_manifest = (
         ROOT / "docs/release/release-candidate-manifest.json"

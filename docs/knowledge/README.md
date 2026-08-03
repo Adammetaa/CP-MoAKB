@@ -36,6 +36,14 @@ instruments, and fictional examples. It governs editorial practice only. It MUST
 NOT create a schema, Runtime behavior, accepted terminology, agricultural
 knowledge, or publication authority.
 
+## Knowledge Review Framework
+
+The [Knowledge Review Framework](review/README.md) defines competence-separated
+review types, non-numeric findings, decision and acceptance rules, independence,
+conflict handling, escalation, audit evidence, and human review instruments. It
+is subordinate to the Constitution, KAS, KGS, and Editorial Handbook and MUST
+NOT create truth, scores, schemas, software workflow, acceptance, or publication.
+
 ## Index
 
 | Standard | Status | Version | Governs |
