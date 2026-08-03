@@ -145,9 +145,16 @@ acceptance authority, deployment, or publication.
 
 - **Earlier Sprint-039U planning entry — Static Knowledge Lab UI Prototype:** MAY explore static,
   non-functional screens based on the blueprint after separate owner approval.
-- **Sprint-040K — Knowledge File Organization and Workspace Mapping:** MAY map
-  governed human documents to a repository-neutral organization without choosing
-  persistence or defining a schema.
+- **Sprint-040K — Knowledge Asset Architecture and Identity Model delivery:**
+  the owner separately authorized an implementation-neutral architecture for
+  canonical Knowledge Assets, Packages, representations, identity philosophy,
+  independent version axes, references, namespaces, repository ownership, and
+  future evolution. It creates no schema, identifier syntax, Runtime mapping,
+  knowledge content, or publication.
+- **Earlier Sprint-040K planning entry — Knowledge File Organization and
+  Workspace Mapping:** MAY still be considered only through a separately
+  authorized future scope. This delivery does not prescribe file organization
+  or persistence and does not silently complete that earlier planning item.
 - **Sprint-041K — Knowledge Identity Strategy:** MAY propose identity questions
   under ADR-006 and existing identifier authority without creating identifiers.
 - **Sprint-042K — Knowledge Lifecycle Operations:** MAY document operational

@@ -18,6 +18,13 @@ is the highest authority within knowledge governance, and the
 [KAS index](../knowledge/README.md) applies it to future authoring. Neither
 authority supersedes ADRs or creates an implementation contract.
 
+The [Knowledge Asset Architecture](../knowledge/architecture/README.md) applies
+those authorities to the canonical asset, package, representation, identity,
+version, reference, namespace, repository, and ownership models. It MUST remain
+implementation-neutral. It does not choose identifier syntax under ADR-006,
+weaken claim-scoped authority under ADR-008, or generalize the ADR-009 Rice-pilot
+candidate format.
+
 ADR-008 remains the authority for canonical master-data prerequisites and for
 claim-, jurisdiction-, version-, and time-scoped source assessment; official
 source authority is not universal truth. ADR-009 remains the authority for the

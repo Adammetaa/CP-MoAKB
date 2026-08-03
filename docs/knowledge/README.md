@@ -20,6 +20,20 @@ create, approve, publish, or reinterpret any record or dataset.
 The roadmap is planning documentation only. It does not authorize a sprint,
 source, record, dataset, schema, Runtime change, or publication.
 
+## Knowledge Asset Architecture
+
+The [Knowledge Asset Architecture](architecture/README.md) defines the canonical,
+implementation-neutral Knowledge Asset, Knowledge Package, identity, independent
+version axes, references, namespaces, representations, repository model, and
+ownership boundaries. It is subordinate to the Constitution and accepted ADRs
+and is authoritative for later knowledge-asset design within that envelope.
+
+The architecture MUST NOT be interpreted as a schema, file organization,
+identifier syntax, Runtime model, API, database, graph implementation, or
+publication event. ADR-006 remains the identity-governance authority, ADR-008
+remains the canonical master-data sequencing and source-authority decision, and
+ADR-009 remains the Rice-pilot candidate YAML authority.
+
 ## Knowledge Governance Standards
 
 The [Knowledge Governance Standards](governance/README.md) govern people,

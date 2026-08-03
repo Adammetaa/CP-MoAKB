@@ -36,6 +36,13 @@ The [Canonical Knowledge Authoring Templates](../knowledge/templates/README.md)
 apply those controls as human documents. Template completion MUST NOT create
 scientific validity, acceptance, publication authority, or an implementation schema.
 
+The [Knowledge Asset Architecture](../knowledge/architecture/README.md) defines
+implementation-neutral invariants for canonical Knowledge Assets, Packages,
+identity, versions, references, representations, and ownership. It is subordinate
+to the Constitution and accepted ADRs. Later knowledge design MUST conform to it,
+but it MUST NOT be treated as a Runtime contract, schema, storage design, or
+generalization of ADR-009.
+
 The [Knowledge Workspace Blueprint](../knowledge/workspace/README.md) is a
 subordinate, documentation-only product design for a possible future Knowledge
 Lab. It may illustrate how governed roles, templates, reviews, findings, and

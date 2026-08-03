@@ -142,6 +142,13 @@ KNOWLEDGE_GOVERNANCE_DOCUMENTS = (
     "docs/knowledge/constitution/knowledge-constitution.md",
     "docs/knowledge/roadmap/knowledge-engineering-roadmap.md",
 )
+KNOWLEDGE_ARCHITECTURE_DOCUMENTS = (
+    "docs/knowledge/architecture/README.md",
+    "docs/knowledge/architecture/knowledge-philosophy.md",
+    "docs/knowledge/architecture/knowledge-asset-and-package-model.md",
+    "docs/knowledge/architecture/identity-version-reference-and-namespace-model.md",
+    "docs/knowledge/architecture/representation-repository-and-evolution-model.md",
+)
 KNOWLEDGE_GOVERNANCE_STANDARDS = (
     "docs/knowledge/governance/README.md",
     "docs/knowledge/governance/KGS-001-knowledge-governance-model.md",
@@ -299,6 +306,7 @@ REQUIRED_DOCUMENTS = (
         "docs/runtime/specifications/RAS-015-open-source-release-audit-and-publication-boundary-contract.md",
     )
     + KNOWLEDGE_GOVERNANCE_DOCUMENTS
+    + KNOWLEDGE_ARCHITECTURE_DOCUMENTS
     + KNOWLEDGE_GOVERNANCE_STANDARDS
     + KNOWLEDGE_EXPLORER_DOCUMENTS
     + KNOWLEDGE_LAB_DOCUMENTS
