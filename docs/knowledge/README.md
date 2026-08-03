@@ -62,6 +62,11 @@ automation, knowledge record, scientific authority, acceptance, or publication.
 Knowledge Explorer remains the read-side concept; Knowledge Lab is the proposed
 write-and-review side.
 
+The [static Knowledge Lab prototype](../../prototype/knowledge-lab/README.md)
+makes this blueprint testable through Thai-first fictional HTML screens. It is
+not a workflow implementation, permission system, acceptance authority, or
+publication mechanism.
+
 ## Index
 
 | Standard | Status | Version | Governs |

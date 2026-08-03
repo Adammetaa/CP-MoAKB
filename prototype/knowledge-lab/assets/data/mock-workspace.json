@@ -1,0 +1,56 @@
+{
+  "meta": {
+    "status": "fictional-placeholder",
+    "schema": "none-documentation-mock-only",
+    "disclaimer": "Entirely invented interface fixture; not agricultural knowledge, evidence, authority, regulation, diagnosis, or recommendation."
+  },
+  "sourceCandidates": [
+    { "id": "SRC-FICTION-001", "status": "fictional-placeholder", "lifecycle": "SOURCE_REVIEW", "owner": "Domain Editor", "title": { "th": "เอกสารสมมติอัลฟา", "en": "Fictional document Alpha" }, "authority": "AUTH-FICTION-001", "rights": "RIGHTS_UNKNOWN" }
+  ],
+  "evidenceItems": [
+    { "id": "EVD-FICTION-001", "status": "fictional-placeholder", "lifecycle": "EVIDENCE_REVIEW", "owner": "Evidence Reviewer", "source": "SRC-FICTION-001", "locator": "fictional-section-A", "relation": "supports" },
+    { "id": "EVD-FICTION-002", "status": "fictional-placeholder", "lifecycle": "EVIDENCE_REVIEW", "owner": "Evidence Reviewer", "source": "SRC-FICTION-001", "locator": "fictional-section-B", "relation": "contradicts" }
+  ],
+  "claims": [
+    { "id": "CLM-FICTION-001", "status": "fictional-placeholder", "lifecycle": "CLAIM_SCOPING", "owner": "Knowledge Author", "evidence": ["EVD-FICTION-001", "EVD-FICTION-002"] }
+  ],
+  "conceptCandidates": [
+    { "id": "CON-FICTION-001", "status": "fictional-placeholder", "lifecycle": "IN_REVIEW", "version": "v3", "owner": "Knowledge Author", "claim": "CLM-FICTION-001", "findings": ["FND-FICTION-001", "FND-FICTION-002"] }
+  ],
+  "terminologyCandidates": [
+    { "id": "TRM-FICTION-001", "status": "fictional-placeholder", "lifecycle": "TERMINOLOGY_REVIEW", "owner": "Terminology Reviewer", "concept": "CON-FICTION-001", "term": "Term Alpha" }
+  ],
+  "relationshipCandidates": [
+    { "id": "REL-FICTION-001", "status": "fictional-placeholder", "lifecycle": "ONTOLOGY_REVIEW", "owner": "Ontology Reviewer", "source": "CON-FICTION-001", "target": "CON-FICTION-PLACEHOLDER", "predicate": "related-to-fictional" }
+  ],
+  "findings": [
+    { "id": "FND-FICTION-001", "status": "fictional-placeholder", "findingStatus": "OPEN", "class": "Evidence Gap", "owner": "Knowledge Author", "closureAuthority": "Evidence Reviewer" },
+    { "id": "FND-FICTION-002", "status": "fictional-placeholder", "findingStatus": "REVISION_REQUIRED", "class": "Governance Blocker", "owner": "Managing Editor", "closureAuthority": "Governance Reviewer" }
+  ],
+  "reviewDecisions": [
+    { "id": "DEC-FICTION-001", "status": "fictional-placeholder", "lifecycle": "DRAFT_DECISION", "candidateVersion": "CON-FICTION-001@v3", "decision": "Return for revision", "owner": "Scientific Reviewer" }
+  ],
+  "acceptanceGates": [
+    { "id": "GATE-FICTION-001", "status": "fictional-placeholder", "lifecycle": "BLOCKED", "candidateVersion": "CON-FICTION-001@v3", "owner": "Knowledge Board", "blockers": ["FND-FICTION-002"] }
+  ],
+  "releasePackages": [
+    { "id": "PKG-FICTION-001", "status": "fictional-placeholder", "lifecycle": "NOT_AUTHORIZED", "owner": "Release Editor", "acceptedVersions": [], "authorization": "DENIED_PLACEHOLDER" }
+  ],
+  "auditEvents": [
+    { "id": "AUD-FICTION-001", "status": "fictional-placeholder", "event": "creation", "object": "CON-FICTION-001@v1", "actorRole": "Knowledge Author" },
+    { "id": "AUD-FICTION-002", "status": "fictional-placeholder", "event": "assignment", "object": "CON-FICTION-001@v1", "actorRole": "Managing Editor" },
+    { "id": "AUD-FICTION-003", "status": "fictional-placeholder", "event": "handoff", "object": "CON-FICTION-001@v1", "actorRole": "Managing Editor" },
+    { "id": "AUD-FICTION-004", "status": "fictional-placeholder", "event": "revision", "object": "CON-FICTION-001@v2", "actorRole": "Knowledge Author" },
+    { "id": "AUD-FICTION-005", "status": "fictional-placeholder", "event": "conflict declaration", "object": "REV-FICTION-001", "actorRole": "Scientific Reviewer" },
+    { "id": "AUD-FICTION-006", "status": "fictional-placeholder", "event": "finding", "object": "FND-FICTION-001", "actorRole": "Evidence Reviewer" },
+    { "id": "AUD-FICTION-007", "status": "fictional-placeholder", "event": "finding response", "object": "FND-FICTION-001", "actorRole": "Knowledge Author" },
+    { "id": "AUD-FICTION-008", "status": "fictional-placeholder", "event": "finding closure", "object": "FND-FICTION-001", "actorRole": "Evidence Reviewer" },
+    { "id": "AUD-FICTION-009", "status": "fictional-placeholder", "event": "review decision", "object": "DEC-FICTION-001", "actorRole": "Scientific Reviewer" },
+    { "id": "AUD-FICTION-010", "status": "fictional-placeholder", "event": "acceptance", "object": "GATE-FICTION-001", "actorRole": "Knowledge Board" },
+    { "id": "AUD-FICTION-011", "status": "fictional-placeholder", "event": "publication readiness", "object": "PKG-FICTION-001", "actorRole": "Release Editor" },
+    { "id": "AUD-FICTION-012", "status": "fictional-placeholder", "event": "authorization result", "object": "PKG-FICTION-001", "actorRole": "Project Owner" },
+    { "id": "AUD-FICTION-013", "status": "fictional-placeholder", "event": "correction", "object": "CON-FICTION-001@v2", "actorRole": "Managing Editor" },
+    { "id": "AUD-FICTION-014", "status": "fictional-placeholder", "event": "supersession", "object": "CON-FICTION-001@v2", "actorRole": "Knowledge Board" },
+    { "id": "AUD-FICTION-015", "status": "fictional-placeholder", "event": "archive", "object": "CON-FICTION-001@v1", "actorRole": "Managing Editor" }
+  ]
+}

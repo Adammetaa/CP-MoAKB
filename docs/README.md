@@ -14,6 +14,7 @@ implemented engineering behavior from conceptual future knowledge work.
 | Knowledge authors and reviewers | [Knowledge Workspace Blueprint](knowledge/workspace/README.md) | Review the future, non-implemented Knowledge Lab authoring and review experience |
 | Knowledge-governance contributors | [Governance maps](governance/README.md) | Relate decisions, KAS, RAS, and review |
 | Product and UX reviewers | [Knowledge Explorer prototype](../prototype/knowledge-explorer/README.md) | Review product vision, fictional mock content, and the prepared but not-yet-live Pages preview |
+| Workspace product reviewers | [Knowledge Lab prototype](../prototype/knowledge-lab/README.md) | Test the Thai-first static authoring and review experience with fictional placeholders |
 
 Additional entry points are the [architecture book](architecture/README.md),
 [project scope and FAQ](project/README.md), [concept guides](concepts/README.md),
@@ -25,7 +26,8 @@ Additional entry points are the [architecture book](architecture/README.md),
 [Knowledge Review Framework](knowledge/review/README.md),
 [Canonical Knowledge Authoring Templates](knowledge/templates/README.md),
 [Knowledge Workspace Blueprint](knowledge/workspace/README.md),
-[Knowledge Explorer prototype](../prototype/knowledge-explorer/README.md), and
+[Knowledge Explorer prototype](../prototype/knowledge-explorer/README.md),
+[Knowledge Lab prototype](../prototype/knowledge-lab/README.md), and
 [executable examples](../examples/README.md).
 
 The [Knowledge Explorer deployment guide](../prototype/knowledge-explorer/docs/deployment.md)

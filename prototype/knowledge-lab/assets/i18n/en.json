@@ -1,0 +1,43 @@
+{
+  "_meta": { "locale": "en", "schema_version": 1, "status": "fictional-placeholder" },
+  "brand": "Knowledge Lab",
+  "prototype": "Workspace prototype · fictional placeholder data only · not an operational system",
+  "language": "Language",
+  "role": "Role view",
+  "menu": "Menu",
+  "nav": {
+    "dashboard": "Dashboard",
+    "tasks": "My Tasks",
+    "inbox": "Inbox",
+    "sources": "Sources",
+    "evidence": "Evidence",
+    "candidates": "Candidates",
+    "reviews": "Review Queue",
+    "findings": "Findings",
+    "acceptance": "Acceptance Gate",
+    "release": "Release Package",
+    "audit": "Audit History",
+    "governance": "Governance",
+    "components": "Components"
+  },
+  "page": {
+    "dashboard": { "title": "Workspace overview", "purpose": "Track human-assigned work, queues, and blockers" },
+    "tasks": { "title": "My Tasks", "purpose": "View fictional assignments and governed handoffs by role" },
+    "inbox": { "title": "Inbox", "purpose": "Triage source, evidence, and candidate submissions" },
+    "sources": { "title": "Source candidates", "purpose": "Inspect fictional source identity, rights, and scope" },
+    "evidence": { "title": "Evidence items", "purpose": "Trace locators, limitations, and explicit evidence links" },
+    "candidates": { "title": "Knowledge candidates", "purpose": "View concept, terminology, and relationship candidates before acceptance" },
+    "candidateDetail": { "title": "Candidate detail", "purpose": "Inspect version, scope, evidence, findings, and lifecycle history" },
+    "reviewQueue": { "title": "Review queue", "purpose": "Organize review views around competence and conflict declarations" },
+    "reviewDetail": { "title": "Review workspace", "purpose": "Review a fixed candidate version and draft conceptual findings" },
+    "findings": { "title": "Finding resolution", "purpose": "Show responses, revisions, closure authority, and audit history" },
+    "acceptance": { "title": "Acceptance gate", "purpose": "Use a human checklist before recording acceptance" },
+    "release": { "title": "Release preparation package", "purpose": "Assemble accepted versions, evidence, rights, and authorization status" },
+    "audit": { "title": "Audit history", "purpose": "Inspect fictional append-only events without rewriting history" },
+    "governance": { "title": "Governance reference", "purpose": "Explain authority, roles, and boundaries that an interface cannot create" },
+    "components": { "title": "Component library", "purpose": "Test reusable cards, panels, status, and boundary patterns" }
+  },
+  "action": { "open": "Open item", "conceptual": "Conceptual action only", "switchEnglish": "Switch to English", "switchThai": "Switch to Thai" },
+  "boundary": "This prototype does not persist, decide, accept, or publish",
+  "footer": "Static prototype for experience testing only"
+}

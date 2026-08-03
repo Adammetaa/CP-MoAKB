@@ -1,0 +1,12 @@
+{
+  "name": "cp-moakb-knowledge-lab-prototype",
+  "version": "0.0.0-private",
+  "private": true,
+  "description": "Thai-first static prototype for the governed CP-MoAKB Knowledge Lab",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "verify": "node scripts/verify-prototype.mjs",
+    "verify:localization": "node scripts/verify-localization.mjs",
+    "smoke": "node scripts/smoke-test.mjs"
+  }
+}

@@ -160,6 +160,13 @@ KNOWLEDGE_EXPLORER_DOCUMENTS = (
     "prototype/knowledge-explorer/docs/deployment.md",
     "prototype/knowledge-explorer/docs/localization-policy.md",
 )
+KNOWLEDGE_LAB_DOCUMENTS = (
+    "prototype/knowledge-lab/README.md",
+    "prototype/knowledge-lab/docs/information-architecture.md",
+    "prototype/knowledge-lab/docs/interaction-model.md",
+    "prototype/knowledge-lab/docs/prototype-boundaries.md",
+    "prototype/knowledge-lab/docs/design-system.md",
+)
 KNOWLEDGE_EDITORIAL_DOCUMENTS = (
     "docs/knowledge/editorial/README.md",
     "docs/knowledge/editorial/knowledge-editorial-handbook.md",
@@ -293,6 +300,7 @@ REQUIRED_DOCUMENTS = (
     + KNOWLEDGE_GOVERNANCE_DOCUMENTS
     + KNOWLEDGE_GOVERNANCE_STANDARDS
     + KNOWLEDGE_EXPLORER_DOCUMENTS
+    + KNOWLEDGE_LAB_DOCUMENTS
     + KNOWLEDGE_EDITORIAL_DOCUMENTS
     + KNOWLEDGE_REVIEW_DOCUMENTS
     + KNOWLEDGE_TEMPLATE_DOCUMENTS

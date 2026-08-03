@@ -135,7 +135,15 @@ The following sequence is planning documentation only. It creates no sprint
 authorization, implementation commitment, data, schema, application, deployment,
 or publication event.
 
-- **Sprint-039U — Static Knowledge Lab UI Prototype:** MAY explore static,
+### Sprint-039U — Static Knowledge Lab UI Prototype delivery
+
+The owner separately authorized Sprint-039U to deliver a Thai-first,
+dependency-free static interface prototype based on the Sprint-038K blueprint.
+The delivery uses fictional placeholders and implements no Runtime, schema,
+backend, persistence, permission, workflow automation, knowledge content,
+acceptance authority, deployment, or publication.
+
+- **Earlier Sprint-039U planning entry — Static Knowledge Lab UI Prototype:** MAY explore static,
   non-functional screens based on the blueprint after separate owner approval.
 - **Sprint-040K — Knowledge File Organization and Workspace Mapping:** MAY map
   governed human documents to a repository-neutral organization without choosing
