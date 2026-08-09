@@ -46,6 +46,18 @@ The Object Model is conceptual architecture only. It MUST NOT be treated as a
 schema, class hierarchy, API payload, validation model, graph implementation,
 Runtime behavior, identifier allocation, knowledge content, or publication.
 
+## Canonical Knowledge Package Architecture
+
+The [Canonical Knowledge Package Architecture](package-architecture/README.md)
+defines a CKP as an implementation-neutral composition boundary over exact
+governed Knowledge Asset and Object versions. It defines profiles, evidence and
+source binding, dependencies, consumer contracts, authoring/review, publication,
+rights, source readiness, candidate nominations, and a Golden Package Plan.
+
+The CKP MUST NOT duplicate canonical knowledge, become a Case Record or consumer
+database, bypass Evidence, create inference or Recommendation, or define a
+production schema or Runtime behavior.
+
 ## Knowledge Governance Standards
 
 The [Knowledge Governance Standards](governance/README.md) govern people,

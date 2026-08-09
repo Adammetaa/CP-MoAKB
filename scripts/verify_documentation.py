@@ -180,6 +180,44 @@ KNOWLEDGE_OBJECT_MODEL_DOCUMENTS = (
     "docs/knowledge/object-model/examples/fictional-complete-object-network.md",
     "docs/knowledge/object-model/examples/fictional-invalid-object-network.md",
 )
+CANONICAL_KNOWLEDGE_PACKAGE_DOCUMENTS = (
+    "docs/knowledge/package-architecture/README.md",
+    "docs/knowledge/package-architecture/canonical-knowledge-package-architecture.md",
+    "docs/knowledge/package-architecture/package-boundary.md",
+    "docs/knowledge/package-architecture/package-composition-model.md",
+    "docs/knowledge/package-architecture/package-manifest-model.md",
+    "docs/knowledge/package-architecture/package-identity-and-versioning.md",
+    "docs/knowledge/package-architecture/package-evidence-binding.md",
+    "docs/knowledge/package-architecture/package-relationship-model.md",
+    "docs/knowledge/package-architecture/package-consumer-contracts.md",
+    "docs/knowledge/package-architecture/package-authoring-and-review.md",
+    "docs/knowledge/package-architecture/package-publication-model.md",
+    "docs/knowledge/package-architecture/package-source-intake-model.md",
+    "docs/knowledge/package-architecture/package-rights-and-provenance.md",
+    "docs/knowledge/package-architecture/package-evolution-and-compatibility.md",
+    "docs/knowledge/package-architecture/package-view-model.md",
+    "docs/knowledge/package-architecture/initial-package-candidate-register.md",
+    "docs/knowledge/package-architecture/first-golden-package-plan.md",
+    "docs/knowledge/package-architecture/consumers/README.md",
+    "docs/knowledge/package-architecture/consumers/website-consumer.md",
+    "docs/knowledge/package-architecture/consumers/spa-assistant-consumer.md",
+    "docs/knowledge/package-architecture/consumers/investigation-engine-consumer.md",
+    "docs/knowledge/package-architecture/consumers/human-review-consumer.md",
+    "docs/knowledge/package-architecture/consumers/future-ai-consumer.md",
+    "docs/knowledge/package-architecture/profiles/README.md",
+    "docs/knowledge/package-architecture/profiles/organism-package-profile.md",
+    "docs/knowledge/package-architecture/profiles/disease-package-profile.md",
+    "docs/knowledge/package-architecture/profiles/insect-package-profile.md",
+    "docs/knowledge/package-architecture/profiles/weed-package-profile.md",
+    "docs/knowledge/package-architecture/profiles/active-ingredient-package-profile.md",
+    "docs/knowledge/package-architecture/profiles/mode-of-action-package-profile.md",
+    "docs/knowledge/package-architecture/profiles/growth-stage-package-profile.md",
+    "docs/knowledge/package-architecture/profiles/management-option-package-profile.md",
+    "docs/knowledge/package-architecture/examples/README.md",
+    "docs/knowledge/package-architecture/examples/fictional-valid-package.md",
+    "docs/knowledge/package-architecture/examples/fictional-invalid-package.md",
+    "docs/knowledge/package-architecture/source-inventory/repository-source-readiness.md",
+)
 KNOWLEDGE_GOVERNANCE_STANDARDS = (
     "docs/knowledge/governance/README.md",
     "docs/knowledge/governance/KGS-001-knowledge-governance-model.md",
@@ -339,6 +377,7 @@ REQUIRED_DOCUMENTS = (
     + KNOWLEDGE_GOVERNANCE_DOCUMENTS
     + KNOWLEDGE_ARCHITECTURE_DOCUMENTS
     + KNOWLEDGE_OBJECT_MODEL_DOCUMENTS
+    + CANONICAL_KNOWLEDGE_PACKAGE_DOCUMENTS
     + KNOWLEDGE_GOVERNANCE_STANDARDS
     + KNOWLEDGE_EXPLORER_DOCUMENTS
     + KNOWLEDGE_LAB_DOCUMENTS
