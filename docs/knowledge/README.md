@@ -65,6 +65,13 @@ Source identity, authority, version, rights, coverage, availability, status, and
 traceability layer needed before Evidence extraction. It creates no scientific
 Knowledge, Evidence, Claim, Concept, Relationship, Package, schema, or Runtime behavior.
 
+## Knowledge Extraction Specification
+
+The [Knowledge Extraction Specification](extraction/README.md) defines the sole
+approved sequential human pathway from a reviewed Source through Evidence, Claim,
+Concept, Terminology, Relationship, and Package Membership candidates. It creates
+no accepted Knowledge, agricultural content, schema, automation, or Runtime behavior.
+
 ## Knowledge Governance Standards
 
 The [Knowledge Governance Standards](governance/README.md) govern people,

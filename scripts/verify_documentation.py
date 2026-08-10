@@ -232,6 +232,25 @@ KNOWLEDGE_SOURCE_CATALOG_DOCUMENTS = (
     "docs/knowledge/source-catalog/examples/fictional-valid-source.md",
     "docs/knowledge/source-catalog/examples/fictional-invalid-source.md",
 )
+KNOWLEDGE_EXTRACTION_DOCUMENTS = (
+    "docs/knowledge/extraction/README.md",
+    "docs/knowledge/extraction/knowledge-extraction-specification.md",
+    "docs/knowledge/extraction/phases/source-analysis.md",
+    "docs/knowledge/extraction/phases/evidence-extraction.md",
+    "docs/knowledge/extraction/phases/claim-authoring.md",
+    "docs/knowledge/extraction/phases/concept-authoring.md",
+    "docs/knowledge/extraction/phases/terminology-authoring.md",
+    "docs/knowledge/extraction/phases/relationship-authoring.md",
+    "docs/knowledge/extraction/phases/package-membership.md",
+    "docs/knowledge/extraction/quality/extraction-quality.md",
+    "docs/knowledge/extraction/quality/ambiguity-handling.md",
+    "docs/knowledge/extraction/quality/confidence-notes.md",
+    "docs/knowledge/extraction/governance/authoring-boundaries.md",
+    "docs/knowledge/extraction/governance/prohibited-shortcuts.md",
+    "docs/knowledge/extraction/examples/fictional-paper.md",
+    "docs/knowledge/extraction/examples/fictional-extraction.md",
+    "docs/knowledge/extraction/examples/fictional-errors.md",
+)
 KNOWLEDGE_GOVERNANCE_STANDARDS = (
     "docs/knowledge/governance/README.md",
     "docs/knowledge/governance/KGS-001-knowledge-governance-model.md",
@@ -393,6 +412,7 @@ REQUIRED_DOCUMENTS = (
     + KNOWLEDGE_OBJECT_MODEL_DOCUMENTS
     + CANONICAL_KNOWLEDGE_PACKAGE_DOCUMENTS
     + KNOWLEDGE_SOURCE_CATALOG_DOCUMENTS
+    + KNOWLEDGE_EXTRACTION_DOCUMENTS
     + KNOWLEDGE_GOVERNANCE_STANDARDS
     + KNOWLEDGE_EXPLORER_DOCUMENTS
     + KNOWLEDGE_LAB_DOCUMENTS
