@@ -19,7 +19,7 @@ def _all() -> str:
 
 
 def test_two_real_claim_candidates_have_exact_evidence_traceability() -> None:
-    assert len(KNOWLEDGE_GOLDEN_SLICE_DOCUMENTS) == 6
+    assert len(KNOWLEDGE_GOLDEN_SLICE_DOCUMENTS) == 7
     assert all((ROOT / path).is_file() for path in KNOWLEDGE_GOLDEN_SLICE_DOCUMENTS)
     text = _all()
     assert text.count("# Claim Candidate CL-GOLDEN-") == 2
@@ -32,7 +32,7 @@ def test_two_real_claim_candidates_have_exact_evidence_traceability() -> None:
         "CL-GOLDEN-002/v1",
     ):
         assert required in text
-    assert len(verify()) == 624
+    assert len(verify()) == 625
 
 
 def test_claim_review_is_complete_deferred_and_preserves_the_blocker() -> None:

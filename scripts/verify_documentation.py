@@ -276,6 +276,7 @@ KNOWLEDGE_GOLDEN_SLICE_DOCUMENTS = (
     "docs/knowledge/golden-knowledge-slice/claim-review-record.md",
     "docs/knowledge/golden-knowledge-slice/unresolved-issue.md",
     "docs/knowledge/golden-knowledge-slice/architecture-review.md",
+    "docs/knowledge/golden-knowledge-slice/scientific-review-packet-th.md",
 )
 KNOWLEDGE_GOVERNANCE_STANDARDS = (
     "docs/knowledge/governance/README.md",
