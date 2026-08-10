@@ -4,7 +4,7 @@ import { fileURLToPath } from "node:url";
 
 const explorerPages = [
   "index.html", "search.html", "browse.html", "concept.html", "evidence.html",
-  "source.html", "authority.html", "governance.html", "about.html", "components.html",
+  "source.html", "authority.html", "governance.html", "about.html", "components.html", "real-knowledge.html",
 ];
 const labPages = [
   "index.html", "tasks.html", "inbox.html", "sources.html", "evidence.html",
@@ -21,6 +21,7 @@ const approved = new Set([
   "knowledge-explorer/assets/styles.css",
   "knowledge-explorer/assets/og.png",
   "knowledge-explorer/assets/data/mock-knowledge.json",
+  "knowledge-explorer/assets/data/governed-batch-001.json",
   "knowledge-explorer/assets/i18n/th.json",
   "knowledge-explorer/assets/i18n/en.json",
   ...labPages.map((page) => `knowledge-lab/${page}`),
@@ -48,8 +49,8 @@ export const verifyArtifact = async (root) => {
   const resolvedRoot = resolve(root);
   const files = await walk(resolvedRoot);
   const relativeFiles = files.map((path) => relative(resolvedRoot, path).split(sep).join("/"));
-  if (relativeFiles.length !== 40 || approved.size !== 40) {
-    throw new Error("Pages artifact must contain exactly 40 approved files");
+  if (relativeFiles.length !== 42 || approved.size !== 42) {
+    throw new Error("Pages artifact must contain exactly 42 approved files");
   }
   const unexpected = relativeFiles.filter((path) => !approved.has(path));
   const missing = [...approved].filter((path) => !relativeFiles.includes(path));
@@ -94,6 +95,13 @@ export const verifyArtifact = async (root) => {
   }
   const explorerMock = JSON.parse(await readFile(resolve(resolvedRoot, "knowledge-explorer", "assets", "data", "mock-knowledge.json"), "utf8"));
   if (explorerMock.meta?.status !== "fictional-placeholder") throw new Error("Explorer mock data lost fictional-placeholder status");
+  const governed = JSON.parse(await readFile(resolve(resolvedRoot, "knowledge-explorer", "assets", "data", "governed-batch-001.json"), "utf8"));
+  if (governed.meta?.status !== "accepted-internal-not-published" || governed.package?.id !== "CKP-KPB-001/v1" || governed.view?.id !== "WV-KPB-001/v1") throw new Error("Explorer governed batch identity or publication boundary is invalid");
+  if (governed.meta?.rights !== "public-source-excerpts-and-images-suppressed") throw new Error("Explorer governed batch lost rights suppression");
+  const governedText = JSON.stringify(governed);
+  for (const prohibited of ["sourceExcerpt", "passageText", "imageUrl", "pdfUrl"]) {
+    if (governedText.includes(prohibited)) throw new Error(`Explorer governed batch exposes prohibited source material: ${prohibited}`);
+  }
   const thai = JSON.parse(await readFile(resolve(resolvedRoot, "knowledge-explorer", "assets", "i18n", "th.json"), "utf8"));
   const english = JSON.parse(await readFile(resolve(resolvedRoot, "knowledge-explorer", "assets", "i18n", "en.json"), "utf8"));
   if (!thai.prototype?.notice || !english.prototype?.notice) throw new Error("Explorer localization dictionaries lost prototype notices");

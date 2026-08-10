@@ -12,7 +12,7 @@ const contentTypes = {
   ".png": "image/png",
   ".txt": "text/plain; charset=utf-8",
 };
-const explorerPages = ["index.html", "search.html", "browse.html", "concept.html", "evidence.html", "source.html", "authority.html", "governance.html", "about.html", "components.html"];
+const explorerPages = ["index.html", "search.html", "browse.html", "concept.html", "evidence.html", "source.html", "authority.html", "governance.html", "about.html", "components.html", "real-knowledge.html"];
 const labPages = ["index.html", "tasks.html", "inbox.html", "sources.html", "evidence.html", "candidates.html", "candidate-detail.html", "review-queue.html", "review-detail.html", "findings.html", "acceptance.html", "release-package.html", "audit.html", "governance.html", "components.html"];
 
 const server = createServer(async (request, response) => {
@@ -96,6 +96,7 @@ try {
     "knowledge-explorer/assets/app.js",
     "knowledge-explorer/assets/og.png",
     "knowledge-explorer/assets/data/mock-knowledge.json",
+    "knowledge-explorer/assets/data/governed-batch-001.json",
     "knowledge-explorer/assets/i18n/th.json",
     "knowledge-explorer/assets/i18n/en.json",
     "knowledge-explorer/deployment.json",

@@ -100,6 +100,7 @@ h3 { font-size: 19px; }
 .card-footer a { margin-left: auto; color: var(--botanical); font-weight: 750; }
 .tag { display: inline-flex; align-items: center; border: 1px solid currentColor; border-radius: 999px; padding: 3px 9px; font-size: 11px; font-weight: 800; letter-spacing: .04em; }
 .tag-placeholder { color: var(--warning); background: var(--warning-light); }
+.tag-real { color: #155a38; background: #e2f4e9; }
 .tag-concept { color: var(--botanical); background: var(--botanical-light); }
 .tag-evidence { color: var(--evidence); background: var(--evidence-light); }
 .tag-source, .tag-authority { color: var(--authority); background: var(--authority-light); }
@@ -159,6 +160,14 @@ h3 { font-size: 19px; }
 .component-section { padding: 28px 0; border-bottom: 1px solid var(--rule); }.component-section:last-child { border: 0; }.component-demo { padding: 24px; border: 1px dashed #aeb8af; border-radius: 16px; background: #edf0ea; }
 .thai-stress { max-width: 680px; overflow-wrap: anywhere; }
 .empty-state { padding: 28px; border: 1px dashed var(--rule); border-radius: 16px; background: var(--surface); color: var(--muted); text-align: center; }
+.real-preview-bar { padding: 9px 20px; color: #fff; background: #155a38; text-align: center; font-size: 13px; font-weight: 750; }
+.real-entry-section { border-block: 1px solid #b9d9c5; background: #edf8f1; }
+.real-knowledge-hero { background: linear-gradient(135deg, #edf8f1, #fff); }
+.real-status-panel { border-top: 4px solid #238252; }
+.governed-stats { grid-template-columns: repeat(5, 1fr); }
+.rights-notice { padding: 20px; border-left: 4px solid var(--warning); background: var(--warning-light); border-radius: 4px 12px 12px 4px; }
+.trace-path { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin: 22px 0; }
+.trace-path span[role="listitem"] { padding: 8px 11px; border: 1px solid #b9d9c5; border-radius: 10px; background: #edf8f1; font-size: 12px; font-weight: 750; }
 .site-footer { width: min(calc(100% - 48px), var(--max)); margin: 80px auto 0; padding: 32px 0 48px; border-top: 1px solid var(--rule); display: flex; justify-content: space-between; gap: 24px; color: var(--muted); }.site-footer strong { color: var(--ink); }.site-footer p { margin: 4px 0 0; }.footer-links { display: flex; gap: 18px; align-items: center; }
 
 @media (max-width: 980px) {

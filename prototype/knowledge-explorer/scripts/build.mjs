@@ -20,6 +20,7 @@ const pages = [
   "governance.html",
   "about.html",
   "components.html",
+  "real-knowledge.html",
 ];
 const labPages = [
   "index.html",
@@ -80,7 +81,7 @@ for (const prohibited of ["sessionStorage", "WebSocket", "EventSource", "documen
 }
 if (!appText.includes("storage?.getItem(storageKey)") || !appText.includes("storage?.setItem(storageKey, nextLanguage)")) failures.push("app.js is missing safe language-preference persistence");
 for (const request of appText.matchAll(/fetch\("([^"]+)"\)/g)) {
-  if (!["assets/i18n/th.json", "assets/i18n/en.json", "assets/data/mock-knowledge.json", "deployment.json"].includes(request[1])) {
+  if (!["assets/i18n/th.json", "assets/i18n/en.json", "assets/data/mock-knowledge.json", "assets/data/governed-batch-001.json", "deployment.json"].includes(request[1])) {
     failures.push(`app.js fetches an unapproved resource: ${request[1]}`);
   }
 }
@@ -89,6 +90,10 @@ const dataText = await readFile(resolve(root, "assets", "data", "mock-knowledge.
 const data = JSON.parse(dataText);
 if (data.meta?.status !== "fictional-placeholder") failures.push("mock dataset must declare fictional-placeholder status");
 if (!data.meta?.disclaimer?.includes("not agricultural knowledge")) failures.push("mock dataset disclaimer is missing");
+const governed = JSON.parse(await readFile(resolve(root, "assets", "data", "governed-batch-001.json"), "utf8"));
+if (governed.meta?.status !== "accepted-internal-not-published") failures.push("governed batch must remain not published");
+if (governed.package?.id !== "CKP-KPB-001/v1" || governed.view?.id !== "WV-KPB-001/v1") failures.push("governed batch identity is invalid");
+if (governed.meta?.rights !== "public-source-excerpts-and-images-suppressed") failures.push("governed batch rights boundary is invalid");
 if (failures.length) throw new Error(`Prototype validation failed:\n${failures.join("\n")}`);
 
 await verifyLocalization();
@@ -135,4 +140,4 @@ await writeFile(
 const files = await verifyArtifact(output);
 console.log(`Combined Pages artifact built: ${pages.length} Explorer pages, ${labPages.length} Lab pages, ${files.length} approved files`);
 console.log(`Deployment identity: ${commit}`);
-console.log("Boundary verified: fictional placeholder content; no backend or Runtime");
+console.log("Boundary verified: fictional placeholder preserved; governed Batch 001 not published; no backend or Runtime");

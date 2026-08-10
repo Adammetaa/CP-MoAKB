@@ -1,0 +1,42 @@
+{
+  "meta": {
+    "kind": "real-governed-knowledge",
+    "status": "accepted-internal-not-published",
+    "language": "th",
+    "rights": "public-source-excerpts-and-images-suppressed"
+  },
+  "package": {
+    "id": "CKP-KPB-001/v1",
+    "name": "Plant Disease Foundations - Batch 001",
+    "status": "accepted for internal composition; not published"
+  },
+  "view": {
+    "id": "WV-KPB-001/v1",
+    "purpose": "Rice Website Disease Detail foundational context",
+    "status": "approved for internal pipeline representation; not published"
+  },
+  "source": {
+    "id": "GS-DOA-HAZARDOUS-SALES-2019-001/v1",
+    "title": "ความรู้สำหรับผู้ควบคุมการขายวัตถุอันตรายทางการเกษตร",
+    "publisher": "สำนักควบคุมพืชและวัสดุการเกษตร กรมวิชาการเกษตร",
+    "edition": "พิมพ์ครั้งที่ 1 พฤศจิกายน 2562",
+    "coverage": "บทที่ 2 หน้า PDF 36-37 (หน้าพิมพ์ 2-31 ถึง 2-32)"
+  },
+  "counts": { "evidence": 2, "claims": 2, "concepts": 3, "terminology": 4, "relationships": 2 },
+  "summary": "องค์ความรู้พื้นฐานที่ผ่านการกำกับดูแล ครอบคลุมแนวคิดโรคพืชและการจัดหมวดหมู่สาเหตุสองประเภทตามแหล่งข้อมูล โดยไม่ใช้เพื่อระบุสาเหตุในกรณีภาคสนาม",
+  "concepts": [
+    { "id": "CO-KPB-001/v1", "term": "โรคพืช" },
+    { "id": "CO-KPB-002/v1", "term": "โรคพืชที่มีสาเหตุเกิดจากสิ่งไม่มีชีวิต" },
+    { "id": "CO-KPB-003/v1", "term": "โรคพืชที่มีสาเหตุเกิดจากสิ่งมีชีวิต" }
+  ],
+  "review": { "id": "KPB-REVIEW-001/v1", "state": "accepted for bounded internal source-backed use" },
+  "limitations": [
+    "ไม่ใช่เนื้อหาเฉพาะโรคข้าวชนิดใดชนิดหนึ่ง",
+    "ไม่ใช้ระบุสาเหตุจากการสังเกตหรือกรณีภาคสนาม",
+    "ไม่มีเนื้อหาการจัดการ ผลิตภัณฑ์ หรือการเลือกวิธีปฏิบัติ"
+  ],
+  "traceability": {
+    "issue": "UI-KPB-001/v1",
+    "path": "WV-KPB-001/v1 -> CKP-KPB-001/v1 -> canonical object -> claim -> evidence -> source -> exact locator"
+  }
+}

@@ -161,7 +161,8 @@ export const verifyLocalization = async () => {
     for (const match of html.matchAll(/<[^>]+aria-label="[^"]+"[^>]*>/g)) {
       if (!/data-i18n-aria-label="[^"]+"/.test(match[0])) failures.push(`${page}: visible ARIA label is not localized`);
     }
-    for (const literal of findUnkeyedVisibleText(html)) failures.push(`${page}: unkeyed visible UI text: ${literal}`);
+    const localizedUi = html.replace(/<section class="section real-entry-section">[\s\S]*?<\/section>/g, "");
+    for (const literal of findUnkeyedVisibleText(localizedUi)) failures.push(`${page}: unkeyed visible UI text: ${literal}`);
   }
 
   for (const [page, attributes] of new Map([

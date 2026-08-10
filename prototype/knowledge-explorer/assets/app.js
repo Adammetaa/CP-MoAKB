@@ -3,6 +3,7 @@ const supportedLanguages = new Set(["th", "en"]);
 const page = typeof document === "undefined" ? "home" : document.body.dataset.page || "home";
 let messages = {};
 let knowledgeData = null;
+let governedBatchData = null;
 let activeFilter = "all";
 
 const readLanguagePreference = (storage) => {
@@ -224,6 +225,17 @@ const renderDetails = () => {
   document.querySelectorAll("[data-authority-title]").forEach((element) => { element.textContent = localized(authority.name); });
 };
 
+const renderGovernedBatch = () => {
+  if (!governedBatchData || page !== "realKnowledge") return;
+  document.querySelectorAll("[data-governed-package]").forEach((element) => { element.textContent = governedBatchData.package.id; });
+  document.querySelectorAll("[data-governed-view]").forEach((element) => { element.textContent = governedBatchData.view.id; });
+  document.querySelectorAll("[data-governed-summary]").forEach((element) => { element.textContent = governedBatchData.summary; });
+  document.querySelectorAll("[data-governed-count]").forEach((element) => {
+    const count = governedBatchData.counts[element.dataset.governedCount];
+    if (Number.isInteger(count)) element.textContent = String(count);
+  });
+};
+
 const renderPage = () => {
   applyTranslations();
   renderHeader();
@@ -232,6 +244,7 @@ const renderPage = () => {
   renderSearch();
   renderConcept();
   renderDetails();
+  renderGovernedBatch();
   loadDeployment();
 };
 
@@ -263,14 +276,16 @@ const bindInteractions = () => {
 };
 
 const initialize = async () => {
-  const [thaiResponse, englishResponse, dataResponse] = await Promise.all([
+  const [thaiResponse, englishResponse, dataResponse, governedResponse] = await Promise.all([
     fetch("assets/i18n/th.json"),
     fetch("assets/i18n/en.json"),
     fetch("assets/data/mock-knowledge.json"),
+    fetch("assets/data/governed-batch-001.json"),
   ]);
   if (!thaiResponse.ok || !englishResponse.ok) throw new Error("Localization dictionaries unavailable");
   messages = { th: await thaiResponse.json(), en: await englishResponse.json() };
   if (dataResponse.ok) knowledgeData = await dataResponse.json();
+  if (governedResponse.ok) governedBatchData = await governedResponse.json();
   const params = new URLSearchParams(window.location.search);
   const searchInput = document.querySelector("[data-search-input]");
   if (searchInput) searchInput.value = params.get("q") ?? "";
