@@ -269,6 +269,14 @@ KNOWLEDGE_EVIDENCE_PILOT_DOCUMENTS = (
     "docs/knowledge/evidence-pilot/evidence-review-record.md",
     "docs/knowledge/evidence-pilot/traceability-record.md",
 )
+KNOWLEDGE_GOLDEN_SLICE_DOCUMENTS = (
+    "docs/knowledge/golden-knowledge-slice/README.md",
+    "docs/knowledge/golden-knowledge-slice/claim-candidate-001.md",
+    "docs/knowledge/golden-knowledge-slice/claim-candidate-002.md",
+    "docs/knowledge/golden-knowledge-slice/claim-review-record.md",
+    "docs/knowledge/golden-knowledge-slice/unresolved-issue.md",
+    "docs/knowledge/golden-knowledge-slice/architecture-review.md",
+)
 KNOWLEDGE_GOVERNANCE_STANDARDS = (
     "docs/knowledge/governance/README.md",
     "docs/knowledge/governance/KGS-001-knowledge-governance-model.md",
@@ -433,6 +441,7 @@ REQUIRED_DOCUMENTS = (
     + KNOWLEDGE_EXTRACTION_DOCUMENTS
     + KNOWLEDGE_SOURCE_OPERATIONS_DOCUMENTS
     + KNOWLEDGE_EVIDENCE_PILOT_DOCUMENTS
+    + KNOWLEDGE_GOLDEN_SLICE_DOCUMENTS
     + KNOWLEDGE_GOVERNANCE_STANDARDS
     + KNOWLEDGE_EXPLORER_DOCUMENTS
     + KNOWLEDGE_LAB_DOCUMENTS
