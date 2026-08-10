@@ -1,0 +1,27 @@
+{
+  "meta": { "kind": "real-governed-knowledge", "status": "accepted-internal-not-published", "language": "th", "rights": "source-pages-images-tables-layout-and-passages-suppressed" },
+  "sources": [
+    { "id": "GS-KU-RICE-DISEASES-2020-001/v1", "label": "มหาวิทยาลัยเกษตรศาสตร์ · 2020", "sha256": "9cd74da88828fbc6d5dcbfdfbcaa0a20e45752a7f21a7d8503b1263d8a6eef2d" },
+    { "id": "GS-RRC-PRACHIN-RICE-DISEASES-2025-001/v1", "label": "ศูนย์วิจัยข้าวปราจีนบุรี กรมการข้าว · 2025", "sha256": "95c3922d9e559b37343d82e5cb7ea2b9305c1b35c558a617dc171eb603105deb" }
+  ],
+  "counts": { "subjects": 16, "evidence": 26, "claims": 48, "concepts": 38, "terminology": 32, "relationships": 32, "issues": 4, "packages": 16, "views": 16 },
+  "subjects": [
+    { "key": "BLAST", "name": "โรคไหม้", "english": "Blast", "cause": "เชื้อรา Pyricularia ตามชื่อที่แต่ละ Source ระบุ", "coverage": "แผลใบคล้ายรูปตา ศูนย์กลางสีเทา; ไหม้คอรวง; ความชื้นสูง", "sources": ["KU:5-10", "RRC:2-3"] },
+    { "key": "SHEATH-BLIGHT", "name": "โรคกาบใบแห้ง", "english": "Sheath blight", "cause": "Rhizoctonia solani", "coverage": "กาบใบใกล้ระดับน้ำ แผลเขียวปนเทา; แตกกอถึงใกล้เก็บเกี่ยว", "sources": ["KU:11-14", "RRC:4"] },
+    { "key": "BROWN-SPOT", "name": "โรคใบจุดสีน้ำตาล", "english": "Brown Spot", "cause": "Bipolaris oryzae", "coverage": "จุดสีน้ำตาลกลมหรือรูปไข่; ใบและเมล็ด; คุณภาพเมล็ด", "sources": ["KU:15-18", "RRC:3-4"] },
+    { "key": "NARROW-BROWN-SPOT", "name": "โรคใบขีดสีน้ำตาล", "english": "Narrow Brown Spot", "cause": "Cercospora oryzae", "coverage": "ขีดสีน้ำตาลขนานเส้นใบ; ใบล่างและคอรวง", "sources": ["KU:19-21", "RRC:4"] },
+    { "key": "BAKANAE", "name": "โรคถอดฝักดาบ", "english": "Bakanae Disease", "cause": "Fusarium fujikuroi Nirenberg", "coverage": "ระยะกล้า; ต้นผอมสูงและซีด; รากเน่า; เส้นใยสีชมพู", "sources": ["KU:22-25"] },
+    { "key": "DIRTY-PANICLE", "name": "โรคเมล็ดด่าง", "english": "Dirty Panicle Disease", "cause": "เชื้อราหลายชนิดตาม Source", "coverage": "จุดน้ำตาลหรือดำบนเมล็ด; เทาปนชมพู; ระยะออกรวง", "sources": ["KU:26-29", "RRC:5"] },
+    { "key": "FALSE-SMUT", "name": "โรคดอกกระถิน", "english": "False smut", "cause": "Ustilaginoidea virens", "coverage": "เมล็ดบวม; กลุ่มสปอร์เหลือง ส้ม แล้วเขียวเข้ม; ตั้งท้อง-ออกรวง", "sources": ["KU:30-32"] },
+    { "key": "BACTERIAL-BLIGHT", "name": "โรคขอบใบแห้ง", "english": "Bacterial Leaf Blight", "cause": "Xanthomonas oryzae pv. oryzae", "coverage": "ขอบใบช้ำและเหลือง; หยดสีครีม; หลายระยะข้าว", "sources": ["KU:33-38", "RRC:6"] },
+    { "key": "BACTERIAL-STREAK", "name": "โรคใบขีดโปร่งแสง", "english": "Bacterial Leaf Streak", "cause": "Xanthomonas oryzae pv. oryzicola", "coverage": "ขีดช้ำโปร่งแสงตามเส้นใบ; เปลี่ยนเป็นเหลืองหรือส้ม", "sources": ["KU:39-40", "RRC:6-7"] },
+    { "key": "RAGGED-STUNT", "name": "โรคใบหงิก หรือโรคจู๋", "english": "Ragged Stunt", "cause": "Rice Ragged Stunt virus (RRSV)", "coverage": "เพลี้ยกระโดดสีน้ำตาลเป็นพาหะ; ต้นเตี้ย ใบเข้มแคบ ขอบแหว่ง", "sources": ["KU:41-43", "RRC:8"], "reuses": "CO-RDW1-003/v1" },
+    { "key": "ROOT-KNOT", "name": "โรครากปม", "english": "Root Knot", "cause": "Meloidogyne graminicola", "coverage": "ปมราก; กล้าใบเหลือง; บริบทนาน้ำฝนที่ดอน/แปลงกล้าแห้ง", "sources": ["KU:44-47", "RRC:9"] },
+    { "key": "AKIOCHI", "name": "โรคเมาตอซัง", "english": "Akiochi", "cause": "การย่อยตอซังไม่สมบูรณ์และบริบทไฮโดรเจนซัลไฟด์", "coverage": "แตกกอ; ต้นแคระ ใบล่างเหลือง รากเน่าดำ และรากใหม่เหนือดิน", "sources": ["KU:48-50", "RRC:9-10"] },
+    { "key": "SHEATH-ROT", "name": "โรคกาบใบเน่า", "english": "Sheath Rot", "cause": "Sarocladium oryzae", "coverage": "แผลน้ำตาลดำบนกาบห่อรวง; เส้นใยขาวอมชมพู; ตั้งท้อง", "sources": ["RRC:4-5"] },
+    { "key": "ORANGE-LEAF", "name": "โรคใบสีแสด", "english": "Orange Leaf", "cause": "เชื้อไฟโตพลาสมา", "coverage": "เพลี้ยจักจั่นปีกลายหยักเป็นพาหะ; สีแสดเริ่มจากปลายใบล่าง", "sources": ["RRC:7-8"] },
+    { "key": "GRASSY-STUNT", "name": "โรคเขียวเตี้ย", "english": "Grassy Stunt", "cause": "Rice Grassy Stunt Virus (RGSV)", "coverage": "เพลี้ยกระโดดสีน้ำตาลเป็นพาหะ; Source ให้ขอบเขต identity/vector", "sources": ["RRC:8"] },
+    { "key": "YELLOW-ORANGE", "name": "โรคใบสีส้ม", "english": "Yellow-Orange leaf", "cause": "RTBV และ RTSV ตาม Source", "coverage": "เพลี้ยจักจั่นสีเขียวเป็นพาหะ; ใช้ Concept เดิมจาก Wave 1", "sources": ["RRC:8"], "reuses": "CO-RDW1-001/v1" }
+  ],
+  "issues": ["UI-RDC-001/v1", "UI-RDC-002/v1", "UI-RDC-003/v1", "UI-RDW1-001/v1"]
+}

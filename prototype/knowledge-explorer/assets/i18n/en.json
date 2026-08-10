@@ -11,7 +11,8 @@
     "governance": { "title": "Governance · CP-MoAKB Knowledge Explorer", "description": "Knowledge-governance authority map for the CP-MoAKB Knowledge Explorer prototype." },
     "about": { "title": "About · CP-MoAKB Knowledge Explorer", "description": "Mission, architecture, and roadmap for the CP-MoAKB Knowledge Explorer prototype." },
     "components": { "title": "Components · CP-MoAKB Knowledge Explorer", "description": "Bilingual component library for the CP-MoAKB Knowledge Explorer prototype." },
-    "riceDiseaseWave1": { "title": "Rice Disease Knowledge Wave 1 · CP-MoAKB", "description": "Rights-safe governed representation of the first real rice-disease knowledge collection." }
+    "riceDiseaseWave1": { "title": "Rice Disease Knowledge Wave 1 · CP-MoAKB", "description": "Rights-safe governed representation of the first real rice-disease knowledge collection." },
+    "riceDiseaseCorpus": { "title": "Rice Disease Knowledge Corpus · CP-MoAKB", "description": "Rights-safe governed multi-source corpus covering 16 rice-disease subjects." }
   },
   "common": {
     "skip": "Skip to content",

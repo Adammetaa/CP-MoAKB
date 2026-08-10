@@ -199,6 +199,8 @@ export const verifyLocalization = async () => {
   for (const type of ["concept", "evidence", "source"]) usedKeys.add(`data.${type}`);
   usedKeys.add("meta.riceDiseaseWave1.title");
   usedKeys.add("meta.riceDiseaseWave1.description");
+  usedKeys.add("meta.riceDiseaseCorpus.title");
+  usedKeys.add("meta.riceDiseaseCorpus.description");
   for (const key of thai.keys()) if (!usedKeys.has(key)) failures.push(`Orphan translation key: ${key}`);
 
   const mockText = await readFile(resolve(root, "assets", "data", "mock-knowledge.json"), "utf8");
