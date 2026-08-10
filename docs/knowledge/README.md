@@ -79,6 +79,13 @@ existing Source Catalog and KES through an implementation-neutral lifecycle,
 conceptual manifest, custody organization, Passage identity, extraction-readiness
 gate, Golden Package readiness matrix, and immediate production roadmap.
 
+## Golden Source to Evidence Pilot
+
+The [Golden Source to Evidence Pilot](evidence-pilot/README.md) records the first
+two real, bounded, reviewed Evidence Candidates from one exact Project
+Owner-approved rice Source. It stops at Evidence Review and creates no Claim,
+Concept, Relationship, Knowledge Object, Package, or publication.
+
 ## Knowledge Governance Standards
 
 The [Knowledge Governance Standards](governance/README.md) govern people,

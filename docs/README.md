@@ -16,6 +16,7 @@ implemented engineering behavior from conceptual future knowledge work.
 | Source custodians and evidence authors | [Governed Source Catalog](knowledge/source-catalog/README.md) | Assess exact Source identity, authority, rights, coverage, status, and readiness |
 | Knowledge extraction authors and reviewers | [Knowledge Extraction Specification](knowledge/extraction/README.md) | Transform reviewed Sources into governed object candidates through mandatory reviewed stages |
 | Source repository operators | [Governed Source Repository Operations](knowledge/source-operations/README.md) | Operate acquisition, integrity, rights, manifest, passage identity, readiness, and archival controls |
+| Evidence authors and reviewers | [Golden Source to Evidence Pilot](knowledge/evidence-pilot/README.md) | Review the first real bounded Source passages as traceable Evidence Candidates |
 | Knowledge-governance contributors | [Governance maps](governance/README.md) | Relate decisions, KAS, RAS, and review |
 | Product and UX reviewers | [Knowledge Explorer prototype](../prototype/knowledge-explorer/README.md) | Review product vision, fictional mock content, and the prepared but not-yet-live Pages preview |
 | Workspace product reviewers | [Knowledge Lab prototype](../prototype/knowledge-lab/README.md) | Test the Thai-first static authoring and review experience with fictional placeholders |
@@ -35,6 +36,7 @@ Additional entry points are the [architecture book](architecture/README.md),
 [Governed Source Catalog](knowledge/source-catalog/README.md),
 [Knowledge Extraction Specification](knowledge/extraction/README.md),
 [Governed Source Repository Operations](knowledge/source-operations/README.md),
+[Golden Source to Evidence Pilot](knowledge/evidence-pilot/README.md),
 [Knowledge Workspace Blueprint](knowledge/workspace/README.md),
 [Knowledge Explorer prototype](../prototype/knowledge-explorer/README.md),
 [Knowledge Lab prototype](../prototype/knowledge-lab/README.md), and
