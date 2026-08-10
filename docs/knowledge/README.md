@@ -72,6 +72,13 @@ approved sequential human pathway from a reviewed Source through Evidence, Claim
 Concept, Terminology, Relationship, and Package Membership candidates. It creates
 no accepted Knowledge, agricultural content, schema, automation, or Runtime behavior.
 
+## Governed Source Repository Operations
+
+[Governed Source Repository Operations](source-operations/README.md) applies the
+existing Source Catalog and KES through an implementation-neutral lifecycle,
+conceptual manifest, custody organization, Passage identity, extraction-readiness
+gate, Golden Package readiness matrix, and immediate production roadmap.
+
 ## Knowledge Governance Standards
 
 The [Knowledge Governance Standards](governance/README.md) govern people,

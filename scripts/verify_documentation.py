@@ -251,6 +251,16 @@ KNOWLEDGE_EXTRACTION_DOCUMENTS = (
     "docs/knowledge/extraction/examples/fictional-extraction.md",
     "docs/knowledge/extraction/examples/fictional-errors.md",
 )
+KNOWLEDGE_SOURCE_OPERATIONS_DOCUMENTS = (
+    "docs/knowledge/source-operations/README.md",
+    "docs/knowledge/source-operations/source-operational-lifecycle.md",
+    "docs/knowledge/source-operations/source-manifest-architecture.md",
+    "docs/knowledge/source-operations/source-repository-organization.md",
+    "docs/knowledge/source-operations/passage-identity-model.md",
+    "docs/knowledge/source-operations/extraction-readiness.md",
+    "docs/knowledge/source-operations/golden-package-readiness-matrix.md",
+    "docs/knowledge/source-operations/knowledge-production-roadmap.md",
+)
 KNOWLEDGE_GOVERNANCE_STANDARDS = (
     "docs/knowledge/governance/README.md",
     "docs/knowledge/governance/KGS-001-knowledge-governance-model.md",
@@ -413,6 +423,7 @@ REQUIRED_DOCUMENTS = (
     + CANONICAL_KNOWLEDGE_PACKAGE_DOCUMENTS
     + KNOWLEDGE_SOURCE_CATALOG_DOCUMENTS
     + KNOWLEDGE_EXTRACTION_DOCUMENTS
+    + KNOWLEDGE_SOURCE_OPERATIONS_DOCUMENTS
     + KNOWLEDGE_GOVERNANCE_STANDARDS
     + KNOWLEDGE_EXPLORER_DOCUMENTS
     + KNOWLEDGE_LAB_DOCUMENTS
