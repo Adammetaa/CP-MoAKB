@@ -4,6 +4,11 @@ Status: Claim Candidates reviewed and deferred
 
 Review date: 2026-08-10
 
+## เริ่มตรวจ Scientific Review ที่นี่
+
+เปิด [แบบตรวจทานองค์ความรู้โรคข้าว](scientific-review-packet-th.md) เป็นเอกสาร
+หลักเพียงฉบับเดียว ผู้ตรวจไม่จำเป็นต้องอ่านเอกสาร Architecture ก่อนเริ่มตรวจ
+
 ## Purpose and Boundary
 
 This directory records the smallest real knowledge-production slice supported by
