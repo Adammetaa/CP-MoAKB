@@ -58,6 +58,13 @@ The CKP MUST NOT duplicate canonical knowledge, become a Case Record or consumer
 database, bypass Evidence, create inference or Recommendation, or define a
 production schema or Runtime behavior.
 
+## Governed Source Catalog
+
+The [Governed Source Catalog](source-catalog/README.md) materializes the minimum
+Source identity, authority, version, rights, coverage, availability, status, and
+traceability layer needed before Evidence extraction. It creates no scientific
+Knowledge, Evidence, Claim, Concept, Relationship, Package, schema, or Runtime behavior.
+
 ## Knowledge Governance Standards
 
 The [Knowledge Governance Standards](governance/README.md) govern people,

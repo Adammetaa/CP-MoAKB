@@ -218,6 +218,20 @@ CANONICAL_KNOWLEDGE_PACKAGE_DOCUMENTS = (
     "docs/knowledge/package-architecture/examples/fictional-invalid-package.md",
     "docs/knowledge/package-architecture/source-inventory/repository-source-readiness.md",
 )
+KNOWLEDGE_SOURCE_CATALOG_DOCUMENTS = (
+    "docs/knowledge/source-catalog/README.md",
+    "docs/knowledge/source-catalog/source-catalog.md",
+    "docs/knowledge/source-catalog/authority-model.md",
+    "docs/knowledge/source-catalog/rights-model.md",
+    "docs/knowledge/source-catalog/source-status-model.md",
+    "docs/knowledge/source-catalog/coverage-model.md",
+    "docs/knowledge/source-catalog/source-version-model.md",
+    "docs/knowledge/source-catalog/source-traceability-model.md",
+    "docs/knowledge/source-catalog/source-selection-policy.md",
+    "docs/knowledge/source-catalog/minimum-golden-source-slice.md",
+    "docs/knowledge/source-catalog/examples/fictional-valid-source.md",
+    "docs/knowledge/source-catalog/examples/fictional-invalid-source.md",
+)
 KNOWLEDGE_GOVERNANCE_STANDARDS = (
     "docs/knowledge/governance/README.md",
     "docs/knowledge/governance/KGS-001-knowledge-governance-model.md",
@@ -378,6 +392,7 @@ REQUIRED_DOCUMENTS = (
     + KNOWLEDGE_ARCHITECTURE_DOCUMENTS
     + KNOWLEDGE_OBJECT_MODEL_DOCUMENTS
     + CANONICAL_KNOWLEDGE_PACKAGE_DOCUMENTS
+    + KNOWLEDGE_SOURCE_CATALOG_DOCUMENTS
     + KNOWLEDGE_GOVERNANCE_STANDARDS
     + KNOWLEDGE_EXPLORER_DOCUMENTS
     + KNOWLEDGE_LAB_DOCUMENTS
