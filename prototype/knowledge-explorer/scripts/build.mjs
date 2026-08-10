@@ -25,6 +25,7 @@ const pages = [
   "real-knowledge.html",
   "rice-disease-wave-1.html",
   "rice-disease-corpus.html",
+  "rice-insect-corpus.html",
 ];
 const labPages = [
   "index.html",
@@ -104,6 +105,9 @@ if (riceWave.meta?.rights !== "public-source-excerpts-and-images-suppressed") fa
 const riceCorpus = JSON.parse(await readFile(resolve(root, "assets", "data", "rice-disease-corpus-001.json"), "utf8"));
 if (riceCorpus.meta?.status !== "accepted-internal-not-published" || riceCorpus.subjects?.length !== 16 || riceCorpus.counts?.packages !== 16 || riceCorpus.counts?.views !== 16) failures.push("rice disease corpus identity or counts are invalid");
 if (riceCorpus.meta?.rights !== "source-pages-images-tables-layout-and-passages-suppressed") failures.push("rice disease corpus rights boundary is invalid");
+const riceInsectCorpus = JSON.parse(await readFile(resolve(root, "assets", "data", "rice-insect-corpus-001.json"), "utf8"));
+if (riceInsectCorpus.meta?.status !== "accepted-internal-not-published" || riceInsectCorpus.subjects?.length !== 19 || riceInsectCorpus.counts?.packages !== 19 || riceInsectCorpus.counts?.views !== 19) failures.push("rice insect corpus identity or counts are invalid");
+if (riceInsectCorpus.meta?.rights !== "source-pages-images-tables-layout-and-passages-suppressed") failures.push("rice insect corpus rights boundary is invalid");
 if (failures.length) throw new Error(`Prototype validation failed:\n${failures.join("\n")}`);
 
 await verifyLocalization();
@@ -158,4 +162,4 @@ await writeFile(
 const files = await verifyArtifact(output);
 console.log(`Combined Pages artifact built: 1 SP Assistant page, ${pages.length} Explorer pages, ${labPages.length} Lab pages, ${files.length} approved files`);
 console.log(`Deployment identity: ${commit}`);
-console.log("Boundary verified: fictional placeholder preserved; governed Batch 001, Rice Disease Wave 1, and Rice Disease Corpus not published; no backend or Runtime");
+console.log("Boundary verified: fictional placeholder preserved; governed disease and insect corpora not published; no backend or Runtime");

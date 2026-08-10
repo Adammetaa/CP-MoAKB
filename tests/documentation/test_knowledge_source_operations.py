@@ -25,7 +25,7 @@ def test_source_operations_family_is_complete_and_governed() -> None:
     assert all(
         (ROOT / path).is_file() for path in KNOWLEDGE_SOURCE_OPERATIONS_DOCUMENTS
     )
-    assert len(verify()) == 649
+    assert len(verify()) == 655
 
 
 def test_operational_lifecycle_is_complete_and_nonautomatic() -> None:
