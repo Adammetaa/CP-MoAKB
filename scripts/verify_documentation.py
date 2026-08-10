@@ -278,6 +278,18 @@ KNOWLEDGE_GOLDEN_SLICE_DOCUMENTS = (
     "docs/knowledge/golden-knowledge-slice/architecture-review.md",
     "docs/knowledge/golden-knowledge-slice/scientific-review-packet-th.md",
 )
+KNOWLEDGE_POPULATION_BATCH_001_DOCUMENTS = (
+    "docs/knowledge/population-batch-001/README.md",
+    "docs/knowledge/population-batch-001/source-record.md",
+    "docs/knowledge/population-batch-001/evidence-records.md",
+    "docs/knowledge/population-batch-001/claim-records.md",
+    "docs/knowledge/population-batch-001/concept-records.md",
+    "docs/knowledge/population-batch-001/terminology-records.md",
+    "docs/knowledge/population-batch-001/relationship-records.md",
+    "docs/knowledge/population-batch-001/review-and-decision-record.md",
+    "docs/knowledge/population-batch-001/package-record.md",
+    "docs/knowledge/population-batch-001/website-view-and-traceability.md",
+)
 KNOWLEDGE_GOVERNANCE_STANDARDS = (
     "docs/knowledge/governance/README.md",
     "docs/knowledge/governance/KGS-001-knowledge-governance-model.md",
@@ -443,6 +455,7 @@ REQUIRED_DOCUMENTS = (
     + KNOWLEDGE_SOURCE_OPERATIONS_DOCUMENTS
     + KNOWLEDGE_EVIDENCE_PILOT_DOCUMENTS
     + KNOWLEDGE_GOLDEN_SLICE_DOCUMENTS
+    + KNOWLEDGE_POPULATION_BATCH_001_DOCUMENTS
     + KNOWLEDGE_GOVERNANCE_STANDARDS
     + KNOWLEDGE_EXPLORER_DOCUMENTS
     + KNOWLEDGE_LAB_DOCUMENTS
