@@ -21,7 +21,7 @@ def test_complete_ckp_family_exists_and_is_governed() -> None:
     assert all(
         (ROOT / path).is_file() for path in CANONICAL_KNOWLEDGE_PACKAGE_DOCUMENTS
     )
-    assert len(verify()) == 635
+    assert len(verify()) == 643
 
 
 def test_ckp_is_composition_not_duplicated_knowledge() -> None:

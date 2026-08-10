@@ -4,7 +4,7 @@ import { fileURLToPath } from "node:url";
 
 const explorerPages = [
   "index.html", "search.html", "browse.html", "concept.html", "evidence.html",
-  "source.html", "authority.html", "governance.html", "about.html", "components.html", "real-knowledge.html",
+  "source.html", "authority.html", "governance.html", "about.html", "components.html", "real-knowledge.html", "rice-disease-wave-1.html",
 ];
 const labPages = [
   "index.html", "tasks.html", "inbox.html", "sources.html", "evidence.html",
@@ -22,6 +22,7 @@ const approved = new Set([
   "knowledge-explorer/assets/og.png",
   "knowledge-explorer/assets/data/mock-knowledge.json",
   "knowledge-explorer/assets/data/governed-batch-001.json",
+  "knowledge-explorer/assets/data/rice-disease-wave-001.json",
   "knowledge-explorer/assets/i18n/th.json",
   "knowledge-explorer/assets/i18n/en.json",
   ...labPages.map((page) => `knowledge-lab/${page}`),
@@ -49,8 +50,8 @@ export const verifyArtifact = async (root) => {
   const resolvedRoot = resolve(root);
   const files = await walk(resolvedRoot);
   const relativeFiles = files.map((path) => relative(resolvedRoot, path).split(sep).join("/"));
-  if (relativeFiles.length !== 42 || approved.size !== 42) {
-    throw new Error("Pages artifact must contain exactly 42 approved files");
+  if (relativeFiles.length !== 44 || approved.size !== 44) {
+    throw new Error("Pages artifact must contain exactly 44 approved files");
   }
   const unexpected = relativeFiles.filter((path) => !approved.has(path));
   const missing = [...approved].filter((path) => !relativeFiles.includes(path));
@@ -102,6 +103,9 @@ export const verifyArtifact = async (root) => {
   for (const prohibited of ["sourceExcerpt", "passageText", "imageUrl", "pdfUrl"]) {
     if (governedText.includes(prohibited)) throw new Error(`Explorer governed batch exposes prohibited source material: ${prohibited}`);
   }
+  const riceWave = JSON.parse(await readFile(resolve(resolvedRoot, "knowledge-explorer", "assets", "data", "rice-disease-wave-001.json"), "utf8"));
+  if (riceWave.meta?.status !== "accepted-internal-not-published" || riceWave.subjects?.length !== 2 || riceWave.counts?.packages !== 2 || riceWave.counts?.views !== 2) throw new Error("Explorer rice disease wave is incomplete or publishable");
+  if (riceWave.meta?.rights !== "public-source-excerpts-and-images-suppressed") throw new Error("Explorer rice disease wave lost rights suppression");
   const thai = JSON.parse(await readFile(resolve(resolvedRoot, "knowledge-explorer", "assets", "i18n", "th.json"), "utf8"));
   const english = JSON.parse(await readFile(resolve(resolvedRoot, "knowledge-explorer", "assets", "i18n", "en.json"), "utf8"));
   if (!thai.prototype?.notice || !english.prototype?.notice) throw new Error("Explorer localization dictionaries lost prototype notices");

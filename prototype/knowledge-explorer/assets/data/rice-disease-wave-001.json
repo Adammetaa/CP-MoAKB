@@ -1,0 +1,15 @@
+{
+  "meta": { "kind": "real-governed-knowledge", "status": "accepted-internal-not-published", "language": "th", "rights": "public-source-excerpts-and-images-suppressed" },
+  "source": { "id": "GS-DOA-HAZARDOUS-SALES-2019-001/v1", "locator": "PDF page 7; printed page 1-2; Chapter 1; section 2.2.2" },
+  "counts": { "evidence": 2, "claims": 4, "concepts": 4, "terminology": 4, "relationships": 2, "issues": 2, "packages": 2, "views": 2 },
+  "subjects": [
+    { "id": "CO-RDW1-001/v1", "name": "โรคใบสีส้มของข้าว", "summary": "แหล่งข้อมูลฉบับปี 2562 ยกโรคนี้เป็นตัวอย่างในบริบทแมลงพาหะนำโรคพืช และเชื่อมโยงกับเพลี้ยจักจั่นสีเขียวโดยตรงภายในขอบเขตข้อความนั้น", "vector": { "id": "CO-RDW1-002/v1", "name": "เพลี้ยจักจั่นสีเขียว", "relationship": "source-describes-vector" }, "package": "CKP-RDW1-ORANGE-001/v1", "view": "WV-RDW1-ORANGE-001/v1", "evidence": "EV-RDW1-001/v1", "claim": "CL-RDW1-002/v1" },
+    { "id": "CO-RDW1-003/v1", "name": "โรคจู๋ของข้าว", "summary": "แหล่งข้อมูลฉบับปี 2562 ยกโรคนี้เป็นตัวอย่างในบริบทแมลงพาหะนำโรคพืช และเชื่อมโยงกับเพลี้ยกระโดดสีน้ำตาลโดยตรงภายในขอบเขตข้อความนั้น", "vector": { "id": "CO-RDW1-004/v1", "name": "เพลี้ยกระโดดสีน้ำตาล", "relationship": "source-describes-vector" }, "package": "CKP-RDW1-GRASSY-STUNT-001/v1", "view": "WV-RDW1-GRASSY-STUNT-001/v1", "evidence": "EV-RDW1-002/v1", "claim": "CL-RDW1-004/v1" }
+  ],
+  "limitations": [
+    "ไม่มีข้อมูลอาการ เชื้อสาเหตุ ระยะการเจริญเติบโต การกระจาย หรือการจัดการเฉพาะโรคในข้อความที่ใช้",
+    "ความสัมพันธ์แสดงเฉพาะสิ่งที่แหล่งข้อมูลปี 2562 ระบุ ไม่ใช่การวินิจฉัยกรณีภาคสนามหรือข้อสรุปสากลปัจจุบัน",
+    "ไม่มีการเลือกสารกำจัดศัตรูพืช ผลิตภัณฑ์ อัตราใช้ หรือคำแนะนำ"
+  ],
+  "issues": ["UI-KPB-001/v1", "UI-RDW1-001/v1"]
+}

@@ -21,6 +21,7 @@ PAGES = (
     "about.html",
     "components.html",
     "real-knowledge.html",
+    "rice-disease-wave-1.html",
 )
 ACTION_PINS = {
     "actions/checkout": ("df4cb1c069e1874edd31b4311f1884172cec0e10", "v6"),
@@ -136,6 +137,7 @@ def test_artifact_verifier_has_exact_allowlist_and_prohibited_capability_checks(
         "knowledge-explorer/assets/og.png",
         "knowledge-explorer/assets/data/mock-knowledge.json",
         "knowledge-explorer/assets/data/governed-batch-001.json",
+        "knowledge-explorer/assets/data/rice-disease-wave-001.json",
         "knowledge-explorer/assets/i18n/th.json",
         "knowledge-explorer/assets/i18n/en.json",
     ):
@@ -148,7 +150,7 @@ def test_artifact_verifier_has_exact_allowlist_and_prohibited_capability_checks(
         "prohibited local or sensitive text",
     ):
         assert boundary in verifier
-    assert "exactly 42 approved files" in verifier
+    assert "exactly 44 approved files" in verifier
     for prohibited in (
         "sessionStorage",
         "WebSocket",

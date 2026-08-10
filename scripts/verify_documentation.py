@@ -290,6 +290,16 @@ KNOWLEDGE_POPULATION_BATCH_001_DOCUMENTS = (
     "docs/knowledge/population-batch-001/package-record.md",
     "docs/knowledge/population-batch-001/website-view-and-traceability.md",
 )
+RICE_DISEASE_WAVE_001_DOCUMENTS = (
+    "docs/knowledge/rice-disease-wave-001/README.md",
+    "docs/knowledge/rice-disease-wave-001/source-coverage.md",
+    "docs/knowledge/rice-disease-wave-001/evidence-records.md",
+    "docs/knowledge/rice-disease-wave-001/claim-records.md",
+    "docs/knowledge/rice-disease-wave-001/concept-and-terminology-records.md",
+    "docs/knowledge/rice-disease-wave-001/relationships-review-and-issues.md",
+    "docs/knowledge/rice-disease-wave-001/package-records.md",
+    "docs/knowledge/rice-disease-wave-001/website-views-and-traceability.md",
+)
 KNOWLEDGE_GOVERNANCE_STANDARDS = (
     "docs/knowledge/governance/README.md",
     "docs/knowledge/governance/KGS-001-knowledge-governance-model.md",
@@ -456,6 +466,7 @@ REQUIRED_DOCUMENTS = (
     + KNOWLEDGE_EVIDENCE_PILOT_DOCUMENTS
     + KNOWLEDGE_GOLDEN_SLICE_DOCUMENTS
     + KNOWLEDGE_POPULATION_BATCH_001_DOCUMENTS
+    + RICE_DISEASE_WAVE_001_DOCUMENTS
     + KNOWLEDGE_GOVERNANCE_STANDARDS
     + KNOWLEDGE_EXPLORER_DOCUMENTS
     + KNOWLEDGE_LAB_DOCUMENTS

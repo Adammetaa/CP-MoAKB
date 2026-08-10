@@ -100,7 +100,7 @@ def test_root_landing_links_both_prototypes_without_javascript() -> None:
 
 def test_exact_combined_artifact_allowlist_contains_all_lab_pages() -> None:
     verifier = _verifier()
-    assert "exactly 42 approved files" in verifier
+    assert "exactly 44 approved files" in verifier
     for page in LAB_PAGES:
         assert page in verifier
     for asset in (
@@ -247,7 +247,7 @@ def test_deployment_documentation_covers_owner_controls() -> None:
 
 
 def test_documentation_api_and_engineering_contracts_are_unchanged() -> None:
-    assert len(verify()) == 635
+    assert len(verify()) == 643
     assert sum(len(symbols) for symbols in PUBLIC_API_EXPORTS.values()) == 165
     changed_scope = "\n".join(
         (
