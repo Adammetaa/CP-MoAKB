@@ -2,3 +2,4 @@ User-agent: *
 Allow: /CP-MoAKB/
 Disallow: /CP-MoAKB/knowledge-explorer/
 Disallow: /CP-MoAKB/knowledge-lab/
+Disallow: /CP-MoAKB/sp-assistant/

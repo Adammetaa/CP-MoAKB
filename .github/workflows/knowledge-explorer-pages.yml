@@ -8,6 +8,7 @@ on:
       - ".github/workflows/knowledge-explorer-pages.yml"
       - "prototype/knowledge-explorer/**"
       - "prototype/knowledge-lab/**"
+      - "prototype/sp-assistant/**"
       - "tests/deployment/**"
   workflow_dispatch:
 
@@ -58,6 +59,10 @@ jobs:
       - name: Verify Knowledge Lab localization
         working-directory: prototype/knowledge-lab
         run: node scripts/verify-localization.mjs
+
+      - name: Verify SP Assistant prototype
+        working-directory: prototype/sp-assistant
+        run: node scripts/verify-prototype.mjs
 
       - name: Build Knowledge Lab standalone artifact
         working-directory: prototype/knowledge-lab

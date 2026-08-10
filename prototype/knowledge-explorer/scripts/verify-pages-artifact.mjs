@@ -33,6 +33,10 @@ const approved = new Set([
   "knowledge-lab/assets/data/mock-workspace.json",
   "knowledge-lab/assets/i18n/th.json",
   "knowledge-lab/assets/i18n/en.json",
+  "sp-assistant/index.html",
+  "sp-assistant/deployment.json",
+  "sp-assistant/assets/app.js",
+  "sp-assistant/assets/styles.css",
 ]);
 
 const walk = async (directory) => {
@@ -51,8 +55,8 @@ export const verifyArtifact = async (root) => {
   const resolvedRoot = resolve(root);
   const files = await walk(resolvedRoot);
   const relativeFiles = files.map((path) => relative(resolvedRoot, path).split(sep).join("/"));
-  if (relativeFiles.length !== 46 || approved.size !== 46) {
-    throw new Error("Pages artifact must contain exactly 46 approved files");
+  if (relativeFiles.length !== 50 || approved.size !== 50) {
+    throw new Error("Pages artifact must contain exactly 50 approved files");
   }
   const unexpected = relativeFiles.filter((path) => !approved.has(path));
   const missing = [...approved].filter((path) => !relativeFiles.includes(path));
@@ -164,15 +168,26 @@ export const verifyArtifact = async (root) => {
     throw new Error("Knowledge Lab deployment metadata is unsafe or incomplete");
   }
 
+  const assistant = await readFile(resolve(resolvedRoot, "sp-assistant", "index.html"), "utf8");
+  for (const requirement of ["SP Assistant", "วันนี้พบปัญหาอะไรในแปลง?", "เพิ่มรูปภาพ", "ยังไม่อัปโหลดหรือจัดเก็บรูปภาพ", "ไม่ใช่คำวินิจฉัยหรือคำแนะนำ", "../knowledge-explorer/rice-disease-corpus.html", '<meta name="robots" content="noindex,nofollow">']) {
+    if (!assistant.includes(requirement)) throw new Error(`SP Assistant lost product boundary: ${requirement}`);
+  }
+  const assistantApp = await readFile(resolve(resolvedRoot, "sp-assistant", "assets", "app.js"), "utf8");
+  for (const prohibited of ["fetch(", "XMLHttpRequest", "WebSocket", "sendBeacon", "localStorage", "sessionStorage", "indexedDB", "FileReader"]) {
+    if (assistantApp.includes(prohibited)) throw new Error(`SP Assistant contains prohibited network or persistence capability: ${prohibited}`);
+  }
+  const assistantMetadata = JSON.parse(await readFile(resolve(resolvedRoot, "sp-assistant", "deployment.json"), "utf8"));
+  if (assistantMetadata.deployment_mode !== "preview" || assistantMetadata.prototype !== "sp-assistant" || assistantMetadata.status !== "local-demo-not-published" || !/^[0-9a-f]{40}$/.test(assistantMetadata.commit)) throw new Error("SP Assistant deployment metadata is unsafe or incomplete");
+
   const landing = await readFile(resolve(resolvedRoot, "index.html"), "utf8");
   for (const requirement of [
     '<html lang="th">',
     'href="knowledge-explorer/"',
     'href="knowledge-lab/"',
+    'href="sp-assistant/"',
     'href="https://github.com/Adammetaa/CP-MoAKB"',
-    "ตัวอย่างต้นแบบ",
-    "เนื้อหาสมมติ",
-    "ไม่ใช่ระบบ",
+    "SP Assistant",
+    "ไม่มีการอัปโหลดหรือจัดเก็บรูป",
     "ไม่ใช่คำวินิจฉัยหรือคำแนะนำ",
     "สำหรับอ่านและสำรวจองค์ความรู้ที่ได้รับอนุมัติ",
     "ต้นแบบพื้นที่สร้าง ตรวจ และพิจารณา Knowledge Candidate",
@@ -190,6 +205,7 @@ export const verifyArtifact = async (root) => {
   const robots = await readFile(resolve(resolvedRoot, "robots.txt"), "utf8");
   if (!robots.includes("Disallow: /CP-MoAKB/knowledge-explorer/")) throw new Error("robots.txt does not block Explorer indexing");
   if (!robots.includes("Disallow: /CP-MoAKB/knowledge-lab/")) throw new Error("robots.txt does not block Knowledge Lab indexing");
+  if (!robots.includes("Disallow: /CP-MoAKB/sp-assistant/")) throw new Error("robots.txt does not block SP Assistant indexing");
   return relativeFiles.sort();
 };
 

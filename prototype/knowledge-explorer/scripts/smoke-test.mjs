@@ -39,8 +39,15 @@ const base = `http://127.0.0.1:${address.port}${prefix}`;
 
 try {
   const landing = await (await fetch(base)).text();
-  if (!landing.includes('href="knowledge-explorer/"') || !landing.includes('href="knowledge-lab/"')) {
-    throw new Error("Root landing does not link both prototypes");
+  if (!landing.includes('href="sp-assistant/"') || !landing.includes('href="knowledge-explorer/"') || !landing.includes('href="knowledge-lab/"')) {
+    throw new Error("Root landing does not link all three prototypes");
+  }
+
+  const assistantResponse = await fetch(`${base}sp-assistant/`);
+  if (!assistantResponse.ok) throw new Error(`SP Assistant failed with ${assistantResponse.status}`);
+  const assistant = await assistantResponse.text();
+  for (const requirement of ["SP Assistant", "วันนี้พบปัญหาอะไรในแปลง?", "เพิ่มรูปภาพ", "ไม่ใช่คำวินิจฉัยหรือคำแนะนำ"]) {
+    if (!assistant.includes(requirement)) throw new Error(`SP Assistant missing ${requirement}`);
   }
 
   for (const page of explorerPages) {
@@ -108,6 +115,9 @@ try {
     "knowledge-lab/assets/i18n/th.json",
     "knowledge-lab/assets/i18n/en.json",
     "knowledge-lab/deployment.json",
+    "sp-assistant/assets/styles.css",
+    "sp-assistant/assets/app.js",
+    "sp-assistant/deployment.json",
   ]) {
     const response = await fetch(`${base}${asset}`);
     if (!response.ok) throw new Error(`${asset} failed with ${response.status}`);

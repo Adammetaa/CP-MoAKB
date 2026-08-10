@@ -89,10 +89,11 @@ def test_root_landing_links_both_prototypes_without_javascript() -> None:
     assert '<html lang="th">' in landing
     assert 'href="knowledge-explorer/"' in landing
     assert 'href="knowledge-lab/"' in landing
+    assert 'href="sp-assistant/"' in landing
     assert 'href="https://github.com/Adammetaa/CP-MoAKB"' in landing
     assert "สำหรับอ่านและสำรวจองค์ความรู้ที่ได้รับอนุมัติ" in landing
     assert "ต้นแบบพื้นที่สร้าง ตรวจ และพิจารณา Knowledge Candidate" in landing
-    assert "ไม่ใช่ระบบ" in landing
+    assert "ไม่มีระบบหลังบ้าน" in landing
     assert "ไม่ใช่คำวินิจฉัยหรือคำแนะนำ" in landing
     assert "<script" not in landing
     assert not re.search(r"http-equiv\s*=\s*['\"]refresh", landing, re.IGNORECASE)
@@ -100,7 +101,7 @@ def test_root_landing_links_both_prototypes_without_javascript() -> None:
 
 def test_exact_combined_artifact_allowlist_contains_all_lab_pages() -> None:
     verifier = _verifier()
-    assert "exactly 46 approved files" in verifier
+    assert "exactly 50 approved files" in verifier
     for page in LAB_PAGES:
         assert page in verifier
     for asset in (

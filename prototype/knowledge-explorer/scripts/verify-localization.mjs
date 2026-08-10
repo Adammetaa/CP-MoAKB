@@ -177,7 +177,7 @@ export const verifyLocalization = async () => {
   const landing = await readFile(resolve(root, "deployment", "root-index.html"), "utf8");
   if (!landing.includes('<html lang="th">')) failures.push("root landing: Thai document language missing");
   if (!/[\u0E00-\u0E7F]/.test(landing.match(/<title>(.*?)<\/title>/s)?.[1] ?? "") || !/[\u0E00-\u0E7F]/.test(landing.match(/<h1>(.*?)<\/h1>/s)?.[1] ?? "")) failures.push("root landing: Thai-first title or heading missing");
-  for (const requirement of ['href="knowledge-explorer/"', 'href="https://github.com/Adammetaa/CP-MoAKB"', "ตัวอย่างต้นแบบ", "เนื้อหาสมมติ", "ไม่ใช่ระบบ", "ไม่ใช่คำวินิจฉัยหรือคำแนะนำ"]) {
+  for (const requirement of ['href="sp-assistant/"', 'href="knowledge-explorer/"', 'href="knowledge-lab/"', 'href="https://github.com/Adammetaa/CP-MoAKB"', "SP Assistant", "ไม่มีการอัปโหลดหรือจัดเก็บรูป", "ไม่มีระบบหลังบ้าน", "ไม่ใช่คำวินิจฉัยหรือคำแนะนำ"]) {
     if (!landing.includes(requirement)) failures.push(`root landing: missing ${requirement}`);
   }
   if (/<script\b|http-equiv\s*=\s*["']refresh|(?:window\.)?location\s*=/i.test(landing)) failures.push("root landing: automatic redirect or JavaScript found");

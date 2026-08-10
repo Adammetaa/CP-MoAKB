@@ -4,8 +4,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="index,follow">
-  <meta name="description" content="หน้าตัวอย่างต้นแบบภาษาไทยของ CP-MoAKB พร้อมทางเข้าสู่ Knowledge Explorer และ Knowledge Lab ซึ่งใช้เนื้อหาสมมติและไม่ใช่ระบบใช้งานจริง">
-  <title>ตัวอย่างต้นแบบ CP-MoAKB · Explorer และ Knowledge Lab</title>
+  <meta name="description" content="หน้าตัวอย่างต้นแบบภาษาไทยของ CP-MoAKB พร้อมทางเข้าสู่ SP Assistant, Knowledge Explorer และ Knowledge Lab">
+  <title>SP Assistant · ตัวอย่างต้นแบบ CP-MoAKB</title>
   <style>
     :root { color-scheme: light; font-family: system-ui, "Leelawadee UI", Tahoma, sans-serif; color: #13251d; background: #f3f1e9; }
     * { box-sizing: border-box; }
@@ -17,21 +17,28 @@
     a { color: #175e47; font-weight: 750; text-underline-offset: 3px; }
     a:focus-visible { outline: 3px solid #175ca6; outline-offset: 4px; }
     .notice { margin: 26px 0; padding: 17px; border-left: 4px solid #9a4d2e; border-radius: 4px 12px 12px 4px; background: #f7e6de; color: #6d3b28; }
-    .paths { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin: 28px 0; }
+    .paths { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin: 28px 0; }
     .path { display: flex; flex-direction: column; min-height: 210px; padding: 22px; border: 1px solid #d8d9cf; border-radius: 16px; background: #f8f8f3; }
     .path p { margin-bottom: 20px; }
     .path a { margin-top: auto; min-height: 44px; display: inline-flex; align-items: center; }
+    .path.primary { border-color: #d4a017; background: #edf6ef; box-shadow: 0 12px 28px rgba(22,92,59,.09); }
+    .path.primary a { color: white; justify-content: center; border-radius: 10px; background: #165c3b; text-decoration: none; }
     .repository { margin-top: 24px; }
-    @media (max-width: 680px) { .paths { grid-template-columns: 1fr; } }
+    @media (max-width: 820px) { .paths { grid-template-columns: 1fr; } }
   </style>
 </head>
 <body>
   <main>
     <p>CP-MoAKB · ตัวอย่างโครงการสาธารณะ</p>
-    <h1>หลักฐานมาก่อนองค์ความรู้</h1>
-    <p>CP-MoAKB เป็นโครงการโอเพนซอร์สที่พัฒนารากฐานวิศวกรรมแบบกำหนดผลแน่นอนและธรรมาภิบาลองค์ความรู้</p>
-    <div class="notice"><strong>ประกาศต้นแบบ:</strong> หน้านี้เชื่อมไปยังตัวอย่างต้นแบบที่ใช้เนื้อหาสมมติ ไม่ใช่ระบบสำหรับใช้งานจริง ไม่ใช่ซอฟต์แวร์เวิร์กโฟลว์ และไม่ใช่คำวินิจฉัยหรือคำแนะนำ</div>
+    <h1>เริ่มงานภาคสนามกับ SP Assistant</h1>
+    <p>เล่าปัญหาในแปลง เพิ่มรูปชั่วคราว และดูขั้นตอนการตรวจสอบก่อนสรุป โดยใช้องค์ความรู้ที่ผ่านการกำกับดูแลจาก CP-MoAKB</p>
+    <div class="notice"><strong>ประกาศต้นแบบ:</strong> ไม่มีการอัปโหลดหรือจัดเก็บรูป ไม่มีระบบหลังบ้าน และไม่ใช่คำวินิจฉัยหรือคำแนะนำ</div>
     <div class="paths">
+      <section class="path primary">
+        <h2>SP Assistant</h2>
+        <p>พื้นที่ทำงานหลักแบบสนทนาสำหรับเล่าปัญหาในแปลง เพิ่มรูปในเบราว์เซอร์ และดูคำถามที่ควรตรวจต่อ</p>
+        <a href="sp-assistant/">เปิด SP Assistant</a>
+      </section>
       <section class="path">
         <h2>Knowledge Explorer</h2>
         <p>สำหรับอ่านและสำรวจองค์ความรู้ที่ได้รับอนุมัติในประสบการณ์ต้นแบบแบบ read-side</p>

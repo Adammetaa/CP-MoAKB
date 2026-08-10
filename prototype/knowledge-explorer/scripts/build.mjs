@@ -9,6 +9,8 @@ const output = resolve(root, "dist", "pages-root");
 const explorerOutput = resolve(output, "knowledge-explorer");
 const labRoot = resolve(root, "..", "knowledge-lab");
 const labOutput = resolve(output, "knowledge-lab");
+const assistantRoot = resolve(root, "..", "sp-assistant");
+const assistantOutput = resolve(output, "sp-assistant");
 const pages = [
   "index.html",
   "search.html",
@@ -109,6 +111,7 @@ await verifyLocalization();
 await rm(resolve(root, "dist"), { recursive: true, force: true });
 await mkdir(explorerOutput, { recursive: true });
 await mkdir(labOutput, { recursive: true });
+await mkdir(assistantOutput, { recursive: true });
 await cp(resolve(root, "deployment", "root-index.html"), resolve(output, "index.html"));
 await cp(resolve(root, "deployment", "robots.txt"), resolve(output, "robots.txt"));
 for (const page of pages) await cp(resolve(root, page), resolve(explorerOutput, page));
@@ -144,8 +147,15 @@ await writeFile(
   `${JSON.stringify({ deployment_mode: "preview", prototype: "knowledge-lab", commit, package_version: packageVersion, status: "fictional-placeholder" }, null, 2)}\n`,
   "utf8",
 );
+await cp(resolve(assistantRoot, "index.html"), resolve(assistantOutput, "index.html"));
+await cp(resolve(assistantRoot, "assets"), resolve(assistantOutput, "assets"), { recursive: true });
+await writeFile(
+  resolve(assistantOutput, "deployment.json"),
+  `${JSON.stringify({ deployment_mode: "preview", prototype: "sp-assistant", commit, package_version: packageVersion, status: "local-demo-not-published" }, null, 2)}\n`,
+  "utf8",
+);
 
 const files = await verifyArtifact(output);
-console.log(`Combined Pages artifact built: ${pages.length} Explorer pages, ${labPages.length} Lab pages, ${files.length} approved files`);
+console.log(`Combined Pages artifact built: 1 SP Assistant page, ${pages.length} Explorer pages, ${labPages.length} Lab pages, ${files.length} approved files`);
 console.log(`Deployment identity: ${commit}`);
 console.log("Boundary verified: fictional placeholder preserved; governed Batch 001, Rice Disease Wave 1, and Rice Disease Corpus not published; no backend or Runtime");
