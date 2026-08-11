@@ -42,6 +42,15 @@
       locator: "DOA Agri Factor description; registration-number and Buddhist-year lookup",
       dateContext: "current official web guidance at retrieval",
     },
+    doaInsectGuidance: {
+      id: "GS-DOA-PPD-INSECT-GUIDANCE-2023-001/v1",
+      authority: "Plant Protection Research and Development Office, Department of Agriculture, Thailand",
+      url: "https://www.doa.go.th/plprotect/wp-content/uploads/2023/12/%E0%B8%84%E0%B8%B3%E0%B9%81%E0%B8%99%E0%B8%B0%E0%B8%99%E0%B8%B3%E0%B8%81%E0%B8%B2%E0%B8%A3%E0%B9%83%E0%B8%8A%E0%B9%89%E0%B8%AA%E0%B8%B2%E0%B8%A3%E0%B8%86%E0%B9%88%E0%B8%B2%E0%B9%81%E0%B8%A1%E0%B8%A5%E0%B8%87%E0%B8%AA%E0%B8%B1%E0%B8%95%E0%B8%A7%E0%B9%8C%E0%B8%A8%E0%B8%B1%E0%B8%95%E0%B8%A3%E0%B8%B9%E0%B8%9E%E0%B8%B7%E0%B8%8A%E0%B8%AD%E0%B8%A2%E0%B9%88%E0%B8%B2%E0%B8%87%E0%B8%9B%E0%B8%A5%E0%B8%AD%E0%B8%94%E0%B8%A0%E0%B8%B1%E0%B8%A21.pdf",
+      retrievalDate: "2026-08-11",
+      locator: "rice entries headed เพลี้ยกระโดดสีน้ำตาล and หนอนห่อใบข้าว",
+      authorityRoles: ["CROP_AUTHORITY", "TARGET_AUTHORITY", "USE_PATTERN_AUTHORITY"],
+      limitation: "No product registration number or stable registration-record identifier is exposed; ingredient wording is not a safe join key.",
+    },
   });
 
   const actionEvidence = Object.freeze({
@@ -128,5 +137,20 @@
     sources: [sources.doaRegistry, sources.doaAgriFactor],
   });
 
-  window.SPDecisionAuthority = Object.freeze({ version: "action-crop-target-use-authority/v1", sources, actionEvidence, unresolved, registration });
+  const eligibilityStates = Object.freeze(["NO_REGULATORY_EVIDENCE", "REGISTRATION_IDENTITY_MATCH_ONLY", "REGULATORY_RELATIONSHIP_AMBIGUOUS", "REGISTRATION_STATUS_UNRESOLVED", "ELIGIBLE_FOR_DECISION_REVIEW", "HUMAN_REVIEW_REQUIRED"]);
+  function evaluateRegulatoryChain(chain = {}) {
+    if (!chain.officialEvidence) return "NO_REGULATORY_EVIDENCE";
+    if (chain.humanReviewRequired) return "HUMAN_REVIEW_REQUIRED";
+    if (!chain.crop || !chain.target || !chain.useContext) return chain.identity ? "REGISTRATION_IDENTITY_MATCH_ONLY" : "REGULATORY_RELATIONSHIP_AMBIGUOUS";
+    if (!chain.recordIdentifier || !chain.defensibleJoinKey || !chain.identity) return "REGULATORY_RELATIONSHIP_AMBIGUOUS";
+    if (chain.registrationStatus !== "CURRENTLY_REGISTERED") return "REGISTRATION_STATUS_UNRESOLVED";
+    return "ELIGIBLE_FOR_DECISION_REVIEW";
+  }
+  const priorityRegulatoryReview = Object.freeze({
+    "brown-planthopper": { sourceCrop: "ข้าว", sourceTarget: "เพลี้ยกระโดดสีน้ำตาล", source: sources.doaInsectGuidance, identity: true, crop: true, target: true, useContext: true, officialEvidence: true, recordIdentifier: null, defensibleJoinKey: false, registrationStatus: "UNRESOLVED", status: "REGULATORY_RELATIONSHIP_AMBIGUOUS", gaps: ["REGULATORY_JOIN_GAP", "REGISTRATION_STATUS_GAP"] },
+    leaffolder: { sourceCrop: "ข้าว", sourceTarget: "หนอนห่อใบข้าว", source: sources.doaInsectGuidance, identity: true, crop: true, target: true, useContext: true, officialEvidence: true, recordIdentifier: null, defensibleJoinKey: false, registrationStatus: "UNRESOLVED", status: "REGULATORY_RELATIONSHIP_AMBIGUOUS", gaps: ["REGULATORY_JOIN_GAP", "REGISTRATION_STATUS_GAP"] },
+    blast: { sourceCrop: "ข้าว", sourceTarget: "โรคไหม้", officialEvidence: false, identity: true, crop: false, target: false, useContext: false, recordIdentifier: null, defensibleJoinKey: false, registrationStatus: "UNRESOLVED", status: "REGISTRATION_IDENTITY_MATCH_ONLY", gaps: ["REGULATORY_SOURCE_GAP", "REGULATORY_JOIN_GAP", "REGISTRATION_STATUS_GAP"] },
+  });
+
+  window.SPDecisionAuthority = Object.freeze({ version: "action-crop-target-use-authority/v1", chemicalEligibilityVersion: "chemical-eligibility-authority/v1", sources, actionEvidence, unresolved, registration, eligibilityStates, evaluateRegulatoryChain, priorityRegulatoryReview });
 })();

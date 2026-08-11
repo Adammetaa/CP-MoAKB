@@ -79,12 +79,16 @@
     const nextGap = candidateGates.filter((gate) => !gate.contradicting.length).flatMap((gate) => gate.missing.map((item) => ({ ...item, candidate: gate.name })))[0];
     const actionDecision = evaluateAction(candidateGates, caseInput.measurements || {});
     actionDecision.basis = actionDecision.explanation;
-    const registration = window.SPDecisionAuthority?.registration;
+    const authority = window.SPDecisionAuthority;
+    const registration = authority?.registration;
+    const regulatoryReview = actionDecision.subject ? authority?.priorityRegulatoryReview?.[actionDecision.subject] : null;
+    const regulatoryStatus = regulatoryReview ? authority.evaluateRegulatoryChain(regulatoryReview) : registration?.status ?? "NO_REGULATORY_EVIDENCE";
+    const chemicalGate = actionDecision.status === "MANAGEMENT_REVIEW_JUSTIFIED" && regulatoryStatus === "ELIGIBLE_FOR_DECISION_REVIEW" ? "CHEMICAL_OPTIONS_READY_FOR_DECISION_REVIEW" : "CHEMICAL_REVIEW_BLOCKED";
     const managementStatus = failedControl ? "HUMAN_REVIEW_REQUIRED" : actionDecision.status === "MANAGEMENT_REVIEW_JUSTIFIED" ? "MANAGEMENT_REVIEW_JUSTIFIED" : actionDecision.status === "MORE_EVIDENCE_REQUIRED" ? "MORE_EVIDENCE_REQUIRED" : "MANAGEMENT_REMAINS_BLOCKED";
     return {
       model: "bounded-case-projection/v1", evidenceRoles: Object.values(ROLES), candidateGates, severity,
       needForAction: actionDecision,
-      management: { status: managementStatus, chemicalGate: registration?.chemicalGate ?? "CHEMICAL_REVIEW_BLOCKED", chemicalRecommendation: "BLOCKED", eligibleOptions: registration?.eligibleOptions ?? [], registrationStatus: registration?.status ?? "REGISTRATION_AUTHORITY_UNAVAILABLE", limitation: `${registration?.status ?? "REGISTRATION_AUTHORITY_UNAVAILABLE"} · ${registration?.chemicalGate ?? "CHEMICAL_REVIEW_BLOCKED"} · ${registration?.limitation ?? "Crop–Target–Use–Registration authority ยังไม่สมบูรณ์; ไม่เลือกสาร ผลิตภัณฑ์ อัตรา หรือโปรแกรมพ่น"}` },
+      management: { status: managementStatus, chemicalGate, chemicalRecommendation: "BLOCKED", eligibleOptions: registration?.eligibleOptions ?? [], registrationStatus: regulatoryStatus, limitation: `${regulatoryStatus} · ${chemicalGate} · ${registration?.limitation ?? "Crop–Target–Use–Registration authority ยังไม่สมบูรณ์; ไม่เลือกสาร ผลิตภัณฑ์ อัตรา หรือโปรแกรมพ่น"}` },
       humanReview: { required: expertRequired, reasons: [failedControl ? "failed-control investigation" : null, candidateGates.some((gate) => gate.domain === "Disease") ? "causal confirmation unavailable in website" : null, candidateGates.some((gate) => gate.alternativesUnresolved) ? "distinguishing evidence or alternatives unresolved" : null].filter(Boolean) },
       nextBestEvidence: nextGap ? { action: "ASK_OBSERVATION", cue: nextGap.cue, label: nextGap.label, candidate: nextGap.candidate, reason: "ข้อมูลนี้เป็น REQUIRED_TO_DISTINGUISH และเปลี่ยนผลของ Identification Gate ได้" } : { action: "EXPERT_REVIEW", reason: "ไม่มี gap ที่ระบบมีคำถามรองรับเพิ่มเติม หรือการยืนยันต้องใช้ผู้เชี่ยวชาญ" },
       boundaries: ["Candidate ≠ Diagnosis", "Severity ≠ Need-for-Action", "Need-for-Action ≠ pesticide recommendation", "Weather alone cannot escalate identification", "Nearby Case cannot escalate identification", "Photo received ≠ Photo analyzed", "CONTROL FAILURE ≠ RESISTANCE"],
