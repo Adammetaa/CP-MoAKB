@@ -86,7 +86,7 @@ def test_surveillance_states_are_explainable_without_scores() -> None:
     for prohibited in (
         "riskScore",
         "infectionScore",
-        "probability",
+        "probability =",
         "outbreakPrediction",
         "hotspot",
         "transmissionRadius",

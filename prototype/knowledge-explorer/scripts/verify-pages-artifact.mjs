@@ -206,6 +206,9 @@ export const verifyArtifact = async (root) => {
   for (const surveillanceBoundary of ["demoFieldCases", "haversineDistanceKm", "ระยะค้นหาเป็นตัวกรองการแสดงผล", "NEARBY ≠ RELATED", "CASE CLUSTER ≠ OUTBREAK"]) {
     if (!assistantApp.includes(surveillanceBoundary)) throw new Error(`SP Assistant lost browser-local surveillance boundary: ${surveillanceBoundary}`);
   }
+  for (const conversationBoundary of ["guidedQuestionControls", "nextBestAction", "answerRecords", "conversationHistory", "Photo received ≠ Photo analyzed", "CONTROL FAILURE ≠ RESISTANCE", "โหมดทดสอบภาคสนาม"]) {
+    if (!assistantApp.includes(conversationBoundary)) throw new Error(`SP Assistant lost guided-conversation boundary: ${conversationBoundary}`);
+  }
   const assistantMetadata = JSON.parse(await readFile(resolve(resolvedRoot, "sp-assistant", "deployment.json"), "utf8"));
   if (assistantMetadata.deployment_mode !== "preview" || assistantMetadata.prototype !== "sp-assistant" || assistantMetadata.status !== "local-demo-not-published" || !/^[0-9a-f]{40}$/.test(assistantMetadata.commit)) throw new Error("SP Assistant deployment metadata is unsafe or incomplete");
 

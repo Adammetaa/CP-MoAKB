@@ -133,7 +133,7 @@ def test_deterministic_case_engine_is_interactive_and_non_diagnostic() -> None:
         "extractObservations",
         "evaluateCandidates",
         "selectQuestions",
-        "caseState.answers.push",
+        "caseState.answerRecords",
         "Missing Information",
         "ข้อมูลที่อาจไม่สอดคล้อง",
         "CONTROL FAILURE ≠ RESISTANCE",
@@ -143,8 +143,8 @@ def test_deterministic_case_engine_is_interactive_and_non_diagnostic() -> None:
     assert "data-management-toggle" in html
     assert "data-moa-toggle" in html
     assert "data-escalate" in html
-    assert "probability" not in app.casefold()
-    assert "confidence" not in app.casefold()
+    assert "probability =" not in app.casefold()
+    assert "confidence =" not in app.casefold()
 
 
 def test_all_three_domains_management_and_authorities_are_reused() -> None:

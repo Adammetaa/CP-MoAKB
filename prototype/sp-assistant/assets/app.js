@@ -24,6 +24,14 @@ const fieldWatchResults = $("[data-field-watch-results]");
 let selectedImages = [];
 let caseState = null;
 
+const validationBadge = document.createElement("span");
+validationBadge.className = "validation-mode";
+validationBadge.textContent = "โหมดทดสอบภาคสนาม";
+document.querySelector(".topbar")?.append(validationBadge);
+$("[data-new-case]")?.addEventListener("click", (event) => {
+  if (caseState && !window.confirm("เริ่มเคสใหม่และล้างข้อมูลชั่วคราวของเคสปัจจุบันหรือไม่?")) event.stopImmediatePropagation();
+}, true);
+
 const commonMissionSteps = [
   { key: "field", title: "ภาพรวมพื้นที่", guide: "ถอยจากจุดที่พบอาการประมาณ 3–5 เมตร ถ่ายให้เห็นต้นที่มีอาการและต้นรอบข้างในภาพเดียว", inspect: "ดูรูปแบบการกระจายในแปลง", observations: [["ต้นเดียว/กอเดียว", "distribution_single"], ["หลายกอใกล้กัน", "distribution_nearby"], ["เป็นหย่อม", "field_distribution"], ["กระจายหลายจุด", "field_distribution"], ["ตามแนวแถว", "distribution_row"], ["ขอบแปลง", "distribution_edge"], ["ทั่วบริเวณ", "field_distribution"], ["ไม่แน่ใจ", "uncertain_distribution"]] },
   { key: "whole", title: "ทั้งต้น / ทั้งกอ", guide: "ถ่ายต้นหรือกอที่มีอาการให้เห็นตั้งแต่โคนถึงปลาย และให้เห็นต้นรอบข้าง", inspect: "เทียบตำแหน่งอาการและสภาพทั้งต้น", observations: [["ต้นเหลือง/เหี่ยว", "wilt"], ["ยอดแห้ง", "deadheart"], ["รวงขาว", "whitehead"], ["ยังไม่แน่ใจ", "uncertain_whole"]] },
@@ -133,6 +141,7 @@ function evaluateCandidates(observations) {
 
 function selectQuestions(observations, activeCandidates) {
   const keys = [];
+  if (observations.includes("failed_control")) return ["chemical_history", "spray"].filter((key) => !caseState.answerRecords?.[key]).map((key) => ({ key, text: questionBank[key] }));
   if (!observations.includes("rice_age")) keys.push("rice_age");
   if (observations.includes("spot")) keys.push("lesion_shape");
   if (!observations.includes("field_distribution")) keys.push("field_distribution");
@@ -140,7 +149,7 @@ function selectQuestions(observations, activeCandidates) {
   if (activeCandidates.some((item) => item.domain === "Insect") && !observations.includes("pest_seen")) keys.push("pest_seen");
   if (activeCandidates.some((item) => item.domain === "Weed")) keys.push("water");
   if (observations.includes("failed_control")) keys.push("chemical_history", "spray");
-  return [...new Set(keys)].slice(0, 5).map((key) => ({ key, text: questionBank[key] }));
+  return [...new Set(keys)].filter((key) => !caseState.answerRecords?.[key]).slice(0, 5).map((key) => ({ key, text: questionBank[key] }));
 }
 
 function renderCandidate(candidate) {
@@ -156,6 +165,54 @@ function renderEnvironmentalContext(candidate) {
   return `<section class="environmental-context"><p class="eyebrow">Environmental / Transmission projection</p><h2>บริบทที่ควรตรวจเพิ่มเติม</h2><div class="investigation-grid"><section><h3>การแพร่ที่ควรพิจารณา</h3><p>${profile.pathway}</p></section><section><h3>ปัจจัยแวดล้อมที่เกี่ยวข้อง</h3><p>${profile.factors}</p></section><section><h3>ปัจจัยอากาศที่ควรติดตาม</h3><p>${profile.weather}</p></section><section><h3>สิ่งที่ควรตรวจในพื้นที่ใกล้เคียง</h3><p>${profile.surveillance}</p></section></div><p class="source-summary"><strong>Evidence:</strong> ${profile.evidence} · <strong>Distance:</strong> ${profile.distance}</p><p class="boundary-copy">สภาพที่เอื้อ ≠ การแพร่ · Vector present ≠ plant infected · Field pattern ≠ Diagnosis · ไม่มี live weather หรือ nearby-case lookup</p></section>`;
 }
 
+const guidedQuestionControls = {
+  rice_age: { type: "number", label: "อายุข้าวประมาณกี่วัน?", why: "อายุข้าวช่วยจัดบริบทระยะพืช แต่ไม่ยืนยันสาเหตุ" },
+  lesion_shape: { type: "chips", label: "ลักษณะแผลใกล้เคียงแบบไหน?", why: "รูปร่างแผลช่วยแยกสิ่งที่ควรตรวจต่อ แต่ไม่ยืนยันโรค", options: [["จุดกลมหรือรี", "จุดกลมหรือรี"], ["แผลยาว/กระสวย", "แผลรูปตาหรือกระสวย"], ["แผลเป็นขีด", "แผลเป็นขีด"], ["ดูไม่แน่ใจ", "ไม่แน่ใจ"]] },
+  field_distribution: { type: "chips", label: "อาการกระจายแบบไหน?", why: "รูปแบบการกระจายช่วยกำหนดจุดตรวจในแปลง", options: [["ไม่กี่ต้น", "ไม่กี่ต้น"], ["เป็นหย่อม", "เป็นหย่อม"], ["หลายจุดทั่วแปลง", "กระจายหลายจุดทั่วแปลง"], ["เกือบทั้งแปลง", "เกือบทั้งแปลง"], ["ไม่แน่ใจ", "ไม่แน่ใจ"]] },
+  rain: { type: "chips", label: "ช่วงก่อนพบอาการมีฝนหรือความชื้นที่สังเกตได้ไหม?", why: "นี่เป็น Field Observation แยกจากข้อมูล Weather API", options: [["มีฝน/ชื้น", "มีฝนและสภาพชื้น"], ["ไม่มี", "ไม่พบฝนหรือความชื้น"], ["ไม่แน่ใจ", "ไม่แน่ใจ"]] },
+  pest_seen: { type: "chips", label: "พบตัวแมลง หนอน ไข่ หรือรอยกินไหม?", why: "การพบแมลงช่วยกำหนดจุดตรวจ แต่ไม่ยืนยันชนิดหรือสาเหตุ", options: [["พบตัวแมลง", "พบแมลง"], ["พบหนอน", "พบหนอน"], ["พบรอยกิน", "พบรอยกิน"], ["ไม่พบ", "ไม่พบแมลง"], ["ไม่แน่ใจ", "ไม่แน่ใจ"]] },
+  water: { type: "chips", label: "สภาพน้ำในแปลงเป็นแบบไหน?", why: "สภาพน้ำเป็น Observation context ไม่ใช่คำวินิจฉัย", options: [["มีน้ำขัง", "มีน้ำขัง"], ["ชื้นแต่ไม่ขัง", "ชื้นแต่ไม่ขัง"], ["ค่อนข้างแห้ง", "แปลงค่อนข้างแห้ง"], ["ไม่แน่ใจ", "ไม่แน่ใจ"]] },
+  chemical_history: { type: "select", label: "สารที่ใช้ล่าสุดอยู่ในกลุ่มใด?", why: "ใช้ตรวจประวัติการควบคุม ไม่ใช้สรุปการดื้อยา", options: [["", "เลือกเท่าที่ทราบ"], ["fungicide", "สารป้องกันกำจัดโรคพืช"], ["insecticide", "สารป้องกันกำจัดแมลง"], ["herbicide", "สารกำจัดวัชพืช"], ["unknown", "จำชื่อหรือกลุ่มไม่ได้"]] },
+  spray: { type: "chips", label: "การใช้ครั้งล่าสุดเป็นอย่างไร?", why: "ตรวจ timing, application และ environment ก่อนตั้งสมมติฐาน resistance", options: [["ตามฉลาก", "ใช้ตามฉลาก"], ["ไม่แน่ใจอัตรา", "ไม่แน่ใจอัตรา"], ["ฝนหลังใช้", "มีฝนหลังใช้"], ["ไม่แน่ใจ", "ไม่แน่ใจ"]] },
+};
+
+function investigationProgress() {
+  if (!caseState.observations.length) return "เริ่มตรวจสอบ";
+  if (!caseState.candidates.length) return "กำลังรวบรวมข้อมูล";
+  if (caseState.questions.length) return "ยังมีจุดสำคัญที่ต้องตรวจ";
+  if (caseState.guidedObservations.length || caseState.photoMission) return "ข้อมูลภาคสนามค่อนข้างครบสำหรับส่งตรวจทาน";
+  return "มีข้อมูลพอเปรียบเทียบ Candidate";
+}
+
+function evidenceCompleteness() {
+  if (!caseState.candidates.length) return "ข้อมูลยังไม่พอสำหรับสรุป";
+  if (caseState.questions.length) return "มีข้อมูลพอสำหรับเปรียบเทียบสาเหตุที่ควรตรวจต่อ";
+  return "ข้อมูลภาคสนามค่อนข้างครบสำหรับส่งตรวจทาน";
+}
+
+function nextBestAction() {
+  if (caseState.lastAnswerUncertain) return { type: "START_PHOTO_MISSION", label: "จุดนี้ถ่ายภาพเพิ่มจะช่วยตรวจต่อได้ครับ", action: "เริ่ม Photo Mission" };
+  if (caseState.questions[0]) return { type: "ASK_QUESTION", question: caseState.questions[0] };
+  if (!caseState.observationTime.value) return { type: "REQUEST_FIELD_CONTEXT", label: "เพิ่มเวลาที่ตรวจแปลงและบริบทข้าว", action: "เพิ่มข้อมูลแปลง" };
+  if (!["captured", "deferred"].includes(caseState.location.status)) return { type: "REQUEST_LOCATION", label: "เพิ่มพิกัดแปลงเพื่อดู Weather และบริบทพื้นที่ใกล้เคียง", action: "เพิ่มตำแหน่ง (ไม่บังคับ)" };
+  if (!caseState.weatherContext) return { type: "OFFER_WEATHER_CONTEXT", label: "เคสนี้มีพิกัดและเวลาสังเกตแล้ว ต้องการดูสภาพอากาศประกอบหรือไม่?", action: "ตรวจสภาพอากาศ" };
+  if (!caseState.photoMission) return { type: "START_PHOTO_MISSION", label: "เก็บหลักฐานภาพและยืนยันสิ่งที่เห็นเพิ่มเติม", action: "เริ่ม Photo Mission" };
+  if (!caseState.nearbyFieldWatch) return { type: "OFFER_NEARBY_FIELD", label: "เคสนี้มีตำแหน่งแล้ว สามารถตรวจบริบทพื้นที่ใกล้เคียงได้", action: "เฝ้าระวังพื้นที่ใกล้เคียง" };
+  return { type: "REQUEST_EXPERT_HANDOFF", label: "ข้อมูลตอนนี้พร้อมพอสำหรับส่งให้ผู้เชี่ยวชาญตรวจทาน", action: "ดูสรุปก่อนส่ง" };
+}
+
+function renderQuestionControl(question) {
+  const control = guidedQuestionControls[question.key] || { type: "text", label: question.text, why: "คำตอบนี้ช่วยเติม Evidence gap ที่กำหนดไว้" };
+  if (control.type === "chips") return `<fieldset class="choice-chips"><legend>${control.label}</legend>${control.options.map(([label, value]) => `<label><input type="radio" name="guided-answer" value="${value}" data-question-key="${question.key}" required><span>${label}</span></label>`).join("")}</fieldset>`;
+  if (control.type === "select") return `<label class="guided-field">${control.label}<select name="guided-answer" data-question-key="${question.key}" required>${control.options.map(([value, label]) => `<option value="${value}">${label}</option>`).join("")}</select></label>`;
+  if (control.type === "number") return `<label class="guided-field">${control.label}<input type="number" inputmode="numeric" min="1" max="365" name="guided-answer" data-question-key="${question.key}" placeholder="เช่น 60" required></label>`;
+  return `<label class="guided-field">${control.label}<input name="guided-answer" data-question-key="${question.key}" required></label>`;
+}
+
+function renderConversationHistory() {
+  return caseState.conversationHistory.map((item, index) => `<li class="history-${item.role.toLowerCase().replaceAll(" ", "-")}"><strong>${item.role}</strong><span>${escapeHtml(item.text)}</span>${item.questionKey ? `<button type="button" data-correct-answer="${item.questionKey}" aria-label="แก้ไขคำตอบ ${escapeHtml(item.text)}">แก้ไขคำตอบ</button>` : ""}</li>`).join("");
+}
+
 function render() {
   const { observations, age } = extractObservations(caseState.userText + " " + caseState.answers.join(" "));
   caseState.observations = observations;
@@ -166,30 +223,93 @@ function render() {
   const stateLabel = caseState.candidates.length ? (caseState.candidates.some((item) => item.contradictions.length) ? "พบข้อมูลที่ขัดแย้ง" : "มีองค์ความรู้ที่เกี่ยวข้องหลายหัวข้อ") : "ข้อมูลยังไม่พอ";
   const failed = observations.includes("failed_control");
   output.innerHTML = `<article class="message assistant-message"><span class="avatar">SP</span><div class="investigation-response"><div class="response-heading"><div><p class="eyebrow">จากเงื่อนไขที่ตรวจพบ</p><h2>${stateLabel}</h2></div><span class="status-pill">ยังไม่ยืนยันสาเหตุ</span></div><div class="investigation-grid"><section><h3>Observation ที่รู้จัก</h3><p>${observations.length ? observations.map((item) => escapeHtml(item.replaceAll("_", " "))).join(" · ") : "ยังไม่พบ cue ที่กำหนดไว้"}</p></section><section><h3>ข้อความผู้ใช้</h3><p>${escapeHtml(freeText)}</p></section><section class="missing"><h3>Missing Information</h3><p>${caseState.questions.length ? caseState.questions.map((item) => item.text).join(" · ") : "ยังต้องตรวจหลักฐานภาคสนามและทบทวนโดยมนุษย์"}</p></section><section><h3>Case outcome</h3><p>${stateLabel} · ต้องตรวจเพิ่ม · ไม่มี Diagnosis</p></section></div>${failed ? `<div class="failed-control"><strong>CONTROL FAILURE ≠ RESISTANCE</strong><p>ตรวจ identification · stage/timing · application · environment · reinfestation · registration/use-pattern · MoA history ก่อนตั้งสมมติฐาน resistance</p></div>` : ""}<h2 class="candidate-heading">หัวข้อที่ควรตรวจต่อ</h2><p class="ordering-note">เรียงตามจำนวน cue ที่กฎตรวจพบเพื่อการทำงานเท่านั้น ไม่ใช่ความน่าจะเป็นหรือความเชื่อมั่น</p><div class="candidate-list">${caseState.candidates.length ? caseState.candidates.map(renderCandidate).join("") : `<p>ไม่พบ Knowledge ที่รองรับเพียงพอ ข้อความเดิมยังคงแสดงโดยไม่ตีความเพิ่ม</p>`}</div>${renderEnvironmentalContext(caseState.candidates[0])}<p class="boundary-copy">Candidate Knowledge ไม่ใช่ Diagnosis · Supporting evidence ไม่พิสูจน์สาเหตุ · Missing/contradicting evidence ต้องตรวจต่อ</p></div></article>`;
-  questionList.innerHTML = caseState.questions.map((question, index) => `<label><span>${escapeHtml(question.text)}</span><input name="answer-${index}" data-question-key="${question.key}" placeholder="ตอบเท่าที่ทราบ"></label>`).join("");
-  questionPanel.hidden = caseState.questions.length === 0;
+  const candidateDetails = caseState.candidates.length ? caseState.candidates.map(renderCandidate).join("") : "<p>ยังไม่มี Candidate ที่ข้อมูลรองรับเพียงพอ</p>";
+  output.innerHTML = `<article class="message assistant-message guided-response"><span class="avatar">SP</span><div><p class="acknowledgement">รับข้อมูลแล้วครับ</p><p class="progress-state">${investigationProgress()}</p><h2>ตอนนี้ควรทำอะไรต่อ?</h2><p>${evidenceCompleteness()} · ยังไม่ใช่ Diagnosis certainty</p>${failed ? `<p class="inline-warning"><strong>⚠️ CONTROL FAILURE ≠ RESISTANCE</strong><br>ก่อนสรุปเรื่องดื้อยา ต้องตรวจสาร เวลา วิธีใช้ สภาพแวดล้อม และการกลับเข้าทำลาย โดยไม่เพิ่มอัตราใช้จากระบบนี้</p>` : ""}<details class="guided-details"><summary>ดูข้อมูลที่ระบบมีแล้ว</summary><p>${observations.length ? observations.map((item) => escapeHtml(item.replaceAll("_", " "))).join(" · ") : "ยังไม่มี Observation ที่รู้จัก"}</p></details><details class="guided-details"><summary>ดูสิ่งที่ยังขาด</summary><p>${caseState.questions.map((item) => escapeHtml(item.text)).join(" · ") || "ไม่มีคำถามโครงสร้างที่ค้าง แต่ยังต้องทบทวนโดยมนุษย์"}</p></details><details class="guided-details"><summary>ดู Candidate Knowledge</summary><p class="ordering-note">การเรียงเป็นลำดับทำงาน ไม่ใช่ probability หรือ confidence</p><div class="candidate-list">${candidateDetails}</div>${renderEnvironmentalContext(caseState.candidates[0])}</details><details class="guided-details"><summary>ดูประวัติการสนทนาและแก้ไขคำตอบ</summary><ol class="conversation-history">${renderConversationHistory()}</ol></details><details class="guided-details"><summary>ตัวเลือกการจัดการในอนาคต</summary><p>เมื่อข้อมูลผ่านเกณฑ์การตรวจทาน ระบบจึงอาจพาไปยังขั้นตอนประเมินการจัดการ ความสามารถนี้ยังไม่เปิดใช้ และยังไม่มีการตรวจ Crop–Target–Use</p></details><p class="boundary-copy">Candidate Knowledge ≠ Diagnosis · Photo received ≠ Photo analyzed · Nearby ≠ Transmission</p></div></article>`;
+  const nextAction = nextBestAction();
+  const heading = questionPanel.querySelector("h2");
+  const questionIntro = questionPanel.querySelectorAll("p")[1];
+  if (questionIntro) questionIntro.textContent = "ตอบทีละ 1 จุด · ลำดับนี้เป็น workflow ไม่ใช่ความน่าจะเป็น";
+  const submit = questionPanel.querySelector('button[type="submit"]');
+  const skip = $("[data-skip]");
+  if (nextAction.type === "ASK_QUESTION") {
+    const control = guidedQuestionControls[nextAction.question.key] || { why: "คำตอบนี้ช่วยเติม Evidence gap ที่กำหนดไว้" };
+    heading.textContent = "ขอเช็กเพิ่มอีก 1 จุดครับ";
+    questionList.innerHTML = `${renderQuestionControl(nextAction.question)}<details class="question-why"><summary>ทำไมต้องถาม?</summary><p>${control.why}</p></details>`;
+    submit.hidden = false;
+    submit.textContent = "บันทึกคำตอบ";
+    skip.hidden = false;
+  } else {
+    heading.textContent = nextAction.label;
+    questionList.innerHTML = `<button type="button" class="button guided-primary-action" data-next-action="${nextAction.type}">${nextAction.action}</button>${nextAction.type === "REQUEST_LOCATION" ? '<button type="button" class="button secondary" data-next-action="SKIP_LOCATION">ยังไม่เพิ่ม</button>' : ""}`;
+    submit.hidden = true;
+    skip.hidden = true;
+  }
+  questionPanel.hidden = false;
   tools.hidden = false;
   $("[data-related-summary]").innerHTML = `<p><strong>${stateLabel}</strong></p><p>${caseState.candidates.map((item) => item.name).join(" · ") || "ยังไม่มี candidate"}</p>`;
   $("[data-case-label]").textContent = `CASE-${caseState.id}`;
+  document.querySelectorAll("[data-correct-answer]").forEach((button) => button.addEventListener("click", () => {
+    const key = button.dataset.correctAnswer;
+    delete caseState.answerRecords[key];
+    caseState.answers = Object.entries(caseState.answerRecords).map(([answerKey, record]) => `${answerKey}: ${record.value}`);
+    caseState.conversationHistory = caseState.conversationHistory.filter((item) => item.questionKey !== key);
+    caseState.lastAnswerUncertain = false;
+    render();
+    questionPanel.scrollIntoView({ behavior: "smooth", block: "center" });
+  }));
+  document.querySelectorAll("[data-next-action]").forEach((button) => button.addEventListener("click", () => handleNextAction(button.dataset.nextAction)));
+}
+
+function handleNextAction(action) {
+  if (!caseState) return;
+  if (action === "START_PHOTO_MISSION") { caseState.lastAnswerUncertain = false; caseState.conversationHistory.push({ role: "SYSTEM / EVIDENCE", text: "เปิด Guided Photo Mission · Photo received ≠ Photo analyzed" }); createPhotoMission(); return; }
+  if (action === "REQUEST_FIELD_CONTEXT") { caseContextPanel.hidden = false; renderCaseContext(); caseContextPanel.scrollIntoView({ behavior: "smooth", block: "start" }); return; }
+  if (action === "REQUEST_LOCATION") { caseContextPanel.hidden = false; renderCaseContext(); $("[data-location-request]").focus(); caseContextPanel.scrollIntoView({ behavior: "smooth", block: "start" }); return; }
+  if (action === "SKIP_LOCATION") { caseState.conversationHistory.push({ role: "USER", text: "ยังไม่เพิ่มตำแหน่ง" }); caseState.location.status = "deferred"; handleNextAction("START_PHOTO_MISSION"); return; }
+  if (action === "OFFER_WEATHER_CONTEXT") { weatherSection.hidden = false; weatherSection.scrollIntoView({ behavior: "smooth", block: "start" }); $("[data-weather-request]").focus(); return; }
+  if (action === "OFFER_NEARBY_FIELD") { fieldWatch.hidden = false; fieldWatch.scrollIntoView({ behavior: "smooth", block: "start" }); $("[data-field-watch-run]").focus(); return; }
+  if (action === "REQUEST_EXPERT_HANDOFF") { $("[data-escalate]").click(); return; }
 }
 
 function startCase() {
   const text = problem.value.trim();
   if (!text) return problem.focus();
-  caseState = { id: String(Date.now()).slice(-6), createdAt: new Date().toISOString(), userText: text, answers: [], observations: [], candidates: [], questions: [], managementViewed: false, guidedObservations: [], photoMission: null, weatherContext: null, environmentalComparison: null, nearbyFieldWatch: null, surveillanceOriginCase: null, inspectionReason: null, field: { identity: "", locality: "", district: "", province: "", areaNotes: "" }, location: { status: "empty", latitude: null, longitude: null, accuracy: null, capturedAt: null, source: null }, observationTime: { value: null, source: null }, firstNoticed: { category: "unknown", date: null }, cropContext: { crop: "rice", variety: "", age: "", growthStage: "", waterCondition: "", notes: "" } };
+  caseState = { id: String(Date.now()).slice(-6), createdAt: new Date().toISOString(), userText: text, answers: [], answerRecords: {}, conversationHistory: [{ role: "USER", text }, { role: "SP ASSISTANT", text: "รับข้อมูลแล้วครับ" }], lastAnswerUncertain: false, observations: [], candidates: [], questions: [], managementViewed: false, guidedObservations: [], photoMission: null, weatherContext: null, environmentalComparison: null, nearbyFieldWatch: null, surveillanceOriginCase: null, inspectionReason: null, field: { identity: "", locality: "", district: "", province: "", areaNotes: "" }, location: { status: "empty", latitude: null, longitude: null, accuracy: null, capturedAt: null, source: null }, observationTime: { value: null, source: null }, firstNoticed: { category: "unknown", date: null }, cropContext: { crop: "rice", variety: "", age: "", growthStage: "", waterCondition: "", notes: "" } };
   $("[data-user-message]").textContent = text;
   $("[data-empty-intro]").hidden = true;
   stream.hidden = false;
   render();
-  weatherSection.hidden = false;
-  fieldWatch.hidden = false;
+  weatherSection.hidden = true;
+  fieldWatch.hidden = true;
   stream.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
 $("[data-submit]")?.addEventListener("click", startCase);
 problem?.addEventListener("keydown", (event) => { if ((event.ctrlKey || event.metaKey) && event.key === "Enter") startCase(); });
-$("[data-question-form]")?.addEventListener("submit", (event) => { event.preventDefault(); if (!caseState) return; const entries = [...event.currentTarget.querySelectorAll("input")].filter((input) => input.value.trim()).map((input) => `${input.dataset.questionKey}: ${input.value.trim()}`); caseState.answers.push(...entries); render(); });
-$("[data-skip]")?.addEventListener("click", () => { if (caseState) { caseState.questions = []; questionPanel.hidden = true; } });
+$("[data-question-form]")?.addEventListener("submit", (event) => {
+  event.preventDefault();
+  if (!caseState) return;
+  const selected = event.currentTarget.querySelector('[name="guided-answer"]:checked') || event.currentTarget.querySelector('select[name="guided-answer"]') || event.currentTarget.querySelector('input[name="guided-answer"]');
+  if (!selected || !selected.value.trim()) { selected?.focus(); return; }
+  const key = selected.dataset.questionKey;
+  const value = key === "rice_age" ? `${selected.value.trim()} วัน` : selected.value.trim();
+  caseState.answerRecords[key] = { value, answeredAt: new Date().toISOString(), source: "structured_user_answer" };
+  caseState.answers = Object.entries(caseState.answerRecords).map(([answerKey, record]) => `${answerKey}: ${record.value}`);
+  caseState.lastAnswerUncertain = ["ไม่แน่ใจ", "unknown"].includes(value);
+  caseState.conversationHistory.push({ role: "USER · STRUCTURED ANSWER", text: value, questionKey: key });
+  caseState.conversationHistory.push({ role: "SP ASSISTANT", text: caseState.lastAnswerUncertain ? "รับทราบครับ ไม่ต้องเดา เราจะใช้การสังเกตหรือภาพช่วยตรวจต่อ" : "รับทราบครับ" });
+  render();
+  questionPanel.scrollIntoView({ behavior: "smooth", block: "center" });
+});
+$("[data-skip]")?.addEventListener("click", () => {
+  if (!caseState?.questions[0]) return;
+  const key = caseState.questions[0].key;
+  caseState.answerRecords[key] = { value: "skipped", answeredAt: new Date().toISOString(), source: "user_deferred" };
+  caseState.answers = Object.entries(caseState.answerRecords).map(([answerKey, record]) => `${answerKey}: ${record.value}`);
+  caseState.conversationHistory.push({ role: "USER · STRUCTURED ANSWER", text: "ข้ามตอนนี้", questionKey: key });
+  caseState.lastAnswerUncertain = false;
+  render();
+});
 document.querySelectorAll("[data-example]").forEach((button) => button.addEventListener("click", () => { problem.value = button.dataset.example; problem.focus(); }));
 $("[data-field-toggle]")?.addEventListener("click", (event) => { const panel = $("[data-field-panel]"); panel.hidden = !panel.hidden; event.currentTarget.setAttribute("aria-expanded", String(!panel.hidden)); });
 
@@ -213,7 +333,9 @@ function saveCaseContext() {
   caseState.observationTime = { value: fieldValue("[data-observation-time]") || null, source: fieldValue("[data-observation-time]") ? "user_provided" : null };
   caseState.firstNoticed = { category: $("[data-first-noticed]").value, date: fieldValue("[data-first-noticed-date]") || null };
   caseState.cropContext = { crop: "rice", variety: fieldValue("[data-context-variety]") || fieldValue("[data-variety]"), age: fieldValue("[data-context-age]") || fieldValue("[data-rice-age]"), growthStage: fieldValue("[data-growth-stage]"), waterCondition: fieldValue("[data-water-condition]"), notes: fieldValue("[data-field-notes]") };
+  caseState.conversationHistory.push({ role: "SYSTEM / EVIDENCE", text: "อัปเดตข้อมูลแปลงและเวลาสังเกตแล้ว" });
   renderCaseContext();
+  render();
 }
 
 function requestCurrentLocation() {
@@ -225,6 +347,8 @@ function requestCurrentLocation() {
     caseState.location = { status: "captured", latitude: position.coords.latitude, longitude: position.coords.longitude, accuracy: position.coords.accuracy, capturedAt: new Date(position.timestamp || Date.now()).toISOString(), source: "device_provided" };
     locationStatus.textContent = `ได้รับตำแหน่งแล้ว · ตำแหน่งจากอุปกรณ์ ± ${Math.round(position.coords.accuracy)} เมตร`;
     renderCaseContext();
+    caseState.conversationHistory.push({ role: "SYSTEM / EVIDENCE", text: "เพิ่มตำแหน่งจากอุปกรณ์แล้ว · ไม่มีการติดตามต่อเนื่อง" });
+    render();
   }, (error) => {
     caseState.location = { status: error.code === 1 ? "denied" : "unavailable", latitude: null, longitude: null, accuracy: null, capturedAt: null, source: null };
     locationStatus.textContent = error.code === 1 ? "ผู้ใช้ไม่อนุญาต — เคสยังใช้งานได้" : "ไม่สามารถอ่านตำแหน่งได้ — ระบุพื้นที่เองได้";
@@ -404,7 +528,7 @@ function renderMission() {
   const step = mission.steps[mission.current];
   const observations = step.observations.map(([label, value]) => `<label><input type="checkbox" data-mission-observation value="${value}"> ${label}</label>`).join("");
   missionStep.innerHTML = `<article class="mission-card"><p class="mission-count">จุดที่ ${mission.current + 1} จาก ${mission.steps.length} · ${mission.domain}</p><h3>${step.title}</h3><p><strong>ถ่ายอย่างไร</strong><br>${step.guide}</p><p><strong>ตรวจตรงไหน</strong><br>${step.inspect}</p><details><summary>เคล็ดลับถ่ายด้วยมือถือ</summary><p>ใช้กล้องหลัง · เช็ดเลนส์ · ใช้แสงพอ · แตะจอให้ชัด · อย่าซูมดิจิทัลมาก · ถือให้นิ่ง</p><p>ถ้ามีไม้บรรทัดหรือการ์ดเทียบขนาด ให้วางในระนาบเดียวกัน ไม่ต้องใช้ถ้าไม่มี และระบบจะไม่ประมาณขนาดจากภาพ</p></details><div class="mission-photo-status">${step.imageIndexes.length ? `มีภาพชั่วคราว ${step.imageIndexes.length} ภาพ — ภาพนี้ยังไม่ยืนยัน Observation` : "ยังไม่มีภาพ — ข้ามได้โดยไม่ปิดเคส"}</div><fieldset class="mission-observations"><legend>จากที่คุณเห็นจริง พบอะไรบ้าง?</legend>${observations}</fieldset><div class="mission-actions"><label class="button secondary mission-camera"><input type="file" accept="image/*" capture="environment" data-mission-image>ถ่ายภาพ</label><button type="button" class="button secondary" data-mission-retake>ถ่ายใหม่/ลบภาพ</button><button type="button" class="button secondary" data-mission-skip>ข้าม</button><button type="button" class="button" data-mission-next>เพิ่มสิ่งที่สังเกตและไปขั้นต่อไป</button></div></article>`;
-  $("[data-mission-image]")?.addEventListener("change", (event) => { const files = [...(event.currentTarget.files ?? [])].filter((file) => file.type.startsWith("image/")); files.forEach((file) => { selectedImages.push({ file, url: URL.createObjectURL(file), missionStep: step.key }); step.imageIndexes.push(selectedImages.length - 1); }); event.currentTarget.value = ""; renderImages(); renderMission(); });
+  $("[data-mission-image]")?.addEventListener("change", (event) => { const files = [...(event.currentTarget.files ?? [])].filter((file) => file.type.startsWith("image/")); files.forEach((file) => { selectedImages.push({ file, url: URL.createObjectURL(file), missionStep: step.key }); step.imageIndexes.push(selectedImages.length - 1); }); if (files.length) caseState.conversationHistory.push({ role: "SYSTEM / EVIDENCE", text: `ได้รับภาพแล้ว ${files.length} ภาพ · อยู่ใน browser ชั่วคราว · Photo received ≠ Photo analyzed` }); event.currentTarget.value = ""; renderImages(); renderMission(); });
   $("[data-mission-retake]")?.addEventListener("click", () => { step.imageIndexes.slice().reverse().forEach((index) => { URL.revokeObjectURL(selectedImages[index]?.url); selectedImages.splice(index, 1); }); step.imageIndexes = []; renderImages(); renderMission(); });
   $("[data-mission-skip]")?.addEventListener("click", () => completeMissionStep("skipped"));
   $("[data-mission-next]")?.addEventListener("click", () => { document.querySelectorAll("[data-mission-observation]:checked").forEach((input) => caseState.guidedObservations.push({ value: input.value, source: "guided_observation", missionStep: step.key, photoAssociated: step.imageIndexes.length > 0 })); completeMissionStep("completed"); });
