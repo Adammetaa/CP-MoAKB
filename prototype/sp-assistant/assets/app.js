@@ -9,9 +9,34 @@ const imageInput = $("[data-image-input]");
 const previews = $("[data-image-previews]");
 const imageCount = $("[data-image-count]");
 const annotations = $("[data-image-annotations]");
+const missionPanel = $("[data-photo-mission]");
+const missionStep = $("[data-mission-step]");
+const missionProgress = $("[data-mission-progress]");
 
 let selectedImages = [];
 let caseState = null;
+
+const commonMissionSteps = [
+  { key: "field", title: "ภาพรวมพื้นที่", guide: "ถอยจากจุดที่พบอาการประมาณ 3–5 เมตร ถ่ายให้เห็นต้นที่มีอาการและต้นรอบข้างในภาพเดียว", inspect: "ดูรูปแบบการกระจายในแปลง", observations: [["ต้นเดียว/กอเดียว", "distribution_single"], ["หลายกอใกล้กัน", "distribution_nearby"], ["เป็นหย่อม", "field_distribution"], ["กระจายหลายจุด", "field_distribution"], ["ตามแนวแถว", "distribution_row"], ["ขอบแปลง", "distribution_edge"], ["ทั่วบริเวณ", "field_distribution"], ["ไม่แน่ใจ", "uncertain_distribution"]] },
+  { key: "whole", title: "ทั้งต้น / ทั้งกอ", guide: "ถ่ายต้นหรือกอที่มีอาการให้เห็นตั้งแต่โคนถึงปลาย และให้เห็นต้นรอบข้าง", inspect: "เทียบตำแหน่งอาการและสภาพทั้งต้น", observations: [["ต้นเหลือง/เหี่ยว", "wilt"], ["ยอดแห้ง", "deadheart"], ["รวงขาว", "whitehead"], ["ยังไม่แน่ใจ", "uncertain_whole"]] },
+];
+
+const domainMissionSteps = {
+  Disease: [
+    { key: "organ", title: "อวัยวะที่มีอาการ", guide: "เลือกใบ กาบใบ โคนต้น ราก คอรวง รวง หรือเมล็ดที่มีอาการชัด วางให้นิ่งและถ่ายให้เต็มภาพ", inspect: "ตรวจเฉพาะอวัยวะที่ผู้ใช้ระบุหรือ candidate รองรับ", observations: [["อาการอยู่ที่ใบ", "organ_leaf"], ["อาการอยู่ที่กาบใบ", "organ_sheath"], ["อาการอยู่ที่ราก", "organ_root"], ["อาการอยู่ที่รวง/เมล็ด", "organ_panicle"], ["ไม่แน่ใจ", "uncertain_organ"]] },
+    { key: "detail", title: "รายละเอียดอาการ", guide: "ถ่ายรูปร่างแผล สีตรงกลาง ขอบแผล รอยขีด หรือการเปลี่ยนสีที่มองเห็นได้ ไม่ต้องถ่ายเชื้อขนาดจุลทรรศน์", inspect: "ตรวจลักษณะอาการที่มองเห็นด้วยตา", observations: [["พบจุด/แผล", "spot"], ["พบรอยขีดทางยาว", "streak"], ["กลางแผลสีเทา", "gray_center"], ["ขอบแผลสีน้ำตาล", "brown"], ["ไม่เห็นโครงสร้างเชื้อ", "no_visible_sign"]] },
+    { key: "environment", title: "สภาพแวดล้อม", guide: "ถ่ายสภาพน้ำ ความหนาแน่นต้น และบริเวณรอบกอ โดยไม่ต้องระบุตำแหน่ง GPS", inspect: "สังเกตน้ำและความชื้นที่เห็นจริง", observations: [["มีน้ำขัง", "standing_water"], ["พื้นแปลงแห้ง", "dry_field"], ["สภาพชื้น", "rain"], ["ไม่แน่ใจ", "uncertain_environment"]] },
+  ],
+  Insect: [
+    { key: "organ", title: "อวัยวะและรอยทำลาย", guide: "ถ่ายใบ ยอด โคนต้น ลำต้น หรือรวงที่มีรอยทำลายให้เต็มภาพ", inspect: "รอยกิน รู มูล ใบม้วน ยอดแห้ง หรือรวงขาว", observations: [["ใบถูกม้วน/พับ", "folded_leaf"], ["รอยกินสีขาว", "feeding_scar"], ["พบรู/จุดเจาะ", "boring_point"], ["พบมูล", "frass"], ["ยอดแห้ง", "deadheart"], ["รวงขาว", "whitehead"]] },
+    { key: "inspection", title: "เปิดและตรวจจุดซ่อน", guide: "เปิดใบที่ม้วนอย่างระมัดระวัง หรือแหวกกอตรวจบริเวณโคนต้นตาม cue ที่พบ", inspect: "ด้านในใบม้วน ใต้ใบ หรือโคนต้นเท่านั้นเมื่อสัมพันธ์กับข้อมูลในเคส", observations: [["พบตัวหนอนด้านใน", "larva"], ["พบแมลงใต้ใบ", "pest_seen"], ["พบแมลงบริเวณโคน", "hopper"], ["ไม่พบแมลง", "no_insect_seen"], ["ไม่แน่ใจ", "uncertain_insect"]] },
+    { key: "tiny", title: "ถ่ายตัวแมลงถ้าพบ", guide: "ภาพตัวแมลงชัดเป็นเพียงโบนัส หากเล็กเกินไปให้บันทึกขนาด สี ปีก การเคลื่อนที่ ตำแหน่ง และจำนวนที่เห็นแทน", inspect: "ไม่บังคับระบุชนิด ใช้สิ่งเทียบขนาดในระนาบเดียวกันถ้ามี", observations: [["เล็กมาก", "tiny_insect"], ["มีปีก", "winged"], ["ไม่มีปีก", "wingless"], ["กระโดด", "jumping"], ["คลาน", "crawling"], ["อยู่เป็นกลุ่ม", "clustered"]] },
+  ],
+  Weed: [
+    { key: "organ", title: "วัชพืชทั้งต้น", guide: "ถ่ายวัชพืชทั้งต้นพร้อมโคน ให้เห็นทรงต้นและตำแหน่งเทียบกับข้าว", inspect: "ตรวจใบ ลำต้น ข้อ กาบ และโคนต้น", observations: [["ใบแคบ/เรียว", "narrow_leaf"], ["ใบกว้าง", "broad_leaf"], ["ลำต้นเป็นเหลี่ยม", "triangular_stem"], ["ลำต้นกลม", "round_stem"]] },
+    { key: "detail", title: "รายละเอียดสัณฐาน", guide: "ถ่ายใบ ลำต้น ข้อ กาบ โคน และช่อดอกถ้ามี โดยไม่ฝืนระบุชื่อชนิด", inspect: "หน้าตัดลำต้น ข้อปล้อง กาบใบ และช่อดอก", observations: [["เห็นข้อปล้อง", "visible_node"], ["มีกาบหุ้มลำต้น", "visible_sheath"], ["มีช่อดอก", "inflorescence"], ["มีน้ำขัง", "standing_water"], ["ไม่แน่ใจ", "uncertain_weed"]] },
+  ],
+};
 
 const cueRules = [
   ["organ_leaf", ["ใบ", "leaf"]], ["organ_root", ["ราก", "root"]],
@@ -25,6 +50,7 @@ const cueRules = [
   ["chemical_history", ["สาร", "ยา", "พ่น", "ฉีด"]],
   ["failed_control", ["ใช้ยาแล้วไม่อยู่", "พ่นแล้วไม่ตาย", "เอาไม่อยู่", "ไม่ได้ผล"]],
   ["rain", ["ฝน", "ชื้น", "rain"]], ["field_distribution", ["ทั้งแปลง", "เป็นหย่อม", "กระจาย"]],
+  ["weed_plant", ["วัชพืช", "weed"]],
 ];
 
 const candidates = [
@@ -32,7 +58,7 @@ const candidates = [
   { key: "blast", domain: "Disease", name: "โรคไหม้", link: "../knowledge-explorer/rice-disease-corpus.html", cues: ["organ_leaf", "spot"], distinctions: ["แผลรูปตา/กระสวย", "กลางแผลสีเทา", "ความชื้นและระยะข้าว"], source: "Rice Disease corpus · governed biological sources" },
   { key: "leaffolder", domain: "Insect", name: "หนอนห่อใบข้าว", link: "../knowledge-explorer/rice-insect-corpus.html", cues: ["folded_leaf", "larva", "organ_leaf"], distinctions: ["พบหนอนภายในใบ", "รอยกินเป็นแถบสีขาว"], source: "Rice Insect corpus · Rice Department source" },
   { key: "brown-planthopper", domain: "Insect", name: "เพลี้ยกระโดดสีน้ำตาล", link: "../knowledge-explorer/rice-insect-corpus.html", cues: ["hopper", "wilt", "organ_stem"], distinctions: ["ตัวแมลงบริเวณโคนต้น", "การกระจายเป็นหย่อม", "อาการไหม้เป็นบริเวณ"], source: "Rice Insect corpus · Rice Department source" },
-  { key: "sedge-group", domain: "Weed", name: "กลุ่มกกที่ควรตรวจต่อ", link: "../knowledge-explorer/rice-weed-corpus.html", cues: ["triangular_stem", "narrow_leaf"], distinctions: ["หน้าตัดลำต้น", "ข้อปล้อง", "ช่อดอก", "สภาพน้ำ"], source: "Rice Weed corpus · governed DOA source" },
+  { key: "sedge-group", domain: "Weed", name: "กลุ่มกกที่ควรตรวจต่อ", link: "../knowledge-explorer/rice-weed-corpus.html", cues: ["weed_plant", "triangular_stem", "narrow_leaf"], distinctions: ["หน้าตัดลำต้น", "ข้อปล้อง", "ช่อดอก", "สภาพน้ำ"], source: "Rice Weed corpus · governed DOA source" },
 ];
 
 const questionBank = {
@@ -52,6 +78,7 @@ function extractObservations(text) {
   const age = normalized.match(/(?:ข้าว\s*)?(\d{1,3})\s*วัน/);
   if (age) observations.push("rice_age");
   document.querySelectorAll("[data-image-annotations] input:checked").forEach((input) => observations.push(input.value));
+  (caseState?.guidedObservations ?? []).forEach((item) => observations.push(item.value));
   return { observations: [...new Set(observations)], age: age?.[1] ?? $("[data-rice-age]")?.value.trim() ?? "" };
 }
 
@@ -104,7 +131,7 @@ function render() {
 function startCase() {
   const text = problem.value.trim();
   if (!text) return problem.focus();
-  caseState = { id: String(Date.now()).slice(-6), userText: text, answers: [], observations: [], candidates: [], questions: [], managementViewed: false };
+  caseState = { id: String(Date.now()).slice(-6), userText: text, answers: [], observations: [], candidates: [], questions: [], managementViewed: false, guidedObservations: [], photoMission: null };
   $("[data-user-message]").textContent = text;
   $("[data-empty-intro]").hidden = true;
   stream.hidden = false;
@@ -118,6 +145,43 @@ $("[data-question-form]")?.addEventListener("submit", (event) => { event.prevent
 $("[data-skip]")?.addEventListener("click", () => { if (caseState) { caseState.questions = []; questionPanel.hidden = true; } });
 document.querySelectorAll("[data-example]").forEach((button) => button.addEventListener("click", () => { problem.value = button.dataset.example; problem.focus(); }));
 $("[data-field-toggle]")?.addEventListener("click", (event) => { const panel = $("[data-field-panel]"); panel.hidden = !panel.hidden; event.currentTarget.setAttribute("aria-expanded", String(!panel.hidden)); });
+
+function missionDomain() {
+  return caseState.candidates[0]?.domain ?? "Generic";
+}
+
+function createPhotoMission() {
+  if (!caseState) return;
+  const domain = missionDomain();
+  const generic = [{ key: "organ", title: "อวัยวะที่มีอาการ", guide: "ถ่ายอวัยวะที่มีอาการให้เต็มภาพ และเก็บภาพจากมากกว่าหนึ่งมุมเมื่อจำเป็น", inspect: "ยังไม่มีข้อมูลที่ผ่าน Governance เพียงพอสำหรับระบุตำแหน่งตรวจเฉพาะ", observations: [["อาการอยู่ที่ใบ", "organ_leaf"], ["อาการอยู่ที่ลำต้น", "organ_stem"], ["อาการอยู่ที่ราก", "organ_root"], ["ไม่แน่ใจ", "uncertain_organ"]] }];
+  caseState.photoMission = { requested: true, domain, current: 0, steps: [...commonMissionSteps, ...(domainMissionSteps[domain] ?? generic)].slice(0, 6).map((step) => ({ ...step, status: "pending", imageIndexes: [] })) };
+  missionPanel.hidden = false;
+  renderMission();
+  missionPanel.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function renderMission() {
+  const mission = caseState?.photoMission;
+  if (!mission) return;
+  const done = mission.steps.filter((step) => step.status !== "pending").length;
+  missionProgress.textContent = `ตรวจแล้ว ${done} / ${mission.steps.length} จุด`;
+  const step = mission.steps[mission.current];
+  const observations = step.observations.map(([label, value]) => `<label><input type="checkbox" data-mission-observation value="${value}"> ${label}</label>`).join("");
+  missionStep.innerHTML = `<article class="mission-card"><p class="mission-count">จุดที่ ${mission.current + 1} จาก ${mission.steps.length} · ${mission.domain}</p><h3>${step.title}</h3><p><strong>ถ่ายอย่างไร</strong><br>${step.guide}</p><p><strong>ตรวจตรงไหน</strong><br>${step.inspect}</p><details><summary>เคล็ดลับถ่ายด้วยมือถือ</summary><p>ใช้กล้องหลัง · เช็ดเลนส์ · ใช้แสงพอ · แตะจอให้ชัด · อย่าซูมดิจิทัลมาก · ถือให้นิ่ง</p><p>ถ้ามีไม้บรรทัดหรือการ์ดเทียบขนาด ให้วางในระนาบเดียวกัน ไม่ต้องใช้ถ้าไม่มี และระบบจะไม่ประมาณขนาดจากภาพ</p></details><div class="mission-photo-status">${step.imageIndexes.length ? `มีภาพชั่วคราว ${step.imageIndexes.length} ภาพ — ภาพนี้ยังไม่ยืนยัน Observation` : "ยังไม่มีภาพ — ข้ามได้โดยไม่ปิดเคส"}</div><fieldset class="mission-observations"><legend>จากที่คุณเห็นจริง พบอะไรบ้าง?</legend>${observations}</fieldset><div class="mission-actions"><label class="button secondary mission-camera"><input type="file" accept="image/*" capture="environment" data-mission-image>ถ่ายภาพ</label><button type="button" class="button secondary" data-mission-retake>ถ่ายใหม่/ลบภาพ</button><button type="button" class="button secondary" data-mission-skip>ข้าม</button><button type="button" class="button" data-mission-next>เพิ่มสิ่งที่สังเกตและไปขั้นต่อไป</button></div></article>`;
+  $("[data-mission-image]")?.addEventListener("change", (event) => { const files = [...(event.currentTarget.files ?? [])].filter((file) => file.type.startsWith("image/")); files.forEach((file) => { selectedImages.push({ file, url: URL.createObjectURL(file), missionStep: step.key }); step.imageIndexes.push(selectedImages.length - 1); }); event.currentTarget.value = ""; renderImages(); renderMission(); });
+  $("[data-mission-retake]")?.addEventListener("click", () => { step.imageIndexes.slice().reverse().forEach((index) => { URL.revokeObjectURL(selectedImages[index]?.url); selectedImages.splice(index, 1); }); step.imageIndexes = []; renderImages(); renderMission(); });
+  $("[data-mission-skip]")?.addEventListener("click", () => completeMissionStep("skipped"));
+  $("[data-mission-next]")?.addEventListener("click", () => { document.querySelectorAll("[data-mission-observation]:checked").forEach((input) => caseState.guidedObservations.push({ value: input.value, source: "guided_observation", missionStep: step.key, photoAssociated: step.imageIndexes.length > 0 })); completeMissionStep("completed"); });
+}
+
+function completeMissionStep(status) {
+  const mission = caseState.photoMission;
+  mission.steps[mission.current].status = status;
+  if (mission.current < mission.steps.length - 1) { mission.current += 1; renderMission(); } else { missionStep.innerHTML = `<div class="mission-complete"><h3>เก็บข้อมูลครบตามภารกิจแล้ว</h3><p>Observation ที่คุณยืนยันถูกเพิ่มเข้าเคสและประเมิน Candidate Knowledge ใหม่แล้ว รูปภาพเพียงอย่างเดียวไม่ได้สร้าง Observation</p></div>`; missionProgress.textContent = `ตรวจแล้ว ${mission.steps.length} / ${mission.steps.length} จุด`; }
+  render();
+}
+
+$("[data-photo-mission-start]")?.addEventListener("click", createPhotoMission);
 
 function renderImages() {
   previews.replaceChildren();
@@ -133,6 +197,6 @@ function togglePanel(buttonSelector, panelSelector, html) { const button = $(but
 togglePanel("[data-management-toggle]", "[data-management-panel]", `<div class="gated-panel"><h3>แนวทางจัดการที่มีข้อมูลรองรับ</h3><p>แสดงหลัง Investigation context เท่านั้น: Monitoring · Prevention · Cultural · Mechanical/Physical · Biological/Natural Enemy · Chemical Context · Follow-up</p><p>Management Option ไม่ใช่ Recommendation</p><a href="../knowledge-explorer/crop-protection-management.html">เปิด Management Knowledge →</a></div>`);
 togglePanel("[data-moa-toggle]", "[data-moa-panel]", `<div class="gated-panel"><h3>MoA authority context</h3><p>Active Ingredient → IRAC v11.5 / FRAC 2026 / HRAC 2026 → Authority + Version → Limitation</p><p>ไม่มีการเลือกสาร ไม่มี spray program และ registration ไม่ใช่ efficacy</p></div>`);
 $("[data-management-toggle]")?.addEventListener("click", () => { if (caseState) caseState.managementViewed = true; });
-$("[data-escalate]")?.addEventListener("click", () => { if (!caseState) return; const summary = $("[data-handoff-summary]"); summary.hidden = false; summary.innerHTML = `<h2>สรุปสำหรับส่งต่อผู้เชี่ยวชาญ (local prototype)</h2><dl><dt>คำอธิบาย</dt><dd>${escapeHtml(caseState.userText)}</dd><dt>Observations</dt><dd>${caseState.observations.join(" · ") || "ไม่มี"}</dd><dt>รูป</dt><dd>${selectedImages.length} รูป · metadata/local preview only</dd><dt>คำตอบ</dt><dd>${caseState.answers.map(escapeHtml).join(" · ") || "ยังไม่มี"}</dd><dt>Candidates</dt><dd>${caseState.candidates.map((item) => item.name).join(" · ") || "ยังไม่มี"}</dd><dt>Evidence gaps</dt><dd>${caseState.questions.map((item) => item.text).join(" · ") || "ต้องทบทวนโดยผู้เชี่ยวชาญ"}</dd><dt>Contradictions</dt><dd>${caseState.candidates.flatMap((item) => item.contradictions).join(" · ") || "ยังไม่พบที่ระบุได้"}</dd><dt>Management viewed</dt><dd>${caseState.managementViewed ? "YES" : "NO"}</dd></dl><p>ไม่มีการส่ง email หรือ notification จริง</p>`; summary.scrollIntoView({ behavior: "smooth" }); });
-$("[data-new-case]")?.addEventListener("click", () => { caseState = null; stream.hidden = true; $("[data-empty-intro]").hidden = false; problem.value = ""; problem.focus(); });
+$("[data-escalate]")?.addEventListener("click", () => { if (!caseState) return; const summary = $("[data-handoff-summary]"); const mission = caseState.photoMission; const completed = mission?.steps.filter((step) => step.status === "completed").length ?? 0; const skipped = mission?.steps.filter((step) => step.status === "skipped").length ?? 0; const locations = mission?.steps.map((step) => step.inspect).join(" · ") ?? "ยังไม่ได้ขอภารกิจ"; summary.hidden = false; summary.innerHTML = `<h2>สรุปสำหรับส่งต่อผู้เชี่ยวชาญ (local prototype)</h2><dl><dt>คำอธิบาย</dt><dd>${escapeHtml(caseState.userText)}</dd><dt>Observations</dt><dd>${caseState.observations.join(" · ") || "ไม่มี"}</dd><dt>รูป</dt><dd>${selectedImages.length} รูป · metadata/local preview only</dd><dt>คำตอบ</dt><dd>${caseState.answers.map(escapeHtml).join(" · ") || "ยังไม่มี"}</dd><dt>Candidates</dt><dd>${caseState.candidates.map((item) => item.name).join(" · ") || "ยังไม่มี"}</dd><dt>Evidence gaps</dt><dd>${caseState.questions.map((item) => item.text).join(" · ") || "ต้องทบทวนโดยผู้เชี่ยวชาญ"}</dd><dt>Contradictions</dt><dd>${caseState.candidates.flatMap((item) => item.contradictions).join(" · ") || "ยังไม่พบที่ระบุได้"}</dd><dt>Management viewed</dt><dd>${caseState.managementViewed ? "YES" : "NO"}</dd><dt>PHOTO MISSION</dt><dd>requested=${mission ? "YES" : "NO"} · completed=${completed} · skipped=${skipped} · images=${selectedImages.length}</dd><dt>User-confirmed observations</dt><dd>${caseState.guidedObservations.map((item) => item.value).join(" · ") || "ยังไม่มี"}</dd><dt>Inspection locations</dt><dd>${locations}</dd><dt>Unresolved observations</dt><dd>${mission?.steps.filter((step) => step.status === "pending").map((step) => step.title).join(" · ") || "ไม่มีที่ค้างในภารกิจ"}</dd></dl><p>ไม่มี binary image data และไม่มีการส่ง email หรือ notification จริง</p>`; summary.scrollIntoView({ behavior: "smooth" }); });
+$("[data-new-case]")?.addEventListener("click", () => { selectedImages.forEach((item) => URL.revokeObjectURL(item.url)); selectedImages = []; caseState = null; stream.hidden = true; missionPanel.hidden = true; $("[data-empty-intro]").hidden = false; problem.value = ""; renderImages(); problem.focus(); });
 window.addEventListener("pagehide", () => selectedImages.forEach((item) => URL.revokeObjectURL(item.url)));

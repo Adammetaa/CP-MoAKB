@@ -167,3 +167,68 @@ def test_manual_image_annotation_and_local_handoff_are_explicit() -> None:
         assert value in html
     assert "metadata/local preview only" in app
     assert "ไม่มีการส่ง email หรือ notification จริง" in app
+
+
+def test_photo_mission_requires_case_and_adapts_to_three_domains() -> None:
+    html = _read("index.html")
+    app = _read("assets/app.js")
+    assert "data-photo-mission-start" in html
+    assert "ช่วยฉันเก็บภาพและตรวจแปลง" in html
+    assert "if (!caseState) return" in app
+    assert "domainMissionSteps" in app
+    for domain in ("Disease", "Insect", "Weed"):
+        assert f"{domain}: [" in app
+    assert "slice(0, 6)" in app
+
+
+def test_photo_mission_captures_field_organ_detail_and_safe_inspection() -> None:
+    app = _read("assets/app.js")
+    for token in (
+        "ภาพรวมพื้นที่",
+        "ทั้งต้น / ทั้งกอ",
+        "อวัยวะที่มีอาการ",
+        "รายละเอียดอาการ",
+        "เปิดและตรวจจุดซ่อน",
+        "วัชพืชทั้งต้น",
+        "ตรวจแล้ว ${done} / ${mission.steps.length} จุด",
+    ):
+        assert token in app
+    assert "ยังไม่มีข้อมูลที่ผ่าน Governance เพียงพอ" in app
+
+
+def test_photo_does_not_create_observation_but_manual_confirmation_does() -> None:
+    html = _read("index.html")
+    app = _read("assets/app.js")
+    assert "รูปภาพเป็นเพียงหลักฐานประกอบ" in html
+    assert "ภาพนี้ยังไม่ยืนยัน Observation" in app
+    assert "data-mission-observation" in app
+    assert "caseState.guidedObservations.push" in app
+    assert 'source: "guided_observation"' in app
+    assert "photoAssociated" in app
+    assert 'completeMissionStep("skipped")' in app
+    assert 'completeMissionStep("completed")' in app
+
+
+def test_photo_mission_preserves_local_image_and_scientific_boundaries() -> None:
+    app = _read("assets/app.js")
+    for token in (
+        'capture="environment"',
+        "ถ่ายใหม่/ลบภาพ",
+        "ไม่ต้องถ่ายเชื้อขนาดจุลทรรศน์",
+        "ภาพตัวแมลงชัดเป็นเพียงโบนัส",
+        "ไม่บังคับระบุชนิด",
+        "PHOTO MISSION",
+        "User-confirmed observations",
+        "ไม่มี binary image data",
+    ):
+        assert token in app
+    for prohibited in (
+        "navigator.geolocation",
+        "getCurrentPosition",
+        "fetch(",
+        "localStorage",
+        "sessionStorage",
+        "FileReader",
+        "FormData",
+    ):
+        assert prohibited not in app
