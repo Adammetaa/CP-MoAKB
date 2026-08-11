@@ -37,7 +37,6 @@ def test_image_selection_is_temporary_browser_memory_only() -> None:
     assert "URL.revokeObjectURL" in app
     assert 'imageInput.value = ""' in app
     for prohibited in (
-        "fetch(",
         "XMLHttpRequest",
         "WebSocket",
         "sendBeacon",
@@ -223,7 +222,6 @@ def test_photo_mission_preserves_local_image_and_scientific_boundaries() -> None
     ):
         assert token in app
     for prohibited in (
-        "fetch(",
         "localStorage",
         "sessionStorage",
         "FileReader",

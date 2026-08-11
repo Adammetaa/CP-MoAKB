@@ -37,3 +37,33 @@ The corresponding Source records retain publisher, date/version, artifact
 hash, authority scope, rights disposition, and limitations. This increment
 reuses their independently authored summaries and does not reproduce pages,
 images, tables, layouts, or substantial passages.
+
+## Prototype weather-provider review
+
+The Sprint-072P product integration selects **Open-Meteo** without a private
+browser key. Past observation dates use the Historical Weather API
+`/v1/archive` Best Match product; same-day observations use the Forecast API
+only as clearly labelled same-day model context. A future observation time is
+rejected. The request sends WGS84 latitude and longitude, one ISO date,
+`timezone=auto`, explicit units, and these hourly variables only:
+`relative_humidity_2m`, `precipitation`, `wind_speed_10m`,
+`wind_direction_10m`, and `soil_moisture_0_to_7cm`.
+
+The Historical API documents hourly temporal resolution. Its Best Match
+product combines model/reanalysis datasets; data from 2017 onward can use a
+9-km model grid, while older data can use 0.1-degree or 0.25-degree grids.
+These values are gridded and model-derived/reanalysis data, not measurements
+from a sensor in the field. Relative humidity is percent, precipitation is the
+preceding-hour sum in millimetres, wind speed is requested in kilometres per
+hour, direction is degrees, and soil moisture is cubic metres per cubic metre
+when the selected model provides it. Response timezone, units, matched hour,
+retrieval time, product/data class, target coordinates, and limitations remain
+in browser-local Case State.
+
+Known limitations include grid cells much broader than device GPS accuracy,
+model-dependent variable availability, differing historical models, and
+same-day values that may be forecast/model-derived. Soil moisture therefore
+remains explicitly unavailable when absent. Open-Meteo attribution and its
+underlying model attribution are exposed in the result details. The request is
+user initiated and sends no photo, narrative, identity, notes, Candidate,
+chemical history, or Case identifier.

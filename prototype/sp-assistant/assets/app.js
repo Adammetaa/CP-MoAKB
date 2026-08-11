@@ -14,6 +14,9 @@ const missionStep = $("[data-mission-step]");
 const missionProgress = $("[data-mission-progress]");
 const caseContextPanel = $("[data-case-context]");
 const locationStatus = $("[data-location-status]");
+const weatherSection = $("[data-weather-section]");
+const weatherStatus = $("[data-weather-status]");
+const weatherResult = $("[data-weather-result]");
 
 let selectedImages = [];
 let caseState = null;
@@ -77,6 +80,14 @@ const environmentalProfiles = {
   leaffolder: { pathway: "ไม่สร้าง transmission pathway; บันทึกการพบแมลงและความเสียหายแยกกัน", factors: "ข้าวอ่อน ใบพับ และรอยกินสีขาว", weather: "ยังไม่มีตัวแปรอากาศเฉพาะ subject", surveillance: "เปิดใบพับและตรวจต้นข้างเคียงเมื่อมีหลักฐานความเสียหาย", evidence: "EV-RIC-006/v1", distance: "ระยะการเคลื่อนที่เชิงปริมาณยังไม่ทราบ" },
   "brown-planthopper": { pathway: "มี vector context ตาม Source; การพบพาหะไม่ยืนยันการติดเชื้อ", factors: "โคนต้นและรูปแบบความเสียหายเป็นหย่อม", weather: "ยังไม่มีตัวแปรอากาศเฉพาะ subject", surveillance: "ตรวจโคนต้นและบันทึกจำนวน/การกระจายแยกจากอาการโรค", evidence: "EV-RIC-002/v1 · EV-RDC-010A/v1 · EV-RDC-015B/v1", distance: "ระยะการเคลื่อนที่เชิงปริมาณยังไม่ทราบ" },
   "sedge-group": { pathway: "ไม่มี pathway ที่รองรับ", factors: "สภาพน้ำเป็น observation context เท่านั้น", weather: "ยังไม่มีตัวแปรอากาศที่รองรับ", surveillance: "ตรวจสัณฐานและการกระจายในแปลงโดยไม่อนุมานชนิด", evidence: "Rice Weed corpus governed evidence", distance: "ไม่กำหนดรัศมี" },
+};
+
+const governedWeatherVariables = {
+  "brown-spot": [],
+  blast: ["relative_humidity"],
+  leaffolder: [],
+  "brown-planthopper": [],
+  "sedge-group": [],
 };
 
 const escapeHtml = (value) => String(value).replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char]);
@@ -147,11 +158,12 @@ function render() {
 function startCase() {
   const text = problem.value.trim();
   if (!text) return problem.focus();
-  caseState = { id: String(Date.now()).slice(-6), createdAt: new Date().toISOString(), userText: text, answers: [], observations: [], candidates: [], questions: [], managementViewed: false, guidedObservations: [], photoMission: null, field: { identity: "", locality: "", district: "", province: "", areaNotes: "" }, location: { status: "empty", latitude: null, longitude: null, accuracy: null, capturedAt: null, source: null }, observationTime: { value: null, source: null }, firstNoticed: { category: "unknown", date: null }, cropContext: { crop: "rice", variety: "", age: "", growthStage: "", waterCondition: "", notes: "" } };
+  caseState = { id: String(Date.now()).slice(-6), createdAt: new Date().toISOString(), userText: text, answers: [], observations: [], candidates: [], questions: [], managementViewed: false, guidedObservations: [], photoMission: null, weatherContext: null, environmentalComparison: null, field: { identity: "", locality: "", district: "", province: "", areaNotes: "" }, location: { status: "empty", latitude: null, longitude: null, accuracy: null, capturedAt: null, source: null }, observationTime: { value: null, source: null }, firstNoticed: { category: "unknown", date: null }, cropContext: { crop: "rice", variety: "", age: "", growthStage: "", waterCondition: "", notes: "" } };
   $("[data-user-message]").textContent = text;
   $("[data-empty-intro]").hidden = true;
   stream.hidden = false;
   render();
+  weatherSection.hidden = false;
   stream.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
@@ -205,6 +217,69 @@ $("[data-case-context-toggle]")?.addEventListener("click", () => { if (!caseStat
 $("[data-location-request]")?.addEventListener("click", requestCurrentLocation);
 $("[data-use-current-time]")?.addEventListener("click", () => { const now = new Date(); const local = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 16); $("[data-observation-time]").value = local; });
 $("[data-case-context-form]")?.addEventListener("submit", (event) => { event.preventDefault(); saveCaseContext(); });
+
+const WEATHER_VARIABLES = ["relative_humidity_2m", "precipitation", "wind_speed_10m", "wind_direction_10m", "soil_moisture_0_to_7cm"];
+const WEATHER_TO_KNOWLEDGE = {
+  relative_humidity: "relative_humidity_2m",
+  rainfall: "precipitation",
+  wind_speed: "wind_speed_10m",
+  wind_direction: "wind_direction_10m",
+  soil_moisture: "soil_moisture_0_to_7cm",
+};
+
+function closestWeatherIndex(times, target) {
+  const targetMs = new Date(target).getTime();
+  return times.reduce((best, value, index) => Math.abs(new Date(value).getTime() - targetMs) < Math.abs(new Date(times[best]).getTime() - targetMs) ? index : best, 0);
+}
+
+function renderWeatherContext() {
+  if (!caseState?.weatherContext) return;
+  const context = caseState.weatherContext;
+  const comparison = caseState.environmentalComparison;
+  const labels = { relative_humidity_2m: "ความชื้นสัมพัทธ์", precipitation: "ฝนในชั่วโมงก่อนหน้า", wind_speed_10m: "ความเร็วลม", wind_direction_10m: "ทิศทางลม", soil_moisture_0_to_7cm: "ความชื้นดิน 0–7 ซม." };
+  const observations = Object.entries(context.variables).map(([key, item]) => `<li>${labels[key] || key}: <strong>${item.value == null ? "ไม่มีข้อมูล" : `${escapeHtml(item.value)} ${escapeHtml(item.unit)}`}</strong></li>`).join("");
+  const relevant = comparison.relevantVariables.length ? comparison.relevantVariables.map((key) => `<li>${labels[WEATHER_TO_KNOWLEDGE[key]] || key} — ${comparison.availableVariables.includes(key) ? "มีข้อมูลบางส่วนที่เกี่ยวข้อง" : "ตัวแปรไม่มีข้อมูล"}</li>`).join("") : "<li>ไม่มีตัวแปรที่ Knowledge ปัจจุบันรองรับเพียงพอ</li>";
+  const manual = [caseState.cropContext.waterCondition, ...caseState.guidedObservations.filter((item) => item.missionStep === "environment").map((item) => item.value)].filter(Boolean).join(" · ") || "ยังไม่มี";
+  weatherResult.hidden = false;
+  weatherResult.innerHTML = `<h3>สรุป</h3><p>${comparison.supportedContext}</p><p><strong>เวลาอ้างอิง:</strong> ${escapeHtml(context.matchedTime)} (${escapeHtml(context.timezone)})</p><h3>Weather Data · Weather provider</h3><ul>${observations}</ul><p><strong>ผู้ใช้สังเกตในแปลง · USER:</strong> ${escapeHtml(manual)}</p><h3>Governed Environmental Knowledge · CANONICAL KNOWLEDGE</h3><p>${escapeHtml(comparison.candidateName || "ไม่มี Candidate")}</p><ul>${relevant}</ul><h3>System Comparison</h3><p>${comparison.supportedContext} · เป็นการตรวจว่ามีตัวแปรหรือไม่ ไม่ใช้ threshold และไม่ใช่ Diagnosis หรือ Recommendation</p><h3>ควรตรวจต่อ</h3><p>ตรวจรูปแบบอาการ อวัยวะที่มีอาการ และหลักฐานตาม Photo Mission</p><details><summary>แหล่งข้อมูลและข้อจำกัด</summary><p>Provider: ${context.provider} · product: ${context.product} · retrieved_at: ${context.retrievedAt}</p><p>Target: ${context.targetLocation.latitude}, ${context.targetLocation.longitude} · observation_time: ${escapeHtml(context.targetTime)} · timezone: ${escapeHtml(context.timezone)}</p><p>Data class: ${context.dataClass} · resolution: ${context.resolution} · hourly temporal resolution</p><p>Device GPS accuracy ±${Math.round(caseState.location.accuracy)} m ≠ weather grid resolution. ข้อมูลนี้ไม่ใช่เซนเซอร์ที่กอข้าวจุดนี้</p><p>${context.limitations.join(" · ")}</p><p>Attribution: Weather data by Open-Meteo; underlying models credited by provider.</p></details>`;
+}
+
+async function requestWeatherContext() {
+  if (!caseState) return;
+  if (caseState.location.status !== "captured") { weatherStatus.textContent = "ต้องใช้พิกัดจากอุปกรณ์ — ระบบจะไม่สร้างพิกัดจากชื่อสถานที่"; return; }
+  if (!caseState.observationTime.value) { weatherStatus.textContent = "ต้องบันทึกเวลาที่ตรวจแปลงก่อน"; return; }
+  const target = new Date(caseState.observationTime.value);
+  if (Number.isNaN(target.getTime()) || target.getTime() > Date.now()) { weatherStatus.textContent = "เวลาที่ตรวจแปลงไม่ถูกต้องหรืออยู่ในอนาคต — ไม่ใช้ Forecast แทน Observation"; return; }
+  const today = new Date();
+  const localDate = caseState.observationTime.value.slice(0, 10);
+  const todayDate = new Date(today.getTime() - today.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+  const historical = localDate < todayDate;
+  const endpoint = historical ? "https://archive-api.open-meteo.com/v1/archive" : "https://api.open-meteo.com/v1/forecast";
+  const query = new URLSearchParams({ latitude: String(caseState.location.latitude), longitude: String(caseState.location.longitude), start_date: localDate, end_date: localDate, hourly: WEATHER_VARIABLES.join(","), timezone: "auto", wind_speed_unit: "kmh", precipitation_unit: "mm" });
+  weatherStatus.textContent = "กำลังดึงข้อมูลอากาศ — ส่งเฉพาะพิกัด วันที่ timezone และตัวแปรที่ระบุ";
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 12000);
+  try {
+    const response = await fetch(`${endpoint}?${query}`, { method: "GET", signal: controller.signal, credentials: "omit", referrerPolicy: "no-referrer" });
+    if (!response.ok) throw new Error(`weather provider ${response.status}`);
+    const data = await response.json();
+    if (!Array.isArray(data.hourly?.time) || !data.hourly.time.length) throw new Error("incomplete weather response");
+    const index = closestWeatherIndex(data.hourly.time, caseState.observationTime.value);
+    const variables = Object.fromEntries(WEATHER_VARIABLES.map((key) => [key, { rawValue: data.hourly[key]?.[index] ?? null, value: data.hourly[key]?.[index] ?? null, unit: data.hourly_units?.[key] ?? "unavailable" }]));
+    caseState.weatherContext = { provider: "Open-Meteo", product: historical ? "Historical Weather API / Best Match" : "Forecast API / same-day hourly context", targetLocation: { latitude: caseState.location.latitude, longitude: caseState.location.longitude }, targetTime: caseState.observationTime.value, matchedTime: data.hourly.time[index], retrievedAt: new Date().toISOString(), timezone: data.timezone || "provider did not return timezone", dataClass: historical ? "gridded reanalysis/model-derived historical data" : "gridded forecast/model-derived same-day data", resolution: historical ? "Best Match: 9 km from 2017; older periods may use 0.1° or 0.25° grids" : "provider-selected forecast model grid; model-dependent", variables, limitations: ["grid/model values are not an on-field sensor reading", "precipitation is the preceding-hour sum", "same-day data may be forecast/model-derived", "soil moisture may be unavailable for some models"] };
+    const candidate = caseState.candidates[0];
+    const relevantVariables = governedWeatherVariables[candidate?.key] ?? [];
+    const availableVariables = relevantVariables.filter((key) => variables[WEATHER_TO_KNOWLEDGE[key]]?.value != null);
+    const unavailableVariables = relevantVariables.filter((key) => !availableVariables.includes(key));
+    caseState.environmentalComparison = { candidate: candidate?.key ?? null, candidateName: candidate?.name ?? null, relevantVariables, availableVariables, unavailableVariables, supportedContext: relevantVariables.length === 0 ? "ไม่มีตัวแปรที่ Knowledge ปัจจุบันรองรับเพียงพอ" : availableVariables.length ? "มีข้อมูลบางส่วนที่เกี่ยวข้อง" : "ยังประเมินไม่ได้จากข้อมูลที่มี", evidenceReferences: candidate ? [environmentalProfiles[candidate.key]?.evidence].filter(Boolean) : [] };
+    weatherStatus.textContent = "ดึงข้อมูลแล้ว — การตรวจสอบเคสส่วนอื่นยังทำงานแยกกัน";
+    renderWeatherContext();
+  } catch (error) {
+    weatherStatus.textContent = error.name === "AbortError" ? "หมดเวลารอผู้ให้บริการ — เคสยังใช้งานต่อได้" : "ไม่สามารถดึงข้อมูลอากาศได้ — เคสยังใช้งานต่อได้";
+  } finally { clearTimeout(timer); }
+}
+
+$("[data-weather-request]")?.addEventListener("click", requestWeatherContext);
 
 function missionDomain() {
   return caseState.candidates[0]?.domain ?? "Generic";
@@ -260,4 +335,16 @@ $("[data-management-toggle]")?.addEventListener("click", () => { if (caseState) 
 $("[data-escalate]")?.addEventListener("click", () => { if (!caseState) return; const summary = $("[data-handoff-summary]"); const mission = caseState.photoMission; const completed = mission?.steps.filter((step) => step.status === "completed").length ?? 0; const skipped = mission?.steps.filter((step) => step.status === "skipped").length ?? 0; const locations = mission?.steps.map((step) => step.inspect).join(" · ") ?? "ยังไม่ได้ขอภารกิจ"; summary.hidden = false; summary.innerHTML = `<h2>สรุปสำหรับส่งต่อผู้เชี่ยวชาญ (local prototype)</h2><dl><dt>คำอธิบาย</dt><dd>${escapeHtml(caseState.userText)}</dd><dt>Observations</dt><dd>${caseState.observations.join(" · ") || "ไม่มี"}</dd><dt>รูป</dt><dd>${selectedImages.length} รูป · metadata/local preview only</dd><dt>คำตอบ</dt><dd>${caseState.answers.map(escapeHtml).join(" · ") || "ยังไม่มี"}</dd><dt>Candidates</dt><dd>${caseState.candidates.map((item) => item.name).join(" · ") || "ยังไม่มี"}</dd><dt>Evidence gaps</dt><dd>${caseState.questions.map((item) => item.text).join(" · ") || "ต้องทบทวนโดยผู้เชี่ยวชาญ"}</dd><dt>Contradictions</dt><dd>${caseState.candidates.flatMap((item) => item.contradictions).join(" · ") || "ยังไม่พบที่ระบุได้"}</dd><dt>Management viewed</dt><dd>${caseState.managementViewed ? "YES" : "NO"}</dd><dt>PHOTO MISSION</dt><dd>requested=${mission ? "YES" : "NO"} · completed=${completed} · skipped=${skipped} · images=${selectedImages.length}</dd><dt>User-confirmed observations</dt><dd>${caseState.guidedObservations.map((item) => item.value).join(" · ") || "ยังไม่มี"}</dd><dt>Inspection locations</dt><dd>${locations}</dd><dt>Unresolved observations</dt><dd>${mission?.steps.filter((step) => step.status === "pending").map((step) => step.title).join(" · ") || "ไม่มีที่ค้างในภารกิจ"}</dd></dl><p>ไม่มี binary image data และไม่มีการส่ง email หรือ notification จริง</p>`; summary.scrollIntoView({ behavior: "smooth" }); });
 $("[data-escalate]")?.addEventListener("click", () => { if (!caseState) return; const summary = $("[data-handoff-summary]"); const spatial = document.createElement("section"); const coordinates = caseState.location.status === "captured" ? `${caseState.location.latitude}, ${caseState.location.longitude} · accuracy ±${Math.round(caseState.location.accuracy)} m · captured_at ${caseState.location.capturedAt}` : "not provided"; spatial.innerHTML = `<h3>FIELD CASE CONTEXT</h3><dl><dt>Field identity · User-provided</dt><dd>${escapeHtml(caseState.field.identity || "not provided")}</dd><dt>Human-readable location · User-provided</dt><dd>${escapeHtml([caseState.field.locality, caseState.field.district, caseState.field.province].filter(Boolean).join(" · ") || "not provided")}</dd><dt>Coordinates · Device-provided</dt><dd>${escapeHtml(coordinates)}</dd><dt>Observation time · User-provided</dt><dd>${escapeHtml(caseState.observationTime.value || "not provided")}</dd><dt>First noticed · User-provided</dt><dd>${escapeHtml(caseState.firstNoticed.date || caseState.firstNoticed.category)}</dd><dt>Crop context · User-provided</dt><dd>rice · ${escapeHtml(caseState.cropContext.variety || "variety not provided")} · ${escapeHtml(caseState.cropContext.age || "age not provided")} · ${escapeHtml(caseState.cropContext.growthStage || "stage not provided")} · ${escapeHtml(caseState.cropContext.waterCondition || "water not provided")}</dd><dt>Candidate Knowledge · System-derived</dt><dd>${caseState.candidates.map((item) => item.name).join(" · ") || "none"}</dd></dl><p>Field observation ≠ Canonical Knowledge · Case coordinate ≠ disease distribution · photo ≠ proof of location</p>`; summary.append(spatial); });
 $("[data-new-case]")?.addEventListener("click", () => { selectedImages.forEach((item) => URL.revokeObjectURL(item.url)); selectedImages = []; caseState = null; stream.hidden = true; missionPanel.hidden = true; caseContextPanel.hidden = true; locationStatus.textContent = "ยังไม่ได้ระบุตำแหน่ง"; $("[data-empty-intro]").hidden = false; problem.value = ""; renderImages(); problem.focus(); });
+$("[data-new-case]")?.addEventListener("click", () => { weatherSection.hidden = true; weatherResult.hidden = true; weatherResult.replaceChildren(); weatherStatus.textContent = "ต้องมีพิกัดและเวลาที่ตรวจแปลงก่อน"; });
+
+$("[data-escalate]")?.addEventListener("click", () => {
+  if (!caseState?.weatherContext) return;
+  const summary = $("[data-handoff-summary]");
+  const context = caseState.weatherContext;
+  const comparison = caseState.environmentalComparison;
+  const weather = document.createElement("section");
+  weather.innerHTML = `<h3>WEATHER CONTEXT</h3><dl><dt>Observation location · DEVICE</dt><dd>${context.targetLocation.latitude}, ${context.targetLocation.longitude} · GPS accuracy ±${Math.round(caseState.location.accuracy)} m</dd><dt>Observation time · USER</dt><dd>${escapeHtml(context.targetTime)}</dd><dt>Weather provider · WEATHER PROVIDER</dt><dd>${escapeHtml(context.provider)} · ${escapeHtml(context.product)} · ${escapeHtml(context.dataClass)} · ${escapeHtml(context.timezone)}</dd><dt>Weather observations · WEATHER PROVIDER</dt><dd>${Object.entries(context.variables).map(([key, item]) => `${escapeHtml(key)}=${escapeHtml(item.value ?? "unavailable")} ${escapeHtml(item.unit)}`).join(" · ")}</dd><dt>Manual field environment · USER</dt><dd>${escapeHtml(caseState.cropContext.waterCondition || "not provided")}</dd><dt>Relevant variables · CANONICAL KNOWLEDGE</dt><dd>${comparison.relevantVariables.map(escapeHtml).join(" · ") || "none"} · ${comparison.evidenceReferences.map(escapeHtml).join(" · ") || "no candidate evidence"}</dd><dt>Environmental comparison · SYSTEM COMPARISON</dt><dd>${escapeHtml(comparison.supportedContext)}</dd><dt>Missing variables</dt><dd>${comparison.unavailableVariables.map(escapeHtml).join(" · ") || "none"}</dd><dt>Limitations</dt><dd>${context.limitations.map(escapeHtml).join(" · ")} · GPS accuracy ≠ weather grid resolution</dd></dl>`;
+  summary.append(weather);
+});
+
 window.addEventListener("pagehide", () => selectedImages.forEach((item) => URL.revokeObjectURL(item.url)));

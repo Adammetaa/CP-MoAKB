@@ -197,8 +197,11 @@ export const verifyArtifact = async (root) => {
     if (!assistant.includes(requirement)) throw new Error(`SP Assistant lost product boundary: ${requirement}`);
   }
   const assistantApp = await readFile(resolve(resolvedRoot, "sp-assistant", "assets", "app.js"), "utf8");
-  for (const prohibited of ["fetch(", "XMLHttpRequest", "WebSocket", "sendBeacon", "localStorage", "sessionStorage", "indexedDB", "FileReader"]) {
+  for (const prohibited of ["XMLHttpRequest", "WebSocket", "sendBeacon", "localStorage", "sessionStorage", "indexedDB", "FileReader", "FormData"]) {
     if (assistantApp.includes(prohibited)) throw new Error(`SP Assistant contains prohibited network or persistence capability: ${prohibited}`);
+  }
+  for (const weatherBoundary of ["https://archive-api.open-meteo.com/v1/archive", "https://api.open-meteo.com/v1/forecast", 'credentials: "omit"', 'referrerPolicy: "no-referrer"']) {
+    if (!assistantApp.includes(weatherBoundary)) throw new Error(`SP Assistant lost weather-only network boundary: ${weatherBoundary}`);
   }
   const assistantMetadata = JSON.parse(await readFile(resolve(resolvedRoot, "sp-assistant", "deployment.json"), "utf8"));
   if (assistantMetadata.deployment_mode !== "preview" || assistantMetadata.prototype !== "sp-assistant" || assistantMetadata.status !== "local-demo-not-published" || !/^[0-9a-f]{40}$/.test(assistantMetadata.commit)) throw new Error("SP Assistant deployment metadata is unsafe or incomplete");
