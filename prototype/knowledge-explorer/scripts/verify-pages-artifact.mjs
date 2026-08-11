@@ -40,6 +40,7 @@ const approved = new Set([
   "sp-assistant/deployment.json",
   "sp-assistant/assets/app.js",
   "sp-assistant/assets/chat.css",
+  "sp-assistant/assets/polish.css",
   "sp-assistant/assets/styles.css",
 ]);
 
@@ -59,8 +60,8 @@ export const verifyArtifact = async (root) => {
   const resolvedRoot = resolve(root);
   const files = await walk(resolvedRoot);
   const relativeFiles = files.map((path) => relative(resolvedRoot, path).split(sep).join("/"));
-  if (relativeFiles.length !== 57 || approved.size !== 57) {
-    throw new Error("Pages artifact must contain exactly 57 approved files");
+  if (relativeFiles.length !== 58 || approved.size !== 58) {
+    throw new Error("Pages artifact must contain exactly 58 approved files");
   }
   const unexpected = relativeFiles.filter((path) => !approved.has(path));
   const missing = [...approved].filter((path) => !relativeFiles.includes(path));

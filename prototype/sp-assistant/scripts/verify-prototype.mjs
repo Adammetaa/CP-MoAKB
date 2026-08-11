@@ -5,6 +5,7 @@ const root = resolve(import.meta.dirname, "..");
 const html = await readFile(resolve(root, "index.html"), "utf8");
 const styles = await readFile(resolve(root, "assets", "styles.css"), "utf8");
 const chatStyles = await readFile(resolve(root, "assets", "chat.css"), "utf8");
+const polishStyles = await readFile(resolve(root, "assets", "polish.css"), "utf8");
 const app = await readFile(resolve(root, "assets", "app.js"), "utf8");
 const failures = [];
 
@@ -21,6 +22,8 @@ for (const required of [
   "CONTROL FAILURE ≠ RESISTANCE", "requestSubmit()", "sendButton.disabled",
   "composer-collapsed", "composer-expanded", "composer-summary", "composer-collapse",
   "readingOlderMessages", "activelyEditing", "updateComposerSummary",
+  "detectInputRecovery", "renderInputRecovery", "timestamp-toggle", "jump-latest",
+  "positionAttachmentMenu", "commitPendingImages", "resizeComposerText",
 ]) if (!app.includes(required)) failures.push(`app.js missing chat contract: ${required}`);
 
 for (const prohibited of [
@@ -38,6 +41,9 @@ for (const required of ["--green:#165c3b", "--gold:#d4a017", ":focus-visible", "
 }
 for (const required of [".chat-composer", ".user-turn", ".assistant-turn", ".attachment-menu", "bottom:52px", "100dvh"]) {
   if (!chatStyles.includes(required)) failures.push(`chat.css missing true-chat requirement: ${required}`);
+}
+for (const required of ['font-family:"Prompt"', ".system-turn", ".warning-turn", "position:fixed!important", "z-index:65", "prefers-reduced-motion", ".jump-latest", ".reply-context"]) {
+  if (!polishStyles.includes(required)) failures.push(`polish.css missing freeze requirement: ${required}`);
 }
 if (/<form\b[^>]*(?:action|method)=/i.test(html)) failures.push("forms must remain local and non-network-submittable");
 if (!html.includes('<html lang="th">') || !html.includes('content="noindex,nofollow"')) failures.push("Thai-first or indexing boundary missing");

@@ -101,7 +101,7 @@ def test_root_landing_links_both_prototypes_without_javascript() -> None:
 
 def test_exact_combined_artifact_allowlist_contains_all_lab_pages() -> None:
     verifier = _verifier()
-    assert "exactly 57 approved files" in verifier
+    assert "exactly 58 approved files" in verifier
     for page in LAB_PAGES:
         assert page in verifier
     for asset in (

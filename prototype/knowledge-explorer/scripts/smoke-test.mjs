@@ -120,6 +120,7 @@ try {
     "knowledge-lab/deployment.json",
     "sp-assistant/assets/styles.css",
     "sp-assistant/assets/chat.css",
+    "sp-assistant/assets/polish.css",
     "sp-assistant/assets/app.js",
     "sp-assistant/deployment.json",
   ]) {
