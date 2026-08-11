@@ -4,7 +4,7 @@ chatStyles.rel = "stylesheet";
 chatStyles.href = "assets/chat.css";
 document.head.append(chatStyles);
 const chatLayoutFix = document.createElement("style");
-chatLayoutFix.textContent = ".chat-composer textarea{height:48px!important;min-height:48px!important}@media(max-width:820px){.empty-intro{margin:18px auto 140px}}";
+chatLayoutFix.textContent = `.chat-composer textarea{height:48px!important;min-height:48px!important}.composer-summary,.composer-collapse{min-height:44px;border:0;background:transparent;color:var(--green);font-weight:800;cursor:pointer}.composer-summary{display:flex;width:100%;align-items:center;gap:8px;padding:6px 12px;text-align:left}.composer-summary small{overflow:hidden;color:var(--muted);font-weight:500;text-overflow:ellipsis;white-space:nowrap}.composer-collapse{position:absolute;right:8px;top:5px;z-index:3;width:44px;border-radius:50%;font-size:20px}.composer-expanded{max-height:min(48dvh,390px);overflow:auto}.composer-expanded textarea{height:88px!important;padding-right:52px}.composer-collapsed .image-previews,.composer-collapsed .image-count,.composer-collapsed .image-annotations,.composer-collapsed .privacy-note{display:none!important}.composer-collapsed{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;overflow:visible}.composer-collapsed textarea,.composer-collapsed .composer-summary{grid-column:1;grid-row:1}.composer-collapsed .composer-actions{grid-column:2;grid-row:1}.composer-collapsed.composer-has-summary textarea{visibility:hidden;pointer-events:none}.composer-collapsed .composer-summary[hidden]{display:none}.composer-expanded .composer-summary{display:none}.composer-expanded .composer-collapse{display:block}.composer-collapsed .composer-collapse{display:none}@media(max-width:820px){.empty-intro{margin:18px auto 140px}.composer-expanded{max-height:min(44dvh,340px);padding-top:44px}.composer-expanded:focus-within{max-height:min(38dvh,280px)}}`;
 document.head.append(chatLayoutFix);
 const problem = $("[data-problem]");
 const stream = $("[data-conversation-stream]");
@@ -33,6 +33,44 @@ let caseState = null;
 
 const composer = document.querySelector(".composer-shell");
 composer?.classList.add("chat-composer");
+const composerSummary = document.createElement("button");
+composerSummary.type = "button";
+composerSummary.className = "composer-summary";
+composerSummary.setAttribute("aria-label", "ขยายพื้นที่เขียนข้อความและดูไฟล์แนบ");
+const composerCollapse = document.createElement("button");
+composerCollapse.type = "button";
+composerCollapse.className = "composer-collapse";
+composerCollapse.textContent = "⌄";
+composerCollapse.setAttribute("aria-label", "ย่อพื้นที่เขียนข้อความ");
+composer?.prepend(composerSummary);
+composer?.prepend(composerCollapse);
+let composerExpanded = false;
+let composerInteractionAt = 0;
+const checkedObservationCount = () => annotations?.querySelectorAll('input:checked').length ?? 0;
+function updateComposerSummary() {
+  const imageSummary = selectedImages.length ? `🖼 ${selectedImages.length} รูป` : "";
+  const observationCount = checkedObservationCount();
+  const observationSummary = observationCount ? ` · เลือกสิ่งที่เห็นแล้ว ${observationCount} รายการ` : "";
+  const statusSummary = `${imageSummary}${observationSummary}`.replace(/^ · /, "");
+  const draft = problem?.value.trim();
+  const hasPendingSummary = selectedImages.length > 0 || observationCount > 0 || Boolean(draft);
+  composer?.classList.toggle("composer-has-summary", hasPendingSummary);
+  composerSummary.hidden = !hasPendingSummary;
+  composerSummary.innerHTML = `${statusSummary ? `<strong>${statusSummary}</strong>` : ""}<small>${draft ? escapeHtml(draft) : "เล่าอาการเพิ่มเติม..."}</small>`;
+}
+function setComposerExpanded(expanded, { focus = false } = {}) {
+  composerExpanded = expanded;
+  composer?.classList.toggle("composer-expanded", expanded);
+  composer?.classList.toggle("composer-collapsed", !expanded);
+  composer?.setAttribute("data-composer-state", expanded ? "expanded" : "collapsed");
+  composerSummary.setAttribute("aria-expanded", String(expanded));
+  updateComposerSummary();
+  if (focus) problem?.focus({ preventScroll: true });
+}
+composerSummary.addEventListener("click", () => setComposerExpanded(true, { focus: true }));
+composerCollapse.addEventListener("click", () => setComposerExpanded(false));
+composer?.addEventListener("pointerdown", () => { composerInteractionAt = Date.now(); });
+setComposerExpanded(false);
 const attachmentMenu = document.createElement("div");
 attachmentMenu.className = "attachment-menu";
 attachmentMenu.hidden = true;
@@ -50,6 +88,7 @@ if (attachmentLabel) {
   attachmentLabel.setAttribute("aria-label", "เปิดเมนูแนบข้อมูล");
   attachmentLabel.addEventListener("click", (event) => {
     event.preventDefault();
+    setComposerExpanded(true);
     attachmentMenu.hidden = !attachmentMenu.hidden;
   });
   attachmentLabel.addEventListener("keydown", (event) => { if (["Enter", " "].includes(event.key)) { event.preventDefault(); attachmentLabel.click(); } });
@@ -320,6 +359,7 @@ function startCase() {
     caseState.conversationHistory.push({ role: "SP ASSISTANT", type: "ASSISTANT_MESSAGE", text: "รับข้อมูลเพิ่มเติมแล้วครับ" });
     problem.value = "";
     render();
+    setComposerExpanded(false);
     requestAnimationFrame(() => questionPanel.scrollIntoView({ behavior: "smooth", block: "end" }));
     return;
   }
@@ -329,6 +369,7 @@ function startCase() {
   stream.hidden = false;
   problem.value = "";
   render();
+  setComposerExpanded(false);
   weatherSection.hidden = true;
   fieldWatch.hidden = true;
   stream.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -337,7 +378,8 @@ function startCase() {
 $("[data-submit]")?.addEventListener("click", startCase);
 const sendButton = $("[data-submit]");
 const updateSendState = () => { if (sendButton) sendButton.disabled = !problem?.value.trim(); };
-problem?.addEventListener("input", updateSendState);
+problem?.addEventListener("focus", () => setComposerExpanded(true));
+problem?.addEventListener("input", () => { updateSendState(); updateComposerSummary(); });
 problem?.addEventListener("keydown", (event) => { if (event.key === "Enter" && !event.shiftKey) { event.preventDefault(); startCase(); updateSendState(); } });
 updateSendState();
 $("[data-question-form]")?.addEventListener("submit", (event) => {
@@ -605,6 +647,7 @@ function renderImages() {
   selectedImages.forEach((item, index) => { const wrapper = document.createElement("div"); wrapper.className = "image-preview"; const image = document.createElement("img"); image.src = item.url; image.alt = `รูปที่เลือก ${index + 1}: ${item.file.name}`; const remove = document.createElement("button"); remove.type = "button"; remove.className = "image-remove"; remove.textContent = "×"; remove.setAttribute("aria-label", `นำรูป ${item.file.name} ออก`); remove.addEventListener("click", () => { URL.revokeObjectURL(item.url); selectedImages = selectedImages.filter((candidate) => candidate !== item); renderImages(); }); wrapper.append(image, remove); previews.append(wrapper); });
   previews.hidden = selectedImages.length === 0; imageCount.hidden = selectedImages.length === 0; annotations.hidden = selectedImages.length === 0;
   imageCount.textContent = `เลือกรูปแล้ว ${selectedImages.length} รูป · อยู่ในเบราว์เซอร์ชั่วคราว`;
+  updateComposerSummary();
 }
 
 imageInput?.addEventListener("change", () => {
@@ -618,6 +661,7 @@ imageInput?.addEventListener("change", () => {
   imageInput.value = "";
   attachmentMenu.hidden = true;
   renderImages();
+  if (images.length) setComposerExpanded(true);
   if (caseState && images.length) render();
 });
 $('[data-gallery-action]')?.addEventListener("click", () => imageInput?.click());
@@ -634,7 +678,16 @@ $('[data-attachment-time]')?.addEventListener("click", () => {
   attachmentMenu.hidden = true;
   if (caseState) handleNextAction("REQUEST_FIELD_CONTEXT"); else $("[data-field-toggle]")?.click();
 });
-annotations?.addEventListener("change", () => { if (caseState) render(); });
+annotations?.addEventListener("change", () => { updateComposerSummary(); if (caseState) render(); });
+
+let lastComposerScrollY = window.scrollY;
+window.addEventListener("scroll", () => {
+  const currentScrollY = window.scrollY;
+  const readingOlderMessages = currentScrollY < lastComposerScrollY - 24;
+  const activelyEditing = composer?.contains(document.activeElement) || Date.now() - composerInteractionAt < 800;
+  if (composerExpanded && readingOlderMessages && !activelyEditing) setComposerExpanded(false);
+  lastComposerScrollY = currentScrollY;
+}, { passive: true });
 
 function togglePanel(buttonSelector, panelSelector, html) { const button = $(buttonSelector); const panel = $(panelSelector); button?.addEventListener("click", () => { panel.hidden = !panel.hidden; button.setAttribute("aria-expanded", String(!panel.hidden)); if (!panel.hidden) panel.innerHTML = html; }); }
 togglePanel("[data-management-toggle]", "[data-management-panel]", `<div class="gated-panel"><h3>แนวทางจัดการที่มีข้อมูลรองรับ</h3><p>แสดงหลัง Investigation context เท่านั้น: Monitoring · Prevention · Cultural · Mechanical/Physical · Biological/Natural Enemy · Chemical Context · Follow-up</p><p>Management Option ไม่ใช่ Recommendation</p><a href="../knowledge-explorer/crop-protection-management.html">เปิด Management Knowledge →</a></div>`);
@@ -642,7 +695,7 @@ togglePanel("[data-moa-toggle]", "[data-moa-panel]", `<div class="gated-panel"><
 $("[data-management-toggle]")?.addEventListener("click", () => { if (caseState) caseState.managementViewed = true; });
 $("[data-escalate]")?.addEventListener("click", () => { if (!caseState) return; const summary = $("[data-handoff-summary]"); const mission = caseState.photoMission; const completed = mission?.steps.filter((step) => step.status === "completed").length ?? 0; const skipped = mission?.steps.filter((step) => step.status === "skipped").length ?? 0; const locations = mission?.steps.map((step) => step.inspect).join(" · ") ?? "ยังไม่ได้ขอภารกิจ"; summary.hidden = false; summary.innerHTML = `<h2>สรุปสำหรับส่งต่อผู้เชี่ยวชาญ (local prototype)</h2><dl><dt>คำอธิบาย</dt><dd>${escapeHtml(caseState.userText)}</dd><dt>Observations</dt><dd>${caseState.observations.join(" · ") || "ไม่มี"}</dd><dt>รูป</dt><dd>${selectedImages.length} รูป · metadata/local preview only</dd><dt>คำตอบ</dt><dd>${caseState.answers.map(escapeHtml).join(" · ") || "ยังไม่มี"}</dd><dt>Candidates</dt><dd>${caseState.candidates.map((item) => item.name).join(" · ") || "ยังไม่มี"}</dd><dt>Evidence gaps</dt><dd>${caseState.questions.map((item) => item.text).join(" · ") || "ต้องทบทวนโดยผู้เชี่ยวชาญ"}</dd><dt>Contradictions</dt><dd>${caseState.candidates.flatMap((item) => item.contradictions).join(" · ") || "ยังไม่พบที่ระบุได้"}</dd><dt>Management viewed</dt><dd>${caseState.managementViewed ? "YES" : "NO"}</dd><dt>PHOTO MISSION</dt><dd>requested=${mission ? "YES" : "NO"} · completed=${completed} · skipped=${skipped} · images=${selectedImages.length}</dd><dt>User-confirmed observations</dt><dd>${caseState.guidedObservations.map((item) => item.value).join(" · ") || "ยังไม่มี"}</dd><dt>Inspection locations</dt><dd>${locations}</dd><dt>Unresolved observations</dt><dd>${mission?.steps.filter((step) => step.status === "pending").map((step) => step.title).join(" · ") || "ไม่มีที่ค้างในภารกิจ"}</dd></dl><p>ไม่มี binary image data และไม่มีการส่ง email หรือ notification จริง</p>`; summary.scrollIntoView({ behavior: "smooth" }); });
 $("[data-escalate]")?.addEventListener("click", () => { if (!caseState) return; const summary = $("[data-handoff-summary]"); const spatial = document.createElement("section"); const coordinates = caseState.location.status === "captured" ? `${caseState.location.latitude}, ${caseState.location.longitude} · accuracy ±${Math.round(caseState.location.accuracy)} m · captured_at ${caseState.location.capturedAt}` : "not provided"; spatial.innerHTML = `<h3>FIELD CASE CONTEXT</h3><dl><dt>Field identity · User-provided</dt><dd>${escapeHtml(caseState.field.identity || "not provided")}</dd><dt>Human-readable location · User-provided</dt><dd>${escapeHtml([caseState.field.locality, caseState.field.district, caseState.field.province].filter(Boolean).join(" · ") || "not provided")}</dd><dt>Coordinates · Device-provided</dt><dd>${escapeHtml(coordinates)}</dd><dt>Observation time · User-provided</dt><dd>${escapeHtml(caseState.observationTime.value || "not provided")}</dd><dt>First noticed · User-provided</dt><dd>${escapeHtml(caseState.firstNoticed.date || caseState.firstNoticed.category)}</dd><dt>Crop context · User-provided</dt><dd>rice · ${escapeHtml(caseState.cropContext.variety || "variety not provided")} · ${escapeHtml(caseState.cropContext.age || "age not provided")} · ${escapeHtml(caseState.cropContext.growthStage || "stage not provided")} · ${escapeHtml(caseState.cropContext.waterCondition || "water not provided")}</dd><dt>Candidate Knowledge · System-derived</dt><dd>${caseState.candidates.map((item) => item.name).join(" · ") || "none"}</dd></dl><p>Field observation ≠ Canonical Knowledge · Case coordinate ≠ disease distribution · photo ≠ proof of location</p>`; summary.append(spatial); });
-$("[data-new-case]")?.addEventListener("click", () => { selectedImages.forEach((item) => URL.revokeObjectURL(item.url)); selectedImages = []; caseState = null; stream.hidden = true; missionPanel.hidden = true; caseContextPanel.hidden = true; locationStatus.textContent = "ยังไม่ได้ระบุตำแหน่ง"; $("[data-empty-intro]").hidden = false; problem.value = ""; renderImages(); problem.focus(); });
+$("[data-new-case]")?.addEventListener("click", () => { selectedImages.forEach((item) => URL.revokeObjectURL(item.url)); selectedImages = []; caseState = null; stream.hidden = true; missionPanel.hidden = true; caseContextPanel.hidden = true; locationStatus.textContent = "ยังไม่ได้ระบุตำแหน่ง"; $("[data-empty-intro]").hidden = false; problem.value = ""; renderImages(); setComposerExpanded(false); updateSendState(); });
 $("[data-new-case]")?.addEventListener("click", () => { weatherSection.hidden = true; weatherResult.hidden = true; weatherResult.replaceChildren(); weatherStatus.textContent = "ต้องมีพิกัดและเวลาที่ตรวจแปลงก่อน"; fieldWatch.hidden = true; fieldWatchResults.hidden = true; fieldWatchResults.replaceChildren(); fieldWatchStatus.textContent = "ต้องมีพิกัดและเวลาที่ตรวจแปลงใน CURRENT CASE ก่อน"; $("[data-watch-distance]").value = ""; });
 
 $("[data-escalate]")?.addEventListener("click", () => {

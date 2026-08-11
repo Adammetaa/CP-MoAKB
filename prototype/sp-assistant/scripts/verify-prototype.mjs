@@ -19,6 +19,8 @@ for (const required of [
   "attachment-menu", "data-camera-action", "data-gallery-action", "data-detail-sheet",
   "Photo received ≠ Photo analyzed", "Candidate Knowledge ≠ Diagnosis",
   "CONTROL FAILURE ≠ RESISTANCE", "requestSubmit()", "sendButton.disabled",
+  "composer-collapsed", "composer-expanded", "composer-summary", "composer-collapse",
+  "readingOlderMessages", "activelyEditing", "updateComposerSummary",
 ]) if (!app.includes(required)) failures.push(`app.js missing chat contract: ${required}`);
 
 for (const prohibited of [
