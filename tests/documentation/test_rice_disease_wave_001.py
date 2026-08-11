@@ -39,7 +39,7 @@ def test_wave_materializes_two_traceable_rice_disease_subjects() -> None:
         "P7-S2.2.2-C",
     ):
         assert required in text
-    assert len(verify()) == 661
+    assert len(verify()) == 667
 
 
 def test_wave_preserves_scientific_and_engineering_boundaries() -> None:

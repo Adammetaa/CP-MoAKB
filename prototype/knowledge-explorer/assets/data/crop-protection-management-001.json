@@ -1,0 +1,22 @@
+{
+  "meta": { "kind": "real-governed-knowledge", "status": "accepted-internal-not-published", "language": "th", "rights": "source-pages-images-tables-layout-and-passages-suppressed" },
+  "counts": { "domains": 3, "problem_subjects": 43, "evidence": 14, "claims": 22, "management_options": 7, "active_ingredients": 6, "moa_relationships": 6, "irac_relationships": 6, "frac_relationships": 0, "hrac_relationships": 0, "registration_relationships": 0, "questions": 16, "issues": 6, "packages": 1, "views": 1 },
+  "management": [
+    { "id": "MO-CPM-001/v1", "domain": "insect", "category": "การติดตาม/เฝ้าระวัง", "summary": "ตรวจระยะแมลง ส่วนข้าว รูปแบบความเสียหาย การกระจาย และระยะข้าวก่อนพิจารณาการจัดการ", "evidence": "EV-RIC-001/v1–EV-RIC-019/v1" },
+    { "id": "MO-CPM-002/v1", "domain": "insect", "category": "ศัตรูธรรมชาติ", "summary": "สังเกตผู้ล่าและตัวเบียนที่แหล่งข้อมูลระบุ โดยไม่รับประกันการควบคุม", "evidence": "RL-RIC-NE-001/v1–RL-RIC-NE-010/v1" },
+    { "id": "MO-CPM-003/v1", "domain": "weed", "category": "การป้องกัน", "summary": "ป้องกันเมล็ดหรือส่วนขยายพันธุ์วัชพืชเข้าสู่หรือแพร่ในแปลง", "evidence": "EV-RWC-005/v1" },
+    { "id": "MO-CPM-004/v1", "domain": "weed", "category": "การจัดการเขตกรรม", "summary": "หมวดแนวทางการเตรียมดินและวิธีปลูกตามขอบเขตแหล่งข้อมูล", "evidence": "EV-RWC-005/v1" },
+    { "id": "MO-CPM-005/v1", "domain": "weed", "category": "กายภาพ/เครื่องจักร", "summary": "ถอน ตัด หรือใช้เครื่องมือในบริบทที่แหล่งข้อมูลรองรับ", "evidence": "EV-RWC-005/v1" },
+    { "id": "MO-CPM-006/v1", "domain": "weed", "category": "ชีววิธี", "summary": "แหล่งข้อมูลยอมรับชีววิธีเป็นหมวด แต่ไม่สร้างการรับประกันเฉพาะสิ่งมีชีวิต", "evidence": "EV-RWC-005/v1" },
+    { "id": "MO-CPM-007/v1", "domain": "cross-domain", "category": "ติดตามผล/ประเมินซ้ำ", "summary": "ตรวจตัวตน ระยะ เวลา อากาศ น้ำ การคลุมพื้นที่ และฉลากก่อนตีความการควบคุมล้มเหลว", "evidence": "EV-RWC-008/v1" }
+  ],
+  "active_ingredients": [
+    { "name": "Carbofuran", "group": "1A", "moa": "Acetylcholinesterase inhibitors", "page": 7 },
+    { "name": "Fipronil", "group": "2B", "moa": "GABA-gated chloride channel blockers", "page": 7 },
+    { "name": "Imidacloprid", "group": "4A", "moa": "nAChR competitive modulators", "page": 8 },
+    { "name": "Cartap hydrochloride", "group": "14", "moa": "nAChR channel blockers", "page": 11 },
+    { "name": "Buprofezin", "group": "16", "moa": "Inhibitors of chitin biosynthesis, type 1", "page": 11 },
+    { "name": "Chlorantraniliprole", "group": "28", "moa": "Ryanodine receptor modulators", "page": 13 }
+  ],
+  "authorities": { "IRAC": "integrated-v11.5", "FRAC": "unresolved-source-absent", "HRAC": "unresolved-source-absent", "thai_registration": "separate-administrative-layer-no-use-edge" }
+}

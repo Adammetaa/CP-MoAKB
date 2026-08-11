@@ -324,6 +324,14 @@ RICE_WEED_CORPUS_001_DOCUMENTS = (
     "docs/knowledge/rice-weed-corpus-001/packages-views-and-traceability.md",
     "docs/knowledge/rice-weed-corpus-001/reconciliation-review-and-issues.md",
 )
+CROP_PROTECTION_MANAGEMENT_001_DOCUMENTS = (
+    "docs/knowledge/crop-protection-management-001/README.md",
+    "docs/knowledge/crop-protection-management-001/sources-and-authority.md",
+    "docs/knowledge/crop-protection-management-001/management-options.md",
+    "docs/knowledge/crop-protection-management-001/active-ingredients-and-moa.md",
+    "docs/knowledge/crop-protection-management-001/failed-control-and-governance.md",
+    "docs/knowledge/crop-protection-management-001/packages-views-and-traceability.md",
+)
 KNOWLEDGE_GOVERNANCE_STANDARDS = (
     "docs/knowledge/governance/README.md",
     "docs/knowledge/governance/KGS-001-knowledge-governance-model.md",

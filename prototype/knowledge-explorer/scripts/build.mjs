@@ -27,6 +27,7 @@ const pages = [
   "rice-disease-corpus.html",
   "rice-insect-corpus.html",
   "rice-weed-corpus.html",
+  "crop-protection-management.html",
 ];
 const labPages = [
   "index.html",
@@ -112,6 +113,9 @@ if (riceInsectCorpus.meta?.rights !== "source-pages-images-tables-layout-and-pas
 const riceWeedCorpus = JSON.parse(await readFile(resolve(root, "assets", "data", "rice-weed-corpus-001.json"), "utf8"));
 if (riceWeedCorpus.meta?.status !== "accepted-internal-not-published" || riceWeedCorpus.subjects?.length !== 8 || riceWeedCorpus.counts?.packages !== 8 || riceWeedCorpus.counts?.views !== 8 || riceWeedCorpus.counts?.differential_relationships !== 3) failures.push("rice weed corpus identity or counts are invalid");
 if (riceWeedCorpus.meta?.rights !== "source-pages-images-tables-layout-and-passages-suppressed") failures.push("rice weed corpus rights boundary is invalid");
+const management = JSON.parse(await readFile(resolve(root, "assets", "data", "crop-protection-management-001.json"), "utf8"));
+if (management.meta?.status !== "accepted-internal-not-published" || management.counts?.management_options !== 7 || management.counts?.active_ingredients !== 6 || management.counts?.irac_relationships !== 6 || management.counts?.frac_relationships !== 0 || management.counts?.hrac_relationships !== 0 || management.counts?.registration_relationships !== 0) failures.push("crop protection management integration is invalid");
+if (management.meta?.rights !== "source-pages-images-tables-layout-and-passages-suppressed") failures.push("crop protection management rights boundary is invalid");
 if (failures.length) throw new Error(`Prototype validation failed:\n${failures.join("\n")}`);
 
 await verifyLocalization();
