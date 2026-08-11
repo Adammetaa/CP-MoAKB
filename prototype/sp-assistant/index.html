@@ -1,114 +1,17 @@
 <!doctype html>
 <html lang="th">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="robots" content="noindex,nofollow">
-  <meta name="description" content="SP Assistant ต้นแบบผู้ช่วยตรวจสอบปัญหาในแปลงแบบสนทนา ใช้รูปในเบราว์เซอร์ชั่วคราวและองค์ความรู้ที่ผ่านการกำกับดูแล">
-  <title>SP Assistant · ผู้ช่วยตรวจสอบปัญหาในแปลง</title>
-  <link rel="stylesheet" href="assets/styles.css">
-  <script src="assets/app.js" defer></script>
-</head>
-<body>
-  <a class="skip-link" href="#workspace">ข้ามไปยังพื้นที่สนทนา</a>
-  <div class="prototype-notice"><strong>ต้นแบบ SP Assistant</strong><span>ไม่ใช่คำวินิจฉัยหรือคำแนะนำ · ไม่มีการอัปโหลดข้อมูล</span></div>
-  <header class="topbar">
-    <a class="product-mark" href="index.html" aria-label="SP Assistant หน้าหลัก"><span class="leaf-mark" aria-hidden="true"></span><span><strong>SP Assistant</strong><small>powered by CP-MoAKB</small></span></a>
-    <nav class="desktop-nav" aria-label="การนำทางหลัก">
-      <a class="active" href="index.html">SP Assistant</a><a href="#cases">เคสของฉัน</a><a href="../knowledge-explorer/rice-disease-corpus.html">องค์ความรู้</a><a href="#tools">เครื่องมือ</a><a href="#history">รายงาน / ประวัติ</a><a href="#help">ช่วยเหลือ</a>
-    </nav>
-    <span class="local-badge"><span aria-hidden="true">●</span> ทำงานในเครื่อง</span>
-  </header>
-
-  <main id="workspace" class="workspace">
-    <aside class="left-rail" aria-label="เคสและเครื่องมือ">
-      <button class="new-case" type="button" data-new-case><span aria-hidden="true">＋</span> เริ่มเคสใหม่</button>
-      <section id="cases"><p class="rail-label">เคสของฉัน</p><button class="case-item active" type="button"><span class="case-icon" aria-hidden="true">✦</span><span><strong>เคสทดลองในเครื่อง</strong><small>ยังไม่ได้บันทึกถาวร</small></span></button></section>
-      <section id="tools" class="rail-links"><p class="rail-label">เครื่องมือ</p><a href="../knowledge-explorer/rice-disease-corpus.html">คลังโรคข้าว</a><a href="#field-info">ข้อมูลแปลง</a></section>
-      <div class="local-note"><span aria-hidden="true">⌂</span><p><strong>ข้อมูลอยู่ในเบราว์เซอร์นี้</strong><br>รีเฟรชแล้วข้อความและรูปอาจหายไป</p></div>
-    </aside>
-
-    <section class="conversation" aria-label="พื้นที่สนทนา">
-      <div class="empty-intro" data-empty-intro>
-        <span class="assistant-orb" aria-hidden="true">SP</span>
-        <p class="eyebrow">ผู้ช่วยตรวจสอบปัญหาในแปลง</p>
-        <h1>วันนี้พบปัญหาอะไรในแปลง?</h1>
-        <p>เล่าสิ่งที่เห็นได้เลย ไม่ต้องเลือกหมวดก่อน ระบบจะแสดงข้อมูลที่ยังขาดและองค์ความรู้ที่เกี่ยวข้องเพื่อช่วยวางขั้นตอนตรวจต่อ</p>
-      </div>
-
-      <div class="conversation-stream" data-conversation-stream hidden aria-live="polite">
-        <article class="message user-message"><span class="avatar">คุณ</span><div><p data-user-message>ข้าวประมาณ 45 วัน ใบมีจุดสีน้ำตาลหลายจุด</p><small>ข้อความสำหรับเคสทดลองในเครื่อง</small></div></article>
-        <article class="message assistant-message"><span class="avatar">SP</span><div class="investigation-response">
-          <div class="response-heading"><span class="status-icon" aria-hidden="true">⌕</span><div><p class="eyebrow">เริ่มตรวจสอบแล้ว</p><h2>ขอรวบรวมข้อมูลก่อนสรุป</h2></div><span class="status-pill">ยังไม่ยืนยันสาเหตุ</span></div>
-          <div class="investigation-grid">
-            <section><h3><span aria-hidden="true">✓</span> ข้อมูลที่ได้รับ</h3><p data-received-summary>ข้าวอายุประมาณ 45 วัน พบจุดสีน้ำตาลหลายจุดบนใบ</p></section>
-            <section><h3><span aria-hidden="true">◌</span> สิ่งที่สังเกตได้</h3><p>มีข้อมูลเรื่องอายุข้าว ตำแหน่งอาการบนใบ และสีของจุด แต่ยังไม่มีรายละเอียดรูปร่างและการกระจาย</p></section>
-            <section><h3><span aria-hidden="true">◇</span> สาเหตุที่ควรตรวจต่อ</h3><p>เปรียบเทียบลักษณะกับองค์ความรู้ที่เกี่ยวข้องหลายรายการ โดยยังไม่จัดอันดับและยังไม่ยืนยันสาเหตุ</p></section>
-            <section class="missing"><h3><span aria-hidden="true">!</span> ข้อมูลที่ยังขาด</h3><p>ตำแหน่งใบบน/ล่าง รูปร่างแผล การกระจายในแปลง สภาพฝนหรือความชื้น และประวัติการใช้สาร</p></section>
-            <section><h3><span aria-hidden="true">→</span> ขั้นตอนถัดไป</h3><p>ตอบคำถามด้านล่างหรือเพิ่มรูปใกล้และรูปภาพรวมแปลง เพื่อเปรียบเทียบกับองค์ความรู้ที่เกี่ยวข้อง</p></section>
-          </div>
-          <p class="boundary-copy"><strong>หลักฐานและข้อจำกัด:</strong> การเชื่อมโยงนี้เป็นการสาธิต UX แบบกำหนดผลไว้ล่วงหน้า ไม่ใช่การอนุมาน ไม่ยืนยันโรค และไม่เลือกวิธีจัดการให้แปลง</p>
-        </div></article>
-
-        <section class="question-panel" aria-labelledby="question-title">
-          <div><p class="eyebrow">ข้อมูลที่ยังขาด</p><h2 id="question-title">ขอข้อมูลเพิ่มอีกเล็กน้อย</h2><p>ตอบเท่าที่ทราบ หรือข้ามไปก่อนได้</p></div>
-          <div class="question-list">
-            <label><input type="checkbox"> แผลอยู่ที่ใบล่างหรือใบใหม่มากกว่า?</label>
-            <label><input type="checkbox"> พบอาการกระจายทั้งแปลงหรือเป็นหย่อม?</label>
-            <label><input type="checkbox"> ช่วง 3–5 วันที่ผ่านมา มีฝนหรือความชื้นสูงหรือไม่?</label>
-            <label><input type="checkbox"> เคยใช้สารอะไรมาก่อน?</label>
-          </div>
-          <div class="question-actions"><button type="button" class="button secondary" data-skip>ข้ามตอนนี้</button><button type="button" class="button" data-answer>ตอบคำถาม</button></div>
-        </section>
-      </div>
-
-      <section class="composer-shell" aria-label="ส่งข้อมูลปัญหาในแปลง">
-        <label class="sr-only" for="problem">อธิบายปัญหาในแปลง</label>
-        <textarea id="problem" rows="4" placeholder="เช่น ข้าวอายุประมาณ 45 วัน ใบมีแผลสีน้ำตาล กระจายหลายจุดในแปลง..." data-problem></textarea>
-        <div class="image-previews" data-image-previews hidden aria-live="polite"></div>
-        <p class="image-count" data-image-count hidden>เลือกรูปแล้ว 0 รูป</p>
-        <div class="composer-actions">
-          <label class="attachment-button"><input type="file" accept="image/*" multiple data-image-input><span aria-hidden="true">＋</span> เพิ่มรูปภาพ</label>
-          <button type="button" class="field-button" data-field-toggle aria-expanded="false"><span aria-hidden="true">▤</span> ข้อมูลแปลง</button>
-          <button type="button" class="submit-button" data-submit>เริ่มตรวจสอบ <span aria-hidden="true">→</span></button>
-        </div>
-        <p class="privacy-note"><span aria-hidden="true">▣</span> รุ่นทดลองนี้ยังไม่อัปโหลดหรือจัดเก็บรูปภาพ รูปจะถูกใช้เพื่อจำลองขั้นตอนการตรวจสอบเท่านั้น</p>
-      </section>
-
-      <section id="field-info" class="field-panel" data-field-panel hidden>
-        <div><label for="rice-age">อายุข้าว <span>ไม่บังคับ</span></label><input id="rice-age" placeholder="เช่น 45 วัน"></div>
-        <div><label for="variety">พันธุ์ <span>ไม่บังคับ</span></label><input id="variety" placeholder="ถ้าทราบ"></div>
-        <div><label for="province">พื้นที่ / จังหวัด <span>ไม่บังคับ</span></label><input id="province" placeholder="เช่น สุพรรณบุรี"></div>
-        <div><label for="observed-date">วันที่พบอาการ <span>ไม่บังคับ</span></label><input id="observed-date" type="date"></div>
-      </section>
-
-      <div class="quick-starters" data-quick-starters><span>เริ่มจากหัวข้อ</span><button type="button">โรค</button><button type="button">แมลง</button><button type="button">วัชพืช</button><button type="button">อาการผิดปกติ</button><button type="button">สารที่ใช้แล้วไม่ได้ผล</button><button type="button">ไม่แน่ใจว่าเกิดจากอะไร</button></div>
-      <noscript><div class="noscript-note"><strong>ยังเริ่มได้แม้ไม่ใช้ JavaScript</strong><p>พิมพ์รายละเอียดอย่างอายุข้าว พันธุ์ พื้นที่ วันที่พบอาการ ตำแหน่งและการกระจายของอาการ จากนั้นใช้ลิงก์องค์ความรู้ด้านล่างประกอบการตรวจสอบ รูปภาพและการสลับสถานะต้องใช้ JavaScript แต่ไม่มีข้อมูลถูกส่งออกจากอุปกรณ์</p></div></noscript>
-    </section>
-
-    <aside class="right-rail" aria-label="องค์ความรู้และหลักฐานที่เกี่ยวข้อง">
-      <div class="context-heading"><div><p class="rail-label">องค์ความรู้ที่เกี่ยวข้อง</p><h2>ใช้ประกอบการตรวจต่อ</h2></div><span class="governed-label"><span aria-hidden="true">✓</span> ผ่านการตรวจสอบ</span></div>
-      <p class="context-intro">ตัวอย่างนี้ใช้เฉพาะองค์ความรู้จริงที่ผ่าน Governance แล้ว ไม่ใช่ข้อสรุปของเคส</p>
-      <article class="knowledge-card featured">
-        <div class="knowledge-card-heading"><span class="knowledge-symbol" aria-hidden="true">ใบ</span><div><h3>โรคใบจุดสีน้ำตาล</h3><p>Brown Spot</p></div></div>
-        <p class="match-label">องค์ความรู้ที่มีลักษณะเกี่ยวข้อง</p><ul><li>จุดสีน้ำตาลกลมหรือรูปไข่</li><li>พบได้บนใบและเมล็ด</li><li>มีบริบทด้านคุณภาพเมล็ด</li></ul>
-        <div class="card-status"><span aria-hidden="true">✓</span><span><strong>องค์ความรู้ที่ผ่าน Governance</strong><small>มีแหล่งอ้างอิง 2 แหล่ง</small></span></div>
-        <a class="card-link" href="../knowledge-explorer/rice-disease-corpus.html">ดูรายละเอียดในคลังองค์ความรู้ <span aria-hidden="true">→</span></a>
-        <details><summary>รายละเอียดแหล่งข้อมูล</summary><p>Knowledge → Evidence → Source<br>มหาวิทยาลัยเกษตรศาสตร์ หน้า 15–18<br>ศูนย์วิจัยข้าวปราจีนบุรี หน้า 3–4</p></details>
-      </article>
-      <article class="knowledge-card"><div class="knowledge-card-heading"><span class="knowledge-symbol" aria-hidden="true">ใบ</span><div><h3>โรคไหม้</h3><p>Blast</p></div></div><p>ข้อมูลอาการบนใบและบริบทความชื้นมีไว้สำหรับเปรียบเทียบ โดยยังไม่ยืนยันสาเหตุ</p><a class="text-link" href="../knowledge-explorer/rice-disease-corpus.html">เปิดคลังองค์ความรู้</a></article>
-      <div class="context-heading insect-context"><div><p class="rail-label">องค์ความรู้แมลงศัตรูข้าว</p><h2>ตัวอย่างสิ่งที่ควรตรวจต่อ</h2></div><span class="governed-label"><span aria-hidden="true">✓</span> ผ่านการตรวจสอบ</span></div>
-      <article class="knowledge-card"><div class="knowledge-card-heading"><span class="knowledge-symbol" aria-hidden="true">แมลง</span><div><h3>หนอนห่อใบข้าว</h3><p>Rice leaffolder</p></div></div><p><strong>ตรวจดู:</strong> ใบพับหรือห่อ ตัวหนอนภายใน และแถบสีขาวจากการกินเนื้อใบ องค์ความรู้นี้ไม่ยืนยันสาเหตุของเคส</p><a class="text-link" href="../knowledge-explorer/rice-insect-corpus.html">เปิดคลังแมลงศัตรูข้าว</a></article>
-      <article class="knowledge-card"><div class="knowledge-card-heading"><span class="knowledge-symbol" aria-hidden="true">แมลง</span><div><h3>เพลี้ยกระโดดสีน้ำตาล</h3><p>Brown planthopper</p></div></div><p><strong>ตรวจดู:</strong> ตัวอ่อนหรือตัวเต็มวัยบริเวณโคนต้น การกระจายเป็นหย่อม และศัตรูธรรมชาติที่พบ</p><a class="text-link" href="../knowledge-explorer/rice-insect-corpus.html">ดูรายละเอียดที่ตรวจสอบแล้ว</a></article>
-      <div class="context-heading insect-context"><div><p class="rail-label">องค์ความรู้วัชพืชในนาข้าว</p><h2>แยกกลุ่มก่อนพิจารณาการจัดการ</h2></div><span class="governed-label"><span aria-hidden="true">✓</span> ผ่านการตรวจสอบ</span></div>
-      <article class="knowledge-card"><div class="knowledge-card-heading"><span class="knowledge-symbol" aria-hidden="true">วัชพืช</span><div><h3>กกขนาก</h3><p>ชื่อวิทยาศาสตร์ยังไม่รองรับจาก Source</p></div></div><p><strong>ตรวจดู:</strong> ลำต้นมีข้อปล้องหรือไม่ หน้าตัดเป็นเหลี่ยมหรือกลม ช่อดอก และสภาพน้ำ ข้อมูลนี้สนับสนุนเพียงการตรวจกลุ่ม ไม่ยืนยันชนิด</p><a class="text-link" href="../knowledge-explorer/rice-weed-corpus.html">เปิดคลังวัชพืชในนาข้าว</a></article>
-      <article class="knowledge-card"><div class="knowledge-card-heading"><span class="knowledge-symbol" aria-hidden="true">?</span><div><h3>ใช้สารแล้วไม่อยู่</h3><p>Investigation required</p></div></div><p><strong>ขอข้อมูลเพิ่ม:</strong> เป้าหมาย ระยะ สารออกฤทธิ์ สูตร/ความเข้มข้น อัตราตามฉลาก วันพ่น การคลุมพื้นที่ น้ำ อากาศ ฝน ผลหลังพ่น การงอกใหม่ และ MoA ที่ใช้ซ้ำ</p><p><strong>CONTROL FAILURE ≠ RESISTANCE</strong> ความต้านทานเป็นสมมติฐานที่ต้องมีหลักฐาน ห้ามเพิ่มอัตราเกินฉลาก</p><a class="text-link" href="../knowledge-explorer/crop-protection-management.html">เปิดตัวเลือกการจัดการ MoA และคำถามตรวจเพิ่ม</a></article>
-      <article class="knowledge-card"><div class="knowledge-card-heading"><span class="knowledge-symbol" aria-hidden="true">MoA</span><div><h3>ข้อมูลสารออกฤทธิ์</h3><p>IRAC classification reference</p></div></div><p>อธิบายได้ว่าสารอยู่กลุ่มเดียวกันหรือต่างกันตาม IRAC v11.5 แต่ไม่ใช้การจัดกลุ่มเพื่อยืนยันประสิทธิภาพ ทะเบียน หรือเลือกวิธีให้เคส</p><a class="text-link" href="../knowledge-explorer/crop-protection-management.html">ดู IRAC และขอบเขต FRAC/HRAC</a></article>
-      <div class="not-diagnosis"><span aria-hidden="true">!</span><p><strong>ยังไม่สามารถยืนยันได้ และยังเลือกวิธีไม่ได้</strong><br>Management Option ไม่ใช่ Recommendation และข้อมูลนี้ไม่ใช่การจัดอันดับ คำวินิจฉัย หรือคำแนะนำเฉพาะแปลง</p></div>
-    </aside>
-      <article class="knowledge-card authority-disclosure"><div class="knowledge-card-heading"><span class="knowledge-symbol" aria-hidden="true">A</span><div><h3>ขอบเขต Authority</h3><p>IRAC v11.5 · FRAC 2026 · HRAC 2026 · Thai registration snapshot</p></div></div><p>แสดงสารออกฤทธิ์ → MoA → Authority + Version → Thai Registration Context → Management Evidence → Limitation โดย classification ไม่ใช่ประสิทธิภาพ ทะเบียนไม่ใช่คำแนะนำ และ CONTROL FAILURE ≠ RESISTANCE</p><a class="text-link" href="../knowledge-explorer/crop-protection-management.html">ตรวจสอบ Authority และข้อจำกัด</a></article>
-  </main>
-
-  <nav class="mobile-nav" aria-label="การนำทางมือถือ"><a class="active" href="index.html"><span aria-hidden="true">⌂</span>หน้าหลัก</a><a href="#cases"><span aria-hidden="true">▤</span>เคส</a><a href="../knowledge-explorer/rice-disease-corpus.html"><span aria-hidden="true">◇</span>องค์ความรู้</a><a href="#help"><span aria-hidden="true">○</span>โปรไฟล์</a></nav>
-</body>
-</html>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><meta name="description" content="SP Assistant ต้นแบบตรวจสอบเคสแบบกำหนดกฎ"><title>SP Assistant · ตรวจสอบปัญหาในแปลง</title><link rel="stylesheet" href="assets/styles.css"><script src="assets/app.js" defer></script></head>
+<body><a class="skip-link" href="#workspace">ข้ามไปยังพื้นที่สนทนา</a><div class="prototype-notice"><strong>ต้นแบบ SP Assistant</strong><span>ไม่ใช่คำวินิจฉัยหรือคำแนะนำ · ไม่มีการอัปโหลดหรือจัดเก็บรูปภาพ</span></div>
+<header class="topbar"><a class="product-mark" href="index.html"><span class="leaf-mark" aria-hidden="true"></span><span><strong>SP Assistant</strong><small>Crop Protection Investigation</small></span></a><nav class="desktop-nav"><a class="active" href="index.html">ผู้ช่วยตรวจสอบ</a><a href="../knowledge-explorer/">Knowledge Explorer</a></nav><span class="local-badge"><span>●</span> local · deterministic</span></header>
+<main class="workspace" id="workspace">
+<aside class="left-rail"><button type="button" class="new-case" data-new-case><span>＋</span> เริ่มเคสใหม่</button><p class="rail-label">เคสชั่วคราว</p><div class="case-item"><span class="case-icon">⌕</span><span><strong data-case-label>ยังไม่มีเคส</strong><small>รีเฟรชแล้วข้อมูลจะถูกล้าง</small></span></div><div class="local-note"><span>▣</span><p>ข้อมูลและรูปอยู่ในหน่วยความจำของแท็บนี้เท่านั้น ไม่มี backend หรือ cloud</p></div></aside>
+<section class="conversation" aria-label="การสนทนาตรวจสอบเคส">
+<div class="empty-intro" data-empty-intro><div class="assistant-orb">SP</div><p class="eyebrow">Deterministic case investigation</p><h1>วันนี้พบปัญหาอะไรในแปลง?</h1><p>เล่าสิ่งที่เห็นได้เลย ไม่ต้องเลือกหมวดก่อน ระบบจะตรวจเฉพาะคำบ่งชี้ที่กำหนดไว้ และเก็บข้อความที่ตีความไม่ได้ตามที่ผู้ใช้กรอก</p></div>
+<div class="conversation-stream" data-conversation-stream hidden aria-live="polite"><article class="message user-message"><span class="avatar">คุณ</span><div><p data-user-message></p><small>ข้อความเคสในหน่วยความจำชั่วคราว</small></div></article><div data-engine-output></div><section class="question-panel" data-question-panel><p class="eyebrow">ข้อมูลที่ยังขาด</p><h2>คำถามถัดไปตามลำดับการตรวจสอบ</h2><p>แสดงครั้งละ 2–5 ข้อ ลำดับนี้ไม่ใช่อันดับความน่าจะเป็น</p><form data-question-form><div class="question-list" data-question-list></div><div class="question-actions"><button type="button" class="button secondary" data-skip>ข้ามตอนนี้</button><button type="submit" class="button">บันทึกคำตอบและตรวจใหม่</button></div></form></section><section class="investigation-tools" data-investigation-tools hidden><button type="button" class="button secondary" data-management-toggle aria-expanded="false">ดู Management Knowledge</button><button type="button" class="button secondary" data-moa-toggle aria-expanded="false">ข้อมูลสารออกฤทธิ์และ MoA</button><button type="button" class="button" data-escalate>ส่งต่อผู้เชี่ยวชาญ</button><div data-management-panel hidden></div><div data-moa-panel hidden></div></section><section class="handoff-summary" data-handoff-summary hidden></section></div>
+<section class="composer-shell" aria-label="ส่งข้อมูลปัญหาในแปลง"><label class="sr-only" for="problem">อธิบายปัญหาในแปลง</label><textarea id="problem" rows="4" placeholder="เช่น ข้าว 45 วัน ใบมีจุดสีน้ำตาลหลายจุด" data-problem></textarea><div class="image-previews" data-image-previews hidden aria-live="polite"></div><p class="image-count" data-image-count hidden></p><fieldset class="image-annotations" data-image-annotations hidden><legend>จากรูปนี้ ฉันเห็น (เลือกด้วยตนเอง)</legend><label><input type="checkbox" value="leaf_spots"> ใบมีจุด</label><label><input type="checkbox" value="folded_leaf"> ใบม้วน/ใบพับ</label><label><input type="checkbox" value="insect_under_leaf"> แมลงอยู่ใต้ใบ</label><label><input type="checkbox" value="dry_shoot"> ยอดแห้ง</label><label><input type="checkbox" value="other"> อื่น ๆ</label></fieldset><div class="composer-actions"><label class="attachment-button"><input type="file" accept="image/*" multiple data-image-input><span>＋</span> เพิ่มรูปภาพ</label><button type="button" class="field-button" data-field-toggle aria-expanded="false">ข้อมูลแปลง</button><button type="button" class="submit-button" data-submit>เริ่มตรวจสอบ <span>→</span></button></div><p class="privacy-note">รุ่นทดลองนี้ยังไม่อัปโหลดหรือจัดเก็บรูปภาพ และไม่มี OCR หรือ computer vision</p></section>
+<section id="field-info" class="field-panel" data-field-panel hidden><div><label for="rice-age">อายุข้าว <span>ไม่บังคับ</span></label><input id="rice-age" placeholder="เช่น 45 วัน" data-rice-age></div><div><label for="variety">พันธุ์ <span>ไม่บังคับ</span></label><input id="variety" data-variety></div><div><label for="province">พื้นที่ / จังหวัด <span>ไม่บังคับ</span></label><input id="province" data-location></div><div><label for="observed-date">วันที่พบอาการ <span>ไม่บังคับ</span></label><input id="observed-date" type="date" data-observed-date></div></section>
+<div class="quick-starters" data-quick-starters><span>ตัวอย่าง</span><button type="button" data-example="ข้าว 45 วัน ใบมีจุดสีน้ำตาลหลายจุด">โรค</button><button type="button" data-example="ใบม้วนและพบหนอนอยู่ในใบ">แมลง</button><button type="button" data-example="วัชพืชลำต้นเป็นเหลี่ยมในนาข้าว">วัชพืช</button><button type="button" data-example="พ่นแล้วไม่ตาย ใช้สารแล้วไม่อยู่">สารที่ใช้แล้วไม่ได้ผล</button></div>
+<noscript><div class="noscript-note"><strong>ยังเริ่มตรวจสอบได้แม้ไม่ใช้ JavaScript</strong><p>จดอายุข้าว ระยะ ส่วนพืช ลักษณะอาการ การกระจาย สภาพน้ำ อากาศ และประวัติการใช้สาร แล้วเปิดคลังโรค แมลง วัชพืช หรือการจัดการด้านข้างเพื่อเทียบหลักฐานด้วยตนเอง รูปภาพไม่ถูกส่งออกจากอุปกรณ์</p></div></noscript>
+</section>
+<aside class="right-rail"><div class="context-heading"><div><p class="rail-label">Case context</p><h2>องค์ความรู้สำหรับตรวจต่อ</h2></div><span class="governed-label">ผ่าน Governance</span></div><p class="context-intro">Candidate ไม่ใช่ Diagnosis และไม่ใช่การจัดอันดับความน่าจะเป็น</p><div data-related-summary><p>เริ่มเคสเพื่อดู Disease / Insect / Weed Knowledge ที่กฎรองรับ</p></div><article class="knowledge-card"><h3>คลังองค์ความรู้เดิม</h3><a class="text-link" href="../knowledge-explorer/rice-disease-corpus.html">Rice Disease · 16 subjects</a><a class="text-link" href="../knowledge-explorer/rice-insect-corpus.html">Rice Insect · 19 subjects รวมหนอนห่อใบข้าว และเพลี้ยกระโดดสีน้ำตาล</a><a class="text-link" href="../knowledge-explorer/rice-weed-corpus.html">Rice Weed · 8 subjects รวมวัชพืชกกขนาก</a><a class="text-link" href="../knowledge-explorer/crop-protection-management.html">Management / IRAC / FRAC / HRAC</a><p><strong>CONTROL FAILURE ≠ RESISTANCE</strong></p><details><summary>Traceability</summary><p>Knowledge → Evidence → Source</p></details></article><div class="not-diagnosis"><span>!</span><p><strong>ยังไม่สามารถยืนยันได้ และยังเลือกวิธีไม่ได้</strong><br>ไม่ใช่คำวินิจฉัยหรือคำแนะนำเฉพาะแปลง</p></div></aside>
+</main><nav class="mobile-nav" aria-label="การนำทางมือถือ"><a class="active" href="index.html">⌂<span>หน้าหลัก</span></a><a href="#workspace">▤<span>เคส</span></a><a href="../knowledge-explorer/">◇<span>องค์ความรู้</span></a><a href="#field-info">○<span>โปรไฟล์</span></a></nav></body></html>
