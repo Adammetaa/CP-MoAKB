@@ -39,6 +39,7 @@ const approved = new Set([
   "sp-assistant/index.html",
   "sp-assistant/deployment.json",
   "sp-assistant/assets/app.js",
+  "sp-assistant/assets/chat.css",
   "sp-assistant/assets/styles.css",
 ]);
 
@@ -58,8 +59,8 @@ export const verifyArtifact = async (root) => {
   const resolvedRoot = resolve(root);
   const files = await walk(resolvedRoot);
   const relativeFiles = files.map((path) => relative(resolvedRoot, path).split(sep).join("/"));
-  if (relativeFiles.length !== 56 || approved.size !== 56) {
-    throw new Error("Pages artifact must contain exactly 56 approved files");
+  if (relativeFiles.length !== 57 || approved.size !== 57) {
+    throw new Error("Pages artifact must contain exactly 57 approved files");
   }
   const unexpected = relativeFiles.filter((path) => !approved.has(path));
   const missing = [...approved].filter((path) => !relativeFiles.includes(path));
@@ -193,7 +194,7 @@ export const verifyArtifact = async (root) => {
   }
 
   const assistant = await readFile(resolve(resolvedRoot, "sp-assistant", "index.html"), "utf8");
-  for (const requirement of ["SP Assistant", "วันนี้พบปัญหาอะไรในแปลง?", "เพิ่มรูปภาพ", "ยังไม่อัปโหลดหรือจัดเก็บรูปภาพ", "ไม่ใช่คำวินิจฉัยหรือคำแนะนำ", "../knowledge-explorer/rice-disease-corpus.html", '<meta name="robots" content="noindex,nofollow">']) {
+  for (const requirement of ["SP Assistant", "วันนี้พบอะไรในแปลง?", "chat-shell", "เพิ่มรูปภาพ", "ยังไม่อัปโหลดหรือจัดเก็บรูปภาพ", "ไม่ใช่คำวินิจฉัยหรือคำแนะนำ", "../knowledge-explorer/rice-disease-corpus.html", '<meta name="robots" content="noindex,nofollow">']) {
     if (!assistant.includes(requirement)) throw new Error(`SP Assistant lost product boundary: ${requirement}`);
   }
   const assistantApp = await readFile(resolve(resolvedRoot, "sp-assistant", "assets", "app.js"), "utf8");

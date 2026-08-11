@@ -46,7 +46,7 @@ try {
   const assistantResponse = await fetch(`${base}sp-assistant/`);
   if (!assistantResponse.ok) throw new Error(`SP Assistant failed with ${assistantResponse.status}`);
   const assistant = await assistantResponse.text();
-  for (const requirement of ["SP Assistant", "วันนี้พบปัญหาอะไรในแปลง?", "เพิ่มรูปภาพ", "ไม่ใช่คำวินิจฉัยหรือคำแนะนำ"]) {
+  for (const requirement of ["SP Assistant", "วันนี้พบอะไรในแปลง?", "chat-shell", "เพิ่มรูปภาพ", "ไม่ใช่คำวินิจฉัยหรือคำแนะนำ"]) {
     if (!assistant.includes(requirement)) throw new Error(`SP Assistant missing ${requirement}`);
   }
 
@@ -119,6 +119,7 @@ try {
     "knowledge-lab/assets/i18n/en.json",
     "knowledge-lab/deployment.json",
     "sp-assistant/assets/styles.css",
+    "sp-assistant/assets/chat.css",
     "sp-assistant/assets/app.js",
     "sp-assistant/deployment.json",
   ]) {

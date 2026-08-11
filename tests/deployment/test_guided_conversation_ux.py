@@ -14,7 +14,7 @@ def _read(path: str) -> str:
 def test_long_form_input_acknowledges_and_guides_one_question() -> None:
     app = _read("assets/app.js")
     assert "รับข้อมูลแล้วครับ" in app
-    assert "ตอนนี้ควรทำอะไรต่อ?" in app
+    assert "รับทราบครับ" in app
     assert "caseState.questions[0]" in app
     assert "ขอเช็กเพิ่มอีก 1 จุดครับ" in app
     assert "slice(0, 5)" in app  # engine may retain gaps; UX selects only the first
@@ -93,18 +93,16 @@ def test_failed_control_becomes_guided_investigation() -> None:
     app = _read("assets/app.js")
     assert 'return ["chemical_history", "spray"]' in app
     assert "CONTROL FAILURE ≠ RESISTANCE" in app
-    assert "โดยไม่เพิ่มอัตราใช้จากระบบนี้" in app
+    assert "ระบบไม่แนะนำให้เพิ่มอัตราใช้" in app
     assert "สารที่ใช้ล่าสุดอยู่ในกลุ่มใด" in app
 
 
 def test_progressive_disclosure_keeps_secondary_context_available() -> None:
     app = _read("assets/app.js")
     for summary in (
-        "ดูข้อมูลที่ระบบมีแล้ว",
-        "ดูสิ่งที่ยังขาด",
-        "ดู Candidate Knowledge",
-        "ดูประวัติการสนทนาและแก้ไขคำตอบ",
-        "ตัวเลือกการจัดการในอนาคต",
+        "ดูรายละเอียดเคสและ Candidate",
+        "รายละเอียดเคส",
+        "Candidate Knowledge",
     ):
         assert summary in app
     for retained in (
@@ -159,5 +157,5 @@ def test_no_diagnosis_severity_or_chemical_decision_is_added() -> None:
         "automaticResistance",
     ):
         assert prohibited not in app
-    assert "ความสามารถนี้ยังไม่เปิดใช้" in app
-    assert "ยังไม่มีการตรวจ Crop–Target–Use" in app
+    assert "Candidate Knowledge ≠ Diagnosis" in app
+    assert "Photo received ≠ Photo analyzed" in app

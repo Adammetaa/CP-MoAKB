@@ -1,4 +1,11 @@
 const $ = (selector) => document.querySelector(selector);
+const chatStyles = document.createElement("link");
+chatStyles.rel = "stylesheet";
+chatStyles.href = "assets/chat.css";
+document.head.append(chatStyles);
+const chatLayoutFix = document.createElement("style");
+chatLayoutFix.textContent = ".chat-composer textarea{height:48px!important;min-height:48px!important}@media(max-width:820px){.empty-intro{margin:18px auto 140px}}";
+document.head.append(chatLayoutFix);
 const problem = $("[data-problem]");
 const stream = $("[data-conversation-stream]");
 const output = $("[data-engine-output]");
@@ -23,6 +30,30 @@ const fieldWatchResults = $("[data-field-watch-results]");
 
 let selectedImages = [];
 let caseState = null;
+
+const composer = document.querySelector(".composer-shell");
+composer?.classList.add("chat-composer");
+const attachmentMenu = document.createElement("div");
+attachmentMenu.className = "attachment-menu";
+attachmentMenu.hidden = true;
+attachmentMenu.setAttribute("role", "menu");
+attachmentMenu.innerHTML = `<button type="button" role="menuitem" data-camera-action>📷 ถ่ายภาพ</button><button type="button" role="menuitem" data-gallery-action>🖼 เลือกรูปจากเครื่อง</button><button type="button" role="menuitem" data-attachment-field>🌾 ข้อมูลแปลง</button><button type="button" role="menuitem" data-attachment-location>📍 ตำแหน่งแปลง</button><button type="button" role="menuitem" data-attachment-time>🕒 เวลาที่สังเกต</button>`;
+composer?.prepend(attachmentMenu);
+const attachmentLabel = document.querySelector(".attachment-button");
+if (attachmentLabel) {
+  composer?.append(imageInput);
+  imageInput.hidden = true;
+  attachmentLabel.setAttribute("role", "button");
+  attachmentLabel.tabIndex = 0;
+  attachmentLabel.querySelector("span").textContent = "+";
+  attachmentLabel.lastChild.textContent = "";
+  attachmentLabel.setAttribute("aria-label", "เปิดเมนูแนบข้อมูล");
+  attachmentLabel.addEventListener("click", (event) => {
+    event.preventDefault();
+    attachmentMenu.hidden = !attachmentMenu.hidden;
+  });
+  attachmentLabel.addEventListener("keydown", (event) => { if (["Enter", " "].includes(event.key)) { event.preventDefault(); attachmentLabel.click(); } });
+}
 
 const validationBadge = document.createElement("span");
 validationBadge.className = "validation-mode";
@@ -210,7 +241,13 @@ function renderQuestionControl(question) {
 }
 
 function renderConversationHistory() {
-  return caseState.conversationHistory.map((item, index) => `<li class="history-${item.role.toLowerCase().replaceAll(" ", "-")}"><strong>${item.role}</strong><span>${escapeHtml(item.text)}</span>${item.questionKey ? `<button type="button" data-correct-answer="${item.questionKey}" aria-label="แก้ไขคำตอบ ${escapeHtml(item.text)}">แก้ไขคำตอบ</button>` : ""}</li>`).join("");
+  return caseState.conversationHistory.map((item) => {
+    const isUser = item.role.startsWith("USER");
+    const isSystem = item.role.includes("SYSTEM");
+    const kind = isUser ? "user" : isSystem ? "system" : "assistant";
+    const image = item.imageUrl ? `<img class="timeline-image" src="${item.imageUrl}" alt="รูปที่ผู้ใช้เลือกสำหรับเคส">` : "";
+    return `<article class="timeline-turn ${kind}-turn" data-message-type="${item.type || item.role}">${kind === "assistant" ? '<span class="avatar">SP</span>' : ""}<div class="message-bubble">${image}<span>${escapeHtml(item.text)}</span>${item.questionKey ? `<button type="button" data-correct-answer="${item.questionKey}" aria-label="แก้ไขคำตอบ ${escapeHtml(item.text)}">แก้ไข</button>` : ""}</div></article>`;
+  }).join("");
 }
 
 function render() {
@@ -224,7 +261,7 @@ function render() {
   const failed = observations.includes("failed_control");
   output.innerHTML = `<article class="message assistant-message"><span class="avatar">SP</span><div class="investigation-response"><div class="response-heading"><div><p class="eyebrow">จากเงื่อนไขที่ตรวจพบ</p><h2>${stateLabel}</h2></div><span class="status-pill">ยังไม่ยืนยันสาเหตุ</span></div><div class="investigation-grid"><section><h3>Observation ที่รู้จัก</h3><p>${observations.length ? observations.map((item) => escapeHtml(item.replaceAll("_", " "))).join(" · ") : "ยังไม่พบ cue ที่กำหนดไว้"}</p></section><section><h3>ข้อความผู้ใช้</h3><p>${escapeHtml(freeText)}</p></section><section class="missing"><h3>Missing Information</h3><p>${caseState.questions.length ? caseState.questions.map((item) => item.text).join(" · ") : "ยังต้องตรวจหลักฐานภาคสนามและทบทวนโดยมนุษย์"}</p></section><section><h3>Case outcome</h3><p>${stateLabel} · ต้องตรวจเพิ่ม · ไม่มี Diagnosis</p></section></div>${failed ? `<div class="failed-control"><strong>CONTROL FAILURE ≠ RESISTANCE</strong><p>ตรวจ identification · stage/timing · application · environment · reinfestation · registration/use-pattern · MoA history ก่อนตั้งสมมติฐาน resistance</p></div>` : ""}<h2 class="candidate-heading">หัวข้อที่ควรตรวจต่อ</h2><p class="ordering-note">เรียงตามจำนวน cue ที่กฎตรวจพบเพื่อการทำงานเท่านั้น ไม่ใช่ความน่าจะเป็นหรือความเชื่อมั่น</p><div class="candidate-list">${caseState.candidates.length ? caseState.candidates.map(renderCandidate).join("") : `<p>ไม่พบ Knowledge ที่รองรับเพียงพอ ข้อความเดิมยังคงแสดงโดยไม่ตีความเพิ่ม</p>`}</div>${renderEnvironmentalContext(caseState.candidates[0])}<p class="boundary-copy">Candidate Knowledge ไม่ใช่ Diagnosis · Supporting evidence ไม่พิสูจน์สาเหตุ · Missing/contradicting evidence ต้องตรวจต่อ</p></div></article>`;
   const candidateDetails = caseState.candidates.length ? caseState.candidates.map(renderCandidate).join("") : "<p>ยังไม่มี Candidate ที่ข้อมูลรองรับเพียงพอ</p>";
-  output.innerHTML = `<article class="message assistant-message guided-response"><span class="avatar">SP</span><div><p class="acknowledgement">รับข้อมูลแล้วครับ</p><p class="progress-state">${investigationProgress()}</p><h2>ตอนนี้ควรทำอะไรต่อ?</h2><p>${evidenceCompleteness()} · ยังไม่ใช่ Diagnosis certainty</p>${failed ? `<p class="inline-warning"><strong>⚠️ CONTROL FAILURE ≠ RESISTANCE</strong><br>ก่อนสรุปเรื่องดื้อยา ต้องตรวจสาร เวลา วิธีใช้ สภาพแวดล้อม และการกลับเข้าทำลาย โดยไม่เพิ่มอัตราใช้จากระบบนี้</p>` : ""}<details class="guided-details"><summary>ดูข้อมูลที่ระบบมีแล้ว</summary><p>${observations.length ? observations.map((item) => escapeHtml(item.replaceAll("_", " "))).join(" · ") : "ยังไม่มี Observation ที่รู้จัก"}</p></details><details class="guided-details"><summary>ดูสิ่งที่ยังขาด</summary><p>${caseState.questions.map((item) => escapeHtml(item.text)).join(" · ") || "ไม่มีคำถามโครงสร้างที่ค้าง แต่ยังต้องทบทวนโดยมนุษย์"}</p></details><details class="guided-details"><summary>ดู Candidate Knowledge</summary><p class="ordering-note">การเรียงเป็นลำดับทำงาน ไม่ใช่ probability หรือ confidence</p><div class="candidate-list">${candidateDetails}</div>${renderEnvironmentalContext(caseState.candidates[0])}</details><details class="guided-details"><summary>ดูประวัติการสนทนาและแก้ไขคำตอบ</summary><ol class="conversation-history">${renderConversationHistory()}</ol></details><details class="guided-details"><summary>ตัวเลือกการจัดการในอนาคต</summary><p>เมื่อข้อมูลผ่านเกณฑ์การตรวจทาน ระบบจึงอาจพาไปยังขั้นตอนประเมินการจัดการ ความสามารถนี้ยังไม่เปิดใช้ และยังไม่มีการตรวจ Crop–Target–Use</p></details><p class="boundary-copy">Candidate Knowledge ≠ Diagnosis · Photo received ≠ Photo analyzed · Nearby ≠ Transmission</p></div></article>`;
+  output.innerHTML = `<div class="message-timeline" data-message-timeline>${renderConversationHistory()}</div><article class="message assistant-message current-assistant"><span class="avatar">SP</span><div class="message-bubble"><p><strong>${caseState.lastAnswerUncertain ? "ไม่ต้องเดาครับ เราจะเก็บหลักฐานเพิ่ม" : "รับทราบครับ"}</strong></p><p>${investigationProgress()} · ${evidenceCompleteness()}</p>${failed ? `<p class="inline-warning"><strong>⚠️ CONTROL FAILURE ≠ RESISTANCE</strong><br>ต้องตรวจสาร เวลา วิธีใช้ สภาพแวดล้อม และการกลับเข้าทำลายก่อน โดยระบบไม่แนะนำให้เพิ่มอัตราใช้</p>` : ""}<button type="button" class="detail-trigger" data-detail-toggle>ดูรายละเอียดเคสและ Candidate</button></div></article><dialog class="case-detail-sheet" data-detail-sheet aria-label="รายละเอียดเคส"><button type="button" class="sheet-close" data-detail-close>ปิด</button><h2>รายละเอียดเคส</h2><p>${observations.length ? observations.map((item) => escapeHtml(item.replaceAll("_", " "))).join(" · ") : "ยังไม่มี Observation ที่รู้จัก"}</p><h3>Candidate Knowledge</h3><p class="ordering-note">ลำดับทำงาน ไม่ใช่ probability หรือ confidence</p><div class="candidate-list">${candidateDetails}</div>${renderEnvironmentalContext(caseState.candidates[0])}<p class="boundary-copy">Candidate Knowledge ≠ Diagnosis · Photo received ≠ Photo analyzed · Nearby ≠ Transmission</p></dialog>`;
   const nextAction = nextBestAction();
   const heading = questionPanel.querySelector("h2");
   const questionIntro = questionPanel.querySelectorAll("p")[1];
@@ -258,6 +295,9 @@ function render() {
     questionPanel.scrollIntoView({ behavior: "smooth", block: "center" });
   }));
   document.querySelectorAll("[data-next-action]").forEach((button) => button.addEventListener("click", () => handleNextAction(button.dataset.nextAction)));
+  const detailSheet = $("[data-detail-sheet]");
+  $("[data-detail-toggle]")?.addEventListener("click", () => detailSheet?.showModal());
+  $("[data-detail-close]")?.addEventListener("click", () => detailSheet?.close());
 }
 
 function handleNextAction(action) {
@@ -274,10 +314,20 @@ function handleNextAction(action) {
 function startCase() {
   const text = problem.value.trim();
   if (!text) return problem.focus();
+  if (caseState) {
+    caseState.userText += ` ${text}`;
+    caseState.conversationHistory.push({ role: "USER", type: "USER_TEXT", text });
+    caseState.conversationHistory.push({ role: "SP ASSISTANT", type: "ASSISTANT_MESSAGE", text: "รับข้อมูลเพิ่มเติมแล้วครับ" });
+    problem.value = "";
+    render();
+    requestAnimationFrame(() => questionPanel.scrollIntoView({ behavior: "smooth", block: "end" }));
+    return;
+  }
   caseState = { id: String(Date.now()).slice(-6), createdAt: new Date().toISOString(), userText: text, answers: [], answerRecords: {}, conversationHistory: [{ role: "USER", text }, { role: "SP ASSISTANT", text: "รับข้อมูลแล้วครับ" }], lastAnswerUncertain: false, observations: [], candidates: [], questions: [], managementViewed: false, guidedObservations: [], photoMission: null, weatherContext: null, environmentalComparison: null, nearbyFieldWatch: null, surveillanceOriginCase: null, inspectionReason: null, field: { identity: "", locality: "", district: "", province: "", areaNotes: "" }, location: { status: "empty", latitude: null, longitude: null, accuracy: null, capturedAt: null, source: null }, observationTime: { value: null, source: null }, firstNoticed: { category: "unknown", date: null }, cropContext: { crop: "rice", variety: "", age: "", growthStage: "", waterCondition: "", notes: "" } };
   $("[data-user-message]").textContent = text;
   $("[data-empty-intro]").hidden = true;
   stream.hidden = false;
+  problem.value = "";
   render();
   weatherSection.hidden = true;
   fieldWatch.hidden = true;
@@ -285,7 +335,11 @@ function startCase() {
 }
 
 $("[data-submit]")?.addEventListener("click", startCase);
-problem?.addEventListener("keydown", (event) => { if ((event.ctrlKey || event.metaKey) && event.key === "Enter") startCase(); });
+const sendButton = $("[data-submit]");
+const updateSendState = () => { if (sendButton) sendButton.disabled = !problem?.value.trim(); };
+problem?.addEventListener("input", updateSendState);
+problem?.addEventListener("keydown", (event) => { if (event.key === "Enter" && !event.shiftKey) { event.preventDefault(); startCase(); updateSendState(); } });
+updateSendState();
 $("[data-question-form]")?.addEventListener("submit", (event) => {
   event.preventDefault();
   if (!caseState) return;
@@ -301,6 +355,9 @@ $("[data-question-form]")?.addEventListener("submit", (event) => {
   render();
   questionPanel.scrollIntoView({ behavior: "smooth", block: "center" });
 });
+$('[data-question-form]')?.addEventListener("change", (event) => {
+  if (event.target.matches('input[type="radio"][name="guided-answer"]')) event.currentTarget.requestSubmit();
+});
 $("[data-skip]")?.addEventListener("click", () => {
   if (!caseState?.questions[0]) return;
   const key = caseState.questions[0].key;
@@ -310,7 +367,7 @@ $("[data-skip]")?.addEventListener("click", () => {
   caseState.lastAnswerUncertain = false;
   render();
 });
-document.querySelectorAll("[data-example]").forEach((button) => button.addEventListener("click", () => { problem.value = button.dataset.example; problem.focus(); }));
+document.querySelectorAll("[data-example]").forEach((button) => button.addEventListener("click", () => { problem.value = button.dataset.example; updateSendState(); problem.focus(); }));
 $("[data-field-toggle]")?.addEventListener("click", (event) => { const panel = $("[data-field-panel]"); panel.hidden = !panel.hidden; event.currentTarget.setAttribute("aria-expanded", String(!panel.hidden)); });
 
 const fieldValue = (selector) => $(selector)?.value.trim() ?? "";
@@ -550,7 +607,33 @@ function renderImages() {
   imageCount.textContent = `เลือกรูปแล้ว ${selectedImages.length} รูป · อยู่ในเบราว์เซอร์ชั่วคราว`;
 }
 
-imageInput?.addEventListener("change", () => { const files = [...(imageInput.files ?? [])].filter((file) => file.type.startsWith("image/")); selectedImages.push(...files.map((file) => ({ file, url: URL.createObjectURL(file) }))); imageInput.value = ""; renderImages(); });
+imageInput?.addEventListener("change", () => {
+  const files = [...(imageInput.files ?? [])].filter((file) => file.type.startsWith("image/"));
+  const images = files.map((file) => ({ file, url: URL.createObjectURL(file) }));
+  selectedImages.push(...images);
+  if (caseState && images.length) {
+    images.forEach((item) => caseState.conversationHistory.push({ role: "USER", type: "USER_IMAGE", text: item.file.name, imageUrl: item.url }));
+    caseState.conversationHistory.push({ role: "SP ASSISTANT", type: "ASSISTANT_MESSAGE", text: "ได้รับรูปแล้วครับ รูปยังไม่ได้ถูกวิเคราะห์อัตโนมัติ · Photo received ≠ Photo analyzed" });
+  }
+  imageInput.value = "";
+  attachmentMenu.hidden = true;
+  renderImages();
+  if (caseState && images.length) render();
+});
+$('[data-gallery-action]')?.addEventListener("click", () => imageInput?.click());
+$('[data-camera-action]')?.addEventListener("click", () => imageInput?.click());
+$('[data-attachment-field]')?.addEventListener("click", () => {
+  attachmentMenu.hidden = true;
+  if (caseState) handleNextAction("REQUEST_FIELD_CONTEXT"); else $("[data-field-toggle]")?.click();
+});
+$('[data-attachment-location]')?.addEventListener("click", () => {
+  attachmentMenu.hidden = true;
+  if (caseState) handleNextAction("REQUEST_LOCATION"); else $("[data-field-toggle]")?.click();
+});
+$('[data-attachment-time]')?.addEventListener("click", () => {
+  attachmentMenu.hidden = true;
+  if (caseState) handleNextAction("REQUEST_FIELD_CONTEXT"); else $("[data-field-toggle]")?.click();
+});
 annotations?.addEventListener("change", () => { if (caseState) render(); });
 
 function togglePanel(buttonSelector, panelSelector, html) { const button = $(buttonSelector); const panel = $(panelSelector); button?.addEventListener("click", () => { panel.hidden = !panel.hidden; button.setAttribute("aria-expanded", String(!panel.hidden)); if (!panel.hidden) panel.innerHTML = html; }); }

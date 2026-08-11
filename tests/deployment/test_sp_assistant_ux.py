@@ -14,7 +14,7 @@ def test_sp_assistant_is_thai_first_chat_primary_ux() -> None:
     html = _read("index.html")
     assert '<html lang="th">' in html
     assert "SP Assistant" in html
-    assert "วันนี้พบปัญหาอะไรในแปลง?" in html
+    assert "วันนี้พบอะไรในแปลง?" in html
     assert (
         html.index("SP Assistant") < html.index("Knowledge Explorer")
         if "Knowledge Explorer" in html
@@ -24,7 +24,7 @@ def test_sp_assistant_is_thai_first_chat_primary_ux() -> None:
     assert "เพิ่มรูปภาพ" in html
     assert "ข้อมูลแปลง" in html
     assert "เริ่มตรวจสอบ" in html
-    assert "ไม่ต้องเลือกหมวดก่อน" in html
+    assert "เล่าอาการหรือปัญหาได้ทันที" in html
     assert "<noscript>" in html
 
 
