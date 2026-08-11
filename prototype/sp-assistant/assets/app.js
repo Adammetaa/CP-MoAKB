@@ -17,6 +17,9 @@ const locationStatus = $("[data-location-status]");
 const weatherSection = $("[data-weather-section]");
 const weatherStatus = $("[data-weather-status]");
 const weatherResult = $("[data-weather-result]");
+const fieldWatch = $("[data-field-watch]");
+const fieldWatchStatus = $("[data-field-watch-status]");
+const fieldWatchResults = $("[data-field-watch-results]");
 
 let selectedImages = [];
 let caseState = null;
@@ -90,6 +93,21 @@ const governedWeatherVariables = {
   "sedge-group": [],
 };
 
+const governedSpatialPathways = {
+  "brown-spot": { category: null, evidence: ["EV-RDC-003A/v1", "EV-RDC-003B/v1"] },
+  blast: { category: null, evidence: ["EV-RDC-001A/v1", "EV-RDC-001B/v1"] },
+  leaffolder: { category: null, evidence: ["EV-RIC-006/v1"] },
+  "brown-planthopper": { category: "vector-associated context", evidence: ["EV-RIC-002/v1", "EV-RDC-010A/v1", "EV-RDC-015B/v1"] },
+  "sedge-group": { category: null, evidence: ["Rice Weed corpus governed evidence"] },
+};
+
+const demoFieldCases = [
+  { id: "DEMO-NFW-001", fieldLabel: "แปลงสาธิต บางเขน A", latitude: 13.8476, longitude: 100.5696, observationTime: "2026-08-10T09:00:00+07:00", crop: "rice", cropAge: "45 วัน", growthStage: "แตกกอ", observations: ["organ_leaf", "spot", "gray_center"], candidates: ["blast"], status: "investigation ongoing", confirmationState: "candidate knowledge · unresolved", weatherContext: { provenance: "DEMO WEATHER CONTEXT", relative_humidity: 82, unit: "%" }, provenance: "demo_fixture" },
+  { id: "DEMO-NFW-002", fieldLabel: "แปลงสาธิต บางเขน B", latitude: 13.8382, longitude: 100.5752, observationTime: "2026-08-08T15:30:00+07:00", crop: "rice", cropAge: "52 วัน", growthStage: "แตกกอ", observations: ["hopper", "field_distribution"], candidates: ["brown-planthopper"], status: "observation only", confirmationState: "candidate knowledge · unresolved", weatherContext: { provenance: "DEMO WEATHER CONTEXT", wind_speed: 7, unit: "km/h" }, provenance: "demo_fixture" },
+  { id: "DEMO-NFW-003", fieldLabel: "แปลงสาธิต ลาดยาว", latitude: 13.8168, longitude: 100.5621, observationTime: "2026-07-28T07:45:00+07:00", crop: "rice", cropAge: "60 วัน", growthStage: "ตั้งท้อง", observations: ["folded_leaf", "larva"], candidates: ["leaffolder"], status: "observation only", confirmationState: "not confirmed", weatherContext: null, provenance: "demo_fixture" },
+  { id: "DEMO-NFW-004", fieldLabel: "แปลงสาธิต ดอนเมือง", latitude: 13.9133, longitude: 100.5897, observationTime: "2026-08-11T06:20:00+07:00", crop: "rice", cropAge: "ไม่ระบุ", growthStage: "ไม่ระบุ", observations: ["weed_plant", "triangular_stem"], candidates: ["sedge-group"], status: "investigation ongoing", confirmationState: "candidate knowledge · unresolved", weatherContext: null, provenance: "demo_fixture" },
+];
+
 const escapeHtml = (value) => String(value).replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char]);
 const detected = (text, words) => words.some((word) => text.includes(word));
 
@@ -158,12 +176,13 @@ function render() {
 function startCase() {
   const text = problem.value.trim();
   if (!text) return problem.focus();
-  caseState = { id: String(Date.now()).slice(-6), createdAt: new Date().toISOString(), userText: text, answers: [], observations: [], candidates: [], questions: [], managementViewed: false, guidedObservations: [], photoMission: null, weatherContext: null, environmentalComparison: null, field: { identity: "", locality: "", district: "", province: "", areaNotes: "" }, location: { status: "empty", latitude: null, longitude: null, accuracy: null, capturedAt: null, source: null }, observationTime: { value: null, source: null }, firstNoticed: { category: "unknown", date: null }, cropContext: { crop: "rice", variety: "", age: "", growthStage: "", waterCondition: "", notes: "" } };
+  caseState = { id: String(Date.now()).slice(-6), createdAt: new Date().toISOString(), userText: text, answers: [], observations: [], candidates: [], questions: [], managementViewed: false, guidedObservations: [], photoMission: null, weatherContext: null, environmentalComparison: null, nearbyFieldWatch: null, surveillanceOriginCase: null, inspectionReason: null, field: { identity: "", locality: "", district: "", province: "", areaNotes: "" }, location: { status: "empty", latitude: null, longitude: null, accuracy: null, capturedAt: null, source: null }, observationTime: { value: null, source: null }, firstNoticed: { category: "unknown", date: null }, cropContext: { crop: "rice", variety: "", age: "", growthStage: "", waterCondition: "", notes: "" } };
   $("[data-user-message]").textContent = text;
   $("[data-empty-intro]").hidden = true;
   stream.hidden = false;
   render();
   weatherSection.hidden = false;
+  fieldWatch.hidden = false;
   stream.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
@@ -281,6 +300,88 @@ async function requestWeatherContext() {
 
 $("[data-weather-request]")?.addEventListener("click", requestWeatherContext);
 
+function haversineDistanceKm(from, to) {
+  const earthRadiusKm = 6371.0088;
+  const radians = (degrees) => degrees * Math.PI / 180;
+  const latitudeDelta = radians(to.latitude - from.latitude);
+  const longitudeDelta = radians(to.longitude - from.longitude);
+  const a = Math.sin(latitudeDelta / 2) ** 2 + Math.cos(radians(from.latitude)) * Math.cos(radians(to.latitude)) * Math.sin(longitudeDelta / 2) ** 2;
+  return earthRadiusKm * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+function formatGeometricDistance(distanceKm) {
+  return distanceKm < 1 ? `ประมาณ ${Math.round(distanceKm * 1000)} เมตร` : `ประมาณ ${Math.round(distanceKm * 10) / 10} กม.`;
+}
+
+function formatTimeSeparation(first, second) {
+  const hours = Math.abs(new Date(first).getTime() - new Date(second).getTime()) / 3600000;
+  if (hours < 24) return `ห่างกันประมาณ ${Math.round(hours)} ชั่วโมง`;
+  const days = Math.round(hours / 24);
+  return days < 14 ? `ห่างกันประมาณ ${days} วัน` : `ห่างกันประมาณ ${Math.round(days / 7)} สัปดาห์`;
+}
+
+function compareDemoCase(demoCase) {
+  const currentKeys = caseState.candidates.map((item) => item.key);
+  const sharedCandidates = demoCase.candidates.filter((key) => currentKeys.includes(key));
+  const sameCrop = caseState.cropContext.crop === demoCase.crop;
+  const pathwayRecords = sharedCandidates.map((key) => governedSpatialPathways[key]).filter((item) => item?.category);
+  const currentLocation = { latitude: caseState.location.latitude, longitude: caseState.location.longitude };
+  const distanceKm = haversineDistanceKm(currentLocation, demoCase);
+  const reasons = ["คำนวณระยะเชิงเรขาคณิตจากพิกัดด้วย Haversine", `เวลาสังเกต ${formatTimeSeparation(caseState.observationTime.value, demoCase.observationTime)}`];
+  if (sameCrop) reasons.push("บริบทพืชเป็นข้าวเหมือนกัน");
+  if (sharedCandidates.length) reasons.push("มี governed Candidate Knowledge subject ร่วมกัน");
+  if (pathwayRecords.length) reasons.push(`มี governed pathway context: ${pathwayRecords.map((item) => item.category).join(" · ")}`);
+  if (caseState.weatherContext && demoCase.weatherContext) reasons.push("ทั้งสองเคสมี weather/environment context ที่แยก provenance แล้ว");
+  const surveillanceState = sharedCandidates.length && sameCrop ? "ควรตรวจพื้นที่ใกล้เคียงเพิ่มเติม" : sameCrop || pathwayRecords.length ? "มีบริบทบางส่วนที่เกี่ยวข้อง" : currentKeys.length ? "ข้อมูลยังไม่พอสำหรับเชื่อมโยง" : "ไม่พบ Knowledge ที่รองรับการเชื่อมโยงเชิงพื้นที่";
+  return { ...demoCase, distanceKm, timeSeparation: formatTimeSeparation(caseState.observationTime.value, demoCase.observationTime), sameCrop, sharedCandidates, pathwayRecords, surveillanceState, reasons, limitations: ["สถานะของทุกเคสยังไม่ยืนยันโรค", "ระยะใกล้กันไม่ยืนยันการแพร่ระหว่างแปลง", "ไม่มีหลักฐานกำหนดรัศมีการแพร่", "shared Candidate ไม่ใช่ shared Diagnosis", "vector presence ไม่เท่ากับ infective vector"] };
+}
+
+function renderNearbyFieldWatch(records, technicalSearchDistance) {
+  fieldWatchResults.hidden = false;
+  const currentCandidateNames = caseState.candidates.map((item) => item.name).join(" · ") || "ยังไม่มี Candidate";
+  const cards = records.map((record) => {
+    const overlap = record.sharedCandidates.map((key) => candidates.find((item) => item.key === key)?.name || key).join(" · ") || "ไม่มี Candidate ร่วม";
+    const pathways = record.pathwayRecords.map((item) => `${item.category} (${item.evidence.join(" · ")})`).join(" · ") || "ไม่มี pathway ที่ governed Knowledge รองรับสำหรับการเทียบนี้";
+    const demoWeather = record.weatherContext ? `${record.weatherContext.provenance}: ${Object.entries(record.weatherContext).filter(([key]) => !["provenance", "unit"].includes(key)).map(([key, value]) => `${key}=${value} ${record.weatherContext.unit}`).join(" · ")}` : "ไม่มีข้อมูลอากาศจำลอง";
+    return `<article class="watch-card"><p class="eyebrow">DEMO NEARBY CASE · ${record.id}</p><h3>${record.fieldLabel}</h3><p class="demo-badge">ข้อมูลจำลองสำหรับทดสอบระบบ</p><p class="watch-state"><strong>${record.surveillanceState}</strong></p><dl><dt>ระยะเชิงเรขาคณิต</dt><dd>${formatGeometricDistance(record.distanceKm)}</dd><dt>เวลาที่สังเกต</dt><dd>${escapeHtml(record.observationTime)} · ${record.timeSeparation}</dd><dt>พืช/ระยะ</dt><dd>${escapeHtml(record.crop)} · ${escapeHtml(record.cropAge)} · ${escapeHtml(record.growthStage)}</dd><dt>Observation</dt><dd>${record.observations.map(escapeHtml).join(" · ")}</dd><dt>Candidate overlap</dt><dd>${escapeHtml(overlap)}</dd><dt>Pathway context</dt><dd>${escapeHtml(pathways)}</dd><dt>Environment</dt><dd>${escapeHtml(demoWeather)}</dd><dt>Status</dt><dd>${escapeHtml(record.status)} · ${escapeHtml(record.confirmationState)}</dd></dl><h4>เหตุผลที่แสดง</h4><ul>${record.reasons.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul><p><strong>สิ่งที่ควรตรวจ:</strong> อวัยวะเดียวกัน รูปแบบการกระจาย ประชากรแมลงพาหะเมื่อ Knowledge รองรับ และหลักฐานตาม Photo Mission</p><details><summary>พิกัดและข้อจำกัด</summary><p>Fixture coordinates: ${record.latitude}, ${record.longitude} · provenance=${record.provenance}</p><ul>${record.limitations.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul></details><button type="button" class="button secondary" data-start-surveillance-case="${record.id}">เริ่มตรวจแปลงนี้</button></article>`;
+  }).join("");
+  fieldWatchResults.innerHTML = `<section class="watch-summary"><p class="eyebrow">CURRENT CASE</p><h3>CASE-${caseState.id}</h3><p>พิกัดจากอุปกรณ์ · เวลาสังเกต ${escapeHtml(caseState.observationTime.value)} · rice · ${escapeHtml(currentCandidateNames)}</p><p>พบ ${records.length} เคสในรายการค้นหา${technicalSearchDistance == null ? "ทั้งหมด" : `ภายในระยะค้นหาเพื่อการแสดงผล ${technicalSearchDistance} กม.`} จำนวนนี้เป็นเพียงจำนวนระเบียน ไม่ใช่ prevalence หรือ outbreak</p></section><div class="watch-list">${cards || "<p>ไม่มีระเบียนจำลองภายในตัวกรองการแสดงผลที่ผู้ใช้กำหนด</p>"}</div><p class="boundary-copy">NEARBY ≠ RELATED · RELATED ≠ TRANSMISSION · CASE CLUSTER ≠ OUTBREAK · ระบบไม่ได้ยืนยันการแพร่ระหว่างเคส</p>`;
+  document.querySelectorAll("[data-start-surveillance-case]").forEach((button) => button.addEventListener("click", () => startSurveillanceCase(button.dataset.startSurveillanceCase)));
+}
+
+function runNearbyFieldWatch() {
+  if (!caseState) return;
+  if (caseState.location.status !== "captured") { fieldWatchStatus.textContent = "ต้องมีพิกัดจากอุปกรณ์ใน CURRENT CASE — ไม่สร้างพิกัดจากชื่อสถานที่"; return; }
+  if (!caseState.observationTime.value) { fieldWatchStatus.textContent = "ต้องบันทึก FIELD OBSERVATION TIME ก่อน"; return; }
+  const rawDistance = $("[data-watch-distance]").value.trim();
+  const technicalSearchDistance = rawDistance ? Number(rawDistance) : null;
+  if (technicalSearchDistance != null && (!Number.isFinite(technicalSearchDistance) || technicalSearchDistance <= 0)) { fieldWatchStatus.textContent = "ระยะค้นหาเพื่อการแสดงผลต้องมากกว่า 0"; return; }
+  const compared = demoFieldCases.map(compareDemoCase).filter((item) => technicalSearchDistance == null || item.distanceKm <= technicalSearchDistance).sort((a, b) => a.distanceKm - b.distanceKm);
+  caseState.nearbyFieldWatch = { comparedAt: new Date().toISOString(), technicalSearchDistance, method: "Haversine · Earth mean radius 6371.0088 km", fixtureProvenance: "demo_fixture", records: compared.map(({ id, distanceKm, timeSeparation, sharedCandidates, surveillanceState }) => ({ id, distanceKm, timeSeparation, sharedCandidates, surveillanceState })) };
+  fieldWatchStatus.textContent = `เปรียบเทียบแล้ว ${compared.length} ระเบียน · ระยะค้นหาเป็นตัวกรองการแสดงผล ไม่ใช่ biological radius`;
+  renderNearbyFieldWatch(compared, technicalSearchDistance);
+}
+
+function startSurveillanceCase(demoId) {
+  const origin = caseState;
+  const demoCase = demoFieldCases.find((item) => item.id === demoId);
+  if (!origin || !demoCase) return;
+  problem.value = `เหตุผลที่เข้าตรวจ: เฝ้าระวังพื้นที่ใกล้เคียง · ตรวจสภาพแปลงและบันทึก Observation โดยไม่กำหนด Diagnosis`;
+  startCase();
+  caseState.surveillanceOriginCase = { caseId: `CASE-${origin.id}`, relation: "surveillance prompted by", meaning: "operational provenance only; does not imply transmission" };
+  caseState.inspectionReason = "เฝ้าระวังพื้นที่ใกล้เคียง";
+  caseState.field.identity = demoCase.fieldLabel;
+  caseState.location = { status: "captured", latitude: demoCase.latitude, longitude: demoCase.longitude, accuracy: null, capturedAt: new Date().toISOString(), source: "demo_fixture_seed" };
+  caseState.cropContext = { crop: demoCase.crop, variety: "", age: demoCase.cropAge, growthStage: demoCase.growthStage, waterCondition: "", notes: "" };
+  caseState.observationTime = { value: null, source: null };
+  renderCaseContext();
+  fieldWatchStatus.textContent = "เริ่ม CURRENT CASE ใหม่จากเหตุผลเฝ้าระวังแล้ว · ยังไม่มี Diagnosis · กรุณาบันทึกเวลาตรวจจริง";
+  fieldWatchResults.hidden = true;
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+$("[data-field-watch-run]")?.addEventListener("click", runNearbyFieldWatch);
+
 function missionDomain() {
   return caseState.candidates[0]?.domain ?? "Generic";
 }
@@ -335,7 +436,7 @@ $("[data-management-toggle]")?.addEventListener("click", () => { if (caseState) 
 $("[data-escalate]")?.addEventListener("click", () => { if (!caseState) return; const summary = $("[data-handoff-summary]"); const mission = caseState.photoMission; const completed = mission?.steps.filter((step) => step.status === "completed").length ?? 0; const skipped = mission?.steps.filter((step) => step.status === "skipped").length ?? 0; const locations = mission?.steps.map((step) => step.inspect).join(" · ") ?? "ยังไม่ได้ขอภารกิจ"; summary.hidden = false; summary.innerHTML = `<h2>สรุปสำหรับส่งต่อผู้เชี่ยวชาญ (local prototype)</h2><dl><dt>คำอธิบาย</dt><dd>${escapeHtml(caseState.userText)}</dd><dt>Observations</dt><dd>${caseState.observations.join(" · ") || "ไม่มี"}</dd><dt>รูป</dt><dd>${selectedImages.length} รูป · metadata/local preview only</dd><dt>คำตอบ</dt><dd>${caseState.answers.map(escapeHtml).join(" · ") || "ยังไม่มี"}</dd><dt>Candidates</dt><dd>${caseState.candidates.map((item) => item.name).join(" · ") || "ยังไม่มี"}</dd><dt>Evidence gaps</dt><dd>${caseState.questions.map((item) => item.text).join(" · ") || "ต้องทบทวนโดยผู้เชี่ยวชาญ"}</dd><dt>Contradictions</dt><dd>${caseState.candidates.flatMap((item) => item.contradictions).join(" · ") || "ยังไม่พบที่ระบุได้"}</dd><dt>Management viewed</dt><dd>${caseState.managementViewed ? "YES" : "NO"}</dd><dt>PHOTO MISSION</dt><dd>requested=${mission ? "YES" : "NO"} · completed=${completed} · skipped=${skipped} · images=${selectedImages.length}</dd><dt>User-confirmed observations</dt><dd>${caseState.guidedObservations.map((item) => item.value).join(" · ") || "ยังไม่มี"}</dd><dt>Inspection locations</dt><dd>${locations}</dd><dt>Unresolved observations</dt><dd>${mission?.steps.filter((step) => step.status === "pending").map((step) => step.title).join(" · ") || "ไม่มีที่ค้างในภารกิจ"}</dd></dl><p>ไม่มี binary image data และไม่มีการส่ง email หรือ notification จริง</p>`; summary.scrollIntoView({ behavior: "smooth" }); });
 $("[data-escalate]")?.addEventListener("click", () => { if (!caseState) return; const summary = $("[data-handoff-summary]"); const spatial = document.createElement("section"); const coordinates = caseState.location.status === "captured" ? `${caseState.location.latitude}, ${caseState.location.longitude} · accuracy ±${Math.round(caseState.location.accuracy)} m · captured_at ${caseState.location.capturedAt}` : "not provided"; spatial.innerHTML = `<h3>FIELD CASE CONTEXT</h3><dl><dt>Field identity · User-provided</dt><dd>${escapeHtml(caseState.field.identity || "not provided")}</dd><dt>Human-readable location · User-provided</dt><dd>${escapeHtml([caseState.field.locality, caseState.field.district, caseState.field.province].filter(Boolean).join(" · ") || "not provided")}</dd><dt>Coordinates · Device-provided</dt><dd>${escapeHtml(coordinates)}</dd><dt>Observation time · User-provided</dt><dd>${escapeHtml(caseState.observationTime.value || "not provided")}</dd><dt>First noticed · User-provided</dt><dd>${escapeHtml(caseState.firstNoticed.date || caseState.firstNoticed.category)}</dd><dt>Crop context · User-provided</dt><dd>rice · ${escapeHtml(caseState.cropContext.variety || "variety not provided")} · ${escapeHtml(caseState.cropContext.age || "age not provided")} · ${escapeHtml(caseState.cropContext.growthStage || "stage not provided")} · ${escapeHtml(caseState.cropContext.waterCondition || "water not provided")}</dd><dt>Candidate Knowledge · System-derived</dt><dd>${caseState.candidates.map((item) => item.name).join(" · ") || "none"}</dd></dl><p>Field observation ≠ Canonical Knowledge · Case coordinate ≠ disease distribution · photo ≠ proof of location</p>`; summary.append(spatial); });
 $("[data-new-case]")?.addEventListener("click", () => { selectedImages.forEach((item) => URL.revokeObjectURL(item.url)); selectedImages = []; caseState = null; stream.hidden = true; missionPanel.hidden = true; caseContextPanel.hidden = true; locationStatus.textContent = "ยังไม่ได้ระบุตำแหน่ง"; $("[data-empty-intro]").hidden = false; problem.value = ""; renderImages(); problem.focus(); });
-$("[data-new-case]")?.addEventListener("click", () => { weatherSection.hidden = true; weatherResult.hidden = true; weatherResult.replaceChildren(); weatherStatus.textContent = "ต้องมีพิกัดและเวลาที่ตรวจแปลงก่อน"; });
+$("[data-new-case]")?.addEventListener("click", () => { weatherSection.hidden = true; weatherResult.hidden = true; weatherResult.replaceChildren(); weatherStatus.textContent = "ต้องมีพิกัดและเวลาที่ตรวจแปลงก่อน"; fieldWatch.hidden = true; fieldWatchResults.hidden = true; fieldWatchResults.replaceChildren(); fieldWatchStatus.textContent = "ต้องมีพิกัดและเวลาที่ตรวจแปลงใน CURRENT CASE ก่อน"; $("[data-watch-distance]").value = ""; });
 
 $("[data-escalate]")?.addEventListener("click", () => {
   if (!caseState?.weatherContext) return;
@@ -345,6 +446,14 @@ $("[data-escalate]")?.addEventListener("click", () => {
   const weather = document.createElement("section");
   weather.innerHTML = `<h3>WEATHER CONTEXT</h3><dl><dt>Observation location · DEVICE</dt><dd>${context.targetLocation.latitude}, ${context.targetLocation.longitude} · GPS accuracy ±${Math.round(caseState.location.accuracy)} m</dd><dt>Observation time · USER</dt><dd>${escapeHtml(context.targetTime)}</dd><dt>Weather provider · WEATHER PROVIDER</dt><dd>${escapeHtml(context.provider)} · ${escapeHtml(context.product)} · ${escapeHtml(context.dataClass)} · ${escapeHtml(context.timezone)}</dd><dt>Weather observations · WEATHER PROVIDER</dt><dd>${Object.entries(context.variables).map(([key, item]) => `${escapeHtml(key)}=${escapeHtml(item.value ?? "unavailable")} ${escapeHtml(item.unit)}`).join(" · ")}</dd><dt>Manual field environment · USER</dt><dd>${escapeHtml(caseState.cropContext.waterCondition || "not provided")}</dd><dt>Relevant variables · CANONICAL KNOWLEDGE</dt><dd>${comparison.relevantVariables.map(escapeHtml).join(" · ") || "none"} · ${comparison.evidenceReferences.map(escapeHtml).join(" · ") || "no candidate evidence"}</dd><dt>Environmental comparison · SYSTEM COMPARISON</dt><dd>${escapeHtml(comparison.supportedContext)}</dd><dt>Missing variables</dt><dd>${comparison.unavailableVariables.map(escapeHtml).join(" · ") || "none"}</dd><dt>Limitations</dt><dd>${context.limitations.map(escapeHtml).join(" · ")} · GPS accuracy ≠ weather grid resolution</dd></dl>`;
   summary.append(weather);
+});
+
+$("[data-escalate]")?.addEventListener("click", () => {
+  if (!caseState?.nearbyFieldWatch) return;
+  const watch = caseState.nearbyFieldWatch;
+  const section = document.createElement("section");
+  section.innerHTML = `<h3>NEARBY FIELD WATCH · BROWSER-LOCAL</h3><dl><dt>Current Case</dt><dd>CASE-${escapeHtml(caseState.id)} · ${escapeHtml(caseState.field.identity || "field not provided")}</dd><dt>Compared at</dt><dd>${escapeHtml(watch.comparedAt)}</dd><dt>Method</dt><dd>${escapeHtml(watch.method)}</dd><dt>Display search distance</dt><dd>${watch.technicalSearchDistance == null ? "not applied" : `${escapeHtml(watch.technicalSearchDistance)} km · technical record filter only`}</dd><dt>Demo Cases considered</dt><dd>${watch.records.map((item) => `${escapeHtml(item.id)} · ${formatGeometricDistance(item.distanceKm)} · ${escapeHtml(item.timeSeparation)} · candidate overlap=${item.sharedCandidates.map(escapeHtml).join("/") || "none"} · ${escapeHtml(item.surveillanceState)}`).join("<br>") || "none within display filter"}</dd><dt>Pathway/environment basis</dt><dd>Governed Sprint-071 context plus separately-provenanced Sprint-072 weather where available</dd><dt>Surveillance origin</dt><dd>${caseState.surveillanceOriginCase ? `${escapeHtml(caseState.surveillanceOriginCase.relation)} ${escapeHtml(caseState.surveillanceOriginCase.caseId)} · ${escapeHtml(caseState.surveillanceOriginCase.meaning)}` : "none"}</dd><dt>Inspection reason</dt><dd>${escapeHtml(caseState.inspectionReason || "nearby field comparison")}</dd><dt>Limitations</dt><dd>Nearby ≠ related · related ≠ transmission · shared Candidate ≠ Diagnosis · no biological radius · no outbreak inference</dd></dl><p><strong>ระบบไม่ได้ยืนยันการแพร่ระหว่างเคส</strong></p>`;
+  $("[data-handoff-summary]").append(section);
 });
 
 window.addEventListener("pagehide", () => selectedImages.forEach((item) => URL.revokeObjectURL(item.url)));
