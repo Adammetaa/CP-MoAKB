@@ -40,7 +40,7 @@ def test_batch_materializes_the_exact_architecture_complete_inventory() -> None:
         SOURCE_HASH,
     ):
         assert required in text
-    assert len(verify()) == 655
+    assert len(verify()) == 661
 
 
 def test_evidence_has_exact_bounded_text_and_stable_locators() -> None:

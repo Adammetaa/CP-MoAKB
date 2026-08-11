@@ -26,6 +26,7 @@ const pages = [
   "rice-disease-wave-1.html",
   "rice-disease-corpus.html",
   "rice-insect-corpus.html",
+  "rice-weed-corpus.html",
 ];
 const labPages = [
   "index.html",
@@ -108,6 +109,9 @@ if (riceCorpus.meta?.rights !== "source-pages-images-tables-layout-and-passages-
 const riceInsectCorpus = JSON.parse(await readFile(resolve(root, "assets", "data", "rice-insect-corpus-001.json"), "utf8"));
 if (riceInsectCorpus.meta?.status !== "accepted-internal-not-published" || riceInsectCorpus.subjects?.length !== 19 || riceInsectCorpus.counts?.packages !== 19 || riceInsectCorpus.counts?.views !== 19) failures.push("rice insect corpus identity or counts are invalid");
 if (riceInsectCorpus.meta?.rights !== "source-pages-images-tables-layout-and-passages-suppressed") failures.push("rice insect corpus rights boundary is invalid");
+const riceWeedCorpus = JSON.parse(await readFile(resolve(root, "assets", "data", "rice-weed-corpus-001.json"), "utf8"));
+if (riceWeedCorpus.meta?.status !== "accepted-internal-not-published" || riceWeedCorpus.subjects?.length !== 8 || riceWeedCorpus.counts?.packages !== 8 || riceWeedCorpus.counts?.views !== 8 || riceWeedCorpus.counts?.differential_relationships !== 3) failures.push("rice weed corpus identity or counts are invalid");
+if (riceWeedCorpus.meta?.rights !== "source-pages-images-tables-layout-and-passages-suppressed") failures.push("rice weed corpus rights boundary is invalid");
 if (failures.length) throw new Error(`Prototype validation failed:\n${failures.join("\n")}`);
 
 await verifyLocalization();

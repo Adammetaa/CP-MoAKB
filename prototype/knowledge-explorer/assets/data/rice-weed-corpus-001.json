@@ -1,0 +1,43 @@
+{
+  "meta": {
+    "kind": "real-governed-knowledge",
+    "status": "accepted-internal-not-published",
+    "language": "th",
+    "rights": "source-pages-images-tables-layout-and-passages-suppressed"
+  },
+  "sources": [
+    {
+      "id": "GS-DOA-HAZARDOUS-SALES-2019-001/v1",
+      "label": "กรมวิชาการเกษตร · ความรู้สำหรับผู้ควบคุมการขายวัตถุอันตรายทางการเกษตร · 2562",
+      "sha256": "9b2a14d7ba2bcc5bc6bde236af406df64d42f9ac109c1f43b3e7923113b0ff22"
+    },
+    {
+      "id": "GS-DOA-HAZARDOUS-REGISTRY-2026-001/v1",
+      "label": "กรมวิชาการเกษตร · registration snapshot 2026 · administrative scope only",
+      "sha256": "8b28fcfa31a40a021645645a33864fe858769af8f2264db22776e549df6916fe"
+    }
+  ],
+  "counts": {
+    "subjects": 8,
+    "evidence": 8,
+    "claims": 28,
+    "concepts": 16,
+    "terminology": 8,
+    "relationships": 19,
+    "differential_relationships": 3,
+    "questions": 13,
+    "issues": 5,
+    "packages": 8,
+    "views": 8
+  },
+  "subjects": [
+    { "key": "BARNYARD-GRASS", "name": "หญ้าข้าวนก", "scientific": "ยังไม่ระบุจากแหล่งข้อมูลนี้", "group": "วัชพืชใบแคบ / กลุ่มหญ้า", "characters": "ตรวจใบแคบ เส้นใบขนาน ลำต้น ข้อปล้อง กาบใบ และช่อดอกเพิ่ม", "context": "แหล่งข้อมูลระบุเป็นวัชพืชในนาข้าว", "pages": "DOA 3-44–3-45 / PDF 49–50", "evidence": "EV-RWC-002/v1; EV-RWC-004/v1" },
+    { "key": "WHITE-FLOWER-GRASS", "name": "หญ้าดอกขาว", "scientific": "ยังไม่ระบุจากแหล่งข้อมูลนี้", "group": "วัชพืชใบแคบ / กลุ่มหญ้า", "characters": "ตรวจใบ เส้นใบ ข้อปล้อง กาบใบ และช่อดอกก่อนสนับสนุนตัวตน", "context": "แหล่งข้อมูลระบุเป็นวัชพืชในนาข้าว", "pages": "DOA 3-45, 3-48 / PDF 50, 53", "evidence": "EV-RWC-004/v1; EV-RWC-006/v1" },
+    { "key": "PINK-GRASS", "name": "หญ้านกสีชมพู", "scientific": "ยังไม่ระบุจากแหล่งข้อมูลนี้", "group": "วัชพืชใบแคบ / กลุ่มหญ้า", "characters": "ตรวจใบแคบ เส้นใบขนาน ข้อปล้อง กาบใบ และช่อดอกเพิ่ม", "context": "แหล่งข้อมูลระบุเป็นวัชพืชในนาข้าว", "pages": "DOA 3-44–3-45 / PDF 49–50", "evidence": "EV-RWC-002/v1; EV-RWC-004/v1" },
+    { "key": "RICE-FIELD-BROADLEAF", "name": "ผักปอดนา", "scientific": "ยังไม่ระบุจากแหล่งข้อมูลนี้", "group": "วัชพืชใบกว้าง", "characters": "ตรวจรูปใบ เส้นใบ ลำต้น ดอก และลักษณะการเจริญเพิ่ม", "context": "แหล่งข้อมูลระบุเป็นวัชพืชในนาข้าว", "pages": "DOA 3-44–3-45 / PDF 49–50", "evidence": "EV-RWC-003/v1; EV-RWC-004/v1" },
+    { "key": "RICE-FIELD-HERB", "name": "เทียนนา", "scientific": "ยังไม่ระบุจากแหล่งข้อมูลนี้", "group": "วัชพืชใบกว้าง", "characters": "ตรวจรูปใบ เส้นใบ ลำต้น ดอก และลักษณะการเจริญเพิ่ม", "context": "แหล่งข้อมูลระบุเป็นวัชพืชในนาข้าว", "pages": "DOA 3-44–3-45 / PDF 49–50", "evidence": "EV-RWC-003/v1; EV-RWC-004/v1" },
+    { "key": "RICE-FIELD-SEDGE", "name": "กกขนาก", "scientific": "ยังไม่ระบุจากแหล่งข้อมูลนี้", "group": "วัชพืชประเภทกก", "characters": "ตรวจลำต้นที่มักไม่มีข้อปล้องและมีแนวโน้มเป็นสามเหลี่ยม รวมทั้งช่อดอก", "context": "แหล่งข้อมูลระบุเป็นวัชพืชในนาข้าว", "pages": "DOA 3-45 / PDF 50", "evidence": "EV-RWC-004/v1" },
+    { "key": "SAND-SEDGE", "name": "กกทราย", "scientific": "ยังไม่ระบุจากแหล่งข้อมูลนี้", "group": "วัชพืชประเภทกก", "characters": "ตรวจลำต้นที่มักไม่มีข้อปล้องและมีแนวโน้มเป็นสามเหลี่ยม รวมทั้งช่อดอก", "context": "แหล่งข้อมูลระบุเป็นวัชพืชในนาข้าว", "pages": "DOA 3-45 / PDF 50", "evidence": "EV-RWC-004/v1" },
+    { "key": "FIMBRISTYLIS-NAMED", "name": "หนวดปลาดุก", "scientific": "ยังไม่ระบุจากแหล่งข้อมูลนี้", "group": "วัชพืชประเภทกก", "characters": "ตรวจลำต้นที่มักไม่มีข้อปล้องและมีแนวโน้มเป็นสามเหลี่ยม รวมทั้งช่อดอก", "context": "แหล่งข้อมูลระบุเป็นวัชพืชในนาข้าว", "pages": "DOA 3-45 / PDF 50", "evidence": "EV-RWC-004/v1" }
+  ]
+}

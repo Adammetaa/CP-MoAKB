@@ -4,7 +4,7 @@ import { fileURLToPath } from "node:url";
 
 const explorerPages = [
   "index.html", "search.html", "browse.html", "concept.html", "evidence.html",
-  "source.html", "authority.html", "governance.html", "about.html", "components.html", "real-knowledge.html", "rice-disease-wave-1.html", "rice-disease-corpus.html", "rice-insect-corpus.html",
+  "source.html", "authority.html", "governance.html", "about.html", "components.html", "real-knowledge.html", "rice-disease-wave-1.html", "rice-disease-corpus.html", "rice-insect-corpus.html", "rice-weed-corpus.html",
 ];
 const labPages = [
   "index.html", "tasks.html", "inbox.html", "sources.html", "evidence.html",
@@ -25,6 +25,7 @@ const approved = new Set([
   "knowledge-explorer/assets/data/rice-disease-wave-001.json",
   "knowledge-explorer/assets/data/rice-disease-corpus-001.json",
   "knowledge-explorer/assets/data/rice-insect-corpus-001.json",
+  "knowledge-explorer/assets/data/rice-weed-corpus-001.json",
   "knowledge-explorer/assets/i18n/th.json",
   "knowledge-explorer/assets/i18n/en.json",
   ...labPages.map((page) => `knowledge-lab/${page}`),
@@ -56,8 +57,8 @@ export const verifyArtifact = async (root) => {
   const resolvedRoot = resolve(root);
   const files = await walk(resolvedRoot);
   const relativeFiles = files.map((path) => relative(resolvedRoot, path).split(sep).join("/"));
-  if (relativeFiles.length !== 52 || approved.size !== 52) {
-    throw new Error("Pages artifact must contain exactly 52 approved files");
+  if (relativeFiles.length !== 54 || approved.size !== 54) {
+    throw new Error("Pages artifact must contain exactly 54 approved files");
   }
   const unexpected = relativeFiles.filter((path) => !approved.has(path));
   const missing = [...approved].filter((path) => !relativeFiles.includes(path));
@@ -115,6 +116,13 @@ export const verifyArtifact = async (root) => {
   const riceInsectText = JSON.stringify(riceInsectCorpus);
   for (const prohibited of ["sourceExcerpt", "passageText", "imageUrl", "pdfUrl", "tradeName", "dose"]) {
     if (riceInsectText.includes(prohibited)) throw new Error(`Explorer rice insect corpus exposes prohibited material: ${prohibited}`);
+  }
+  const riceWeedCorpus = JSON.parse(await readFile(resolve(resolvedRoot, "knowledge-explorer", "assets", "data", "rice-weed-corpus-001.json"), "utf8"));
+  if (riceWeedCorpus.meta?.status !== "accepted-internal-not-published" || riceWeedCorpus.subjects?.length !== 8 || riceWeedCorpus.counts?.packages !== 8 || riceWeedCorpus.counts?.views !== 8 || riceWeedCorpus.counts?.differential_relationships !== 3) throw new Error("Explorer rice weed corpus is incomplete or publishable");
+  if (riceWeedCorpus.meta?.rights !== "source-pages-images-tables-layout-and-passages-suppressed") throw new Error("Explorer rice weed corpus lost rights suppression");
+  const riceWeedText = JSON.stringify(riceWeedCorpus);
+  for (const prohibited of ["sourceExcerpt", "passageText", "imageUrl", "pdfUrl", "tradeName", "dose"]) {
+    if (riceWeedText.includes(prohibited)) throw new Error(`Explorer rice weed corpus exposes prohibited material: ${prohibited}`);
   }
   const riceWave = JSON.parse(await readFile(resolve(resolvedRoot, "knowledge-explorer", "assets", "data", "rice-disease-wave-001.json"), "utf8"));
   if (riceWave.meta?.status !== "accepted-internal-not-published" || riceWave.subjects?.length !== 2 || riceWave.counts?.packages !== 2 || riceWave.counts?.views !== 2) throw new Error("Explorer rice disease wave is incomplete or publishable");
@@ -221,5 +229,5 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
   const target = process.argv[2];
   if (!target) throw new Error("Usage: node scripts/verify-pages-artifact.mjs <pages-root>");
   const files = await verifyArtifact(target);
-  console.log(`Pages artifact verified: ${files.length} approved files`);
+  console.log(`Pages artifact verified: ${files.length} approved files; governed disease, insect, and weed corpora remain not published`);
 }

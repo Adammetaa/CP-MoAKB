@@ -21,7 +21,7 @@ def _all() -> str:
 def test_complete_source_catalog_family_is_governed() -> None:
     assert len(KNOWLEDGE_SOURCE_CATALOG_DOCUMENTS) == 12
     assert all((ROOT / path).is_file() for path in KNOWLEDGE_SOURCE_CATALOG_DOCUMENTS)
-    assert len(verify()) == 655
+    assert len(verify()) == 661
 
 
 def test_source_definition_and_owned_responsibilities_are_explicit() -> None:

@@ -13,7 +13,8 @@
     "components": { "title": "Components · CP-MoAKB Knowledge Explorer", "description": "Bilingual component library for the CP-MoAKB Knowledge Explorer prototype." },
     "riceDiseaseWave1": { "title": "Rice Disease Knowledge Wave 1 · CP-MoAKB", "description": "Rights-safe governed representation of the first real rice-disease knowledge collection." },
     "riceDiseaseCorpus": { "title": "Rice Disease Knowledge Corpus · CP-MoAKB", "description": "Rights-safe governed multi-source corpus covering 16 rice-disease subjects." },
-    "riceInsectCorpus": { "title": "Rice Insect Knowledge Corpus · CP-MoAKB", "description": "Rights-safe governed corpus covering 19 rice-insect subjects, observations, natural enemies, evidence, and limitations." }
+    "riceInsectCorpus": { "title": "Rice Insect Knowledge Corpus · CP-MoAKB", "description": "Rights-safe governed corpus covering 19 rice-insect subjects, observations, natural enemies, evidence, and limitations." },
+    "riceWeedCorpus": { "title": "Rice Weed Knowledge Corpus · CP-MoAKB", "description": "Rights-safe governed corpus covering 8 rice-weed subjects, investigation questions, evidence, and limitations." }
   },
   "common": {
     "skip": "Skip to content",

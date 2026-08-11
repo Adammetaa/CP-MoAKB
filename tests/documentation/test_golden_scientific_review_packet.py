@@ -37,7 +37,7 @@ def test_thai_first_packet_binds_the_fixed_source_evidence_and_claims() -> None:
     ):
         assert exact_claim_wording in text
     assert len(KNOWLEDGE_GOLDEN_SLICE_DOCUMENTS) == 7
-    assert len(verify()) == 655
+    assert len(verify()) == 661
 
 
 def test_packet_has_uncompleted_human_identity_competence_and_conflict_fields() -> None:
