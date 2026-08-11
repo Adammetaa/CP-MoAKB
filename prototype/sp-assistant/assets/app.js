@@ -12,6 +12,8 @@ const annotations = $("[data-image-annotations]");
 const missionPanel = $("[data-photo-mission]");
 const missionStep = $("[data-mission-step]");
 const missionProgress = $("[data-mission-progress]");
+const caseContextPanel = $("[data-case-context]");
+const locationStatus = $("[data-location-status]");
 
 let selectedImages = [];
 let caseState = null;
@@ -131,7 +133,7 @@ function render() {
 function startCase() {
   const text = problem.value.trim();
   if (!text) return problem.focus();
-  caseState = { id: String(Date.now()).slice(-6), userText: text, answers: [], observations: [], candidates: [], questions: [], managementViewed: false, guidedObservations: [], photoMission: null };
+  caseState = { id: String(Date.now()).slice(-6), createdAt: new Date().toISOString(), userText: text, answers: [], observations: [], candidates: [], questions: [], managementViewed: false, guidedObservations: [], photoMission: null, field: { identity: "", locality: "", district: "", province: "", areaNotes: "" }, location: { status: "empty", latitude: null, longitude: null, accuracy: null, capturedAt: null, source: null }, observationTime: { value: null, source: null }, firstNoticed: { category: "unknown", date: null }, cropContext: { crop: "rice", variety: "", age: "", growthStage: "", waterCondition: "", notes: "" } };
   $("[data-user-message]").textContent = text;
   $("[data-empty-intro]").hidden = true;
   stream.hidden = false;
@@ -146,6 +148,50 @@ $("[data-skip]")?.addEventListener("click", () => { if (caseState) { caseState.q
 document.querySelectorAll("[data-example]").forEach((button) => button.addEventListener("click", () => { problem.value = button.dataset.example; problem.focus(); }));
 $("[data-field-toggle]")?.addEventListener("click", (event) => { const panel = $("[data-field-panel]"); panel.hidden = !panel.hidden; event.currentTarget.setAttribute("aria-expanded", String(!panel.hidden)); });
 
+const fieldValue = (selector) => $(selector)?.value.trim() ?? "";
+
+function renderCaseContext() {
+  if (!caseState) return;
+  const { field, location, observationTime, firstNoticed, cropContext } = caseState;
+  const place = [field.locality, field.district, field.province].filter(Boolean).join(" · ") || "ยังไม่ได้ระบุ";
+  const accuracy = location.accuracy == null ? "ไม่ระบุ" : `± ${Math.round(location.accuracy)} เมตร (ตามที่อุปกรณ์รายงาน)`;
+  const observed = observationTime.value ? new Intl.DateTimeFormat("th-TH", { dateStyle: "medium", timeStyle: "short" }).format(new Date(observationTime.value)) : "ยังไม่ได้ระบุ";
+  $("[data-case-data-preview]").innerHTML = `<h3>ข้อมูลเคส</h3><dl><dt>แปลง · User-provided</dt><dd>${escapeHtml(field.identity || "ไม่ระบุ")}</dd><dt>พื้นที่ · User-provided</dt><dd>${escapeHtml(place)}</dd><dt>พิกัด · Device-provided</dt><dd>${location.status === "captured" ? "บันทึกแล้ว" : "ยังไม่ได้บันทึก"}</dd><dt>ความแม่นยำ · Device-provided</dt><dd>${accuracy}</dd><dt>ตรวจแปลง · User-provided</dt><dd>${escapeHtml(observed)}</dd><dt>เริ่มเห็นอาการ</dt><dd>${escapeHtml(firstNoticed.date || firstNoticed.category)}</dd><dt>ข้าว</dt><dd>${escapeHtml(cropContext.variety || "ไม่ระบุ")} · ${escapeHtml(cropContext.age || "ไม่ระบุอายุ")}</dd><dt>Case created · System-derived</dt><dd>${escapeHtml(caseState.createdAt)}</dd></dl>`;
+  const details = $("[data-coordinate-details]");
+  details.hidden = location.status !== "captured";
+  if (!details.hidden) $("[data-coordinate-values]").textContent = `latitude ${location.latitude} · longitude ${location.longitude} · ${accuracy} · captured_at ${location.capturedAt}`;
+}
+
+function saveCaseContext() {
+  if (!caseState) return;
+  caseState.field = { identity: fieldValue("[data-field-id]"), locality: fieldValue("[data-locality]"), district: fieldValue("[data-district]"), province: fieldValue("[data-province]"), areaNotes: fieldValue("[data-area-notes]") };
+  caseState.observationTime = { value: fieldValue("[data-observation-time]") || null, source: fieldValue("[data-observation-time]") ? "user_provided" : null };
+  caseState.firstNoticed = { category: $("[data-first-noticed]").value, date: fieldValue("[data-first-noticed-date]") || null };
+  caseState.cropContext = { crop: "rice", variety: fieldValue("[data-context-variety]") || fieldValue("[data-variety]"), age: fieldValue("[data-context-age]") || fieldValue("[data-rice-age]"), growthStage: fieldValue("[data-growth-stage]"), waterCondition: fieldValue("[data-water-condition]"), notes: fieldValue("[data-field-notes]") };
+  renderCaseContext();
+}
+
+function requestCurrentLocation() {
+  if (!caseState) return;
+  if (!("geolocation" in navigator)) { caseState.location.status = "unsupported"; locationStatus.textContent = "อุปกรณ์ไม่รองรับ — ระบุพื้นที่เองได้"; return; }
+  caseState.location.status = "requesting";
+  locationStatus.textContent = "กำลังขอตำแหน่ง";
+  navigator.geolocation.getCurrentPosition((position) => {
+    caseState.location = { status: "captured", latitude: position.coords.latitude, longitude: position.coords.longitude, accuracy: position.coords.accuracy, capturedAt: new Date(position.timestamp || Date.now()).toISOString(), source: "device_provided" };
+    locationStatus.textContent = `ได้รับตำแหน่งแล้ว · ตำแหน่งจากอุปกรณ์ ± ${Math.round(position.coords.accuracy)} เมตร`;
+    renderCaseContext();
+  }, (error) => {
+    caseState.location = { status: error.code === 1 ? "denied" : "unavailable", latitude: null, longitude: null, accuracy: null, capturedAt: null, source: null };
+    locationStatus.textContent = error.code === 1 ? "ผู้ใช้ไม่อนุญาต — เคสยังใช้งานได้" : "ไม่สามารถอ่านตำแหน่งได้ — ระบุพื้นที่เองได้";
+    renderCaseContext();
+  }, { enableHighAccuracy: false, timeout: 10000, maximumAge: 0 });
+}
+
+$("[data-case-context-toggle]")?.addEventListener("click", () => { if (!caseState) return; caseContextPanel.hidden = !caseContextPanel.hidden; if (!caseContextPanel.hidden) renderCaseContext(); });
+$("[data-location-request]")?.addEventListener("click", requestCurrentLocation);
+$("[data-use-current-time]")?.addEventListener("click", () => { const now = new Date(); const local = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 16); $("[data-observation-time]").value = local; });
+$("[data-case-context-form]")?.addEventListener("submit", (event) => { event.preventDefault(); saveCaseContext(); });
+
 function missionDomain() {
   return caseState.candidates[0]?.domain ?? "Generic";
 }
@@ -154,7 +200,7 @@ function createPhotoMission() {
   if (!caseState) return;
   const domain = missionDomain();
   const generic = [{ key: "organ", title: "อวัยวะที่มีอาการ", guide: "ถ่ายอวัยวะที่มีอาการให้เต็มภาพ และเก็บภาพจากมากกว่าหนึ่งมุมเมื่อจำเป็น", inspect: "ยังไม่มีข้อมูลที่ผ่าน Governance เพียงพอสำหรับระบุตำแหน่งตรวจเฉพาะ", observations: [["อาการอยู่ที่ใบ", "organ_leaf"], ["อาการอยู่ที่ลำต้น", "organ_stem"], ["อาการอยู่ที่ราก", "organ_root"], ["ไม่แน่ใจ", "uncertain_organ"]] }];
-  caseState.photoMission = { requested: true, domain, current: 0, steps: [...commonMissionSteps, ...(domainMissionSteps[domain] ?? generic)].slice(0, 6).map((step) => ({ ...step, status: "pending", imageIndexes: [] })) };
+  caseState.photoMission = { requested: true, domain, current: 0, caseContext: { locationCaptured: caseState.location.status === "captured", locationCapturedAt: caseState.location.capturedAt, observationTime: caseState.observationTime.value }, steps: [...commonMissionSteps, ...(domainMissionSteps[domain] ?? generic)].slice(0, 6).map((step) => ({ ...step, status: "pending", imageIndexes: [] })) };
   missionPanel.hidden = false;
   renderMission();
   missionPanel.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -198,5 +244,6 @@ togglePanel("[data-management-toggle]", "[data-management-panel]", `<div class="
 togglePanel("[data-moa-toggle]", "[data-moa-panel]", `<div class="gated-panel"><h3>MoA authority context</h3><p>Active Ingredient → IRAC v11.5 / FRAC 2026 / HRAC 2026 → Authority + Version → Limitation</p><p>ไม่มีการเลือกสาร ไม่มี spray program และ registration ไม่ใช่ efficacy</p></div>`);
 $("[data-management-toggle]")?.addEventListener("click", () => { if (caseState) caseState.managementViewed = true; });
 $("[data-escalate]")?.addEventListener("click", () => { if (!caseState) return; const summary = $("[data-handoff-summary]"); const mission = caseState.photoMission; const completed = mission?.steps.filter((step) => step.status === "completed").length ?? 0; const skipped = mission?.steps.filter((step) => step.status === "skipped").length ?? 0; const locations = mission?.steps.map((step) => step.inspect).join(" · ") ?? "ยังไม่ได้ขอภารกิจ"; summary.hidden = false; summary.innerHTML = `<h2>สรุปสำหรับส่งต่อผู้เชี่ยวชาญ (local prototype)</h2><dl><dt>คำอธิบาย</dt><dd>${escapeHtml(caseState.userText)}</dd><dt>Observations</dt><dd>${caseState.observations.join(" · ") || "ไม่มี"}</dd><dt>รูป</dt><dd>${selectedImages.length} รูป · metadata/local preview only</dd><dt>คำตอบ</dt><dd>${caseState.answers.map(escapeHtml).join(" · ") || "ยังไม่มี"}</dd><dt>Candidates</dt><dd>${caseState.candidates.map((item) => item.name).join(" · ") || "ยังไม่มี"}</dd><dt>Evidence gaps</dt><dd>${caseState.questions.map((item) => item.text).join(" · ") || "ต้องทบทวนโดยผู้เชี่ยวชาญ"}</dd><dt>Contradictions</dt><dd>${caseState.candidates.flatMap((item) => item.contradictions).join(" · ") || "ยังไม่พบที่ระบุได้"}</dd><dt>Management viewed</dt><dd>${caseState.managementViewed ? "YES" : "NO"}</dd><dt>PHOTO MISSION</dt><dd>requested=${mission ? "YES" : "NO"} · completed=${completed} · skipped=${skipped} · images=${selectedImages.length}</dd><dt>User-confirmed observations</dt><dd>${caseState.guidedObservations.map((item) => item.value).join(" · ") || "ยังไม่มี"}</dd><dt>Inspection locations</dt><dd>${locations}</dd><dt>Unresolved observations</dt><dd>${mission?.steps.filter((step) => step.status === "pending").map((step) => step.title).join(" · ") || "ไม่มีที่ค้างในภารกิจ"}</dd></dl><p>ไม่มี binary image data และไม่มีการส่ง email หรือ notification จริง</p>`; summary.scrollIntoView({ behavior: "smooth" }); });
-$("[data-new-case]")?.addEventListener("click", () => { selectedImages.forEach((item) => URL.revokeObjectURL(item.url)); selectedImages = []; caseState = null; stream.hidden = true; missionPanel.hidden = true; $("[data-empty-intro]").hidden = false; problem.value = ""; renderImages(); problem.focus(); });
+$("[data-escalate]")?.addEventListener("click", () => { if (!caseState) return; const summary = $("[data-handoff-summary]"); const spatial = document.createElement("section"); const coordinates = caseState.location.status === "captured" ? `${caseState.location.latitude}, ${caseState.location.longitude} · accuracy ±${Math.round(caseState.location.accuracy)} m · captured_at ${caseState.location.capturedAt}` : "not provided"; spatial.innerHTML = `<h3>FIELD CASE CONTEXT</h3><dl><dt>Field identity · User-provided</dt><dd>${escapeHtml(caseState.field.identity || "not provided")}</dd><dt>Human-readable location · User-provided</dt><dd>${escapeHtml([caseState.field.locality, caseState.field.district, caseState.field.province].filter(Boolean).join(" · ") || "not provided")}</dd><dt>Coordinates · Device-provided</dt><dd>${escapeHtml(coordinates)}</dd><dt>Observation time · User-provided</dt><dd>${escapeHtml(caseState.observationTime.value || "not provided")}</dd><dt>First noticed · User-provided</dt><dd>${escapeHtml(caseState.firstNoticed.date || caseState.firstNoticed.category)}</dd><dt>Crop context · User-provided</dt><dd>rice · ${escapeHtml(caseState.cropContext.variety || "variety not provided")} · ${escapeHtml(caseState.cropContext.age || "age not provided")} · ${escapeHtml(caseState.cropContext.growthStage || "stage not provided")} · ${escapeHtml(caseState.cropContext.waterCondition || "water not provided")}</dd><dt>Candidate Knowledge · System-derived</dt><dd>${caseState.candidates.map((item) => item.name).join(" · ") || "none"}</dd></dl><p>Field observation ≠ Canonical Knowledge · Case coordinate ≠ disease distribution · photo ≠ proof of location</p>`; summary.append(spatial); });
+$("[data-new-case]")?.addEventListener("click", () => { selectedImages.forEach((item) => URL.revokeObjectURL(item.url)); selectedImages = []; caseState = null; stream.hidden = true; missionPanel.hidden = true; caseContextPanel.hidden = true; locationStatus.textContent = "ยังไม่ได้ระบุตำแหน่ง"; $("[data-empty-intro]").hidden = false; problem.value = ""; renderImages(); problem.focus(); });
 window.addEventListener("pagehide", () => selectedImages.forEach((item) => URL.revokeObjectURL(item.url)));

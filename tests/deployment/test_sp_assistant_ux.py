@@ -223,12 +223,80 @@ def test_photo_mission_preserves_local_image_and_scientific_boundaries() -> None
     ):
         assert token in app
     for prohibited in (
-        "navigator.geolocation",
-        "getCurrentPosition",
         "fetch(",
         "localStorage",
         "sessionStorage",
         "FileReader",
         "FormData",
+    ):
+        assert prohibited not in app
+
+
+def test_spatial_case_location_is_optional_explicit_and_browser_local() -> None:
+    html = _read("index.html")
+    app = _read("assets/app.js")
+    assert "ใช้ตำแหน่งปัจจุบัน" in html
+    assert "data-location-request" in html
+    assert 'addEventListener("click", requestCurrentLocation)' in app
+    assert "navigator.geolocation.getCurrentPosition" in app
+    assert "requestCurrentLocation();" not in app
+    assert "ตำแหน่งไม่จำเป็นต่อการตรวจสอบเคส" in html
+    assert 'status: "empty"' in app
+    for state in ("requesting", "captured", "denied", "unsupported", "unavailable"):
+        assert f'"{state}"' in app
+
+
+def test_spatial_case_preserves_device_accuracy_without_fake_precision() -> None:
+    app = _read("assets/app.js")
+    assert "position.coords.latitude" in app
+    assert "position.coords.longitude" in app
+    assert "position.coords.accuracy" in app
+    assert "position.timestamp" in app
+    assert "Math.round(position.coords.accuracy)" in app
+    assert "ตามที่อุปกรณ์รายงาน" in app
+    assert "toFixed(" not in app
+
+
+def test_manual_field_time_crop_context_and_preview_are_structured() -> None:
+    html = _read("index.html")
+    app = _read("assets/app.js")
+    for token in (
+        "data-field-id",
+        "data-locality",
+        "data-district",
+        "data-province",
+        'type="datetime-local"',
+        "data-first-noticed",
+        "data-context-variety",
+        "data-context-age",
+        "data-growth-stage",
+        "data-water-condition",
+        "data-case-data-preview",
+    ):
+        assert token in html
+    assert "createdAt: new Date().toISOString()" in app
+    assert "observationTime:" in app
+    assert "firstNoticed:" in app
+    assert "cropContext:" in app
+    assert "User-provided" in app and "Device-provided" in app
+
+
+def test_spatial_context_reaches_photo_mission_and_handoff_safely() -> None:
+    app = _read("assets/app.js")
+    assert "locationCaptured" in app
+    assert "locationCapturedAt" in app
+    assert "FIELD CASE CONTEXT" in app
+    assert "Field observation ≠ Canonical Knowledge" in app
+    assert "Case coordinate ≠ disease distribution" in app
+    assert "photo ≠ proof of location" in app
+    for prohibited in (
+        "watchPosition",
+        "Exif",
+        "EXIF",
+        "google.maps",
+        "weatherapi",
+        "openweathermap",
+        "nearby-field",
+        "transmissionRadius",
     ):
         assert prohibited not in app
