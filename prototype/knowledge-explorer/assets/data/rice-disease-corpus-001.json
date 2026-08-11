@@ -23,5 +23,29 @@
     { "key": "GRASSY-STUNT", "name": "โรคเขียวเตี้ย", "english": "Grassy Stunt", "cause": "Rice Grassy Stunt Virus (RGSV)", "coverage": "เพลี้ยกระโดดสีน้ำตาลเป็นพาหะ; Source ให้ขอบเขต identity/vector", "sources": ["RRC:8"] },
     { "key": "YELLOW-ORANGE", "name": "โรคใบสีส้ม", "english": "Yellow-Orange leaf", "cause": "RTBV และ RTSV ตาม Source", "coverage": "เพลี้ยจักจั่นสีเขียวเป็นพาหะ; ใช้ Concept เดิมจาก Wave 1", "sources": ["RRC:8"], "reuses": "CO-RDW1-001/v1" }
   ],
-  "issues": ["UI-RDC-001/v1", "UI-RDC-002/v1", "UI-RDC-003/v1", "UI-RDW1-001/v1"]
+  "environmental_transmission": {
+    "status": "accepted-internal-not-published",
+    "distance_policy": "ระยะการแพร่กระจายเชิงปริมาณยังไม่มีหลักฐานเพียงพอสำหรับกำหนดรัศมีเฝ้าระวัง",
+    "thresholds": [],
+    "operational_surveillance_radii": [],
+    "records": [
+      { "subject": "BLAST", "roles": { "favorable_environment": ["high_humidity"] }, "weather_variables": ["relative_humidity"], "evidence": ["EV-RDC-001A/v1", "EV-RDC-001B/v1"], "distance": "unknown" },
+      { "subject": "SHEATH-BLIGHT", "roles": { "observation_context": ["sheath_near_water_level"], "temporal_context": ["tillering_to_near_harvest"] }, "weather_variables": [], "evidence": ["EV-RDC-002A/v1", "EV-RDC-002B/v1"], "distance": "unknown" },
+      { "subject": "BROWN-SPOT", "roles": { "observation_context": ["leaf_and_grain"] }, "weather_variables": [], "evidence": ["EV-RDC-003A/v1", "EV-RDC-003B/v1"], "distance": "unknown" },
+      { "subject": "NARROW-BROWN-SPOT", "roles": { "observation_context": ["lower_leaf_progression", "neck_context"] }, "weather_variables": [], "evidence": ["EV-RDC-004A/v1", "EV-RDC-004B/v1"], "distance": "unknown" },
+      { "subject": "BAKANAE", "roles": { "transmission": ["seedborne"], "survival_context": ["residue", "soil"], "temporal_context": ["seedling"] }, "weather_variables": [], "evidence": ["EV-RDC-005A/v1"], "distance": "unknown" },
+      { "subject": "DIRTY-PANICLE", "roles": { "dispersal": ["wind"], "transmission": ["seed"], "survival_context": ["storage"], "temporal_context": ["heading"] }, "weather_variables": ["wind_speed", "wind_direction"], "evidence": ["EV-RDC-006A/v1", "EV-RDC-006B/v1"], "distance": "unknown" },
+      { "subject": "FALSE-SMUT", "roles": { "dispersal": ["wind", "water"], "transmission": ["seed"], "temporal_context": ["booting_to_heading"] }, "weather_variables": ["wind_speed", "wind_direction", "rainfall"], "evidence": ["EV-RDC-007A/v1"], "distance": "unknown" },
+      { "subject": "BACTERIAL-BLIGHT", "roles": { "dispersal": ["water", "rain", "wind", "contact"] }, "weather_variables": ["rainfall", "wind_speed", "wind_direction"], "evidence": ["EV-RDC-008A/v1", "EV-RDC-008B/v1"], "distance": "unknown" },
+      { "subject": "BACTERIAL-STREAK", "roles": { "observation_context": ["visible_streak_progression"] }, "weather_variables": [], "evidence": ["EV-RDC-009A/v1", "EV-RDC-009B/v1"], "distance": "unknown" },
+      { "subject": "RAGGED-STUNT", "roles": { "cause": ["RRSV"], "vector_association": ["brown_planthopper"] }, "weather_variables": [], "evidence": ["EV-RDC-010A/v1", "EV-RDC-010B/v1"], "distance": "unknown", "limitation": "vector presence does not establish infection" },
+      { "subject": "ROOT-KNOT", "roles": { "observation_context": ["upland_rainfed", "dry_seedbed"] }, "weather_variables": ["soil_moisture", "rainfall"], "evidence": ["EV-RDC-011A/v1", "EV-RDC-011B/v1"], "distance": "unknown" },
+      { "subject": "AKIOCHI", "roles": { "development_context": ["incomplete_residue_decomposition", "hydrogen_sulfide"], "temporal_context": ["tillering"] }, "weather_variables": ["soil_moisture"], "evidence": ["EV-RDC-012A/v1", "EV-RDC-012B/v1"], "distance": "not_applicable" },
+      { "subject": "SHEATH-ROT", "roles": { "temporal_context": ["booting"] }, "weather_variables": [], "evidence": ["EV-RDC-013B/v1"], "distance": "unknown" },
+      { "subject": "ORANGE-LEAF", "roles": { "cause": ["phytoplasma"], "vector_association": ["zigzag_leafhopper"] }, "weather_variables": [], "evidence": ["EV-RDC-014B/v1"], "distance": "unknown", "limitation": "vector presence does not establish infection" },
+      { "subject": "GRASSY-STUNT", "roles": { "cause": ["RGSV"], "vector_association": ["brown_planthopper"] }, "weather_variables": [], "evidence": ["EV-RDC-015B/v1"], "distance": "unknown", "limitation": "vector presence does not establish infection" },
+      { "subject": "YELLOW-ORANGE", "roles": { "cause": ["RTBV", "RTSV"], "vector_association": ["green_leafhopper"] }, "weather_variables": [], "evidence": ["EV-RDC-016B/v1"], "distance": "unknown", "limitation": "vector presence does not establish infection" }
+    ]
+  },
+  "issues": ["UI-RDC-001/v1", "UI-RDC-002/v1", "UI-RDC-003/v1", "UI-RDW1-001/v1", "UI-ETS-001/v1", "UI-ETS-002/v1", "UI-ETS-003/v1", "UI-ETS-004/v1", "UI-ETS-005/v1"]
 }

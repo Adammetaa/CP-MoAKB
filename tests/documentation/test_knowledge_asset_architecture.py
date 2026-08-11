@@ -294,7 +294,7 @@ def test_examples_are_fictional_domain_neutral_and_non_operational() -> None:
 
 
 def test_engineering_contracts_and_governed_count_remain_stable() -> None:
-    assert len(verify()) == 668
+    assert len(verify()) == 672
     assert sum(len(symbols) for symbols in PUBLIC_API_EXPORTS.values()) == 165
     assert (ROOT / "cpmoakb" / "runtime_api.py").is_file()
     assert not any(

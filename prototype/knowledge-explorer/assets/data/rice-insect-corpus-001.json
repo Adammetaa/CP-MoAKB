@@ -27,6 +27,25 @@
     { "key": "ROOT-WEEVIL", "name": "ด้วงงวงกินรากข้าว", "english": "Rice root weevil", "scientific": "Hydronomidius molitor", "stage": "ตัวเต็มวัยและหนอน", "structure": "ใบและราก", "observation": "ตัวเต็มวัยกัดใบ; หนอนกัดราก ทำให้เหลืองแห้งและอาจตาย", "context": "รายงานเฉพาะพื้นที่; ระยะแตกกอ", "pages": "RD 53 / PDF 64" },
     { "key": "BLACK-BEETLE", "name": "ด้วงดำ", "english": "Black beetle", "scientific": "Heteronychus lioderes", "stage": "ตัวเต็มวัย", "structure": "ส่วนอ่อนใต้ดินของต้นข้าว", "observation": "กัดกินใต้ดิน ทำให้เหลือง เหี่ยว แห้ง และเกิดแนวความเสียหาย", "context": "ข้าวอ่อน 15-45 วัน; นาน้ำฝนภาคตะวันออกเฉียงเหนือ", "pages": "RD 54-56 / PDF 65-67" }
   ],
+  "environmental_spatial": {
+    "status": "accepted-internal-not-published",
+    "distance_policy": "no quantitative movement distance or operational surveillance radius supported",
+    "records": [
+      { "subject": "THRIPS", "roles": { "environmental_context": ["dry_condition"], "temporal_context": ["seedling"] }, "weather_variables": [], "evidence": ["EV-RIC-001/v1"] },
+      { "subject": "BPH", "roles": { "field_pattern": ["patch"], "vector_relevance": ["source_named_vector_context"] }, "weather_variables": [], "evidence": ["EV-RIC-002/v1"], "limitation": "vector presence does not imply infection" },
+      { "subject": "WBPH", "roles": { "field_pattern": ["patch"], "temporal_context": ["young_rice"] }, "weather_variables": [], "evidence": ["EV-RIC-003/v1"] },
+      { "subject": "GREEN-LEAFHOPPER", "roles": { "vector_relevance": ["source_named_vector_context"] }, "weather_variables": [], "evidence": ["EV-RIC-004/v1"], "limitation": "vector presence does not imply infection" },
+      { "subject": "ZIGZAG-LEAFHOPPER", "roles": { "vector_relevance": ["source_named_vector_context"] }, "weather_variables": [], "evidence": ["EV-RIC-005/v1"], "limitation": "vector presence does not imply infection" },
+      { "subject": "LEAFFOLDER", "roles": { "temporal_context": ["young_rice"], "inspection_context": ["folded_leaf"] }, "weather_variables": [], "evidence": ["EV-RIC-006/v1"] },
+      { "subject": "GALL-MIDGE", "roles": { "favorable_environment": ["rainy", "humid"] }, "weather_variables": ["rainfall", "relative_humidity"], "evidence": ["EV-RIC-008/v1"] },
+      { "subject": "CASEWORM", "roles": { "environmental_context": ["flooded_field"], "temporal_context": ["young_rice"] }, "weather_variables": [], "evidence": ["EV-RIC-010/v1"] },
+      { "subject": "WHORL-MAGGOT", "roles": { "environmental_context": ["wet_field"], "temporal_context": ["newly_planted"] }, "weather_variables": [], "evidence": ["EV-RIC-012/v1"] },
+      { "subject": "ARMYWORM", "roles": { "field_pattern": ["patch"], "environmental_context": ["wet_after_dry"] }, "weather_variables": ["rainfall"], "evidence": ["EV-RIC-013/v1"] },
+      { "subject": "EAR-CUTTING", "roles": { "movement_context": ["from_grasses"], "environmental_context": ["wet_weather"] }, "weather_variables": ["rainfall"], "evidence": ["EV-RIC-014/v1"] },
+      { "subject": "HISPA", "roles": { "environmental_context": ["temporarily_flooded_area"] }, "weather_variables": [], "evidence": ["EV-RIC-015/v1"] },
+      { "subject": "MEALYBUG", "roles": { "environmental_context": ["dry_field"] }, "weather_variables": [], "evidence": ["EV-RIC-016/v1"] }
+    ]
+  },
   "questions": ["ระยะของแมลง", "ส่วนของต้นข้าว", "รูปแบบความเสียหาย", "ยอดแห้งหรือรวงขาว", "การกระจายในแปลง", "ระยะข้าว", "น้ำและอากาศ", "ศัตรูธรรมชาติ", "จำนวนแมลงและประวัติการใช้สาร"],
   "issues": ["UI-RIC-001/v1", "UI-RIC-002/v1", "UI-RIC-003/v1", "UI-RIC-004/v1"]
 }

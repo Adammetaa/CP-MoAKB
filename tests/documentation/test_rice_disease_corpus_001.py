@@ -54,4 +54,4 @@ def test_corpus_preserves_scientific_and_publication_boundaries() -> None:
 
 
 def test_documentation_verifier_includes_corpus() -> None:
-    assert len(verify()) == 668
+    assert len(verify()) == 672

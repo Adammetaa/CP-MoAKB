@@ -55,4 +55,4 @@ def test_natural_enemies_questions_and_investigation_boundaries_are_governed() -
 
 
 def test_documentation_verifier_includes_insect_corpus() -> None:
-    assert len(verify()) == 668
+    assert len(verify()) == 672
