@@ -6,6 +6,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 ASSISTANT = ROOT / "prototype" / "sp-assistant"
 GATES = ASSISTANT / "assets" / "decision-gates.js"
+AUTHORITY = ASSISTANT / "assets" / "decision-authority.js"
 APP = ASSISTANT / "assets" / "app.js"
 HTML = ASSISTANT / "index.html"
 POLISH = ASSISTANT / "assets" / "polish.css"
@@ -22,6 +23,7 @@ def gate_source() -> str:
 def evaluate(observations: list[str], candidates: list[dict[str, str]]) -> dict:
     script = (
         "global.window={};"
+        f"require({json.dumps(str(AUTHORITY))});"
         f"require({json.dumps(str(GATES))});"
         f"const result=window.SPDecisionGates.evaluate({json.dumps({'observations': observations, 'candidates': candidates}, ensure_ascii=False)});"
         "process.stdout.write(JSON.stringify(result));"
@@ -67,7 +69,7 @@ def test_insufficient_symptom_keeps_identification_blocked() -> None:
         "IDENTIFICATION_NOT_SUPPORTED"
     }
     assert result["nextBestEvidence"]["action"] == "ASK_OBSERVATION"
-    assert result["management"]["status"] == "MANAGEMENT_REMAINS_BLOCKED"
+    assert result["management"]["status"] == "MORE_EVIDENCE_REQUIRED"
 
 
 def test_differential_preserves_brown_spot_and_blast_without_winner() -> None:
@@ -179,9 +181,12 @@ def test_severity_is_independent_and_blocked_without_extent() -> None:
 
 
 def test_need_for_action_and_chemical_selection_remain_blocked() -> None:
-    result = evaluate(["field_distribution"], [])
+    result = evaluate(
+        ["organ_leaf", "spot", "eye_shaped_lesion", "gray_center"],
+        [candidate("blast", "Blast", "Disease")],
+    )
     assert result["needForAction"]["status"] == "NO_ACTION_DETERMINATION_SUPPORTED"
-    assert "ไม่มี action threshold" in result["needForAction"]["basis"]
+    assert "ACTION_THRESHOLD_UNRESOLVED" in result["needForAction"]["basis"]
     assert result["management"]["chemicalRecommendation"] == "BLOCKED"
     assert "Crop–Target–Use–Registration" in result["management"]["limitation"]
 

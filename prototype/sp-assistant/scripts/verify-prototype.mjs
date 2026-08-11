@@ -8,6 +8,7 @@ const chatStyles = await readFile(resolve(root, "assets", "chat.css"), "utf8");
 const polishStyles = await readFile(resolve(root, "assets", "polish.css"), "utf8");
 const app = await readFile(resolve(root, "assets", "app.js"), "utf8");
 const decisionGates = await readFile(resolve(root, "assets", "decision-gates.js"), "utf8");
+const decisionAuthority = await readFile(resolve(root, "assets", "decision-authority.js"), "utf8");
 const failures = [];
 
 for (const required of [
@@ -50,6 +51,9 @@ if (/<form\b[^>]*(?:action|method)=/i.test(html)) failures.push("forms must rema
 if (!html.includes('<html lang="th">') || !html.includes('content="noindex,nofollow"')) failures.push("Thai-first or indexing boundary missing");
 for (const required of ["bounded-case-projection/v1", "REQUIRED_TO_DISTINGUISH", "SUFFICIENT_FOR_PROVISIONAL_IDENTIFICATION", "PROVISIONAL_IDENTIFICATION", "SEVERITY_EVIDENCE_INSUFFICIENT", "NO_ACTION_DETERMINATION_SUPPORTED", "MANAGEMENT_REMAINS_BLOCKED", "chemicalRecommendation: \"BLOCKED\"", "thresholds: []", "CONTROL FAILURE ≠ RESISTANCE"]) {
   if (!decisionGates.includes(required)) failures.push(`decision-gates.js missing scientific boundary: ${required}`);
+}
+for (const required of ["action-crop-target-use-authority/v1", "Economic Threshold", "THAI_OPERATIONAL_EVIDENCE_WITH_LIMITATION", "REFERENCE_EVIDENCE_ONLY", "REGISTRATION_IDENTITY_MATCH_ONLY", "CHEMICAL_REVIEW_BLOCKED", "eligibleOptions: []", "completeCropTargetUseChains: 0", "preserve exact mixture identity"]) {
+  if (!decisionAuthority.includes(required)) failures.push(`decision-authority.js missing authority boundary: ${required}`);
 }
 if (failures.length) throw new Error(`SP Assistant verification failed:\n${failures.join("\n")}`);
 console.log("SP Assistant verified: true chat, governed details, local images, no backend, Thai-first and mobile-safe");

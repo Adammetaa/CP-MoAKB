@@ -233,10 +233,11 @@ function extractObservations(text) {
   const normalized = text.toLowerCase();
   const observations = cueRules.filter(([, words]) => detected(normalized, words)).map(([key]) => key);
   const age = normalized.match(/(?:ข้าว\s*)?(\d{1,3})\s*วัน/);
+  const insectsPerPlant = normalized.match(/(\d+(?:\.\d+)?)\s*(?:ตัว)\s*(?:ต่อ|\/)\s*(?:ต้น|กอ)|(?:average\s*)?(\d+(?:\.\d+)?)\s*(?:insects?|hoppers?)\s*per\s*(?:plant|hill)/i);
   if (age) observations.push("rice_age");
   document.querySelectorAll("[data-image-annotations] input:checked").forEach((input) => observations.push(input.value));
   (caseState?.guidedObservations ?? []).forEach((item) => observations.push(item.value));
-  return { observations: [...new Set(observations)], age: age?.[1] ?? $("[data-rice-age]")?.value.trim() ?? "" };
+  return { observations: [...new Set(observations)], age: age?.[1] ?? $("[data-rice-age]")?.value.trim() ?? "", measurements: { insectsPerPlant: insectsPerPlant ? Number(insectsPerPlant[1] ?? insectsPerPlant[2]) : null } };
 }
 
 function evaluateCandidates(observations) {
@@ -370,15 +371,18 @@ function renderConversationHistory() {
 }
 
 function render() {
-  const { observations, age } = extractObservations(caseState.userText + " " + caseState.answers.join(" "));
+  const { observations, age, measurements } = extractObservations(caseState.userText + " " + caseState.answers.join(" "));
   caseState.observations = observations;
   caseState.riceAge = age;
   caseState.candidates = evaluateCandidates(observations);
   caseState.questions = selectQuestions(observations, caseState.candidates);
-  caseState.decision = window.SPDecisionGates?.evaluate({ observations, candidates: caseState.candidates }) ?? null;
+  caseState.measurements = measurements;
+  caseState.decision = window.SPDecisionGates?.evaluate({ observations, candidates: caseState.candidates, measurements }) ?? null;
   const decisionGap = caseState.decision?.nextBestEvidence;
   if (decisionGap?.action === "ASK_OBSERVATION" && !observations.includes("failed_control")) {
     caseState.questions = [{ key: `gate_${decisionGap.cue}`, text: `เพื่อแยก ${decisionGap.candidate} ต้องตรวจ: ${decisionGap.label}` }, ...caseState.questions].slice(0, 5);
+  } else if (caseState.decision?.needForAction.status === "MORE_EVIDENCE_REQUIRED" && caseState.decision.needForAction.requiredMeasurement === "average insects per rice plant" && !observations.includes("failed_control")) {
+    caseState.questions = [{ key: "action_insects_per_plant", text: "สุ่มนับเพลี้ยบริเวณโคนต้นแล้วพบเฉลี่ยกี่ตัวต่อต้น?" }, ...caseState.questions].slice(0, 5);
   }
   const workflowStatus = document.querySelector(".chat-status small");
   if (workflowStatus) { workflowStatus.className = "workflow-state"; workflowStatus.textContent = `${investigationProgress()} · โหมดทดสอบภาคสนาม`; }
