@@ -126,7 +126,7 @@ export const verifyArtifact = async (root) => {
     if (riceWeedText.includes(prohibited)) throw new Error(`Explorer rice weed corpus exposes prohibited material: ${prohibited}`);
   }
   const management = JSON.parse(await readFile(resolve(resolvedRoot, "knowledge-explorer", "assets", "data", "crop-protection-management-001.json"), "utf8"));
-  if (management.meta?.status !== "accepted-internal-not-published" || management.counts?.management_options !== 7 || management.counts?.active_ingredients !== 6 || management.counts?.irac_relationships !== 6 || management.counts?.frac_relationships !== 0 || management.counts?.hrac_relationships !== 0 || management.counts?.registration_relationships !== 0) throw new Error("Explorer crop protection management integration is invalid");
+  if (management.meta?.status !== "accepted-internal-not-published" || management.counts?.management_options !== 9 || management.counts?.active_ingredients !== 18 || management.counts?.irac_relationships !== 6 || management.counts?.frac_relationships !== 6 || management.counts?.hrac_relationships !== 6 || management.counts?.registration_relationships !== 0) throw new Error("Explorer crop protection management integration is invalid");
   if (management.meta?.rights !== "source-pages-images-tables-layout-and-passages-suppressed") throw new Error("Explorer crop protection management lost rights suppression");
   const managementText = JSON.stringify(management);
   for (const prohibited of ["sourceExcerpt", "passageText", "imageUrl", "pdfUrl", "tradeName", "productRank", "dose"]) {

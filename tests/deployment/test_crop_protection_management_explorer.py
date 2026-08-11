@@ -19,25 +19,28 @@ def test_projection_counts_and_authorities_are_governed() -> None:
     assert data["counts"] == {
         "domains": 3,
         "problem_subjects": 43,
-        "evidence": 14,
-        "claims": 22,
-        "management_options": 7,
-        "active_ingredients": 6,
-        "moa_relationships": 6,
+        "evidence": 28,
+        "claims": 36,
+        "management_options": 9,
+        "active_ingredients": 18,
+        "moa_relationships": 18,
         "irac_relationships": 6,
-        "frac_relationships": 0,
-        "hrac_relationships": 0,
+        "frac_relationships": 6,
+        "hrac_relationships": 6,
         "registration_relationships": 0,
         "questions": 16,
-        "issues": 6,
+        "issues": 4,
         "packages": 1,
         "views": 1,
     }
+    assert len(data["management"]) == 9
+    assert len(data["frac_active_ingredients"]) == 6
+    assert len(data["hrac_active_ingredients"]) == 6
     assert data["authorities"] == {
         "IRAC": "integrated-v11.5",
-        "FRAC": "unresolved-source-absent",
-        "HRAC": "unresolved-source-absent",
-        "thai_registration": "separate-administrative-layer-no-use-edge",
+        "FRAC": "integrated-2026",
+        "HRAC": "integrated-2026-numeric-and-legacy-preserved",
+        "thai_registration": "targeted-verified-no-use-edge",
     }
 
 
@@ -57,6 +60,8 @@ def test_page_exposes_options_moa_and_failed_control_without_selection() -> None
     ):
         assert value in page
     assert "ไม่มีความสัมพันธ์จากแมลงไปยัง IRAC Group" in page
+    assert "FRAC 2026" in page and "HRAC 2026" in page
+    assert "ทะเบียน ≠ ประสิทธิภาพ ≠ Recommendation" in page
 
 
 def test_rights_product_dose_and_recommendation_boundaries_hold() -> None:

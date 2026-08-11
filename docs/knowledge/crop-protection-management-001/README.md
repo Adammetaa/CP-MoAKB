@@ -9,18 +9,18 @@ Recommendation.
 
 | Record family | Count |
 | --- | ---: |
-| Sources used | 6 |
-| Evidence responsibilities | 14 |
-| Claims | 22 |
-| Management Options | 7 |
-| Active Ingredient Concepts | 6 |
-| MoA relationships | 6 |
+| Sources used | 8 |
+| Evidence responsibilities | 28 |
+| Claims | 36 |
+| Management Options | 9 |
+| Active Ingredient Concepts | 18 |
+| MoA relationships | 18 |
 | IRAC relationships | 6 |
-| FRAC relationships | 0 |
-| HRAC relationships | 0 |
+| FRAC relationships | 6 |
+| HRAC relationships | 6 |
 | Registration relationships | 0 |
 | Investigation questions | 16 |
-| Unresolved Issues | 6 |
+| Unresolved Issues | 4 |
 | New CKP / Website View | 1 / 1 |
 | Existing problem CKPs referenced | 43 |
 

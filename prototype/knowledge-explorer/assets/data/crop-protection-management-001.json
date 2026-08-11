@@ -1,6 +1,6 @@
 {
   "meta": { "kind": "real-governed-knowledge", "status": "accepted-internal-not-published", "language": "th", "rights": "source-pages-images-tables-layout-and-passages-suppressed" },
-  "counts": { "domains": 3, "problem_subjects": 43, "evidence": 14, "claims": 22, "management_options": 7, "active_ingredients": 6, "moa_relationships": 6, "irac_relationships": 6, "frac_relationships": 0, "hrac_relationships": 0, "registration_relationships": 0, "questions": 16, "issues": 6, "packages": 1, "views": 1 },
+  "counts": { "domains": 3, "problem_subjects": 43, "evidence": 28, "claims": 36, "management_options": 9, "active_ingredients": 18, "moa_relationships": 18, "irac_relationships": 6, "frac_relationships": 6, "hrac_relationships": 6, "registration_relationships": 0, "questions": 16, "issues": 4, "packages": 1, "views": 1 },
   "management": [
     { "id": "MO-CPM-001/v1", "domain": "insect", "category": "การติดตาม/เฝ้าระวัง", "summary": "ตรวจระยะแมลง ส่วนข้าว รูปแบบความเสียหาย การกระจาย และระยะข้าวก่อนพิจารณาการจัดการ", "evidence": "EV-RIC-001/v1–EV-RIC-019/v1" },
     { "id": "MO-CPM-002/v1", "domain": "insect", "category": "ศัตรูธรรมชาติ", "summary": "สังเกตผู้ล่าและตัวเบียนที่แหล่งข้อมูลระบุ โดยไม่รับประกันการควบคุม", "evidence": "RL-RIC-NE-001/v1–RL-RIC-NE-010/v1" },
@@ -8,7 +8,9 @@
     { "id": "MO-CPM-004/v1", "domain": "weed", "category": "การจัดการเขตกรรม", "summary": "หมวดแนวทางการเตรียมดินและวิธีปลูกตามขอบเขตแหล่งข้อมูล", "evidence": "EV-RWC-005/v1" },
     { "id": "MO-CPM-005/v1", "domain": "weed", "category": "กายภาพ/เครื่องจักร", "summary": "ถอน ตัด หรือใช้เครื่องมือในบริบทที่แหล่งข้อมูลรองรับ", "evidence": "EV-RWC-005/v1" },
     { "id": "MO-CPM-006/v1", "domain": "weed", "category": "ชีววิธี", "summary": "แหล่งข้อมูลยอมรับชีววิธีเป็นหมวด แต่ไม่สร้างการรับประกันเฉพาะสิ่งมีชีวิต", "evidence": "EV-RWC-005/v1" },
-    { "id": "MO-CPM-007/v1", "domain": "cross-domain", "category": "ติดตามผล/ประเมินซ้ำ", "summary": "ตรวจตัวตน ระยะ เวลา อากาศ น้ำ การคลุมพื้นที่ และฉลากก่อนตีความการควบคุมล้มเหลว", "evidence": "EV-RWC-008/v1" }
+    { "id": "MO-CPM-007/v1", "domain": "cross-domain", "category": "ติดตามผล/ประเมินซ้ำ", "summary": "ตรวจตัวตน ระยะ เวลา อากาศ น้ำ การคลุมพื้นที่ และฉลากก่อนตีความการควบคุมล้มเหลว", "evidence": "EV-RWC-008/v1" },
+    { "id": "MO-CPM-008/v1", "domain": "disease", "category": "บริบทการป้องกันโรคไหม้", "summary": "หมวดพันธุ์ต้านทาน อัตราเมล็ดพันธุ์ การระบายน้ำ และการจัดการไนโตรเจนตามขอบเขตแหล่งข้อมูล", "evidence": "EV-DMG-CPM-001/v1" },
+    { "id": "MO-CPM-009/v1", "domain": "disease", "category": "บริบทสุขอนามัยโรค", "summary": "หมวดสุขอนามัยแหล่งเมล็ด วัชพืช และต้นที่ได้รับผลกระทบตามขอบเขตแหล่งข้อมูล", "evidence": "EV-DMG-CPM-002/v1" }
   ],
   "active_ingredients": [
     { "name": "Carbofuran", "group": "1A", "moa": "Acetylcholinesterase inhibitors", "page": 7 },
@@ -18,5 +20,22 @@
     { "name": "Buprofezin", "group": "16", "moa": "Inhibitors of chitin biosynthesis, type 1", "page": 11 },
     { "name": "Chlorantraniliprole", "group": "28", "moa": "Ryanodine receptor modulators", "page": 13 }
   ],
-  "authorities": { "IRAC": "integrated-v11.5", "FRAC": "unresolved-source-absent", "HRAC": "unresolved-source-absent", "thai_registration": "separate-administrative-layer-no-use-edge" }
+  "frac_active_ingredients": [
+    { "name": "Carbendazim", "group": "1", "moa": "B1 tubulin polymerization", "page": 5 },
+    { "name": "Isoprothiolane", "group": "6", "moa": "F2 phospholipid biosynthesis / methyltransferase", "page": 10 },
+    { "name": "Propiconazole", "group": "3", "moa": "G1 C14-demethylase in sterol biosynthesis", "page": 11 },
+    { "name": "Tricyclazole", "group": "16.1", "moa": "I1 reductase in melanin biosynthesis", "page": 12 },
+    { "name": "Validamycin", "group": "U18", "moa": "unknown; inhibition of trehalase proposed", "page": 14 },
+    { "name": "Mancozeb", "group": "M03", "moa": "multi-site contact activity", "page": 15 }
+  ],
+  "hrac_active_ingredients": [
+    { "name": "Cyhalofop-butyl", "group": "1", "legacy": "A", "moa": "ACCase inhibition" },
+    { "name": "Bispyribac-sodium", "group": "2", "legacy": "B", "moa": "ALS inhibition" },
+    { "name": "Bensulfuron-methyl", "group": "2", "legacy": "B", "moa": "ALS inhibition" },
+    { "name": "Penoxsulam", "group": "2", "legacy": "B", "moa": "ALS inhibition" },
+    { "name": "Quinclorac", "group": "4/29", "legacy": "O.L", "moa": "auxin mimics / cellulose synthesis inhibition" },
+    { "name": "Propanil", "group": "5", "legacy": "C2", "moa": "PSII inhibition; D1 Serine 264 binders" }
+  ],
+  "registration_verification": { "snapshot_pages": 3501, "identities_searched": 18, "exact_identity_matches": 17, "absent": ["Carbofuran"], "exact_identity_page_hits": 5166, "accepted_relationships": 0, "limitation": "identity match does not bind a complete crop-target-use record" },
+  "authorities": { "IRAC": "integrated-v11.5", "FRAC": "integrated-2026", "HRAC": "integrated-2026-numeric-and-legacy-preserved", "thai_registration": "targeted-verified-no-use-edge" }
 }

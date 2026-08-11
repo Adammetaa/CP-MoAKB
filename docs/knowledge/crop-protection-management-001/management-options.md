@@ -13,14 +13,15 @@ they do not select, prioritize, decide, or recommend an action.
 | `MO-CPM-005/v1` Mechanical / physical management | Weed; 8 `CKP-RWC-*` packages | `EV-RWC-005/v1` | hand or machine removal before flowering/seed production where source states the class |
 | `MO-CPM-006/v1` Biological context | Weed; 8 `CKP-RWC-*` packages | `EV-RWC-005/v1` | source recognizes biological management as a class; no organism-specific control guarantee is created |
 | `MO-CPM-007/v1` Follow-up / reassessment | Weed and cross-domain failed-control path | `EV-RWC-008/v1`; DOA ss.10.1-10.8, printed p.3-55 / PDF p.60 | reassess identity, crop safety, timing, weather, coverage and application conditions before interpreting failure |
+| `MO-CPM-008/v1` Blast prevention context | Disease; blast context only | `EV-DMG-CPM-001/v1`; Prachin Buri RRC PDF p.3 | source-stated resistant-variety, seed-rate, drainage and nitrogen-management categories |
+| `MO-CPM-009/v1` Disease sanitation context | Disease; source-defined context only | `EV-DMG-CPM-002/v1`; KU PDF p.25 | source-stated seed-source hygiene, weed sanitation and affected-plant removal categories |
 
 ## Disease boundary
 
-The 16 disease CKPs remain connected to the management view with status
-`Management evidence required`. Existing disease Evidence supports identity,
-symptoms, causal agents, spread and field context, but the accepted corpus
-explicitly deferred chemical efficacy, current registration, FRAC and treatment.
-No disease Management Option is inferred from a spread pathway.
+The 16 disease CKPs remain connected with partial management coverage. Two direct
+management passages now support bounded non-product options; no option is inferred
+from symptoms, causal biology or spread. Chemical efficacy, current registration,
+label safety and case-specific treatment remain deferred.
 
 ## Historical chemical context
 

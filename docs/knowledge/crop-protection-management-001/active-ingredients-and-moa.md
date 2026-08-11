@@ -1,6 +1,7 @@
 # Active Ingredients and Mode of Action
 
-Six canonical Active Ingredient Concepts are materialized from IRAC v11.5 only.
+Eighteen canonical Active Ingredient Concepts are materialized from IRAC v11.5,
+FRAC 2026 and HRAC 2026.
 Trade names are not identities. These records have no pest, crop, efficacy,
 registration, product, rate, timing or Recommendation edge.
 
@@ -22,3 +23,17 @@ Same group means the source classifies ingredients under the same IRAC group; it
 does not prove equal efficacy, cross-resistance in a field population, registration,
 interchangeability or suitability. A mixture is not automatically better, and a
 different MoA is not automatically effective against a target.
+
+## FRAC and HRAC additions
+
+`CO-AI-CPM-007/v1` through `CO-AI-CPM-012/v1` and
+`RL-FRAC-CPM-001/v1` through `RL-FRAC-CPM-006/v1` preserve six exact FRAC 2026
+classifications. `CO-AI-CPM-013/v1` through `CO-AI-CPM-018/v1` and
+`RL-HRAC-CPM-001/v1` through `RL-HRAC-CPM-006/v1` preserve six exact HRAC 2026
+classifications. Evidence, page locators, numeric/legacy code separation, identity
+normalization and biological-source linkage are recorded in
+`authority-completion.md`.
+
+IRAC, FRAC and HRAC are independent authorities. No classification relationship
+is reused across authority families, and no authority code is interpreted as
+efficacy, registration, Recommendation or a rotation instruction.

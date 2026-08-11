@@ -26,9 +26,8 @@ rotation program, dose escalation, Decision or Recommendation is generated.
 
 ## Unresolved Issues
 
-- `UI-CPM-001/v1`: official FRAC classification artifact absent.
-- `UI-CPM-002/v1`: official HRAC classification artifact absent.
-- `UI-CPM-003/v1`: disease-specific management requires direct accepted Evidence.
+- `UI-CPM-003/v1`: disease management now has two direct Evidence records, but
+  coverage remains partial across the 16 disease CKPs.
 - `UI-CPM-004/v1`: exact current Thai crop/target/use-pattern registration and label
   relationships were not established; registry existence is insufficient.
 - `UI-CPM-005/v1`: resistance requires correct-use, target, stage, environment,
