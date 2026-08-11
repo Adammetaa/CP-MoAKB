@@ -159,7 +159,7 @@ def test_artifact_verifier_has_exact_allowlist_and_prohibited_capability_checks(
         "prohibited local or sensitive text",
     ):
         assert boundary in verifier
-    assert "exactly 58 approved files" in verifier
+    assert "exactly 59 approved files" in verifier
     for prohibited in (
         "sessionStorage",
         "WebSocket",

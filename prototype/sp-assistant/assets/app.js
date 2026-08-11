@@ -164,11 +164,14 @@ const cueRules = [
   ["organ_leaf", ["ใบ", "leaf"]], ["organ_root", ["ราก", "root"]],
   ["organ_stem", ["ลำต้น", "โคนต้น", "stem"]], ["brown", ["สีน้ำตาล", "น้ำตาล", "brown"]],
   ["spot", ["จุด", "แผล", "spot", "lesion"]], ["streak", ["ขีด", "ทางยาว", "streak"]],
+  ["eye_shaped_lesion", ["รูปตา", "กระสวย", "eye-shaped", "spindle"]], ["gray_center", ["กลางแผลสีเทา", "ตรงกลางสีเทา", "gray center"]],
+  ["brown_round_oval", ["จุดสีน้ำตาลกลม", "จุดสีน้ำตาลรูปไข่", "brown round", "brown oval"]], ["grain_symptom", ["อาการที่เมล็ด", "จุดบนเมล็ด", "grain symptom"]],
   ["folded_leaf", ["ใบม้วน", "ใบพับ", "ใบห่อ", "folded leaf"]],
   ["larva", ["หนอน", "larva"]], ["hopper", ["เพลี้ย", "hopper"]],
   ["deadheart", ["ยอดแห้ง", "deadheart"]], ["whitehead", ["รวงขาว", "whitehead"]],
   ["wilt", ["เหี่ยว", "wilting"]], ["triangular_stem", ["ลำต้นเป็นเหลี่ยม", "สามเหลี่ยม", "triangular stem"]],
   ["narrow_leaf", ["ใบแคบ", "ใบเรียว", "narrow leaf"]], ["pest_seen", ["พบแมลง", "เห็นแมลง", "ตัวหนอน"]],
+  ["broad_leaf", ["ใบกว้าง", "broad leaf"]], ["feeding_scar", ["รอยกินสีขาว", "แถบสีขาว", "feeding scar"]],
   ["chemical_history", ["สาร", "ยา", "พ่น", "ฉีด"]],
   ["failed_control", ["ใช้ยาแล้วไม่อยู่", "พ่นแล้วไม่ตาย", "เอาไม่อยู่", "ไม่ได้ผล"]],
   ["rain", ["ฝน", "ชื้น", "rain"]], ["field_distribution", ["ทั้งแปลง", "เป็นหย่อม", "กระจาย"]],
@@ -181,6 +184,7 @@ const candidates = [
   { key: "leaffolder", domain: "Insect", name: "หนอนห่อใบข้าว", link: "../knowledge-explorer/rice-insect-corpus.html", cues: ["folded_leaf", "larva", "organ_leaf"], distinctions: ["พบหนอนภายในใบ", "รอยกินเป็นแถบสีขาว"], source: "Rice Insect corpus · Rice Department source" },
   { key: "brown-planthopper", domain: "Insect", name: "เพลี้ยกระโดดสีน้ำตาล", link: "../knowledge-explorer/rice-insect-corpus.html", cues: ["hopper", "wilt", "organ_stem"], distinctions: ["ตัวแมลงบริเวณโคนต้น", "การกระจายเป็นหย่อม", "อาการไหม้เป็นบริเวณ"], source: "Rice Insect corpus · Rice Department source" },
   { key: "sedge-group", domain: "Weed", name: "กลุ่มกกที่ควรตรวจต่อ", link: "../knowledge-explorer/rice-weed-corpus.html", cues: ["weed_plant", "triangular_stem", "narrow_leaf"], distinctions: ["หน้าตัดลำต้น", "ข้อปล้อง", "ช่อดอก", "สภาพน้ำ"], source: "Rice Weed corpus · governed DOA source" },
+  { key: "rice-field-broadleaf", domain: "Weed", name: "ผักปอดนา / กลุ่มใบกว้างที่ควรตรวจต่อ", link: "../knowledge-explorer/rice-weed-corpus.html", cues: ["weed_plant", "broad_leaf"], distinctions: ["รูปใบ", "เส้นใบ", "ลำต้น", "ดอก"], source: "Rice Weed corpus · EV-RWC-003/v1; EV-RWC-004/v1" },
 ];
 
 const questionBank = {
@@ -263,6 +267,17 @@ function renderCandidate(candidate) {
   const missing = candidate.missing.map((item) => `<li>${escapeHtml(item)}</li>`).join("");
   const contradictions = candidate.contradictions.length ? candidate.contradictions.map((item) => `<li>${escapeHtml(item)}</li>`).join("") : "<li>ยังไม่พบข้อขัดแย้งที่ระบุได้</li>";
   return `<article class="candidate-card"><p class="eyebrow">${candidate.domain} Knowledge</p><h3>${candidate.name}</h3><h4>สนับสนุนจากข้อมูลที่มี</h4><ul>${support}</ul><h4>ข้อมูลที่ยังขาด</h4><ul>${missing}</ul><h4>ข้อมูลที่อาจไม่สอดคล้อง</h4><ul>${contradictions}</ul><p class="source-summary"><strong>แหล่งองค์ความรู้:</strong> ${candidate.source}</p><a href="${candidate.link}">เปิด Knowledge Explorer →</a></article>`;
+}
+
+function renderDecisionGates(decision) {
+  if (!decision) return '<section data-decision-gates><p>Evidence Gate unavailable · Management remains blocked</p></section>';
+  const gates = decision.candidateGates.map((gate) => {
+    const supporting = gate.supporting.map((item) => `<li>${escapeHtml(item.label)} <small>${escapeHtml(item.claim)} → ${escapeHtml(item.evidence)} → ${escapeHtml(item.locator)}</small></li>`).join("") || "<li>ยังไม่มี</li>";
+    const missing = gate.missing.map((item) => `<li>${escapeHtml(item.label)} · ${item.role}</li>`).join("") || "<li>ไม่มี gap ที่ระบุใน profile นี้</li>";
+    const contradicting = gate.contradicting.map((item) => `<li>${escapeHtml(item.label)}</li>`).join("") || "<li>ยังไม่พบข้อขัดแย้งที่กฎรองรับ</li>";
+    return `<article class="candidate-card" data-identification-gate="${gate.key}"><h3>${escapeHtml(gate.name)}</h3><dl><dt>Evidence Sufficiency</dt><dd>${gate.sufficiency}</dd><dt>Identification Gate</dt><dd>${gate.identification} · ${escapeHtml(gate.level)}</dd></dl><h4>Supporting Evidence</h4><ul>${supporting}</ul><h4>Missing Distinguishing Evidence</h4><ul>${missing}</ul><h4>Contradictory Evidence</h4><ul>${contradicting}</ul><p><strong>ข้อจำกัด:</strong> ${escapeHtml(gate.confirmation)}</p></article>`;
+  }).join("") || "<p>ยังไม่มี Candidate profile ที่เข้าสู่ Gate</p>";
+  return `<section data-decision-gates><h3>Evidence Sufficiency และ Identification Gate</h3>${gates}<h3>Severity</h3><p>${decision.severity.status} · ${escapeHtml(decision.severity.limitation)}</p><p>Observable evidence: ${decision.severity.evidence.map(escapeHtml).join(" · ") || "ยังไม่มี"} · quantitative thresholds: NONE</p><h3>Need-for-Action</h3><p>${decision.needForAction.status} · ${escapeHtml(decision.needForAction.basis)}</p><h3>Management Gate</h3><p>${decision.management.status} · chemical recommendation=${decision.management.chemicalRecommendation}</p><p>${escapeHtml(decision.management.limitation)}</p><h3>Next Best Evidence</h3><p>${escapeHtml(decision.nextBestEvidence.label || decision.nextBestEvidence.reason)}${decision.nextBestEvidence.candidate ? ` · ${escapeHtml(decision.nextBestEvidence.candidate)}` : ""}</p><h3>Human Review</h3><p>${decision.humanReview.required ? "REQUIRED" : "NOT CURRENTLY TRIGGERED"} · ${decision.humanReview.reasons.map(escapeHtml).join(" · ") || "ไม่มีเงื่อนไขที่กฎระบุ"}</p><p class="boundary-copy">${decision.boundaries.map(escapeHtml).join(" · ")}</p></section>`;
 }
 
 function renderEnvironmentalContext(candidate) {
@@ -360,6 +375,11 @@ function render() {
   caseState.riceAge = age;
   caseState.candidates = evaluateCandidates(observations);
   caseState.questions = selectQuestions(observations, caseState.candidates);
+  caseState.decision = window.SPDecisionGates?.evaluate({ observations, candidates: caseState.candidates }) ?? null;
+  const decisionGap = caseState.decision?.nextBestEvidence;
+  if (decisionGap?.action === "ASK_OBSERVATION" && !observations.includes("failed_control")) {
+    caseState.questions = [{ key: `gate_${decisionGap.cue}`, text: `เพื่อแยก ${decisionGap.candidate} ต้องตรวจ: ${decisionGap.label}` }, ...caseState.questions].slice(0, 5);
+  }
   const workflowStatus = document.querySelector(".chat-status small");
   if (workflowStatus) { workflowStatus.className = "workflow-state"; workflowStatus.textContent = `${investigationProgress()} · โหมดทดสอบภาคสนาม`; }
   const freeText = caseState.userText;
@@ -367,7 +387,13 @@ function render() {
   const failed = observations.includes("failed_control");
   output.innerHTML = `<article class="message assistant-message"><span class="avatar">SP</span><div class="investigation-response"><div class="response-heading"><div><p class="eyebrow">จากเงื่อนไขที่ตรวจพบ</p><h2>${stateLabel}</h2></div><span class="status-pill">ยังไม่ยืนยันสาเหตุ</span></div><div class="investigation-grid"><section><h3>Observation ที่รู้จัก</h3><p>${observations.length ? observations.map((item) => escapeHtml(item.replaceAll("_", " "))).join(" · ") : "ยังไม่พบ cue ที่กำหนดไว้"}</p></section><section><h3>ข้อความผู้ใช้</h3><p>${escapeHtml(freeText)}</p></section><section class="missing"><h3>Missing Information</h3><p>${caseState.questions.length ? caseState.questions.map((item) => item.text).join(" · ") : "ยังต้องตรวจหลักฐานภาคสนามและทบทวนโดยมนุษย์"}</p></section><section><h3>Case outcome</h3><p>${stateLabel} · ต้องตรวจเพิ่ม · ไม่มี Diagnosis</p></section></div>${failed ? `<div class="failed-control"><strong>CONTROL FAILURE ≠ RESISTANCE</strong><p>ตรวจ identification · stage/timing · application · environment · reinfestation · registration/use-pattern · MoA history ก่อนตั้งสมมติฐาน resistance</p></div>` : ""}<h2 class="candidate-heading">หัวข้อที่ควรตรวจต่อ</h2><p class="ordering-note">เรียงตามจำนวน cue ที่กฎตรวจพบเพื่อการทำงานเท่านั้น ไม่ใช่ความน่าจะเป็นหรือความเชื่อมั่น</p><div class="candidate-list">${caseState.candidates.length ? caseState.candidates.map(renderCandidate).join("") : `<p>ไม่พบ Knowledge ที่รองรับเพียงพอ ข้อความเดิมยังคงแสดงโดยไม่ตีความเพิ่ม</p>`}</div>${renderEnvironmentalContext(caseState.candidates[0])}<p class="boundary-copy">Candidate Knowledge ไม่ใช่ Diagnosis · Supporting evidence ไม่พิสูจน์สาเหตุ · Missing/contradicting evidence ต้องตรวจต่อ</p></div></article>`;
   const candidateDetails = caseState.candidates.length ? caseState.candidates.map(renderCandidate).join("") : "<p>ยังไม่มี Candidate ที่ข้อมูลรองรับเพียงพอ</p>";
+  const decisionDetails = renderDecisionGates(caseState.decision);
+  const leadingGate = caseState.decision?.candidateGates.find((gate) => gate.identification === "PROVISIONAL_IDENTIFICATION") ?? caseState.decision?.candidateGates[0];
+  const decisionSummary = leadingGate ? `<p><strong>Identification Gate:</strong> ${leadingGate.identification}</p><p>${leadingGate.identification === "PROVISIONAL_IDENTIFICATION" ? `ลักษณะที่พบสอดคล้องกับ ${escapeHtml(leadingGate.name)} ในระดับเบื้องต้น แต่ไม่ใช่การยืนยันสาเหตุ` : `ข้อมูลยังไม่พอสำหรับแยก ${escapeHtml(leadingGate.name)} · ยังขาด ${leadingGate.missing.map((item) => escapeHtml(item.label)).join(" · ") || "การทบทวนทางวิทยาศาสตร์"}`}</p>` : "";
   output.innerHTML = `<div class="message-timeline" data-message-timeline>${renderConversationHistory()}</div><article class="message assistant-message current-assistant"><span class="avatar">SP</span><div class="message-bubble"><p><strong>${caseState.lastAnswerUncertain ? "ไม่ต้องเดาครับ เราจะเก็บหลักฐานเพิ่ม" : "รับทราบครับ"}</strong></p><p>${investigationProgress()} · ${evidenceCompleteness()}</p>${failed ? `<p class="inline-warning"><strong>⚠️ CONTROL FAILURE ≠ RESISTANCE</strong><br>ต้องตรวจสาร เวลา วิธีใช้ สภาพแวดล้อม และการกลับเข้าทำลายก่อน โดยระบบไม่แนะนำให้เพิ่มอัตราใช้</p>` : ""}<button type="button" class="detail-trigger" data-detail-toggle>ดูรายละเอียดเคสและ Candidate</button></div></article><dialog class="case-detail-sheet" data-detail-sheet aria-label="รายละเอียดเคส"><button type="button" class="sheet-close" data-detail-close>ปิด</button><h2>รายละเอียดเคส</h2><p>${observations.length ? observations.map((item) => escapeHtml(item.replaceAll("_", " "))).join(" · ") : "ยังไม่มี Observation ที่รู้จัก"}</p><h3>Candidate Knowledge</h3><p class="ordering-note">ลำดับทำงาน ไม่ใช่ probability หรือ confidence</p><div class="candidate-list">${candidateDetails}</div>${renderEnvironmentalContext(caseState.candidates[0])}<p class="boundary-copy">Candidate Knowledge ≠ Diagnosis · Photo received ≠ Photo analyzed · Nearby ≠ Transmission</p></dialog>`;
+  const assistantBubble = output.querySelector(".current-assistant .message-bubble");
+  assistantBubble?.querySelector(".detail-trigger")?.insertAdjacentHTML("beforebegin", decisionSummary);
+  output.querySelector(".case-detail-sheet .boundary-copy")?.insertAdjacentHTML("beforebegin", decisionDetails);
   const nextAction = nextBestAction();
   const heading = questionPanel.querySelector("h2");
   const questionIntro = questionPanel.querySelectorAll("p")[1];

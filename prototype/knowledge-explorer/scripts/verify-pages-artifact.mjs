@@ -38,6 +38,7 @@ const approved = new Set([
   "knowledge-lab/assets/i18n/en.json",
   "sp-assistant/index.html",
   "sp-assistant/deployment.json",
+  "sp-assistant/assets/decision-gates.js",
   "sp-assistant/assets/app.js",
   "sp-assistant/assets/chat.css",
   "sp-assistant/assets/polish.css",
@@ -60,8 +61,8 @@ export const verifyArtifact = async (root) => {
   const resolvedRoot = resolve(root);
   const files = await walk(resolvedRoot);
   const relativeFiles = files.map((path) => relative(resolvedRoot, path).split(sep).join("/"));
-  if (relativeFiles.length !== 58 || approved.size !== 58) {
-    throw new Error("Pages artifact must contain exactly 58 approved files");
+  if (relativeFiles.length !== 59 || approved.size !== 59) {
+    throw new Error("Pages artifact must contain exactly 59 approved files");
   }
   const unexpected = relativeFiles.filter((path) => !approved.has(path));
   const missing = [...approved].filter((path) => !relativeFiles.includes(path));
