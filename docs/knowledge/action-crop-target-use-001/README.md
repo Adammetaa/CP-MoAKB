@@ -31,4 +31,5 @@ active ingredient, product, formulation, rate, or program.
 - [Rice damage progression and life-stage investigation](rice-damage-progression.md)
 - [Rice abiotic differential investigation](rice-abiotic-differential.md)
 - [Application quality and failed-control investigation](application-failed-control-investigation.md)
+- [Need-for-action and management decision gate](need-for-action-decision-gate.md)
 - [Decision matrix and unresolved issues](decision-matrix-and-issues.md)

@@ -261,6 +261,99 @@
     };
   }
 
+  const needForActionStates = Object.freeze(["MORE_EVIDENCE_REQUIRED", "CONTINUE_MONITORING", "NO_ACTION_DETERMINATION_SUPPORTED", "MANAGEMENT_REVIEW_JUSTIFIED", "NON_CHEMICAL_REVIEW_JUSTIFIED", "HUMAN_REVIEW_REQUIRED", "CHEMICAL_REVIEW_BLOCKED", "CHEMICAL_REVIEW_ELIGIBILITY_UNRESOLVED"]);
+  const managementOptionClasses = Object.freeze(["MONITORING", "FIELD_INSPECTION", "CULTURAL_MANAGEMENT", "MECHANICAL_MANAGEMENT", "WATER_MANAGEMENT", "BIOLOGICAL_MANAGEMENT", "CHEMICAL_MANAGEMENT_REVIEW", "EXPERT_REVIEW", "OTHER_GOVERNED_MANAGEMENT"]);
+
+  function evaluateNeedForAction(input = {}) {
+    const authority = window.SPDecisionAuthority;
+    const subject = input.subject || null;
+    const actionEvidence = subject ? authority?.actionEvidence?.[subject] || null : null;
+    const identified = ["PROVISIONAL_IDENTIFICATION", "IDENTIFICATION_SUPPORTED"].includes(input.identificationState);
+    const alternativesResolved = input.alternativesResolved === true;
+    const currentActivity = input.activityState === "CURRENT_ACTIVITY_SUPPORTED";
+    const historicalOnly = input.activityState === "HISTORICAL_DAMAGE_SUPPORTED" && input.progressionState !== "PROGRESSION_SUPPORTED" && input.newDamage !== true;
+    const progressing = input.progressionState === "PROGRESSION_SUPPORTED";
+    const failedControl = input.failedControlContext || null;
+    const weatherOnly = Boolean(input.weatherContext) && !identified && !currentActivity && !progressing;
+    const nearbyOnly = Boolean(input.nearbyCase) && !identified && !currentActivity && !progressing;
+    const burden = { observations: input.burdenEvidence || {}, labels: [], limitation: "observable burden only; no generic LOW/MEDIUM/HIGH severity" };
+    const applicability = actionEvidence ? { status: actionEvidence.thaiApplicability, geography: actionEvidence.geography || "international/reference context", cropStage: actionEvidence.cropStage || "not stated", samplingMethod: actionEvidence.samplingMethod || "source criterion wording", limitations: actionEvidence.limitations || [] } : { status: "NO_GOVERNED_ACTION_EVIDENCE", limitations: ["subject-specific threshold or criterion unavailable"] };
+    let needForAction = "MORE_EVIDENCE_REQUIRED";
+    let basis = "Identification and current evidence are incomplete.";
+    let next = { key: "TARGET_IDENTIFICATION", question: "What target or cause is supported by the field evidence?" };
+    if (historicalOnly) {
+      needForAction = actionEvidence ? "CONTINUE_MONITORING" : "MORE_EVIDENCE_REQUIRED";
+      basis = "Historical damage is supported without current activity, progression, or new damage.";
+      next = { key: "REPEAT_OBSERVATION", question: "Has new damage or current activity appeared since the last observation?" };
+    } else if (weatherOnly || nearbyOnly) {
+      needForAction = "NO_ACTION_DETERMINATION_SUPPORTED";
+      basis = weatherOnly ? "Weather is contextual and cannot independently establish management need." : "A nearby Case is surveillance context and cannot independently establish management need.";
+      next = { key: "FIELD_INSPECTION", question: "What is directly observable in this field?" };
+    } else if (!identified || !alternativesResolved) {
+      needForAction = "MORE_EVIDENCE_REQUIRED";
+      basis = "Identification or differential alternatives remain unresolved.";
+      next = { key: "TARGET_IDENTIFICATION", question: "What distinguishing evidence resolves the target or competing cause families?" };
+    } else if (!currentActivity && !progressing) {
+      needForAction = "MORE_EVIDENCE_REQUIRED";
+      basis = "Current activity and progression are not established.";
+      next = { key: "CURRENT_ACTIVITY", question: "Is current activity, new damage, or new affected tissue directly observable?" };
+    } else if (failedControl && failedControl.states?.includes("MORE_EVIDENCE_REQUIRED")) {
+      needForAction = "HUMAN_REVIEW_REQUIRED";
+      basis = "Reported control failure retains unresolved Sprint-081 alternatives and cannot skip to re-treatment.";
+      next = failedControl.nextBestEvidence || { key: "FAILED_CONTROL_REVIEW", question: "What failed-control evidence remains unresolved?" };
+    } else if (subject === "brown-planthopper" && actionEvidence?.thaiApplicability === "THAI_OPERATIONAL_EVIDENCE_WITH_LIMITATION") {
+      const count = input.measurements?.insectsPerPlant;
+      if (!Number.isFinite(count)) {
+        needForAction = "MORE_EVIDENCE_REQUIRED";
+        basis = "Current BPH activity is supported, but the governed insects-per-plant measurement is missing.";
+        next = { key: "INSECTS_PER_PLANT", question: "What is the observed average number of insects per plant, preserving the sampling unit?" };
+      } else if (input.measurements?.unit !== "insects_per_plant") {
+        needForAction = "HUMAN_REVIEW_REQUIRED";
+        basis = "The reported sampling unit cannot be silently converted to insects per plant.";
+        next = { key: "SAMPLING_UNIT_REVIEW", question: "Can the observation be repeated and recorded explicitly as insects per plant?" };
+      } else if (count >= actionEvidence.triggerValue) {
+        needForAction = "MANAGEMENT_REVIEW_JUSTIFIED";
+        basis = `The observed ${count} insects per plant meets the governed ${actionEvidence.triggerValue} insects-per-plant economic criterion, subject to its stated limitations.`;
+        next = { key: "MANAGEMENT_OPTIONS", question: "Which governed management option classes are applicable to this Case?" };
+      } else {
+        needForAction = "CONTINUE_MONITORING";
+        basis = `The observed ${count} insects per plant is below the governed ${actionEvidence.triggerValue} insects-per-plant criterion.`;
+        next = { key: "REPEAT_COUNT", question: "When should the same insects-per-plant observation be repeated?" };
+      }
+    } else if (actionEvidence?.thaiApplicability === "REFERENCE_EVIDENCE_ONLY") {
+      needForAction = "NO_ACTION_DETERMINATION_SUPPORTED";
+      basis = "Reference evidence is available, but Thai operational action authority is unresolved.";
+      next = { key: "HUMAN_REVIEW", question: "Can a qualified reviewer assess the reference criterion and Thai applicability?" };
+    } else {
+      needForAction = "NO_ACTION_DETERMINATION_SUPPORTED";
+      basis = progressing ? "Progression is supported, but no governed applicable action criterion exists." : "No governed applicable action criterion exists.";
+      next = { key: "HUMAN_REVIEW", question: "Can a qualified reviewer assess the unsupported management decision?" };
+    }
+    const keyA = needForAction === "MANAGEMENT_REVIEW_JUSTIFIED";
+    const regulatoryReview = subject ? authority?.priorityRegulatoryReview?.[subject] : null;
+    const regulatoryStatus = regulatoryReview ? authority.evaluateRegulatoryChain(regulatoryReview) : authority?.registration?.status || "NO_REGULATORY_EVIDENCE";
+    const keyB = regulatoryStatus === "ELIGIBLE_FOR_DECISION_REVIEW";
+    const chemicalGate = keyA && keyB ? "CHEMICAL_OPTIONS_READY_FOR_DECISION_REVIEW" : keyA ? "CHEMICAL_REVIEW_ELIGIBILITY_UNRESOLVED" : "CHEMICAL_REVIEW_BLOCKED";
+    const options = [];
+    if (["CONTINUE_MONITORING", "MORE_EVIDENCE_REQUIRED"].includes(needForAction)) options.push({ class: "MONITORING", eligibility: "CASE_RELEVANCE_SUPPORTED" }, { class: "FIELD_INSPECTION", eligibility: "CASE_RELEVANCE_SUPPORTED" });
+    if (["NO_ACTION_DETERMINATION_SUPPORTED", "HUMAN_REVIEW_REQUIRED"].includes(needForAction)) options.push({ class: "EXPERT_REVIEW", eligibility: "REQUIRES_HUMAN_REVIEW" });
+    if (keyA) options.push({ class: "EXPERT_REVIEW", eligibility: "CASE_RELEVANCE_SUPPORTED" }, { class: "CHEMICAL_MANAGEMENT_REVIEW", eligibility: keyB ? "CHEMICAL_REGULATORY_REVIEW_REQUIRED" : "CASE_APPLICABILITY_UNRESOLVED" });
+    const humanReasons = [!identified ? "unresolved identification" : null, !alternativesResolved ? "unresolved differential alternatives" : null, applicability.status === "NO_GOVERNED_ACTION_EVIDENCE" ? "missing subject-specific Action Evidence" : null, applicability.limitations?.some((item) => item.includes("point") || item.includes("plant")) ? "sampling-unit limitation" : null, failedControl ? "failed-control complexity" : null, regulatoryStatus !== "ELIGIBLE_FOR_DECISION_REVIEW" ? "regulatory ambiguity" : null, needForAction === "NO_ACTION_DETERMINATION_SUPPORTED" ? "unsupported management determination" : null].filter(Boolean);
+    return {
+      model: "need-for-action-decision/v1", decisionTimestamp: input.decisionTimestamp || null, subject, identificationState: input.identificationState || "UNRESOLVED", activityState: input.activityState || "UNRESOLVED", progressionState: input.progressionState || "UNRESOLVED", burden,
+      actionEvidence: actionEvidence ? { id: actionEvidence.id, claim: actionEvidence.claim, evidence: actionEvidence.evidence, thresholdType: actionEvidence.thresholdType, measurement: actionEvidence.measurement, unit: actionEvidence.unit, samplingMethod: actionEvidence.samplingMethod || null, source: actionEvidence.source, limitations: actionEvidence.limitations } : null,
+      applicability, needForAction, decisionBasis: basis, nextBestDecisionEvidence: { action: "ASK_ONE_QUESTION", ...next },
+      managementGate: keyA ? "OPEN_FOR_OPTION_CLASS_REVIEW" : "CLOSED", managementOptions: options, managementOptionClasses,
+      twoKeyGate: { keyA: { question: "SHOULD MANAGEMENT BE REVIEWED?", satisfied: keyA }, keyB: { question: "IS A CHEMICAL OPTION REGULATORILY ELIGIBLE?", satisfied: keyB, status: regulatoryStatus }, result: chemicalGate },
+      chemicalGate, efficacyGate: { status: keyB ? "ELIGIBLE_BUT_EFFICACY_NOT_ASSESSED" : "REGULATORY_ELIGIBILITY_UNRESOLVED", boundary: "REGULATORY ELIGIBILITY ≠ EFFICACY EVIDENCE ≠ CASE SUITABILITY ≠ PRODUCT RANKING" },
+      humanReview: { required: humanReasons.length > 0, reasons: humanReasons },
+      explainability: { observed: { burden: input.burdenEvidence || {}, measurements: input.measurements || {} }, supported: [input.identificationState, input.activityState, input.progressionState].filter(Boolean), uncertain: humanReasons, actionEvidenceAvailable: Boolean(actionEvidence), applicable: applicability.status, reason: basis, evidenceThatWouldChangeDecision: next, managementGate: keyA ? "OPEN" : "CLOSED", chemicalGate },
+      traceability: { scientific: ["Case Observation", "Candidate / Identification", "Current Activity / Progression", "Action Evidence", "Claim", "Evidence", "Source locator", "Applicability", "Need-for-Action", "Management Gate"], regulatory: ["Case Candidate", "Crop x Target x Use", "Regulatory Evidence", "Current Registration", "Chemical Eligibility"] },
+      execute: { planCreated: false, droneMissionCreated: false }, learn: { canonicalPromotion: false, boundary: "FIELD OUTCOME ≠ CANONICAL KNOWLEDGE" }, recommendation: null,
+      boundaries: ["PROBLEM PRESENT ≠ ACTION REQUIRED", "CURRENT ACTIVITY ≠ ACTION REQUIRED", "PROGRESSION ≠ CHEMICAL ACTION REQUIRED", "THRESHOLD MET ≠ PESTICIDE REQUIRED", "MANAGEMENT REVIEW ≠ CHEMICAL RECOMMENDATION", "OLD DAMAGE ≠ CURRENT MANAGEMENT NEED", "CONTROL FAILURE ≠ RESISTANCE", "NEARBY CASE ≠ ACTION REQUIRED"],
+    };
+  }
+
   const has = (observations, cue) => cue === "larva_or_feeding" ? observations.includes("larva") || observations.includes("feeding_scar") : observations.includes(cue);
   function evaluateCandidate(candidate, observations) {
     const profile = profiles[candidate.key];
@@ -317,5 +410,5 @@
       boundaries: ["Candidate ≠ Diagnosis", "Severity ≠ Need-for-Action", "Need-for-Action ≠ pesticide recommendation", "Weather alone cannot escalate identification", "Nearby Case cannot escalate identification", "Photo received ≠ Photo analyzed", "CONTROL FAILURE ≠ RESISTANCE"],
     };
   }
-  window.SPDecisionGates = Object.freeze({ evaluate, beginFromObservation, evaluateProgression, evaluateAbioticDifferential, evaluateFailedControl, compareTemporalObservations, profiles, symptomFamilies, observationVocabulary, progressionStates, lifeStageProfiles, abioticProfiles, abioticInvestigationStates, applicationQualityStates, moaAuthority, roles: ROLES });
+  window.SPDecisionGates = Object.freeze({ evaluate, beginFromObservation, evaluateProgression, evaluateAbioticDifferential, evaluateFailedControl, evaluateNeedForAction, compareTemporalObservations, profiles, symptomFamilies, observationVocabulary, progressionStates, lifeStageProfiles, abioticProfiles, abioticInvestigationStates, applicationQualityStates, needForActionStates, managementOptionClasses, moaAuthority, roles: ROLES });
 })();
