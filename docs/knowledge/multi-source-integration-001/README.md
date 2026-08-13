@@ -5,6 +5,24 @@ Status: accepted internal architecture and representative slice; `not_published`
 See [Golden Slice Validation 1: Brown Planthopper](brown-planthopper-golden-slice-validation.md)
 for the evidence-driven end-to-end chain and Sprint-088 gap decision.
 
+## Sprint-089R current positive-path search
+
+Sprint-089R reused the Sprint-088R binding model and conducted a bounded, source-driven search in the required target order. Governed repository evidence was reviewed first, followed by exact official Thai DOA product-registration and label/certificate queries. No company was preselected, no registry was mass-ingested, and search-result snippets were navigation aids rather than Evidence.
+
+| Candidate | Target | Registration | Status | Label | Stable ID | Rice | Target | Use | Result |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| เพลนั่ม 50 ดับบลิวจี; pymetrozine 50% WG | Brown Planthopper / เพลี้ยกระโดดสีน้ำตาล / *Nilaparvata lugens* | `405-2555` | `EXPIRED` 2024-03-22 | no | no shared CTU ID | explicit in separate official guidance | explicit in separate official guidance | explicit in separate official guidance | `REJECTED_EXPIRED` |
+| พรีวาธอน / Prevathon; chlorantraniliprole 5.17% W/V SC; FMC AG (Thailand) Co., Ltd. | Rice Leaffolder / หนอนห่อใบข้าว / *Cnaphalocrocis medinalis* | `7-2554` | `CURRENT`; 2023-04-07 through 2029-04-06 | no official label/certificate located | no | explicit in separate official guidance | explicit in separate official guidance | explicit in separate official guidance | `REJECTED_NO_LABEL` |
+| no product identity accepted | Rice Stem Borers / หนอนกอข้าว | not established | `STATUS_UNKNOWN` | no | no | explicit in guidance | grouped target covers multiple species | use pattern only | `REJECTED_NO_STABLE_IDENTIFIER` |
+| บลาสวัน; tricyclazole 75% WP; Global Crops Co., Ltd. | Rice Blast / โรคไหม้ | `602-2555` | `CURRENT`; 2024-04-17 through 2030-04-16 | no official label/certificate located | no | absent from registry row | absent from registry row | absent from registry row | `REJECTED_NO_LABEL` |
+| no product identity accepted | Brown Spot / โรคใบจุดสีน้ำตาล | not established | `STATUS_UNKNOWN` | no | no | unresolved | unresolved | unresolved | `NEEDS_REVIEW` |
+
+Current registrations `7-2554` and `602-2555` prove that the architecture can preserve exact current identity and validity separately from use authority. They do not prove rice, exact target, or approved use. The official insect guidance provides crop-target-use facts for insect candidates but no registration, certificate, regulator-record, or approved-label identifier. No candidate therefore meets the complete positive-path standard.
+
+Sprint classification: **`CURRENT_REGULATORY_POSITIVE_SOURCE_GAP`**. Selected positive slice: **`NO QUALIFIED POSITIVE SLICE`**. The single highest-value next gap is one public official approved rice-use label or certificate sharing a current Thai registration identifier.
+
+The Website projection exposes the five candidate outcomes and current identity facts while retaining the separate BPH `EXPIRED` / `AUTHORITY_BLOCKED` card. Neither a current registry identity, manufacturer source, scientific source, nor IRAC/FRAC/HRAC classification becomes approved-use authority, product selection, Case recommendation, ranking, execution, or automatic Learn promotion.
+
 ## What is integrated, and what is not merged
 
 The `multi-source-knowledge-integration/v1` projection composes independently governed source assertions through normalized identities and traceable relationships into an existing Knowledge View. It supports Field/Case evidence, scientific and agronomic knowledge, Thai regulatory records, IRAC/FRAC/HRAC classification, and manufacturer/product information.
@@ -17,11 +35,12 @@ The composition path is:
 
 ## Source authority
 
-The five roles remain separate:
+The six roles remain separate:
 
 - **Case Evidence** establishes only what a Case records.
 - **Scientific Authority** supports scientific or agronomic knowledge within source scope.
 - **Regulatory Authority** establishes only the registration or use facts explicitly present in its records.
+- **Regulatory-supporting Official Material** may establish bounded crop, target, use-pattern, or rate facts but cannot replace a required approved-label or registration join.
 - **MoA Classification Authority** establishes IRAC, FRAC, or HRAC classification and explanatory context.
 - **Manufacturer / Commercial Source** establishes attributed manufacturer product information or claims, not independent scientific or regulatory truth.
 
@@ -43,7 +62,7 @@ The representative product slice reuses the governed Sprint-083 lead for `เพ
 
 ## Regulatory binding and freshness
 
-The official row records expiry on 22 March 2024; current renewal is unresolved. It exposes no official crop, target, use, or approved-label binding. Therefore the exact identity relationship is visible while the crop-target-use relationship remains `AUTHORITY_BLOCKED`.
+The BPH official row records expiry on 22 March 2024 and is classified `EXPIRED` in the current listing context. It exposes no official crop, target, use, or approved-label binding. Therefore the exact identity relationship is visible while the crop-target-use relationship remains `AUTHORITY_BLOCKED`.
 
 Registration identity known, current registration known, and exact crop-target-use authority established are three separate states. Historical or expired-date evidence is never presented as current merely because a name remains discoverable. Source version/date, retrieval date, and locator remain attached wherever available; an unavailable manufacturer version is explicitly marked rather than treated as timeless truth.
 
