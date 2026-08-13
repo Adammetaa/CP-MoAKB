@@ -412,6 +412,91 @@
     };
   }
 
+  const governedManagementOptionClasses = Object.freeze(["CONTINUE_MONITORING", "CULTURAL_MANAGEMENT", "MECHANICAL_MANAGEMENT", "BIOLOGICAL_MANAGEMENT", "CHEMICAL_REVIEW", "EXPERT_REVIEW", "NO_ACTION_CURRENTLY_JUSTIFIED"]);
+  const managementOptionEligibilityStates = Object.freeze(["eligible", "information-required", "human-review-required", "authority-blocked", "evidence-blocked", "not-currently-justified"]);
+  function evaluateManagementOptions(input = {}) {
+    const suitability = input.managementSuitability || evaluateManagementSuitability(input);
+    const decision = input.needForActionDecision || evaluateNeedForAction(input);
+    const sourceByClass = new Map(suitability.options.map((item) => [item.optionClass, item]));
+    const managementGateOpen = suitability.needForAction === "MANAGEMENT_REVIEW_JUSTIFIED";
+    const caseReference = input.caseReference || suitability.caseReference || null;
+    const evaluatedAt = input.evaluatedAt || input.decisionTimestamp || suitability.decisionTimestamp || null;
+    const reviewedFinding = input.reviewedFinding || {
+      state: suitability.needForAction,
+      source: decision.actionEvidence?.id || "CASE_DECISION",
+      basis: decision.decisionBasis || null,
+    };
+    const targetProblem = input.targetProblem || suitability.subject || "UNRESOLVED_MANAGEMENT_QUESTION";
+    const evidenceTrace = {
+      observations: input.observations || [],
+      identification: suitability.explainability.identification,
+      currentActivity: suitability.explainability.currentActivity,
+      progression: suitability.explainability.progression,
+      burden: suitability.explainability.burden,
+      actionEvidence: suitability.explainability.actionEvidence,
+      needForAction: suitability.needForAction,
+    };
+    const candidate = (optionClass, eligibilityState, source, overrides = {}) => ({
+      caseReference,
+      reviewedFinding,
+      optionClass,
+      targetProblem,
+      eligibilityState,
+      evidenceBasis: overrides.evidenceBasis || source?.supporting || [],
+      authorityBasis: overrides.authorityBasis || { required: false, status: "NOT_APPLICABLE" },
+      limitations: overrides.limitations || source?.limitations || [],
+      unresolvedEvidenceGaps: overrides.unresolvedEvidenceGaps || source?.missing || [],
+      humanReviewRequired: overrides.humanReviewRequired ?? source?.humanReviewRequired ?? false,
+      provenance: ["Case", "Observation", "Evidence", "Reviewed Finding", "Need-for-Action", "Management Suitability", "Management Option Candidate"],
+      evaluationContext: { evaluatedAt, model: "governed-management-option-selection/v1", browserLocal: true },
+      explainability: { caseEvidence: evidenceTrace, relevance: overrides.relevance || source?.why || null, authority: overrides.authorityBasis || null, unknown: overrides.unresolvedEvidenceGaps || source?.missing || [], nextGovernedStep: overrides.nextGovernedStep || null },
+      prescription: null,
+      execution: null,
+    });
+    const stateFor = (source, availableBeforeManagementGate = false) => {
+      if (!managementGateOpen && !availableBeforeManagementGate) return source?.state === "MORE_EVIDENCE_REQUIRED" ? "information-required" : "evidence-blocked";
+      if (!source) return "evidence-blocked";
+      if (source.state === "SUPPORTED_FOR_REVIEW") return source.humanReviewRequired ? "human-review-required" : "eligible";
+      if (source.state === "MORE_EVIDENCE_REQUIRED") return "information-required";
+      if (source.state === "BLOCKED_BY_AUTHORITY") return "authority-blocked";
+      if (source.state === "HUMAN_REVIEW_REQUIRED") return "human-review-required";
+      return "not-currently-justified";
+    };
+    const monitoring = sourceByClass.get("MONITORING");
+    const cultural = sourceByClass.get("CULTURAL_MANAGEMENT");
+    const mechanical = sourceByClass.get("MECHANICAL_MANAGEMENT");
+    const biological = sourceByClass.get("BIOLOGICAL_MANAGEMENT");
+    const chemical = sourceByClass.get("CHEMICAL_MANAGEMENT_REVIEW");
+    const expert = sourceByClass.get("EXPERT_REVIEW");
+    const chemicalAuthority = { required: true, status: suitability.regulatoryGate.chemicalGate, cropTargetUseChainComplete: suitability.regulatoryGate.keyB.satisfied === true, boundary: "Registration identity or MoA classification alone does not authorize crop, target, use, product, rate, timing, mixture, method, drone use, re-treatment, or MoA switching." };
+    const expertState = managementGateOpen && expert?.state === "NOT_APPLICABLE" ? "eligible" : stateFor(expert, true);
+    const options = [
+      candidate("CONTINUE_MONITORING", stateFor(monitoring, true), monitoring, { nextGovernedStep: monitoring?.state === "MORE_EVIDENCE_REQUIRED" ? "FIELD_ACTION_HANDOFF" : "HUMAN_SELECTION_OR_CASE_REVIEW" }),
+      candidate("CULTURAL_MANAGEMENT", stateFor(cultural), cultural, { nextGovernedStep: "HUMAN_SELECTION_OR_CASE_REVIEW" }),
+      candidate("MECHANICAL_MANAGEMENT", stateFor(mechanical), mechanical, { nextGovernedStep: "HUMAN_SELECTION_OR_CASE_REVIEW" }),
+      candidate("BIOLOGICAL_MANAGEMENT", stateFor(biological), biological, { nextGovernedStep: "HUMAN_SELECTION_OR_CASE_REVIEW" }),
+      candidate("CHEMICAL_REVIEW", managementGateOpen ? stateFor(chemical) : "evidence-blocked", chemical, { authorityBasis: chemicalAuthority, humanReviewRequired: managementGateOpen, nextGovernedStep: managementGateOpen && chemicalAuthority.cropTargetUseChainComplete ? "HUMAN_CHEMICAL_DECISION_REVIEW" : "RESOLVE_AUTHORITY_OR_HUMAN_REVIEW", limitations: [...(chemical?.limitations || []), "Chemical Review is not a pesticide prescription or application instruction."] }),
+      candidate("EXPERT_REVIEW", expertState, expert, { humanReviewRequired: ["eligible", "human-review-required"].includes(expertState), nextGovernedStep: "HUMAN_REVIEW" }),
+      candidate("NO_ACTION_CURRENTLY_JUSTIFIED", managementGateOpen ? "eligible" : suitability.needForAction === "CONTINUE_MONITORING" ? "eligible" : suitability.needForAction === "MORE_EVIDENCE_REQUIRED" ? "information-required" : "not-currently-justified", null, { evidenceBasis: [{ item: decision.decisionBasis, role: ROLES.SUPPORTING }], limitations: ["Eligibility preserves a bounded no-intervention choice; it is not a permanent determination."], nextGovernedStep: suitability.needForAction === "MORE_EVIDENCE_REQUIRED" ? "FIELD_ACTION_HANDOFF" : "HUMAN_SELECTION_OR_CASE_REVIEW" }),
+    ];
+    return {
+      model: "governed-management-option-selection/v1",
+      caseReference,
+      reviewedFinding,
+      managementGate: managementGateOpen ? "OPEN" : "CLOSED",
+      optionClasses: governedManagementOptionClasses,
+      eligibilityStates: managementOptionEligibilityStates,
+      options,
+      ordering: { rule: "GOVERNED_CLASS_ORDER", order: governedManagementOptionClasses, ranking: false, commercialPreferenceUsed: false },
+      fieldActionInteraction: { architecture: "field-action-handoff/v1", createsAction: false, nextEvidence: suitability.nextBestDecisionQuestion, rule: "Use the existing single highest-value Field Action only when additional Case evidence is required." },
+      humanReview: { approvalInferred: false, required: options.some((item) => item.humanReviewRequired) },
+      chemicalBoundary: { prescriptionCreated: false, productSelected: false, activeIngredientSelected: false, rateCreated: false, applicationInstructionCreated: false },
+      execute: { taskCreated: false, planCreated: false, applicationCreated: false },
+      learn: { automaticLearning: false, canonicalPromotion: false, boundary: "Case outcome is Case evidence and does not alter canonical knowledge." },
+      privacy: { persistence: "BROWSER_LOCAL_ONLY", transmission: "NOT_PERFORMED", analytics: false, tracking: false, persistentGps: false },
+    };
+  }
+
   const fieldActionTypes = Object.freeze(["OBSERVE", "COUNT", "INSPECT", "COMPARE", "PHOTOGRAPH", "RECORD", "RE_INSPECT", "MEASURE", "VERIFY_APPLICATION_CONTEXT", "PREPARE_EXPERT_HANDOFF", "REPEAT_OBSERVATION", "OTHER_GOVERNED_FIELD_ACTION"]);
   const fieldActionStates = Object.freeze(["READY_FOR_FIELD_ACTION", "MORE_INFORMATION_REQUIRED", "HUMAN_REVIEW_REQUIRED", "BLOCKED_BY_AUTHORITY", "IN_PROGRESS", "COMPLETED_BY_USER", "CANCELLED_BY_USER"]);
   function createFieldAction(input = {}) {
@@ -511,5 +596,5 @@
       boundaries: ["Candidate ≠ Diagnosis", "Severity ≠ Need-for-Action", "Need-for-Action ≠ pesticide recommendation", "Weather alone cannot escalate identification", "Nearby Case cannot escalate identification", "Photo received ≠ Photo analyzed", "CONTROL FAILURE ≠ RESISTANCE"],
     };
   }
-  window.SPDecisionGates = Object.freeze({ evaluate, beginFromObservation, evaluateProgression, evaluateAbioticDifferential, evaluateFailedControl, evaluateNeedForAction, evaluateManagementSuitability, createFieldAction, applyFieldActionResult, prepareExpertHandoff, compareTemporalObservations, profiles, symptomFamilies, observationVocabulary, progressionStates, lifeStageProfiles, abioticProfiles, abioticInvestigationStates, applicationQualityStates, needForActionStates, managementOptionClasses, managementSuitabilityStates, fieldActionTypes, fieldActionStates, moaAuthority, roles: ROLES });
+  window.SPDecisionGates = Object.freeze({ evaluate, beginFromObservation, evaluateProgression, evaluateAbioticDifferential, evaluateFailedControl, evaluateNeedForAction, evaluateManagementSuitability, evaluateManagementOptions, createFieldAction, applyFieldActionResult, prepareExpertHandoff, compareTemporalObservations, profiles, symptomFamilies, observationVocabulary, progressionStates, lifeStageProfiles, abioticProfiles, abioticInvestigationStates, applicationQualityStates, needForActionStates, managementOptionClasses, managementSuitabilityStates, governedManagementOptionClasses, managementOptionEligibilityStates, fieldActionTypes, fieldActionStates, moaAuthority, roles: ROLES });
 })();

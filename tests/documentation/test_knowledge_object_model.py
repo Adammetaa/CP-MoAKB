@@ -404,6 +404,6 @@ def test_object_model_is_implementation_neutral_and_domain_safe() -> None:
 
 
 def test_documentation_links_counts_and_engineering_contracts_remain_stable() -> None:
-    assert len(verify()) == 685
+    assert len(verify()) == 686
     assert sum(len(symbols) for symbols in PUBLIC_API_EXPORTS.values()) == 165
     assert (ROOT / "cpmoakb" / "runtime_api.py").is_file()

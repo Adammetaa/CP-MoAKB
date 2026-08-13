@@ -49,7 +49,7 @@ for (const required of ['font-family:"Prompt"', ".system-turn", ".warning-turn",
 }
 if (/<form\b[^>]*(?:action|method)=/i.test(html)) failures.push("forms must remain local and non-network-submittable");
 if (!html.includes('<html lang="th">') || !html.includes('content="noindex,nofollow"')) failures.push("Thai-first or indexing boundary missing");
-for (const required of ["bounded-case-projection/v1", "REQUIRED_TO_DISTINGUISH", "SUFFICIENT_FOR_PROVISIONAL_IDENTIFICATION", "PROVISIONAL_IDENTIFICATION", "SEVERITY_EVIDENCE_INSUFFICIENT", "NO_ACTION_DETERMINATION_SUPPORTED", "MANAGEMENT_REMAINS_BLOCKED", "chemicalRecommendation: \"BLOCKED\"", "thresholds: []", "CONTROL FAILURE ≠ RESISTANCE"]) {
+for (const required of ["bounded-case-projection/v1", "REQUIRED_TO_DISTINGUISH", "SUFFICIENT_FOR_PROVISIONAL_IDENTIFICATION", "PROVISIONAL_IDENTIFICATION", "SEVERITY_EVIDENCE_INSUFFICIENT", "NO_ACTION_DETERMINATION_SUPPORTED", "MANAGEMENT_REMAINS_BLOCKED", "chemicalRecommendation: \"BLOCKED\"", "thresholds: []", "CONTROL FAILURE ≠ RESISTANCE", "governed-management-option-selection/v1", "NO_ACTION_CURRENTLY_JUSTIFIED", "authority-blocked", "commercialPreferenceUsed: false", "taskCreated: false", "automaticLearning: false"]) {
   if (!decisionGates.includes(required)) failures.push(`decision-gates.js missing scientific boundary: ${required}`);
 }
 for (const required of ["action-crop-target-use-authority/v1", "Economic Threshold", "THAI_OPERATIONAL_EVIDENCE_WITH_LIMITATION", "REFERENCE_EVIDENCE_ONLY", "REGISTRATION_IDENTITY_MATCH_ONLY", "CHEMICAL_REVIEW_BLOCKED", "eligibleOptions: []", "completeCropTargetUseChains: 0", "preserve exact mixture identity"]) {

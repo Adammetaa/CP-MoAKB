@@ -35,4 +35,5 @@ active ingredient, product, formulation, rate, or program.
 - [Thai decision-authority resolution](thai-decision-authority-resolution.md)
 - [Management option and Case suitability intelligence](management-case-suitability.md)
 - [Field action handoff and execution readiness](field-action-handoff.md)
+- [Governed Management Option Selection](governed-management-option-selection.md)
 - [Decision matrix and unresolved issues](decision-matrix-and-issues.md)
