@@ -213,6 +213,47 @@
       "preserved_regulatory_classification": "CURRENT_REGULATORY_POSITIVE_SOURCE_GAP"
     }
   ],
+  "application_context_views": [
+    {
+      "id": "ACV-091P-BPH-001/v1",
+      "model": "application-context-evidence/v1",
+      "case_reference": "CASE-087-BPH/v1",
+      "subject": "Brown Planthopper / Nilaparvata lugens",
+      "application_event": {
+        "id": "APP-EVENT-091-BPH-001",
+        "timestamp": "2026-08-10T07:30:00+07:00",
+        "event_type": "CASE_SCOPED_APPLICATION_HISTORY",
+        "product": "Plenum 50 WG — user-reported Case history",
+        "active_ingredient": "pymetrozine",
+        "formulation": "WG",
+        "source": "CASE_EVIDENCE",
+        "limitations": ["reported history is not regulatory authority, efficacy evidence, an execution task, or a prescription"]
+      },
+      "states": ["CONTEXT_INCOMPLETE", "POTENTIAL_LIMITATION", "NEEDS_REVIEW"],
+      "assertions": [
+        { "subject": "application_method", "value": "agricultural_drone", "unit": null, "denominator": null, "timestamp": "2026-08-10T07:30:00+07:00", "source": "USER", "evidence_state": "REPORTED", "direct": true, "limitations": ["recorded method does not establish application quality"] },
+        { "subject": "water_volume", "value": 3, "unit": "L", "denominator": "rai", "timestamp": "2026-08-10T07:30:00+07:00", "source": "USER", "evidence_state": "REPORTED", "direct": true, "limitations": ["recorded 3 L/rai is not a recommended water volume and is not interpreted as sufficient or insufficient"] },
+        { "subject": "equipment_or_drone", "value": { "equipment_type": "agricultural_drone", "model": "UNKNOWN", "nozzle_type": "UNKNOWN", "flight_height": { "value": 3, "unit": "m" }, "flight_speed": "UNKNOWN", "flow_rate": "UNKNOWN", "swath": "UNKNOWN", "droplet_class": "UNKNOWN", "pressure": "NOT_APPLICABLE", "operator_reported_events": ["line_interruption"] }, "unit": null, "denominator": null, "timestamp": "2026-08-10T07:30:00+07:00", "source": "USER", "evidence_state": "REPORTED", "direct": true, "limitations": ["recorded flight height and interruption do not confirm deposition or prescribe drone settings"] },
+        { "subject": "application_weather", "value": { "wind_speed": 7, "unit": "km/h", "wind_direction": "UNKNOWN", "temperature": "UNKNOWN", "relative_humidity": "UNKNOWN", "rain_before": "UNKNOWN", "rain_after": "UNKNOWN" }, "unit": null, "denominator": null, "timestamp": "2026-08-10T07:30:00+07:00", "source": "HUMAN_FIELD_OBSERVATION", "evidence_state": "REPORTED", "direct": true, "limitations": ["single human-reported value has unresolved instrument, exact location, and temporal representativeness"] },
+        { "subject": "crop_and_canopy", "value": { "crop_stage": "tillering", "plant_height": "UNKNOWN", "canopy_density": "dense — operator reported", "canopy_closure": "UNKNOWN", "lodging": "not reported", "water_level": "UNKNOWN" }, "unit": null, "denominator": null, "timestamp": "2026-08-10T07:30:00+07:00", "source": "USER", "evidence_state": "REPORTED", "direct": true, "limitations": ["crop and canopy context alone does not establish application quality"] },
+        { "subject": "target_location", "value": "plant_base", "unit": null, "denominator": null, "timestamp": null, "source": "GOVERNED_TARGET_KNOWLEDGE", "evidence_state": "GOVERNED_CONTEXT", "direct": false, "limitations": ["application occurrence does not establish that deposition reached the plant base"] },
+        { "subject": "timing_context", "value": { "application_time": "07:30", "crop_stage_at_application": "tillering", "target_activity_at_application": "UNKNOWN", "time_to_rain": "UNKNOWN", "time_to_T1": "UNKNOWN", "time_to_T2": "UNKNOWN" }, "unit": null, "denominator": null, "timestamp": "2026-08-10T07:30:00+07:00", "source": "USER", "evidence_state": "REPORTED", "direct": true, "limitations": ["history does not establish causality or a recommended interval"] }
+      ],
+      "coverage_evidence": { "status": "UNKNOWN", "source": null, "timestamp": null, "limitations": ["coverage was not measured and cannot be inferred from method, flight height, or water volume"] },
+      "potential_limitations": [{ "state": "POTENTIAL_LIMITATION", "evidence": "line_interruption", "interpretation": "RELEVANCE_UNRESOLVED", "instruction": null, "limitations": ["recorded interruption may matter to Human Review but does not confirm poor application or justify re-treatment"] }],
+      "missing_evidence": ["coverage_evidence", "rainfall_after_application", "nozzle_condition"],
+      "next_best_evidence": { "architecture": "field-action-handoff/v1", "count": 1, "action_type": "RECORD", "subject": "coverage_evidence", "prompt": "Inspect and record one direct coverage or skipped-line observation.", "completion": "EXPLICIT_HUMAN_SUBMISSION_REQUIRED", "chemical_execution": null, "drone_parameters": null },
+      "target_location_profiles": [
+        { "subject": "brown-planthopper", "location": "plant_base", "limitation": "external application does not establish target exposure" },
+        { "subject": "leaffolder", "location": "folded_leaf_interior", "limitation": "historical folded leaves do not establish current larvae or exposure" },
+        { "subject": "stem-borer-group", "location": "stem_interior", "limitation": "symptoms do not identify species and external application does not establish interior exposure" },
+        { "subject": "blast", "location": "leaf_or_affected_organ", "limitation": "lesions, canopy/weather, and prior application do not confirm pathogen or failure" }
+      ],
+      "sequence": { "order": ["T0", "APPLICATION_EVENT", "T1", "T2", "OUTCOME_REVIEW"], "causality_established": false, "efficacy_established": false, "resistance_established": false },
+      "boundaries": { "application_quality": "NOT_ESTABLISHED", "recommendation": null, "dose": null, "drone_settings": null, "water_volume": null, "spray_timing": null, "retreatment": null, "product_ranking": null, "regulatory_authority_waived": false, "manufacturer_fact_becomes_instruction": false, "automatic_learning": false },
+      "privacy": { "persistence": "BROWSER_LOCAL_ONLY", "automatic_gps_persistence": false, "telemetry_upload": false, "analytics": false, "tracking": false, "synchronization": false }
+    }
+  ],
   "entities": {
     "biological": [
       { "id": "BIO-BPH", "type": "pest", "normalized_name": "brown planthopper", "thai_name": "เพลี้ยกระโดดสีน้ำตาล", "english_name": "Brown Planthopper", "scientific_name": "Nilaparvata lugens", "crop_relationship": "rice", "aliases": ["BPH"], "canonical_reference": "rice-insect-corpus-001:BPH", "identity_state": "SUPPORTED", "duplicate_identity_state": "NO_DUPLICATE_IN_INTEGRATION_SLICE" },
@@ -380,6 +421,7 @@
       },
       "regulatory_positive_search_id": "RR-089R-TH-RICE-POSITIVE-001/v1",
       "product_comparison_id": "PC-090P-RICE-INSECT-001/v1",
+      "application_context_view_id": "ACV-091P-BPH-001/v1",
       "management_option_link": "CHEMICAL_REVIEW_INFORMATION_ONLY"
     },
     { "id": "WV-MSI-BLAST-001/v1", "subject_id": "BIO-BLAST", "title": "Rice blast integrated knowledge", "case_assertions": ["AS-CASE-BLAST-001"], "scientific_assertions": ["AS-SCI-BLAST-001"], "moa_assertions": ["AS-FRAC-TRI-001"], "regulatory_assertions": [], "manufacturer_assertions": [], "relationship_ids": ["REL-BLAST-TRI", "REL-CASE-BLAST-CONFLICT"], "management_option_link": "NO_CHEMICAL_SELECTION" }

@@ -204,6 +204,56 @@
   }
 
   const applicationQualityStates = Object.freeze(["APPLICATION_CONTEXT_INCOMPLETE", "APPLICATION_CONTEXT_RECORDED", "APPLICATION_QUALITY_NOT_ESTABLISHED", "APPLICATION_ISSUE_PLAUSIBLE", "TARGET_IDENTITY_REVIEW_REQUIRED", "CURRENT_ACTIVITY_REVIEW_REQUIRED", "REINFESTATION_NOT_RESOLVED", "REGULATORY_USE_UNRESOLVED", "RESISTANCE_EVIDENCE_INSUFFICIENT", "RESISTANCE_HYPOTHESIS_REVIEWABLE", "MORE_EVIDENCE_REQUIRED", "HUMAN_REVIEW_REQUIRED"]);
+  const applicationSuitabilityStates = Object.freeze(["CONTEXT_RECORDED", "CONTEXT_INCOMPLETE", "POTENTIAL_LIMITATION", "CONFLICTING_CONTEXT", "NEEDS_REVIEW", "NOT_APPLICABLE"]);
+  const targetLocationProfiles = Object.freeze({
+    "brown-planthopper": { location: "plant_base", evidence: "GOVERNED_TARGET_KNOWLEDGE", limitation: "Application occurrence does not establish that deposition reached the plant base." },
+    leaffolder: { location: "folded_leaf_interior", evidence: "GOVERNED_TARGET_KNOWLEDGE", limitation: "Historical folded leaves do not establish live larvae or successful exposure inside the fold." },
+    "stem-borer-group": { location: "stem_interior", evidence: "GOVERNED_TARGET_KNOWLEDGE", limitation: "Deadheart or whitehead does not identify a species, and external application does not establish stem-interior exposure." },
+    blast: { location: "leaf_or_affected_organ", evidence: "GOVERNED_DISEASE_CONTEXT", limitation: "Lesion appearance and application history do not confirm a pathogen or fungicide failure." },
+  });
+
+  function evaluateApplicationContext(input = {}) {
+    const event = input.applicationEvent || {};
+    const context = event.context || {};
+    const assertion = (subject, record, fallbackLimitations = []) => {
+      if (!record || record.value === undefined || record.value === null || record.value === "") return { subject, state: "UNKNOWN", value: null, unit: null, denominator: null, timestamp: null, source: null, evidence_state: null, direct: null, limitations: fallbackLimitations, supersedes_assertion_id: null };
+      return { subject, state: "CONTEXT_RECORDED", value: record.value, unit: record.unit || null, denominator: record.denominator || null, timestamp: record.timestamp || event.timestamp || null, source: record.source || "USER", evidence_state: record.evidenceState || "REPORTED", direct: record.direct === true, limitations: record.limitations || fallbackLimitations, supersedes_assertion_id: record.supersedesAssertionId || null };
+    };
+    const method = assertion("application_method", context.applicationMethod, ["Recorded method does not establish application quality or suitability."]);
+    const waterVolume = assertion("water_volume", context.waterVolume, ["Recorded water volume is not a recommended volume and incompatible units are not converted."]);
+    const equipment = assertion("equipment_or_drone", context.equipment, ["Recorded equipment settings do not confirm deposition or establish recommended settings."]);
+    const weather = assertion("application_weather", context.weather, ["Weather relevance remains limited by source, location, and observation time."]);
+    const cropCanopy = assertion("crop_and_canopy", context.cropCanopy, ["Crop or canopy context alone does not establish application quality."]);
+    const timing = assertion("timing_context", context.timing, ["Application history does not establish a recommended interval or causality."]);
+    const targetProfile = targetLocationProfiles[input.subject] || null;
+    const targetLocation = context.targetLocation ? assertion("target_location", context.targetLocation) : targetProfile ? { subject: "target_location", state: "CONTEXT_RECORDED", value: targetProfile.location, unit: null, denominator: null, timestamp: null, source: targetProfile.evidence, evidence_state: "GOVERNED_CONTEXT", direct: false, limitations: [targetProfile.limitation], supersedes_assertion_id: null } : assertion("target_location", null, ["Target location remains unknown."]);
+    const coverageInput = context.coverageEvidence;
+    const coverageEvidence = coverageInput && coverageInput.status !== "UNKNOWN" ? { ...assertion("coverage_evidence", coverageInput), coverage_status: coverageInput.status } : { ...assertion("coverage_evidence", null, ["Coverage was not measured and cannot be inferred from method or equipment settings."]), coverage_status: "UNKNOWN" };
+    const assertions = [method, waterVolume, equipment, weather, cropCanopy, targetLocation, timing];
+    const missing = assertions.filter((item) => item.state === "UNKNOWN").map((item) => item.subject);
+    if (coverageEvidence.coverage_status === "UNKNOWN") missing.push("coverage_evidence");
+    const anomalyKeys = ["equipmentInterruption", "sensorMismatch", "flowAnomaly", "skippedLine", "overlap", "nozzleBlockage"].filter((key) => context.anomalies?.[key] === true);
+    const potentialLimitations = anomalyKeys.map((key) => ({ state: "POTENTIAL_LIMITATION", evidence: key, interpretation: "RELEVANCE_UNRESOLVED", instruction: null, limitation: "Recorded anomaly may matter to Human Review but does not confirm poor application or justify corrective settings." }));
+    const conflicting = context.conflicts || [];
+    const states = [missing.length ? "CONTEXT_INCOMPLETE" : "CONTEXT_RECORDED", potentialLimitations.length ? "POTENTIAL_LIMITATION" : null, conflicting.length ? "CONFLICTING_CONTEXT" : null, missing.length || potentialLimitations.length || conflicting.length ? "NEEDS_REVIEW" : null].filter(Boolean);
+    const nextSubject = missing[0] || null;
+    return {
+      model: "application-context-evidence/v1",
+      applicationEvent: { id: event.id || null, caseReference: event.caseReference || input.caseReference || null, timestamp: event.timestamp || null, eventType: "CASE_SCOPED_APPLICATION_HISTORY", recordedProduct: event.recordedProduct || null, activeIngredient: event.activeIngredient || null, formulation: event.formulation || null, provenance: event.provenance || [], limitations: event.limitations || ["Application Event is Case evidence, not an execution task, spray order, schedule, or prescription."], executionTask: null, prescription: null },
+      states, assertions, coverageEvidence, previousApplication: { status: event.previousApplication ? "CASE_HISTORY_RECORDED" : "NOT_RECORDED", record: event.previousApplication || null, conclusions: { failure: null, resistance: null, underDose: null, overDose: null, retreatment: null, moaSwitch: null } },
+      potentialLimitations, conflicts: conflicting, missingEvidence: missing,
+      nextBestEvidence: nextSubject ? { architecture: "field-action-handoff/v1", count: 1, action_type: "RECORD", subject: nextSubject, completion: "EXPLICIT_HUMAN_SUBMISSION_REQUIRED", instruction: null } : { architecture: "field-action-handoff/v1", count: 0, action_type: null, subject: null, completion: null, instruction: null },
+      sequence: { order: ["T0", "APPLICATION_EVENT", "T1", "T2", "OUTCOME_REVIEW"], causalityEstablished: false, efficacyEstablished: false, resistanceEstablished: false },
+      comparisonInteraction: { orderingChanged: false, scoreChanged: false, preferredProduct: null, productSelected: null },
+      regulatoryInteraction: { authorityWaived: false, authorityState: input.regulatoryState || "PRESERVED_SEPARATELY", boundary: "APPLICATION CONTEXT â‰  REGULATORY AUTHORITY" },
+      manufacturerBoundary: { sourceFactsMayBeRecorded: true, caseInstructionCreated: false },
+      suitability: { applicationQuality: "NOT_ESTABLISHED", score: null, passFail: null, recommendation: null, dose: null, droneSettings: null, waterVolume: null, sprayTiming: null, retreatment: null },
+      photoBoundary: "Photo received â‰  Photo analyzed â‰  Observation confirmed",
+      learn: { automaticPromotion: false, efficacyLearning: false, resistanceLearning: false, settingsLearning: false },
+      privacy: { persistence: "BROWSER_LOCAL_ONLY", automaticGpsPersistence: false, telemetryUpload: false, analytics: false, tracking: false, synchronization: false },
+      boundaries: ["RECORDED APPLICATION CONTEXT â‰  CONFIRMED APPLICATION QUALITY", "APPLICATION EVENT â‰  EXECUTION TASK", "FAILED CONTROL â‰  RESISTANCE", "POTENTIAL LIMITATION â‰  APPLICATION INSTRUCTION"],
+    };
+  }
   const moaAuthority = Object.freeze({
     imidacloprid: { system: "IRAC", group: "4A", evidence: "EV-IRAC-CPM-001/v1" }, buprofezin: { system: "IRAC", group: "16", evidence: "EV-IRAC-CPM-002/v1" }, fipronil: { system: "IRAC", group: "2B", evidence: "EV-IRAC-CPM-003/v1" },
     carbendazim: { system: "FRAC", group: "1", evidence: "EV-FRAC-CPM-001/v1" }, isoprothiolane: { system: "FRAC", group: "6", evidence: "EV-FRAC-CPM-002/v1" }, propiconazole: { system: "FRAC", group: "3", evidence: "EV-FRAC-CPM-003/v1" }, tricyclazole: { system: "FRAC", group: "16.1", evidence: "EV-FRAC-CPM-004/v1" }, validamycin: { system: "FRAC", group: "U18", evidence: "EV-FRAC-CPM-005/v1" }, mancozeb: { system: "FRAC", group: "M03", evidence: "EV-FRAC-CPM-006/v1" },
@@ -241,6 +291,19 @@
     if (!input.weatherAtApplication) gaps.push({ key: "WEATHER_AT_APPLICATION", question: "Was rain, wind, temperature, or humidity recorded at application time?" });
     if (!input.fieldWater) gaps.push({ key: "FIELD_WATER", question: "What was the rice-field water condition at application?" });
     const states = [contextComplete ? "APPLICATION_CONTEXT_RECORDED" : "APPLICATION_CONTEXT_INCOMPLETE", "APPLICATION_QUALITY_NOT_ESTABLISHED", applicationConcern ? "APPLICATION_ISSUE_PLAUSIBLE" : null, identity.resolved ? null : "TARGET_IDENTITY_REVIEW_REQUIRED", activity.currentActivitySupported || activity.historicalDamageSupported ? null : "CURRENT_ACTIVITY_REVIEW_REQUIRED", input.reinfestationReviewed === true ? null : "REINFESTATION_NOT_RESOLVED", regulatoryStatus === "ELIGIBLE_FOR_DECISION_REVIEW" ? null : "REGULATORY_USE_UNRESOLVED", resistanceState, gaps.length ? "MORE_EVIDENCE_REQUIRED" : null, "HUMAN_REVIEW_REQUIRED"].filter(Boolean);
+    const reportedContext = {
+      applicationMethod: intervention.method ? { value: intervention.method, timestamp: intervention.applicationDate || null, source: "USER", evidenceState: "REPORTED", direct: true } : null,
+      waterVolume: intervention.waterVolume ? { value: intervention.waterVolume, timestamp: intervention.applicationDate || null, source: "USER", evidenceState: "REPORTED", direct: true } : null,
+      equipment: intervention.equipment || intervention.drone ? { value: intervention.equipment || intervention.drone, timestamp: intervention.applicationDate || null, source: "USER", evidenceState: "REPORTED", direct: true } : null,
+      weather: input.weatherAtApplication ? { value: input.weatherAtApplication, timestamp: intervention.applicationDate || null, source: "USER", evidenceState: "REPORTED", direct: true } : null,
+      cropCanopy: input.cropCanopyContext ? { value: input.cropCanopyContext, timestamp: intervention.applicationDate || null, source: "USER", evidenceState: "REPORTED", direct: true } : null,
+      targetLocation: input.targetLocation ? { value: input.targetLocation, source: "USER", evidenceState: "OBSERVED", direct: true } : null,
+      timing: intervention.applicationTime ? { value: intervention.applicationTime, timestamp: intervention.applicationDate || null, source: "USER", evidenceState: "REPORTED", direct: true } : null,
+      coverageEvidence: input.applicationQualityObservation ? { value: input.applicationQualityObservation, status: "OBSERVED_LIMITED", timestamp: outcome.observationTime || null, source: "USER", evidenceState: "OBSERVED", direct: true } : { status: "UNKNOWN" },
+      anomalies: input.applicationQualityObservation || {},
+    };
+    const reportedEvent = { caseReference: input.caseReference, timestamp: intervention.applicationDate || null, recordedProduct: intervention.product || null, activeIngredient: intervention.activeIngredient || null, formulation: intervention.formulation || null, context: reportedContext, previousApplication: intervention };
+    const applicationContextEvidence = evaluateApplicationContext({ caseReference: input.caseReference, subject: identity.candidate || input.subject, applicationEvent: input.applicationEvent || reportedEvent, regulatoryState: regulatoryStatus });
     return {
       model: "application-failed-control-investigation/v1", start: input.reportedControlFailure ? "REPORTED_CONTROL_FAILURE" : "OUTCOME_UNRESOLVED", states: [...new Set(states)], evidenceRoles: Object.values(ROLES),
       outcomeObservation: { expected: outcome.expected || null, observed: outcome.observed || null, observationTime: outcome.observationTime || null, affectedArea: outcome.affectedArea || null, treatedArea: outcome.treatedArea || null, untreatedComparison: outcome.untreatedComparison || null, targetStillObservable: outcome.targetStillObservable ?? null, newDamage: outcome.newDamage ?? null, oldDamage: outcome.oldDamage ?? null, progression: outcome.progression ?? null, cropInjury: outcome.cropInjury ?? null, boundary: "EXPECTED OUTCOME ≠ GOVERNED EFFICACY STANDARD" },
@@ -257,6 +320,7 @@
       photoMission: { action: "HUMAN_CONFIRMED_CAPTURE", missions: ["CURRENT_TARGET_ACTIVITY", "NEW_VS_OLD_DAMAGE", "TREATED_VS_UNTREATED", "FIELD_PATTERN", "MISSED_OR_OVERLAP_PATTERN", "CROP_INJURY", "PLANT_BASE", "FOLDED_LEAF_INTERIOR"], automaticImageAnalysis: false, boundary: "Photo received ≠ Photo analyzed" },
       economics: { inputsPreserved: ["treatedArea", "applicationCount", "productAmount", "applicationMethod", "reapplicationReported"], recommendation: null }, executionReadiness: "CASE_OBSERVATIONS_ONLY", learnReadiness: { sequence: ["Intervention", "T1", "T2", "Outcome observation"], boundary: "FIELD OUTCOME ≠ CANONICAL EFFICACY CLAIM" },
       management: { readiness: "EVIDENCE_PREPARATION_ONLY", humanReviewRequired: true, reapplication: null, productRecommendation: null, activeIngredientRecommendation: null, doseIncreaseDecision: null, moaRotationRecommendation: null, chemicalGate: "CHEMICAL_REVIEW_BLOCKED" },
+      applicationContextEvidence,
       boundaries: ["OLD DAMAGE ≠ CONTROL FAILURE", "CURRENT ACTIVITY ≠ CHEMICAL ACTION REQUIRED", "APPLICATION BEFORE OUTCOME ≠ CAUSATION", "APPLICATION ISSUE PLAUSIBLE ≠ APPLICATION FAILURE CONFIRMED", "PRODUCT REGISTERED ≠ EFFECTIVE IN THIS CASE", "WEATHER ASSOCIATION ≠ CAUSATION"],
     };
   }
@@ -596,5 +660,5 @@
       boundaries: ["Candidate ≠ Diagnosis", "Severity ≠ Need-for-Action", "Need-for-Action ≠ pesticide recommendation", "Weather alone cannot escalate identification", "Nearby Case cannot escalate identification", "Photo received ≠ Photo analyzed", "CONTROL FAILURE ≠ RESISTANCE"],
     };
   }
-  window.SPDecisionGates = Object.freeze({ evaluate, beginFromObservation, evaluateProgression, evaluateAbioticDifferential, evaluateFailedControl, evaluateNeedForAction, evaluateManagementSuitability, evaluateManagementOptions, createFieldAction, applyFieldActionResult, prepareExpertHandoff, compareTemporalObservations, profiles, symptomFamilies, observationVocabulary, progressionStates, lifeStageProfiles, abioticProfiles, abioticInvestigationStates, applicationQualityStates, needForActionStates, managementOptionClasses, managementSuitabilityStates, governedManagementOptionClasses, managementOptionEligibilityStates, fieldActionTypes, fieldActionStates, moaAuthority, roles: ROLES });
+  window.SPDecisionGates = Object.freeze({ evaluate, beginFromObservation, evaluateProgression, evaluateAbioticDifferential, evaluateApplicationContext, evaluateFailedControl, evaluateNeedForAction, evaluateManagementSuitability, evaluateManagementOptions, createFieldAction, applyFieldActionResult, prepareExpertHandoff, compareTemporalObservations, profiles, symptomFamilies, observationVocabulary, progressionStates, lifeStageProfiles, abioticProfiles, abioticInvestigationStates, applicationQualityStates, applicationSuitabilityStates, targetLocationProfiles, needForActionStates, managementOptionClasses, managementSuitabilityStates, governedManagementOptionClasses, managementOptionEligibilityStates, fieldActionTypes, fieldActionStates, moaAuthority, roles: ROLES });
 })();

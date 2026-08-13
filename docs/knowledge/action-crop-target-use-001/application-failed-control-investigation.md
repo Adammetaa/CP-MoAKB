@@ -2,6 +2,46 @@
 
 Status: accepted bounded investigation foundation; not published
 
+## Sprint-091P Application Context model
+
+`application-context-evidence/v1` composes a Case-scoped Application Event, normalized context Assertions, potential limitations, missing evidence, Human Review, and later outcome observations. It captures what was actually observed or reported because method, water volume, equipment, weather, crop structure, target position, timing, and coverage may be relevant to explaining treatment performance. Every Assertion retains value, unit, denominator, timestamp, source, observed/reported state, direct/inferred state, limitations, and an optional superseded-Assertion reference. Unknown values remain `UNKNOWN` and no incompatible-unit conversion or default is introduced.
+
+## Application Event boundary
+
+An Application Event references a Case, timestamp, recorded product or ingredient when known, context, provenance, and limitations. It is prior Case history between T0 and T1/T2; it is not an execution task, spray order, schedule, prescription, or workflow-management object. `field-action-handoff/v1` remains the sole architecture for requesting one missing fact and requires explicit human submission before completion.
+
+## Recorded context versus quality
+
+The neutral states are `CONTEXT_RECORDED`, `CONTEXT_INCOMPLETE`, `POTENTIAL_LIMITATION`, `CONFLICTING_CONTEXT`, `NEEDS_REVIEW`, and `NOT_APPLICABLE`. Recorded context never becomes a spray-quality, suitability, risk, or pass/fail score. A reported 3 m flight height, 3 L/rai water volume, wind value, or line interruption can remain relevant to Human Review without being classified as good, bad, too high, too low, sufficient, or causal.
+
+## Drone context
+
+The model may retain equipment type/model, nozzle or atomizer, flight height and speed, flow, swath, droplet class, pressure, sensor mismatch, interruption, or operator events exactly as recorded. These are observations, not prescribed settings. They do not confirm biological deposition and never produce a height, speed, nozzle, flow, water-volume, or re-treatment instruction.
+
+## Weather context
+
+Application-time weather and later observation weather remain separate Assertions. Source class, timestamp, spatial/temporal relevance, instrument uncertainty, and missing values remain visible. A human field observation, device reading, local instrument, or regional source is not silently represented as exact field weather; no universal operational rule or causality is inferred.
+
+## Target location and crop structure
+
+Bounded target-location context supports Brown Planthopper at the plant base, Rice Leaffolder within folded leaves, stem-borer groups within stems, and Rice Blast on leaves or affected organs. Crop stage, canopy, lodging, leaf orientation, water level, and target position can inform investigation, but external application does not establish target exposure. Historical folded leaves do not establish current larvae; deadheart/whitehead does not identify a species; lesions do not confirm a pathogen.
+
+## Coverage evidence
+
+Coverage evidence remains distinct from settings. Direct wetting/deposition observations, untreated strips, skipped lines, overlap, interruption, blockage, flow anomalies, sensor mismatch, or operator-reported problems may be recorded. When it was not measured, the state is `UNKNOWN`; method, height, and water volume cannot fill the gap.
+
+## Failed-control interaction
+
+Failed-control investigation retains multiple open explanations: target identity/activity, timing, application context, weather, crop structure, coverage, target exposure, interruption, product identity, regulation, reinfestation, biological tolerance, and unresolved cause. A potential application limitation does not establish failure, resistance, wrong MoA, low dose, weak product, repeat treatment, stronger chemistry, or tank mixing.
+
+## Product comparison and regulatory interaction
+
+Application history may appear alongside product information, but it never changes Sprint-090P neutral ordering, score, eligibility, or selection. Application context cannot waive `AUTHORITY_BLOCKED`, and even complete regulatory authority would not prove application quality. Manufacturer guidance remains an attributed Manufacturer Source Fact and does not become a Case instruction.
+
+## T0/T1/T2, Learn, privacy, and recommendation boundaries
+
+The sequence `T0 -> Application Event -> T1 -> T2 -> Outcome Review` preserves explicit observations without establishing causality. Improvement does not prove efficacy and non-improvement does not prove resistance. There is no automatic efficacy, resistance, weather-rule, drone-setting, best-practice, ranking, or recommendation learning. Records remain browser-local with no telemetry upload, automatic GPS persistence, analytics, tracking, cloud synchronization, or background persistence. CP-MoAKB still cannot prescribe dose, drone settings, water volume, spray timing, re-treatment, mixtures, or products.
+
 ## Purpose
 
 `application-failed-control-investigation/v1` begins with
