@@ -1,0 +1,99 @@
+{
+  "meta": {
+    "model": "multi-source-knowledge-integration/v1",
+    "status": "accepted-internal-not-published",
+    "rights": "source-pages-images-tables-layout-and-passages-suppressed",
+    "review_date": "2026-08-13",
+    "field_data_policy": "representative Case projections remain Case evidence and are never canonicalized automatically"
+  },
+  "source_classes": [
+    { "id": "CASE_EVIDENCE", "authority_role": "Case Evidence", "canonical_authority": false },
+    { "id": "SCIENTIFIC_AUTHORITY", "authority_role": "Scientific Authority", "canonical_authority": true },
+    { "id": "REGULATORY_AUTHORITY", "authority_role": "Regulatory Authority", "canonical_authority": true },
+    { "id": "MOA_CLASSIFICATION_AUTHORITY", "authority_role": "MoA Classification Authority", "canonical_authority": true },
+    { "id": "MANUFACTURER_COMMERCIAL_SOURCE", "authority_role": "Manufacturer / Commercial Source", "canonical_authority": false }
+  ],
+  "sources": [
+    { "id": "CASE-087-BPH/v1", "class": "CASE_EVIDENCE", "title": "Representative browser-local BPH Case", "version_date": "2026-08-13", "retrieved_at": null, "locator": "Case Observation OBS-087-BPH-001", "scope": "Case-only observation", "limitations": ["not canonical knowledge", "not an efficacy claim"] },
+    { "id": "CASE-087-BLAST/v1", "class": "CASE_EVIDENCE", "title": "Representative browser-local rice-blast investigation", "version_date": "2026-08-13", "retrieved_at": null, "locator": "Case Observation OBS-087-BLAST-001", "scope": "Case-only morphology observation", "limitations": ["field appearance does not confirm a pathogen"] },
+    { "id": "GS-RD-RICE-PESTS-2007-001/v1", "class": "SCIENTIFIC_AUTHORITY", "title": "Rice Department rice-pest corpus source", "version_date": "2007", "retrieved_at": "2026-08-13", "locator": "RD pp.4-7 / PDF pp.15-18", "scope": "BPH identity, biology, symptoms, and context", "limitations": ["scientific context is not Case diagnosis or product authority"] },
+    { "id": "GS-KU-RICE-DISEASES-2020-001/v1", "class": "SCIENTIFIC_AUTHORITY", "title": "Kasetsart University rice-disease source", "version_date": "2020", "retrieved_at": "2026-08-13", "locator": "Rice blast pp.5-10", "scope": "rice-blast lesion and biological context", "limitations": ["morphology is not laboratory confirmation"] },
+    { "id": "GS-IRAC-MOA-11.5-001/v1", "class": "MOA_CLASSIFICATION_AUTHORITY", "title": "IRAC Mode of Action Classification Scheme", "version_date": "2026-02", "retrieved_at": "2026-08-13", "locator": "Group 9B: pymetrozine", "scope": "insecticide MoA classification", "limitations": ["classification does not establish efficacy, resistance, suitability, or use authority"] },
+    { "id": "GS-FRAC-MOA-2026-001/v1", "class": "MOA_CLASSIFICATION_AUTHORITY", "title": "FRAC Code List", "version_date": "2026-05", "retrieved_at": "2026-08-13", "locator": "tricyclazole group 16.1", "scope": "fungicide MoA classification", "limitations": ["classification does not establish treatment suitability"] },
+    { "id": "GS-DOA-HAZARDOUS-REGISTRY-2568-001/v1", "class": "REGULATORY_AUTHORITY", "title": "Thai DOA 2554-2568 registration listing", "version_date": "2025-09-15", "retrieved_at": "2026-08-13", "locator": "row 765 / PDF p.136", "scope": "registration identity and administrative dates", "limitations": ["no crop, target, use, or approved-label fields"] },
+    { "id": "MS-SYN-PLENUM-001/v1", "class": "MANUFACTURER_COMMERCIAL_SOURCE", "title": "Syngenta product identity lead retained by governed review", "version_date": "unavailable", "retrieved_at": "2026-08-13", "locator": "RR-083-TH-DECISION-AUTHORITY-001/v1 product lead", "scope": "manufacturer-attributed product identity and claimed rice/BPH relationship", "limitations": ["original source version is not established", "manufacturer claim is not regulatory authority"] }
+  ],
+  "entities": {
+    "biological": [
+      { "id": "BIO-BPH", "type": "pest", "normalized_name": "brown planthopper", "scientific_name": "Nilaparvata lugens", "identity_state": "SUPPORTED" },
+      { "id": "BIO-BLAST", "type": "disease", "normalized_name": "rice blast", "causal_identity": "source-attributed Pyricularia naming", "identity_state": "NEEDS_REVIEW" }
+    ],
+    "chemicals": [
+      { "id": "AI-PYMETROZINE", "normalized_name": "pymetrozine", "identity_state": "SUPPORTED" },
+      { "id": "AI-TRICYCLAZOLE", "normalized_name": "tricyclazole", "identity_state": "SUPPORTED" }
+    ],
+    "manufacturers": [
+      { "id": "MFR-CHIA-TAI", "name": "Chia Tai", "schema_role": "manufacturer", "product_assertions": 0 },
+      { "id": "MFR-SYNGENTA", "name": "Syngenta Crop Protection Co., Ltd.", "schema_role": "manufacturer", "product_assertions": 1 },
+      { "id": "MFR-BAYER", "name": "Bayer", "schema_role": "manufacturer", "product_assertions": 0 },
+      { "id": "MFR-ADAMA", "name": "ADAMA", "schema_role": "manufacturer", "product_assertions": 0 }
+    ],
+    "products": [
+      {
+        "id": "PRODUCT-SYN-PLENUM-50WG-001",
+        "product_name": "เพลนั่ม 50 ดับบลิวจี",
+        "manufacturer_id": "MFR-SYNGENTA",
+        "active_ingredient_id": "AI-PYMETROZINE",
+        "concentration": "50%",
+        "formulation": "WG",
+        "source_identity": "MS-SYN-PLENUM-001/v1",
+        "identity_key": "เพลนั่ม 50 ดับบลิวจี|MFR-SYNGENTA|AI-PYMETROZINE|50%|WG|MS-SYN-PLENUM-001/v1",
+        "identity_state": "SUPPORTED",
+        "ambiguity_rule": "similar trade names never merge without the full identity key"
+      },
+      {
+        "id": "PRODUCT-AMBIGUOUS-PLENUM-NAME-001",
+        "product_name": "Plenum identity candidate",
+        "manufacturer_id": null,
+        "active_ingredient_id": null,
+        "concentration": null,
+        "formulation": null,
+        "source_identity": "UNRESOLVED_SOURCE",
+        "identity_key": null,
+        "identity_state": "NEEDS_REVIEW",
+        "ambiguity_rule": "name similarity cannot merge this candidate with PRODUCT-SYN-PLENUM-50WG-001"
+      }
+    ],
+    "registrations": [
+      { "id": "TH-REG-405-2555", "registration_number": "405-2555", "product_id": "PRODUCT-SYN-PLENUM-50WG-001", "registrant": "Syngenta Crop Protection Co., Ltd.", "active_ingredient_id": "AI-PYMETROZINE", "concentration": "50%", "formulation": "WG", "recorded_expiry": "2024-03-22", "current_status": "CURRENT_RENEWAL_UNRESOLVED", "crop_target_use_authority": "AUTHORITY_BLOCKED", "source_id": "GS-DOA-HAZARDOUS-REGISTRY-2568-001/v1" }
+    ]
+  },
+  "assertions": [
+    { "id": "AS-CASE-BPH-001", "subject_id": "BIO-BPH", "source_id": "CASE-087-BPH/v1", "source_role": "CASE_EVIDENCE", "statement": "The representative Case records 10 insects per plant with current activity.", "direct": true, "state": "SUPPORTED", "canonical": false },
+    { "id": "AS-SCI-BPH-001", "subject_id": "BIO-BPH", "source_id": "GS-RD-RICE-PESTS-2007-001/v1", "source_role": "SCIENTIFIC_AUTHORITY", "statement": "Governed scientific knowledge associates BPH with plant-base feeding and hopper-burn damage context.", "direct": true, "state": "SUPPORTED", "canonical": true },
+    { "id": "AS-CASE-BLAST-001", "subject_id": "BIO-BLAST", "source_id": "CASE-087-BLAST/v1", "source_role": "CASE_EVIDENCE", "statement": "The representative Case records lesions that do not fully match the governed textbook morphology.", "direct": true, "state": "CONFLICTING", "canonical": false },
+    { "id": "AS-SCI-BLAST-001", "subject_id": "BIO-BLAST", "source_id": "GS-KU-RICE-DISEASES-2020-001/v1", "source_role": "SCIENTIFIC_AUTHORITY", "statement": "Governed sources describe lesion morphology relevant to rice-blast investigation.", "direct": true, "state": "SUPPORTED", "canonical": true },
+    { "id": "AS-IRAC-PYM-001", "subject_id": "AI-PYMETROZINE", "source_id": "GS-IRAC-MOA-11.5-001/v1", "source_role": "MOA_CLASSIFICATION_AUTHORITY", "statement": "IRAC classifies pymetrozine in Group 9B.", "direct": true, "state": "SUPPORTED", "canonical": true },
+    { "id": "AS-FRAC-TRI-001", "subject_id": "AI-TRICYCLAZOLE", "source_id": "GS-FRAC-MOA-2026-001/v1", "source_role": "MOA_CLASSIFICATION_AUTHORITY", "statement": "FRAC classifies tricyclazole in Group 16.1.", "direct": true, "state": "SUPPORTED", "canonical": true },
+    { "id": "AS-MFR-PLENUM-001", "subject_id": "PRODUCT-SYN-PLENUM-50WG-001", "source_id": "MS-SYN-PLENUM-001/v1", "source_role": "MANUFACTURER_COMMERCIAL_SOURCE", "statement": "The retained manufacturer lead describes the product identity and claims rice/BPH relevance.", "direct": true, "state": "NEEDS_REVIEW", "canonical": false },
+    { "id": "AS-REG-PLENUM-001", "subject_id": "TH-REG-405-2555", "source_id": "GS-DOA-HAZARDOUS-REGISTRY-2568-001/v1", "source_role": "REGULATORY_AUTHORITY", "statement": "The official row confirms registration identity, product, ingredient, formulation, registrant, and a 2024 expiry date.", "direct": true, "state": "SUPPORTED", "canonical": true }
+  ],
+  "relationships": [
+    { "id": "REL-CASE-BPH-SUPPORTS", "from": "AS-CASE-BPH-001", "predicate": "supports_case_investigation_of", "to": "BIO-BPH", "source_assertions": ["AS-CASE-BPH-001"], "state": "SUPPORTED", "direct": true, "limitations": ["Case evidence is not canonical knowledge"] },
+    { "id": "REL-BPH-PYM", "from": "BIO-BPH", "predicate": "related_active_ingredient_knowledge", "to": "AI-PYMETROZINE", "source_assertions": ["AS-MFR-PLENUM-001"], "state": "NEEDS_REVIEW", "direct": false, "limitations": ["relationship does not establish efficacy or suitability"] },
+    { "id": "REL-PYM-IRAC", "from": "AI-PYMETROZINE", "predicate": "classified_by", "to": "IRAC-9B", "source_assertions": ["AS-IRAC-PYM-001"], "state": "SUPPORTED", "direct": true, "limitations": ["MoA classification is informational"] },
+    { "id": "REL-PRODUCT-AI", "from": "PRODUCT-SYN-PLENUM-50WG-001", "predicate": "contains_active_ingredient", "to": "AI-PYMETROZINE", "source_assertions": ["AS-MFR-PLENUM-001", "AS-REG-PLENUM-001"], "state": "SUPPORTED", "direct": true, "limitations": [] },
+    { "id": "REL-PRODUCT-MFR", "from": "PRODUCT-SYN-PLENUM-50WG-001", "predicate": "described_by_manufacturer", "to": "MFR-SYNGENTA", "source_assertions": ["AS-MFR-PLENUM-001"], "state": "SUPPORTED", "direct": true, "limitations": ["manufacturer attribution is not regulatory authority"] },
+    { "id": "REL-PRODUCT-REG", "from": "PRODUCT-SYN-PLENUM-50WG-001", "predicate": "exact_registration_identity_match", "to": "TH-REG-405-2555", "source_assertions": ["AS-REG-PLENUM-001"], "state": "SUPPORTED", "direct": true, "limitations": ["historical identity match is not current crop-target-use authority"] },
+    { "id": "REL-MFR-CLAIM-CTU", "from": "AS-MFR-PLENUM-001", "predicate": "claims_crop_target_relevance", "to": "BIO-BPH", "source_assertions": ["AS-MFR-PLENUM-001", "AS-REG-PLENUM-001"], "state": "AUTHORITY_BLOCKED", "direct": false, "limitations": ["official crop-target-use join absent", "current renewal status unresolved"] },
+    { "id": "REL-BLAST-TRI", "from": "BIO-BLAST", "predicate": "related_active_ingredient_knowledge", "to": "AI-TRICYCLAZOLE", "source_assertions": ["AS-SCI-BLAST-001", "AS-FRAC-TRI-001"], "state": "INCOMPLETE", "direct": false, "limitations": ["disease appearance and MoA data do not authorize chemical review"] },
+    { "id": "REL-CASE-BLAST-CONFLICT", "from": "AS-CASE-BLAST-001", "predicate": "conflicts_with_expected_morphology", "to": "AS-SCI-BLAST-001", "source_assertions": ["AS-CASE-BLAST-001", "AS-SCI-BLAST-001"], "state": "CONFLICTING", "direct": true, "limitations": ["retain both assertions", "do not overwrite Field evidence or infer diagnosis"] },
+    { "id": "REL-FAILED-CONTROL", "from": "CASE-087-BPH/v1", "predicate": "reported_outcome_does_not_promote", "to": "canonical_resistance_or_efficacy", "source_assertions": ["AS-CASE-BPH-001"], "state": "NOT_APPLICABLE", "direct": true, "limitations": ["failed control does not establish resistance", "Case result does not become efficacy knowledge"] }
+  ],
+  "views": [
+    { "id": "WV-MSI-BPH-001/v1", "subject_id": "BIO-BPH", "title": "Brown planthopper integrated knowledge", "case_assertions": ["AS-CASE-BPH-001"], "scientific_assertions": ["AS-SCI-BPH-001"], "moa_assertions": ["AS-IRAC-PYM-001"], "regulatory_assertions": ["AS-REG-PLENUM-001"], "manufacturer_assertions": ["AS-MFR-PLENUM-001"], "relationship_ids": ["REL-CASE-BPH-SUPPORTS", "REL-BPH-PYM", "REL-PYM-IRAC", "REL-PRODUCT-AI", "REL-PRODUCT-MFR", "REL-PRODUCT-REG", "REL-MFR-CLAIM-CTU"], "management_option_link": "CHEMICAL_REVIEW_INFORMATION_ONLY" },
+    { "id": "WV-MSI-BLAST-001/v1", "subject_id": "BIO-BLAST", "title": "Rice blast integrated knowledge", "case_assertions": ["AS-CASE-BLAST-001"], "scientific_assertions": ["AS-SCI-BLAST-001"], "moa_assertions": ["AS-FRAC-TRI-001"], "regulatory_assertions": [], "manufacturer_assertions": [], "relationship_ids": ["REL-BLAST-TRI", "REL-CASE-BLAST-CONFLICT"], "management_option_link": "NO_CHEMICAL_SELECTION" }
+  ],
+  "conflict_states": ["SUPPORTED", "INCOMPLETE", "CONFLICTING", "AUTHORITY_BLOCKED", "NEEDS_REVIEW", "NOT_APPLICABLE"],
+  "safety": { "recommendation": null, "ranking": null, "commercial_preference": null, "prescription": null, "execution": null, "application_instructions": null, "automatic_learning": false, "human_review_can_invent_authority": false }
+}

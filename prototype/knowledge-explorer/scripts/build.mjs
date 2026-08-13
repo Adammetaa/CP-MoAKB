@@ -88,7 +88,7 @@ for (const prohibited of ["sessionStorage", "WebSocket", "EventSource", "documen
 }
 if (!appText.includes("storage?.getItem(storageKey)") || !appText.includes("storage?.setItem(storageKey, nextLanguage)")) failures.push("app.js is missing safe language-preference persistence");
 for (const request of appText.matchAll(/fetch\("([^"]+)"\)/g)) {
-  if (!["assets/i18n/th.json", "assets/i18n/en.json", "assets/data/mock-knowledge.json", "assets/data/governed-batch-001.json", "deployment.json"].includes(request[1])) {
+  if (!["assets/i18n/th.json", "assets/i18n/en.json", "assets/data/mock-knowledge.json", "assets/data/governed-batch-001.json", "assets/data/multi-source-integration-001.json", "deployment.json"].includes(request[1])) {
     failures.push(`app.js fetches an unapproved resource: ${request[1]}`);
   }
 }
@@ -116,6 +116,9 @@ if (riceWeedCorpus.meta?.rights !== "source-pages-images-tables-layout-and-passa
 const management = JSON.parse(await readFile(resolve(root, "assets", "data", "crop-protection-management-001.json"), "utf8"));
 if (management.meta?.status !== "accepted-internal-not-published" || management.counts?.management_options !== 9 || management.counts?.active_ingredients !== 18 || management.counts?.irac_relationships !== 6 || management.counts?.frac_relationships !== 6 || management.counts?.hrac_relationships !== 6 || management.counts?.registration_relationships !== 0) failures.push("crop protection management integration is invalid");
 if (management.meta?.rights !== "source-pages-images-tables-layout-and-passages-suppressed") failures.push("crop protection management rights boundary is invalid");
+const integration = JSON.parse(await readFile(resolve(root, "assets", "data", "multi-source-integration-001.json"), "utf8"));
+if (integration.meta?.model !== "multi-source-knowledge-integration/v1" || integration.meta?.status !== "accepted-internal-not-published" || integration.source_classes?.length !== 5 || integration.views?.length < 2) failures.push("multi-source knowledge integration is invalid");
+if (integration.safety?.recommendation !== null || integration.safety?.ranking !== null || integration.safety?.execution !== null || integration.safety?.automatic_learning !== false) failures.push("multi-source integration crossed the recommendation or Learn boundary");
 if (failures.length) throw new Error(`Prototype validation failed:\n${failures.join("\n")}`);
 
 await verifyLocalization();

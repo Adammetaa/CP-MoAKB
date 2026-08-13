@@ -27,6 +27,7 @@ const approved = new Set([
   "knowledge-explorer/assets/data/rice-insect-corpus-001.json",
   "knowledge-explorer/assets/data/rice-weed-corpus-001.json",
   "knowledge-explorer/assets/data/crop-protection-management-001.json",
+  "knowledge-explorer/assets/data/multi-source-integration-001.json",
   "knowledge-explorer/assets/i18n/th.json",
   "knowledge-explorer/assets/i18n/en.json",
   ...labPages.map((page) => `knowledge-lab/${page}`),
@@ -62,8 +63,8 @@ export const verifyArtifact = async (root) => {
   const resolvedRoot = resolve(root);
   const files = await walk(resolvedRoot);
   const relativeFiles = files.map((path) => relative(resolvedRoot, path).split(sep).join("/"));
-  if (relativeFiles.length !== 60 || approved.size !== 60) {
-    throw new Error("Pages artifact must contain exactly 60 approved files");
+  if (relativeFiles.length !== 61 || approved.size !== 61) {
+    throw new Error("Pages artifact must contain exactly 61 approved files");
   }
   const unexpected = relativeFiles.filter((path) => !approved.has(path));
   const missing = [...approved].filter((path) => !relativeFiles.includes(path));
@@ -136,6 +137,10 @@ export const verifyArtifact = async (root) => {
   for (const prohibited of ["sourceExcerpt", "passageText", "imageUrl", "pdfUrl", "tradeName", "productRank", "dose"]) {
     if (managementText.includes(prohibited)) throw new Error(`Explorer crop protection management exposes prohibited material: ${prohibited}`);
   }
+  const integration = JSON.parse(await readFile(resolve(resolvedRoot, "knowledge-explorer", "assets", "data", "multi-source-integration-001.json"), "utf8"));
+  if (integration.meta?.model !== "multi-source-knowledge-integration/v1" || integration.meta?.status !== "accepted-internal-not-published" || integration.source_classes?.length !== 5 || integration.views?.length < 2) throw new Error("Explorer multi-source integration is invalid");
+  if (integration.safety?.recommendation !== null || integration.safety?.ranking !== null || integration.safety?.prescription !== null || integration.safety?.execution !== null || integration.safety?.automatic_learning !== false) throw new Error("Explorer multi-source integration crossed a safety boundary");
+  if (!integration.relationships?.every((relationship) => relationship.source_assertions?.length)) throw new Error("Explorer multi-source relationship lacks provenance");
   const riceWave = JSON.parse(await readFile(resolve(resolvedRoot, "knowledge-explorer", "assets", "data", "rice-disease-wave-001.json"), "utf8"));
   if (riceWave.meta?.status !== "accepted-internal-not-published" || riceWave.subjects?.length !== 2 || riceWave.counts?.packages !== 2 || riceWave.counts?.views !== 2) throw new Error("Explorer rice disease wave is incomplete or publishable");
   if (riceWave.meta?.rights !== "public-source-excerpts-and-images-suppressed") throw new Error("Explorer rice disease wave lost rights suppression");

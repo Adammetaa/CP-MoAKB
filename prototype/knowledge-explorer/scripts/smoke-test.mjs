@@ -109,6 +109,7 @@ try {
     "knowledge-explorer/assets/data/rice-insect-corpus-001.json",
     "knowledge-explorer/assets/data/rice-weed-corpus-001.json",
     "knowledge-explorer/assets/data/crop-protection-management-001.json",
+    "knowledge-explorer/assets/data/multi-source-integration-001.json",
     "knowledge-explorer/assets/i18n/th.json",
     "knowledge-explorer/assets/i18n/en.json",
     "knowledge-explorer/deployment.json",

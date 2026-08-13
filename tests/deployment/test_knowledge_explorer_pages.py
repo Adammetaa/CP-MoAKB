@@ -147,6 +147,7 @@ def test_artifact_verifier_has_exact_allowlist_and_prohibited_capability_checks(
         "knowledge-explorer/assets/data/rice-insect-corpus-001.json",
         "knowledge-explorer/assets/data/rice-weed-corpus-001.json",
         "knowledge-explorer/assets/data/crop-protection-management-001.json",
+        "knowledge-explorer/assets/data/multi-source-integration-001.json",
         "knowledge-explorer/assets/i18n/th.json",
         "knowledge-explorer/assets/i18n/en.json",
     ):
@@ -159,7 +160,7 @@ def test_artifact_verifier_has_exact_allowlist_and_prohibited_capability_checks(
         "prohibited local or sensitive text",
     ):
         assert boundary in verifier
-    assert "exactly 60 approved files" in verifier
+    assert "exactly 61 approved files" in verifier
     for prohibited in (
         "sessionStorage",
         "WebSocket",

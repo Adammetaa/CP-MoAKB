@@ -4,6 +4,7 @@ const page = typeof document === "undefined" ? "home" : document.body.dataset.pa
 let messages = {};
 let knowledgeData = null;
 let governedBatchData = null;
+let integratedKnowledgeData = null;
 let activeFilter = "all";
 
 const readLanguagePreference = (storage) => {
@@ -236,6 +237,58 @@ const renderGovernedBatch = () => {
   });
 };
 
+const integrationStates = new Set(["SUPPORTED", "INCOMPLETE", "CONFLICTING", "AUTHORITY_BLOCKED", "NEEDS_REVIEW", "NOT_APPLICABLE"]);
+
+const projectIntegratedKnowledge = (data, viewId) => {
+  const view = data.views.find((item) => item.id === viewId);
+  if (!view) throw new Error(`Unknown integrated Knowledge View: ${viewId}`);
+  const sources = new Map(data.sources.map((source) => [source.id, source]));
+  const assertions = new Map(data.assertions.map((assertion) => [assertion.id, assertion]));
+  const relationships = new Map(data.relationships.map((relationship) => [relationship.id, relationship]));
+  const resolveAssertions = (ids) => ids.map((id) => {
+    const assertion = assertions.get(id);
+    if (!assertion || !integrationStates.has(assertion.state)) throw new Error(`Invalid integrated assertion: ${id}`);
+    const source = sources.get(assertion.source_id);
+    if (!source) throw new Error(`Assertion ${id} has no provenance source`);
+    return { ...assertion, provenance: { sourceId: source.id, sourceClass: source.class, title: source.title, versionDate: source.version_date, retrievedAt: source.retrieved_at, locator: source.locator, limitations: source.limitations } };
+  });
+  const projectedRelationships = view.relationship_ids.map((id) => {
+    const relationship = relationships.get(id);
+    if (!relationship || !integrationStates.has(relationship.state) || !relationship.source_assertions.length) throw new Error(`Invalid integrated relationship: ${id}`);
+    return { ...relationship, provenance: relationship.source_assertions.map((assertionId) => resolveAssertions([assertionId])[0].provenance) };
+  });
+  return {
+    id: view.id, title: view.title, subjectId: view.subject_id,
+    observedInCase: resolveAssertions(view.case_assertions),
+    generalKnowledge: resolveAssertions(view.scientific_assertions),
+    moaKnowledge: resolveAssertions(view.moa_assertions),
+    regulatoryKnowledge: resolveAssertions(view.regulatory_assertions),
+    manufacturerKnowledge: resolveAssertions(view.manufacturer_assertions),
+    products: data.entities.products.filter((product) => projectedRelationships.some((relationship) => relationship.from === product.id || relationship.to === product.id)),
+    relationships: projectedRelationships,
+    gapsAndConflicts: projectedRelationships.filter((relationship) => relationship.state !== "SUPPORTED"),
+    managementOptionLink: view.management_option_link,
+    humanReviewRequired: projectedRelationships.some((relationship) => ["INCOMPLETE", "CONFLICTING", "AUTHORITY_BLOCKED", "NEEDS_REVIEW"].includes(relationship.state)),
+    recommendation: null, ranking: null, prescription: null, execution: null, canonicalPromotion: false,
+  };
+};
+
+const renderIntegratedKnowledge = () => {
+  const target = document.querySelector("[data-integrated-knowledge]");
+  if (!target || !integratedKnowledgeData || page !== "cropProtectionManagement") return;
+  const projection = projectIntegratedKnowledge(integratedKnowledgeData, "WV-MSI-BPH-001/v1");
+  const labels = language === "th" ? {
+    observed: "สิ่งที่สังเกตในเคสนี้", scientific: "องค์ความรู้วิทยาศาสตร์", moa: "Mode of Action", regulatory: "สถานะทะเบียน", products: "ข้อมูลผลิตภัณฑ์ที่เกี่ยวข้อง", provenance: "แหล่งที่มาและ Provenance", gaps: "ช่องว่าง / ความขัดแย้ง",
+  } : {
+    observed: "Observed in this Case", scientific: "Scientific Knowledge", moa: "Mode of Action", regulatory: "Regulatory Status", products: "Related Product Information", provenance: "Source & Provenance", gaps: "Gaps / Conflicts",
+  };
+  const assertionList = (title, items) => `<article class="knowledge-card"><h3>${escapeHtml(title)}</h3>${items.length ? `<ul>${items.map((item) => `<li>${escapeHtml(item.statement)}<small>${escapeHtml(item.provenance.sourceClass)} · ${escapeHtml(item.provenance.sourceId)} · ${escapeHtml(item.provenance.locator)}</small></li>`).join("")}</ul>` : `<p>${escapeHtml(language === "th" ? "ยังไม่มีความสัมพันธ์ที่ยืนยันแล้ว" : "No established relationship")}</p>`}</article>`;
+  const products = projection.products.map((product) => `<li><strong>${escapeHtml(product.product_name)}</strong><small>${escapeHtml(product.concentration)} · ${escapeHtml(product.formulation)} · ${escapeHtml(product.manufacturer_id)} · informational only</small></li>`).join("");
+  const gaps = projection.gapsAndConflicts.map((relationship) => `<li><strong>${escapeHtml(relationship.state)}</strong> · ${escapeHtml(relationship.predicate)}<small>${escapeHtml(relationship.limitations.join("; "))}</small></li>`).join("");
+  const provenance = [...projection.observedInCase, ...projection.generalKnowledge, ...projection.moaKnowledge, ...projection.regulatoryKnowledge, ...projection.manufacturerKnowledge].map((item) => `<li>${escapeHtml(item.id)} → ${escapeHtml(item.provenance.sourceId)}<small>${escapeHtml(item.provenance.sourceClass)} · ${escapeHtml(item.provenance.versionDate)} · retrieved ${escapeHtml(item.provenance.retrievedAt || "not applicable")}</small></li>`).join("");
+  target.innerHTML = `<div class="section-heading"><div><p class="eyebrow">${escapeHtml(projection.id)}</p><h2>${escapeHtml(projection.title)}</h2></div><span class="tag tag-real">${escapeHtml(projection.managementOptionLink)}</span></div><div class="grid-3 corpus-grid">${assertionList(labels.observed, projection.observedInCase)}${assertionList(labels.scientific, projection.generalKnowledge)}${assertionList(labels.moa, projection.moaKnowledge)}${assertionList(labels.regulatory, projection.regulatoryKnowledge)}<article class="knowledge-card"><h3>${escapeHtml(labels.products)}</h3><ul>${products}</ul><p><strong>Product information ≠ recommendation</strong></p></article><article class="knowledge-card"><h3>${escapeHtml(labels.gaps)}</h3><ul>${gaps}</ul><p>Human Review: ${projection.humanReviewRequired ? "REQUIRED" : "NOT REQUIRED"}</p></article></div><div class="detail-grid"><div><h3>${escapeHtml(labels.provenance)}</h3><ul>${provenance}</ul></div><aside class="boundary-note"><span aria-hidden="true">!</span><div><strong>Case Evidence ≠ Canonical Knowledge</strong><p>Manufacturer claim ≠ Regulatory Authority · Registration identity ≠ crop-target-use authority · CHEMICAL_REVIEW ≠ product selection.</p></div></aside></div>`;
+};
+
 const renderPage = () => {
   applyTranslations();
   renderHeader();
@@ -245,6 +298,7 @@ const renderPage = () => {
   renderConcept();
   renderDetails();
   renderGovernedBatch();
+  renderIntegratedKnowledge();
   loadDeployment();
 };
 
@@ -276,16 +330,18 @@ const bindInteractions = () => {
 };
 
 const initialize = async () => {
-  const [thaiResponse, englishResponse, dataResponse, governedResponse] = await Promise.all([
+  const [thaiResponse, englishResponse, dataResponse, governedResponse, integratedResponse] = await Promise.all([
     fetch("assets/i18n/th.json"),
     fetch("assets/i18n/en.json"),
     fetch("assets/data/mock-knowledge.json"),
     fetch("assets/data/governed-batch-001.json"),
+    fetch("assets/data/multi-source-integration-001.json"),
   ]);
   if (!thaiResponse.ok || !englishResponse.ok) throw new Error("Localization dictionaries unavailable");
   messages = { th: await thaiResponse.json(), en: await englishResponse.json() };
   if (dataResponse.ok) knowledgeData = await dataResponse.json();
   if (governedResponse.ok) governedBatchData = await governedResponse.json();
+  if (integratedResponse.ok) integratedKnowledgeData = await integratedResponse.json();
   const params = new URLSearchParams(window.location.search);
   const searchInput = document.querySelector("[data-search-input]");
   if (searchInput) searchInput.value = params.get("q") ?? "";
@@ -297,6 +353,7 @@ globalThis.__explorerLocalization = Object.freeze({
   applyDocumentLanguage,
   languageToggleState,
   localizedResultCount,
+  projectIntegratedKnowledge,
   readLanguagePreference,
   searchKnowledge,
   storageKey,

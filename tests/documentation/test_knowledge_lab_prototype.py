@@ -276,7 +276,7 @@ def test_accessibility_and_mobile_static_rules_exist() -> None:
 
 
 def test_documentation_count_and_public_api_are_unchanged() -> None:
-    assert len(verify()) == 686
+    assert len(verify()) == 687
     assert sum(len(exports) for exports in PUBLIC_API_EXPORTS.values()) == 165
 
 

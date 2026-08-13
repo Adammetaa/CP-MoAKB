@@ -133,6 +133,14 @@ makes this blueprint testable through Thai-first fictional HTML screens. It is
 not a workflow implementation, permission system, acceptance authority, or
 publication mechanism.
 
+## Multi-Source Knowledge Integration
+
+The [Multi-Source Knowledge Integration representative slice](multi-source-integration-001/README.md)
+composes Case evidence, scientific knowledge, regulatory identity, MoA
+classification, and attributed manufacturer/product information into an existing
+Website Knowledge View while preserving every source's identity, provenance,
+authority, conflicts, and non-recommendation boundary.
+
 ## Index
 
 | Standard | Status | Version | Governs |
