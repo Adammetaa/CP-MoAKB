@@ -254,6 +254,78 @@
       "privacy": { "persistence": "BROWSER_LOCAL_ONLY", "automatic_gps_persistence": false, "telemetry_upload": false, "analytics": false, "tracking": false, "synchronization": false }
     }
   ],
+  "deposition_coverage_views": [
+    {
+      "id": "DCV-092K-BPH-001/v1",
+      "model": "target-specific-deposition-evidence/v1",
+      "case_reference": "CASE-087-BPH/v1",
+      "application_event_reference": "APP-EVENT-091-BPH-001",
+      "subject": "Brown Planthopper / Nilaparvata lugens",
+      "target_locations": ["plant_base", "lower_canopy"],
+      "states": ["MEASURED", "SAMPLING_INCOMPLETE", "TARGET_LOCATION_UNMEASURED", "POTENTIAL_COVERAGE_GAP", "NEEDS_REVIEW"],
+      "measurements": [
+        {
+          "id": "DCM-092-BPH-UPPER-001",
+          "concept": "COVERAGE",
+          "method": "water-sensitive paper",
+          "collector_type": "water-sensitive paper",
+          "collector_location": "upper_canopy",
+          "collector_orientation": "horizontal — user reported",
+          "value": 18,
+          "unit": "%",
+          "denominator": "collector_surface",
+          "timestamp": "2026-08-10T07:45:00+07:00",
+          "number_of_collectors": 2,
+          "sampling_context": { "field_zone": "field_interior", "locations": 1, "protocol": "NOT_ESTABLISHED" },
+          "source": "HUMAN_MEASUREMENT",
+          "evidence_state": "MEASURED",
+          "limitations": ["two collectors in one field zone", "manual coverage estimate", "orientation reported but not independently verified"],
+          "supersedes_measurement_id": null,
+          "collector_image": "RECEIVED_NOT_ANALYZED",
+          "automatic_droplet_analysis": false,
+          "provenance": ["CASE_EVIDENCE", "APP-EVENT-091-BPH-001", "explicit human submission"]
+        },
+        {
+          "id": "DCM-092-BPH-BASE-001",
+          "concept": "DEPOSITION",
+          "method": "water-sensitive paper",
+          "collector_type": "water-sensitive paper",
+          "collector_location": "plant_base",
+          "collector_orientation": "UNKNOWN",
+          "value": null,
+          "unit": null,
+          "denominator": null,
+          "timestamp": null,
+          "number_of_collectors": 0,
+          "sampling_context": { "status": "NOT_SAMPLED" },
+          "source": "CASE_EVIDENCE_GAP",
+          "evidence_state": "NOT_MEASURED",
+          "limitations": ["no collector was placed at the BPH target location", "upper-canopy coverage cannot establish plant-base deposition"],
+          "supersedes_measurement_id": null,
+          "collector_image": null,
+          "automatic_droplet_analysis": false,
+          "provenance": ["CASE_EVIDENCE_GAP", "APP-EVENT-091-BPH-001"]
+        }
+      ],
+      "concept_boundary": { "coverage_and_deposition_separate": true, "common_scale": null, "conversion": null },
+      "spatial_sampling": { "measured_locations": ["upper_canopy"], "target_locations_unmeasured": ["plant_base", "lower_canopy"], "protocol_invented": false, "representative_sampling_claimed": false },
+      "target_location_binding": { "target_location": "plant_base / lower_canopy", "measurement_at_target_location": "NOT_MEASURED", "internal_exposure_confirmed": false },
+      "sampling_limitations": ["too few collectors for a representativeness claim", "one field zone only", "plant-base and lower-canopy locations not sampled", "manual image/coverage interpretation not governed"],
+      "potential_coverage_gap": { "state": "POTENTIAL_COVERAGE_GAP", "statement": "Upper-canopy coverage was measured; plant-base deposition remains unknown.", "cause_established": false, "instruction": null },
+      "threshold_interpretation": { "threshold_available": false, "minimum_droplets_per_cm2": null, "minimum_coverage_percent": null, "quality_score": null, "pass_fail": null },
+      "next_best_evidence": { "architecture": "field-action-handoff/v1", "count": 1, "action_type": "RECORD", "subject": "target_location_measurement", "collector_location": "plant_base", "prompt": "Verify whether a plant-base collector measurement exists and explicitly submit its recorded value or NOT_MEASURED state.", "completion": "EXPLICIT_HUMAN_OR_DEVICE_SUBMISSION_REQUIRED", "respray_action": false, "instruction": null },
+      "target_boundaries": [
+        { "subject": "brown-planthopper", "location": "plant_base / lower_canopy", "external_measurement_boundary": "upper-canopy measurement does not establish plant-base exposure" },
+        { "subject": "leaffolder", "location": "folded_leaf_interior", "external_measurement_boundary": "folded-leaf exterior deposition does not establish interior exposure" },
+        { "subject": "stem-borer-group", "location": "stem_interior", "external_measurement_boundary": "external stem deposition does not confirm internal stem exposure" },
+        { "subject": "blast", "location": "affected plant organ", "external_measurement_boundary": "collector relevance depends on organ and disease context" }
+      ],
+      "sequence": { "order": ["T0", "APPLICATION_EVENT", "DEPOSITION_OR_COVERAGE_EVIDENCE", "T1", "T2", "OUTCOME_REVIEW"], "causality_established": false, "efficacy_established": false, "resistance_established": false },
+      "boundaries": { "increase_water": null, "lower_drone": null, "change_nozzle": null, "respray": null, "efficacy": null, "failure_cause": null, "resistance": null, "product_ranking": null, "regulatory_authority_waived": false, "manufacturer_guidance_becomes_threshold": false, "automatic_learning": false },
+      "human_review": { "required": true, "reasons": ["target location unmeasured", "sampling too limited", "manual coverage estimate"], "can_invent_measurement": false },
+      "privacy": { "persistence": "BROWSER_LOCAL_ONLY", "telemetry_upload": false, "automatic_gps": false, "cloud_image_analysis": false, "equipment_tracking": false, "analytics": false, "operator_monitoring": false }
+    }
+  ],
   "entities": {
     "biological": [
       { "id": "BIO-BPH", "type": "pest", "normalized_name": "brown planthopper", "thai_name": "เพลี้ยกระโดดสีน้ำตาล", "english_name": "Brown Planthopper", "scientific_name": "Nilaparvata lugens", "crop_relationship": "rice", "aliases": ["BPH"], "canonical_reference": "rice-insect-corpus-001:BPH", "identity_state": "SUPPORTED", "duplicate_identity_state": "NO_DUPLICATE_IN_INTEGRATION_SLICE" },
@@ -422,6 +494,7 @@
       "regulatory_positive_search_id": "RR-089R-TH-RICE-POSITIVE-001/v1",
       "product_comparison_id": "PC-090P-RICE-INSECT-001/v1",
       "application_context_view_id": "ACV-091P-BPH-001/v1",
+      "deposition_coverage_view_id": "DCV-092K-BPH-001/v1",
       "management_option_link": "CHEMICAL_REVIEW_INFORMATION_ONLY"
     },
     { "id": "WV-MSI-BLAST-001/v1", "subject_id": "BIO-BLAST", "title": "Rice blast integrated knowledge", "case_assertions": ["AS-CASE-BLAST-001"], "scientific_assertions": ["AS-SCI-BLAST-001"], "moa_assertions": ["AS-FRAC-TRI-001"], "regulatory_assertions": [], "manufacturer_assertions": [], "relationship_ids": ["REL-BLAST-TRI", "REL-CASE-BLAST-CONFLICT"], "management_option_link": "NO_CHEMICAL_SELECTION" }

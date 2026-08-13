@@ -2,6 +2,34 @@
 
 Status: accepted bounded investigation foundation; not published
 
+## Sprint-092K target-specific deposition evidence
+
+### Deposition evidence
+
+`target-specific-deposition-evidence/v1` records deposits relative to one Case and Application Event. A measurement retains method, collector identity, location and orientation, value, exact unit and denominator, timestamp, collector count, sampling context, source, measured/observed state, limitations, correction/supersession, provenance, and any explicitly governed derived formula. Deposition metrics such as droplet count, deposits per area, tracer mass, or instrument measurements are never silently converted into coverage.
+
+### Coverage evidence
+
+Coverage records collector-surface percentage, observed wetting/distribution, presence/absence, or spatial uniformity. `COVERAGE â‰  DEPOSITION`: neither concept is normalized into a common scale. A water-sensitive-paper image may be retained, but `Photo received â‰  automated droplet analysis â‰  measurement confirmed`; Sprint-092K performs no automatic counting or image interpretation.
+
+### Target-specific measurement
+
+Collector location determines what the record can support. Brown Planthopper context uses plant base/lower canopy; Rice Leaffolder uses folded-leaf interior; stem-borer groups use stem interior; Rice Blast depends on the affected organ and disease context. Upper-canopy measurement cannot establish plant-base exposure, folded-leaf exterior measurement cannot establish interior exposure, and external stem deposition cannot confirm internal exposure.
+
+The BPH golden slice binds one user-submitted upper-canopy water-sensitive-paper coverage measurement to `APP-EVENT-091-BPH-001` and separately records plant-base deposition as `NOT_MEASURED`. The bounded interpretation is `POTENTIAL_COVERAGE_GAP`: upper-canopy coverage was measured while plant-base deposition remains unknown. This does not establish poor application, product failure, resistance, or causality.
+
+### Sampling and threshold boundaries
+
+Actual placement, orientation, number of collectors, field zone, missing/moved/contaminated collectors, timing, image quality, and manual-counting uncertainty remain visible. The system does not invent a collector count or sampling protocol and does not claim representativeness. No universal minimum droplets/cmÂ², coverage percentage, deposits/cmÂ², or quality/pass threshold exists unless a future governed source supports the exact crop, target, method, and context.
+
+### Application context, failed control, and Field Action
+
+Sprint-091P supplies Application Event, equipment, weather, canopy, timing, and target-location context; those settings remain separate from measured target exposure. A failed-control investigation can now ask whether the biological target location was sampled while retaining all other explanations. `field-action-handoff/v1` may request exactly one missing target-location measurement and requires explicit human or device submission; application completion, photo receipt, elapsed time, or Field Action creation does not create a measurement or a re-spray task.
+
+### Outcome and recommendation boundaries
+
+The prepared chain is `T0 -> Application Event -> Deposition/Coverage Evidence -> T1 -> T2 -> Outcome Review`. Measurements remain Case evidence: high deposition does not prove efficacy, and low or unknown deposition does not prove the cause of failed control. Case deposition evidence cannot reorder Product Comparison, waive `AUTHORITY_BLOCKED`, turn manufacturer guidance into a threshold, or promote local efficacy/resistance knowledge. CP-MoAKB still cannot prescribe water volume, drone height, nozzle, dose, timing, setting optimization, or re-treatment.
+
 ## Sprint-091P Application Context model
 
 `application-context-evidence/v1` composes a Case-scoped Application Event, normalized context Assertions, potential limitations, missing evidence, Human Review, and later outcome observations. It captures what was actually observed or reported because method, water volume, equipment, weather, crop structure, target position, timing, and coverage may be relevant to explaining treatment performance. Every Assertion retains value, unit, denominator, timestamp, source, observed/reported state, direct/inferred state, limitations, and an optional superseded-Assertion reference. Unknown values remain `UNKNOWN` and no incompatible-unit conversion or default is introduced.

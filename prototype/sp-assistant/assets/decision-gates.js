@@ -211,6 +211,66 @@
     "stem-borer-group": { location: "stem_interior", evidence: "GOVERNED_TARGET_KNOWLEDGE", limitation: "Deadheart or whitehead does not identify a species, and external application does not establish stem-interior exposure." },
     blast: { location: "leaf_or_affected_organ", evidence: "GOVERNED_DISEASE_CONTEXT", limitation: "Lesion appearance and application history do not confirm a pathogen or fungicide failure." },
   });
+  const depositionEvidenceStates = Object.freeze(["MEASURED", "OBSERVED", "NOT_MEASURED", "SAMPLING_INCOMPLETE", "TARGET_LOCATION_UNMEASURED", "POTENTIAL_COVERAGE_GAP", "CONFLICTING_MEASUREMENTS", "NEEDS_REVIEW", "NOT_APPLICABLE"]);
+
+  function evaluateDepositionEvidence(input = {}) {
+    const records = (input.measurements || []).map((record) => ({
+      id: record.id || null,
+      caseReference: record.caseReference || input.caseReference || null,
+      applicationEventReference: record.applicationEventReference || input.applicationEventReference || null,
+      concept: record.concept === "COVERAGE" ? "COVERAGE" : "DEPOSITION",
+      method: record.method || "UNKNOWN",
+      collectorType: record.collectorType || "UNKNOWN",
+      collectorLocation: record.collectorLocation || "UNKNOWN",
+      collectorOrientation: record.collectorOrientation || "UNKNOWN",
+      value: record.value ?? null,
+      unit: record.unit || null,
+      denominator: record.denominator || null,
+      timestamp: record.timestamp || null,
+      numberOfCollectors: record.numberOfCollectors ?? null,
+      samplingContext: record.samplingContext || {},
+      source: record.source || "UNKNOWN",
+      evidenceState: record.value === undefined || record.value === null ? "NOT_MEASURED" : record.evidenceState || "MEASURED",
+      limitations: record.limitations || [],
+      supersedesMeasurementId: record.supersedesMeasurementId || null,
+      provenance: record.provenance || [],
+      derivedCalculation: record.derivedCalculation || null,
+      collectorImage: record.collectorImage || null,
+      automaticDropletAnalysis: false,
+    }));
+    const targetProfile = targetLocationProfiles[input.subject] || null;
+    const targetLocations = input.targetLocations || (targetProfile ? [targetProfile.location] : []);
+    const measuredLocations = new Set(records.filter((record) => ["MEASURED", "OBSERVED"].includes(record.evidenceState)).map((record) => record.collectorLocation));
+    const unmeasuredTargetLocations = targetLocations.filter((location) => !measuredLocations.has(location));
+    const concepts = new Set(records.map((record) => record.concept));
+    const conflicting = (input.conflicts || []).map((conflict) => ({ ...conflict, state: "CONFLICTING_MEASUREMENTS", resolution: null }));
+    const samplingLimitations = [...new Set(records.flatMap((record) => record.limitations).concat(input.samplingLimitations || []))];
+    const states = [records.some((record) => record.evidenceState === "MEASURED") ? "MEASURED" : records.some((record) => record.evidenceState === "OBSERVED") ? "OBSERVED" : "NOT_MEASURED", samplingLimitations.length ? "SAMPLING_INCOMPLETE" : null, unmeasuredTargetLocations.length ? "TARGET_LOCATION_UNMEASURED" : null, unmeasuredTargetLocations.length && records.length ? "POTENTIAL_COVERAGE_GAP" : null, conflicting.length ? "CONFLICTING_MEASUREMENTS" : null, samplingLimitations.length || unmeasuredTargetLocations.length || conflicting.length ? "NEEDS_REVIEW" : null].filter(Boolean);
+    const missingLocation = unmeasuredTargetLocations[0] || null;
+    return {
+      model: "target-specific-deposition-evidence/v1",
+      caseReference: input.caseReference || null,
+      applicationEventReference: input.applicationEventReference || null,
+      records,
+      concepts: { coverage: concepts.has("COVERAGE"), deposition: concepts.has("DEPOSITION"), collapsedToOneScale: false, conversions: [] },
+      spatialSampling: { measuredLocations: [...measuredLocations], targetLocations, unmeasuredTargetLocations, protocolInvented: false, representativeSamplingClaimed: false },
+      targetLocationBinding: { subject: input.subject || null, relationship: targetProfile || null, measuredAtTargetLocation: targetLocations.length > 0 && unmeasuredTargetLocations.length === 0, internalExposureConfirmed: false },
+      states, samplingLimitations, conflicts: conflicting,
+      thresholdInterpretation: { thresholdAvailable: false, threshold: null, qualityScore: null, passFail: null, minimumDropletsPerArea: null, boundary: "MEASURED VALUE â‰  UNIVERSAL ACCEPTANCE THRESHOLD" },
+      potentialCoverageGap: unmeasuredTargetLocations.length ? { state: "POTENTIAL_COVERAGE_GAP", statement: `No measurement exists at target location: ${unmeasuredTargetLocations.join(", ")}.`, causeEstablished: false, instruction: null } : null,
+      nextBestEvidence: missingLocation ? { architecture: "field-action-handoff/v1", count: 1, action_type: "RECORD", subject: "target_location_measurement", collectorLocation: missingLocation, completion: "EXPLICIT_HUMAN_OR_DEVICE_SUBMISSION_REQUIRED", reSprayAction: false, instruction: null } : { architecture: "field-action-handoff/v1", count: 0, action_type: null, subject: null, collectorLocation: null, completion: null, reSprayAction: false, instruction: null },
+      sequence: { order: ["T0", "APPLICATION_EVENT", "DEPOSITION_OR_COVERAGE_EVIDENCE", "T1", "T2", "OUTCOME_REVIEW"], causalityEstablished: false, efficacyEstablished: false, resistanceEstablished: false },
+      comparisonInteraction: { orderingChanged: false, scoreChanged: false, productLabelsChanged: false, preferredProduct: null },
+      regulatoryInteraction: { authorityWaived: false, authorityState: input.regulatoryState || "PRESERVED_SEPARATELY" },
+      manufacturerBoundary: { guidanceMayBeAttributed: true, thresholdCreated: false, caseInstructionCreated: false },
+      humanReview: { required: states.includes("NEEDS_REVIEW"), canInventMeasurement: false, canCreateUniversalThreshold: false },
+      conclusions: { biologicalEfficacy: null, controlFailureCause: null, resistance: null, increaseWater: null, lowerDrone: null, changeNozzle: null, reSpray: null },
+      photoBoundary: "Photo received â‰  automated droplet analysis â‰  measurement confirmed",
+      learn: { automaticPromotion: false, thresholdLearning: false, settingsOptimization: false, efficacyLearning: false, resistanceLearning: false },
+      privacy: { persistence: "BROWSER_LOCAL_ONLY", telemetryUpload: false, automaticGps: false, cloudImageAnalysis: false, equipmentTracking: false, analytics: false, operatorMonitoring: false },
+      boundaries: ["COVERAGE â‰  DEPOSITION", "MEASURED DEPOSITION â‰  BIOLOGICAL EFFICACY", "LOW OR UNKNOWN DEPOSITION â‰  CAUSAL CONTROL FAILURE", "FAILED CONTROL â‰  RESISTANCE", "DEPOSITION MEASUREMENT â‰  SPRAY SETTING RECOMMENDATION"],
+    };
+  }
 
   function evaluateApplicationContext(input = {}) {
     const event = input.applicationEvent || {};
@@ -660,5 +720,5 @@
       boundaries: ["Candidate ≠ Diagnosis", "Severity ≠ Need-for-Action", "Need-for-Action ≠ pesticide recommendation", "Weather alone cannot escalate identification", "Nearby Case cannot escalate identification", "Photo received ≠ Photo analyzed", "CONTROL FAILURE ≠ RESISTANCE"],
     };
   }
-  window.SPDecisionGates = Object.freeze({ evaluate, beginFromObservation, evaluateProgression, evaluateAbioticDifferential, evaluateApplicationContext, evaluateFailedControl, evaluateNeedForAction, evaluateManagementSuitability, evaluateManagementOptions, createFieldAction, applyFieldActionResult, prepareExpertHandoff, compareTemporalObservations, profiles, symptomFamilies, observationVocabulary, progressionStates, lifeStageProfiles, abioticProfiles, abioticInvestigationStates, applicationQualityStates, applicationSuitabilityStates, targetLocationProfiles, needForActionStates, managementOptionClasses, managementSuitabilityStates, governedManagementOptionClasses, managementOptionEligibilityStates, fieldActionTypes, fieldActionStates, moaAuthority, roles: ROLES });
+  window.SPDecisionGates = Object.freeze({ evaluate, beginFromObservation, evaluateProgression, evaluateAbioticDifferential, evaluateApplicationContext, evaluateDepositionEvidence, evaluateFailedControl, evaluateNeedForAction, evaluateManagementSuitability, evaluateManagementOptions, createFieldAction, applyFieldActionResult, prepareExpertHandoff, compareTemporalObservations, profiles, symptomFamilies, observationVocabulary, progressionStates, lifeStageProfiles, abioticProfiles, abioticInvestigationStates, applicationQualityStates, applicationSuitabilityStates, depositionEvidenceStates, targetLocationProfiles, needForActionStates, managementOptionClasses, managementSuitabilityStates, governedManagementOptionClasses, managementOptionEligibilityStates, fieldActionTypes, fieldActionStates, moaAuthority, roles: ROLES });
 })();
