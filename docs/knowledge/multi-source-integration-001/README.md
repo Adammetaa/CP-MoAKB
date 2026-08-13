@@ -2,6 +2,9 @@
 
 Status: accepted internal architecture and representative slice; `not_published`
 
+See [Golden Slice Validation 1: Brown Planthopper](brown-planthopper-golden-slice-validation.md)
+for the evidence-driven end-to-end chain and Sprint-088 gap decision.
+
 ## What is integrated, and what is not merged
 
 The `multi-source-knowledge-integration/v1` projection composes independently governed source assertions through normalized identities and traceable relationships into an existing Knowledge View. It supports Field/Case evidence, scientific and agronomic knowledge, Thai regulatory records, IRAC/FRAC/HRAC classification, and manufacturer/product information.

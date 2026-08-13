@@ -25,7 +25,7 @@
   ],
   "entities": {
     "biological": [
-      { "id": "BIO-BPH", "type": "pest", "normalized_name": "brown planthopper", "scientific_name": "Nilaparvata lugens", "identity_state": "SUPPORTED" },
+      { "id": "BIO-BPH", "type": "pest", "normalized_name": "brown planthopper", "thai_name": "เพลี้ยกระโดดสีน้ำตาล", "english_name": "Brown Planthopper", "scientific_name": "Nilaparvata lugens", "crop_relationship": "rice", "aliases": ["BPH"], "canonical_reference": "rice-insect-corpus-001:BPH", "identity_state": "SUPPORTED", "duplicate_identity_state": "NO_DUPLICATE_IN_INTEGRATION_SLICE" },
       { "id": "BIO-BLAST", "type": "disease", "normalized_name": "rice blast", "causal_identity": "source-attributed Pyricularia naming", "identity_state": "NEEDS_REVIEW" }
     ],
     "chemicals": [
@@ -69,7 +69,7 @@
     ]
   },
   "assertions": [
-    { "id": "AS-CASE-BPH-001", "subject_id": "BIO-BPH", "source_id": "CASE-087-BPH/v1", "source_role": "CASE_EVIDENCE", "statement": "The representative Case records 10 insects per plant with current activity.", "direct": true, "state": "SUPPORTED", "canonical": false },
+    { "id": "AS-CASE-BPH-001", "subject_id": "BIO-BPH", "source_id": "CASE-087-BPH/v1", "source_role": "CASE_EVIDENCE", "statement": "The representative Case records 10 insects per plant with current activity.", "details": { "crop": "rice", "crop_stage": "NOT_RECORDED", "observation_timestamp": "2026-08-13T12:00:00+07:00", "burden": 10, "unit": "insects_per_plant", "sampling_denominator": "plant", "activity_context": "CURRENT_ACTIVITY_SUPPORTED", "historical_context": "previous reports, damage, or treatment are not current burden", "observation_source": "HUMAN_FIELD_OBSERVATION", "photo_inference": false, "limitations": ["representative browser-local Case", "sampling-unit limitation remains visible", "observation is not canonical knowledge"] }, "direct": true, "state": "SUPPORTED", "canonical": false },
     { "id": "AS-SCI-BPH-001", "subject_id": "BIO-BPH", "source_id": "GS-RD-RICE-PESTS-2007-001/v1", "source_role": "SCIENTIFIC_AUTHORITY", "statement": "Governed scientific knowledge associates BPH with plant-base feeding and hopper-burn damage context.", "direct": true, "state": "SUPPORTED", "canonical": true },
     { "id": "AS-CASE-BLAST-001", "subject_id": "BIO-BLAST", "source_id": "CASE-087-BLAST/v1", "source_role": "CASE_EVIDENCE", "statement": "The representative Case records lesions that do not fully match the governed textbook morphology.", "direct": true, "state": "CONFLICTING", "canonical": false },
     { "id": "AS-SCI-BLAST-001", "subject_id": "BIO-BLAST", "source_id": "GS-KU-RICE-DISEASES-2020-001/v1", "source_role": "SCIENTIFIC_AUTHORITY", "statement": "Governed sources describe lesion morphology relevant to rice-blast investigation.", "direct": true, "state": "SUPPORTED", "canonical": true },
@@ -91,7 +91,7 @@
     { "id": "REL-FAILED-CONTROL", "from": "CASE-087-BPH/v1", "predicate": "reported_outcome_does_not_promote", "to": "canonical_resistance_or_efficacy", "source_assertions": ["AS-CASE-BPH-001"], "state": "NOT_APPLICABLE", "direct": true, "limitations": ["failed control does not establish resistance", "Case result does not become efficacy knowledge"] }
   ],
   "views": [
-    { "id": "WV-MSI-BPH-001/v1", "subject_id": "BIO-BPH", "title": "Brown planthopper integrated knowledge", "case_assertions": ["AS-CASE-BPH-001"], "scientific_assertions": ["AS-SCI-BPH-001"], "moa_assertions": ["AS-IRAC-PYM-001"], "regulatory_assertions": ["AS-REG-PLENUM-001"], "manufacturer_assertions": ["AS-MFR-PLENUM-001"], "relationship_ids": ["REL-CASE-BPH-SUPPORTS", "REL-BPH-PYM", "REL-PYM-IRAC", "REL-PRODUCT-AI", "REL-PRODUCT-MFR", "REL-PRODUCT-REG", "REL-MFR-CLAIM-CTU"], "management_option_link": "CHEMICAL_REVIEW_INFORMATION_ONLY" },
+    { "id": "WV-MSI-BPH-001/v1", "subject_id": "BIO-BPH", "title": "Brown planthopper integrated knowledge", "case_assertions": ["AS-CASE-BPH-001"], "scientific_assertions": ["AS-SCI-BPH-001"], "moa_assertions": ["AS-IRAC-PYM-001"], "regulatory_assertions": ["AS-REG-PLENUM-001"], "manufacturer_assertions": ["AS-MFR-PLENUM-001"], "relationship_ids": ["REL-CASE-BPH-SUPPORTS", "REL-BPH-PYM", "REL-PYM-IRAC", "REL-PRODUCT-AI", "REL-PRODUCT-MFR", "REL-PRODUCT-REG", "REL-MFR-CLAIM-CTU"], "management_review": { "case_count": 10, "unit": "insects_per_plant", "state": "MANAGEMENT_REVIEW_JUSTIFIED", "options_exposed": true, "chemical_information_state": "CHEMICAL_REVIEW_INFORMATION_ONLY", "product_selected": false, "threshold_source": "AE-076-BPH-001/v1", "limitation": "10 insects/plant opens review; it does not require chemical treatment" }, "management_option_link": "CHEMICAL_REVIEW_INFORMATION_ONLY" },
     { "id": "WV-MSI-BLAST-001/v1", "subject_id": "BIO-BLAST", "title": "Rice blast integrated knowledge", "case_assertions": ["AS-CASE-BLAST-001"], "scientific_assertions": ["AS-SCI-BLAST-001"], "moa_assertions": ["AS-FRAC-TRI-001"], "regulatory_assertions": [], "manufacturer_assertions": [], "relationship_ids": ["REL-BLAST-TRI", "REL-CASE-BLAST-CONFLICT"], "management_option_link": "NO_CHEMICAL_SELECTION" }
   ],
   "conflict_states": ["SUPPORTED", "INCOMPLETE", "CONFLICTING", "AUTHORITY_BLOCKED", "NEEDS_REVIEW", "NOT_APPLICABLE"],
