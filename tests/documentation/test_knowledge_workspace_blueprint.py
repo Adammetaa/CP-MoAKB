@@ -273,7 +273,7 @@ def test_examples_are_domain_neutral_and_non_operational() -> None:
 
 
 def test_workspace_links_and_document_count_are_governed() -> None:
-    assert len(verify()) == 684
+    assert len(verify()) == 685
 
 
 def test_public_api_manifest_remains_unchanged() -> None:

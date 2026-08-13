@@ -34,4 +34,5 @@ active ingredient, product, formulation, rate, or program.
 - [Need-for-action and management decision gate](need-for-action-decision-gate.md)
 - [Thai decision-authority resolution](thai-decision-authority-resolution.md)
 - [Management option and Case suitability intelligence](management-case-suitability.md)
+- [Field action handoff and execution readiness](field-action-handoff.md)
 - [Decision matrix and unresolved issues](decision-matrix-and-issues.md)
