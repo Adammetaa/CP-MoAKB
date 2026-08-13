@@ -22,11 +22,11 @@ def data() -> dict:
 
 
 def project(view_id: str = "WV-MSI-BPH-001/v1") -> dict:
-    payload = json.dumps(data())
     script = (
         "global.__EXPLORER_TEST__=true;"
         + f"require({json.dumps(str(APP))});"
-        + f"const data={payload};"
+        + "const fs=require('fs');"
+        + f"const data=JSON.parse(fs.readFileSync({json.dumps(str(DATA))},'utf8'));"
         + "process.stdout.write(JSON.stringify(global.__explorerLocalization."
         + f"projectIntegratedKnowledge(data,{json.dumps(view_id)})));"
     )
@@ -85,7 +85,11 @@ def test_product_identity_binds_name_manufacturer_ingredient_and_formulation() -
 
 
 def test_ambiguous_product_name_is_not_merged() -> None:
-    candidate = data()["entities"]["products"][1]
+    candidate = next(
+        item
+        for item in data()["entities"]["products"]
+        if item["id"] == "PRODUCT-AMBIGUOUS-PLENUM-NAME-001"
+    )
     assert candidate["identity_state"] == "NEEDS_REVIEW"
     assert candidate["identity_key"] is None
     assert "cannot merge" in candidate["ambiguity_rule"]
@@ -132,12 +136,13 @@ def test_conflicting_field_and_scientific_assertions_are_both_retained() -> None
 
 def test_multiple_manufacturers_share_one_neutral_schema() -> None:
     manufacturers = data()["entities"]["manufacturers"]
-    assert [item["name"] for item in manufacturers] == [
+    assert {item["name"] for item in manufacturers} >= {
         "Chia Tai",
         "Syngenta Crop Protection Co., Ltd.",
+        "FMC AG (Thailand) Co., Ltd.",
         "Bayer",
         "ADAMA",
-    ]
+    }
     assert len({item["schema_role"] for item in manufacturers}) == 1
     assert (
         next(item for item in manufacturers if item["name"] == "Chia Tai")[

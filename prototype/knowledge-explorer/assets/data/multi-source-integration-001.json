@@ -19,7 +19,7 @@
     { "id": "CASE-087-BLAST/v1", "class": "CASE_EVIDENCE", "title": "Representative browser-local rice-blast investigation", "version_date": "2026-08-13", "retrieved_at": null, "locator": "Case Observation OBS-087-BLAST-001", "scope": "Case-only morphology observation", "limitations": ["field appearance does not confirm a pathogen"] },
     { "id": "GS-RD-RICE-PESTS-2007-001/v1", "class": "SCIENTIFIC_AUTHORITY", "title": "Rice Department rice-pest corpus source", "version_date": "2007", "retrieved_at": "2026-08-13", "locator": "RD pp.4-7 / PDF pp.15-18", "scope": "BPH identity, biology, symptoms, and context", "limitations": ["scientific context is not Case diagnosis or product authority"] },
     { "id": "GS-KU-RICE-DISEASES-2020-001/v1", "class": "SCIENTIFIC_AUTHORITY", "title": "Kasetsart University rice-disease source", "version_date": "2020", "retrieved_at": "2026-08-13", "locator": "Rice blast pp.5-10", "scope": "rice-blast lesion and biological context", "limitations": ["morphology is not laboratory confirmation"] },
-    { "id": "GS-IRAC-MOA-11.5-001/v1", "class": "MOA_CLASSIFICATION_AUTHORITY", "title": "IRAC Mode of Action Classification Scheme", "version_date": "2026-02", "retrieved_at": "2026-08-13", "locator": "Group 9B: pymetrozine", "scope": "insecticide MoA classification", "limitations": ["classification does not establish efficacy, resistance, suitability, or use authority"] },
+    { "id": "GS-IRAC-MOA-11.5-001/v1", "class": "MOA_CLASSIFICATION_AUTHORITY", "title": "IRAC Mode of Action Classification Scheme", "version_date": "2026-02", "retrieved_at": "2026-08-13", "locator": "Group 9B: pymetrozine; Group 28: chlorantraniliprole", "scope": "insecticide MoA classification", "limitations": ["classification does not establish efficacy, resistance, suitability, or use authority"] },
     { "id": "GS-FRAC-MOA-2026-001/v1", "class": "MOA_CLASSIFICATION_AUTHORITY", "title": "FRAC Code List", "version_date": "2026-05", "retrieved_at": "2026-08-13", "locator": "tricyclazole group 16.1", "scope": "fungicide MoA classification", "limitations": ["classification does not establish treatment suitability"] },
     { "id": "GS-DOA-HAZARDOUS-REGISTRY-2568-001/v1", "class": "REGULATORY_AUTHORITY", "title": "Thai DOA 2554-2568 registration listing", "organization": "Agricultural Regulatory Division, Department of Agriculture, Thailand", "url": "https://www.doa.go.th/ard/wp-content/uploads/2025/09/%E0%B8%97%E0%B8%B0%E0%B9%80%E0%B8%9A%E0%B8%B5%E0%B8%A2%E0%B8%99%E0%B8%A7%E0%B8%B1%E0%B8%95%E0%B8%96%E0%B8%B8%E0%B8%AD%E0%B8%B1%E0%B8%99%E0%B8%95%E0%B8%A3%E0%B8%B2%E0%B8%A2%E0%B9%81%E0%B8%9A%E0%B9%88%E0%B8%87%E0%B8%8A%E0%B8%99%E0%B8%B4%E0%B8%94-%E0%B8%9B%E0%B8%B5-2554-25681.pdf", "version_date": "2025-09-15", "retrieved_at": "2026-08-13", "locator": "row 7 / PDF p.2: registration 7-2554; row 765 / PDF p.136: registration 405-2555; row 962 / PDF p.198: registration 602-2555", "scope": "registration identity, registrant, formulation, issue, expiry, and cancellation fields", "limitations": ["no crop, target, use, or approved-label fields"] },
     { "id": "GS-DOA-HAZARDOUS-REGISTRY-2026-001/v2", "class": "REGULATORY_AUTHORITY", "title": "Thai DOA hazardous-substance registration listing", "organization": "Agricultural Regulatory Division, Department of Agriculture, Thailand", "url": "https://www.doa.go.th/ard/?page_id=386", "version_date": "2026-07-16", "retrieved_at": "2026-08-13", "locator": "official listing link labelled updated 16 July 2026; governed 3,501-page snapshot; registration 405-2555 retains expiry 22 March 2024", "sha256": "8b28fcfa31a40a021645645a33864fe858769af8f2264db22776e549df6916fe", "scope": "current administrative listing context and registration status", "limitations": ["listing has no crop, target, use, or approved-label fields", "no replacement registration or current renewal is bound"] },
@@ -141,6 +141,78 @@
     },
     "next_gap": "obtain one public official approved rice-use label or certificate sharing a current Thai registration identifier"
   },
+  "product_comparisons": [
+    {
+      "id": "PC-090P-RICE-INSECT-001/v1",
+      "title": "Comparing Product Information",
+      "context": {
+        "label": "Thai rice insect-control regulatory knowledge",
+        "scope": "general governed knowledge across separately identified rice insect targets; not a same-target treatment-choice comparison",
+        "subject_type": "GOVERNED_KNOWLEDGE_CONTEXT",
+        "case_required": false,
+        "case_link": "CHEMICAL_REVIEW_INFORMATION_ONLY",
+        "case_selection": false
+      },
+      "inclusion_rule": "include an exact governed product identity only when a cited official or manufacturer assertion explains its rice-insect knowledge relationship",
+      "ordering": {
+        "field": "neutral_sort_key",
+        "direction": "ascending",
+        "explanation": "alphabetical English trade-name order; manufacturer, registration status, authority state, and Case history do not affect position"
+      },
+      "candidate_ids": ["PC-CAND-PLENUM-001", "PC-CAND-PREVATHON-001"],
+      "candidates": [
+        {
+          "id": "PC-CAND-PLENUM-001",
+          "neutral_sort_key": "plenum 50 wg",
+          "product_id": "PRODUCT-SYN-PLENUM-50WG-001",
+          "regulatory_candidate_id": "REG-CAND-089-BPH-001",
+          "target_context": "Brown Planthopper / Nilaparvata lugens",
+          "why_shown": "exact product identity is linked to pymetrozine, an official rice/BPH guidance entry, and Thai registration 405-2555",
+          "moa": { "system": "IRAC", "group": "9B", "source_id": "GS-IRAC-MOA-11.5-001/v1", "descriptive_only": true },
+          "authority": { "product_identity": "KNOWN", "registration_identity": "KNOWN", "registration_status": "EXPIRED", "crop": "AUTHORITY_BLOCKED", "exact_target": "AUTHORITY_BLOCKED", "exact_ctu": "AUTHORITY_BLOCKED" },
+          "manufacturer_source": { "status": "AVAILABLE_NEEDS_REVIEW", "source_id": "MS-SYN-PLENUM-001/v1", "version_date": "unavailable", "limitation": "manufacturer-attributed identity and target claim are not regulatory authority" },
+          "scientific_source": { "source_id": "GS-RD-RICE-PESTS-2007-001/v1", "scope": "BPH biological context only", "authority_for_use": false },
+          "official_source_ids": ["GS-DOA-HAZARDOUS-REGISTRY-2026-001/v2", "GS-DOA-PPD-INSECT-GUIDANCE-2023-001/v1"],
+          "source_facts": ["Official guidance fact: 20 g per 20 L water; not a Case recommendation"],
+          "gaps": ["registration expired", "current approved label unavailable", "no stable identifier binds the guidance fact to registration 405-2555", "no independent efficacy comparison"],
+          "previous_case_use": { "state": "CASE_HISTORY_ONLY", "conclusion": null },
+          "human_review": "REQUIRED",
+          "not_concluded": ["product suitability", "comparative efficacy", "resistance", "recommendation"]
+        },
+        {
+          "id": "PC-CAND-PREVATHON-001",
+          "neutral_sort_key": "prevathon",
+          "product_id": "PRODUCT-FMC-PREVATHON-517SC-001",
+          "regulatory_candidate_id": "REG-CAND-089-LEAFFOLDER-001",
+          "target_context": "Rice Leaffolder / Cnaphalocrocis medinalis",
+          "why_shown": "exact current registry identity and separate official rice/leaffolder guidance both identify chlorantraniliprole 5.17% W/V SC, while the missing stable join remains explicit",
+          "moa": { "system": "IRAC", "group": "28", "source_id": "GS-IRAC-MOA-11.5-001/v1", "descriptive_only": true },
+          "authority": { "product_identity": "KNOWN", "registration_identity": "KNOWN", "registration_status": "CURRENT", "crop": "INCOMPLETE", "exact_target": "INCOMPLETE", "exact_ctu": "AUTHORITY_BLOCKED" },
+          "manufacturer_source": { "status": "NOT_GOVERNED_IN_SLICE", "source_id": null, "version_date": null, "limitation": "registrant identity comes from the regulatory row; no manufacturer assertion is used" },
+          "scientific_source": { "source_id": null, "scope": "no independent efficacy evidence governed in this comparison", "authority_for_use": false },
+          "official_source_ids": ["GS-DOA-HAZARDOUS-REGISTRY-2568-001/v1", "GS-DOA-PPD-INSECT-GUIDANCE-2023-001/v1"],
+          "source_facts": [],
+          "gaps": ["current approved label unavailable", "no stable identifier binds official guidance to registration 7-2554", "exact CTU authority blocked", "no independent efficacy comparison"],
+          "previous_case_use": { "state": "NO_CASE_HISTORY_IN_COMPARISON", "conclusion": null },
+          "human_review": "REQUIRED",
+          "not_concluded": ["product suitability", "comparative efficacy", "resistance", "recommendation"]
+        }
+      ],
+      "boundaries": {
+        "recommendation": null,
+        "ranking": null,
+        "score": null,
+        "winner": null,
+        "treatment_selection": null,
+        "commercial_preference": null,
+        "execution": null,
+        "automatic_learning": false,
+        "human_review_can_upgrade_authority": false,
+        "current_registration_implies_ctu_authority": false
+      },
+      "preserved_regulatory_classification": "CURRENT_REGULATORY_POSITIVE_SOURCE_GAP"
+    }
+  ],
   "entities": {
     "biological": [
       { "id": "BIO-BPH", "type": "pest", "normalized_name": "brown planthopper", "thai_name": "เพลี้ยกระโดดสีน้ำตาล", "english_name": "Brown Planthopper", "scientific_name": "Nilaparvata lugens", "crop_relationship": "rice", "aliases": ["BPH"], "canonical_reference": "rice-insect-corpus-001:BPH", "identity_state": "SUPPORTED", "duplicate_identity_state": "NO_DUPLICATE_IN_INTEGRATION_SLICE" },
@@ -148,11 +220,13 @@
     ],
     "chemicals": [
       { "id": "AI-PYMETROZINE", "normalized_name": "pymetrozine", "identity_state": "SUPPORTED" },
+      { "id": "AI-CHLORANTRANILIPROLE", "normalized_name": "chlorantraniliprole", "identity_state": "SUPPORTED" },
       { "id": "AI-TRICYCLAZOLE", "normalized_name": "tricyclazole", "identity_state": "SUPPORTED" }
     ],
     "manufacturers": [
       { "id": "MFR-CHIA-TAI", "name": "Chia Tai", "schema_role": "manufacturer", "product_assertions": 0 },
       { "id": "MFR-SYNGENTA", "name": "Syngenta Crop Protection Co., Ltd.", "schema_role": "manufacturer", "product_assertions": 1 },
+      { "id": "MFR-FMC-AG-TH", "name": "FMC AG (Thailand) Co., Ltd.", "schema_role": "manufacturer", "product_assertions": 1 },
       { "id": "MFR-BAYER", "name": "Bayer", "schema_role": "manufacturer", "product_assertions": 0 },
       { "id": "MFR-ADAMA", "name": "ADAMA", "schema_role": "manufacturer", "product_assertions": 0 }
     ],
@@ -168,6 +242,18 @@
         "identity_key": "เพลนั่ม 50 ดับบลิวจี|MFR-SYNGENTA|AI-PYMETROZINE|50%|WG|MS-SYN-PLENUM-001/v1",
         "identity_state": "SUPPORTED",
         "ambiguity_rule": "similar trade names never merge without the full identity key"
+      },
+      {
+        "id": "PRODUCT-FMC-PREVATHON-517SC-001",
+        "product_name": "\u0e1e\u0e23\u0e35\u0e27\u0e32\u0e18\u0e2d\u0e19 / Prevathon",
+        "manufacturer_id": "MFR-FMC-AG-TH",
+        "active_ingredient_id": "AI-CHLORANTRANILIPROLE",
+        "concentration": "5.17% W/V",
+        "formulation": "SC",
+        "source_identity": "GS-DOA-HAZARDOUS-REGISTRY-2568-001/v1",
+        "identity_key": "Prevathon|MFR-FMC-AG-TH|AI-CHLORANTRANILIPROLE|5.17% W/V|SC|GS-DOA-HAZARDOUS-REGISTRY-2568-001/v1",
+        "identity_state": "SUPPORTED",
+        "ambiguity_rule": "regulatory identity remains distinct unless the complete identity key and registration record agree"
       },
       {
         "id": "PRODUCT-AMBIGUOUS-PLENUM-NAME-001",
@@ -205,6 +291,23 @@
           "current_successor_bound": false,
           "limitation": "the administrative row does not itself classify the event as renewal or establish a successor"
         }
+      },
+      {
+        "id": "TH-REG-7-2554",
+        "registration_number": "7-2554",
+        "product_id": "PRODUCT-FMC-PREVATHON-517SC-001",
+        "registrant": "FMC AG (Thailand) Co., Ltd.",
+        "active_ingredient_id": "AI-CHLORANTRANILIPROLE",
+        "concentration": "5.17% W/V",
+        "formulation": "SC",
+        "recorded_issue": "2023-04-07",
+        "recorded_expiry": "2029-04-06",
+        "current_status": "CURRENT",
+        "status_as_of": "2025-09-15",
+        "cancellation_status": "NOT_RECORDED",
+        "crop_target_use_authority": "AUTHORITY_BLOCKED",
+        "source_ids": ["GS-DOA-HAZARDOUS-REGISTRY-2568-001/v1"],
+        "lineage": { "relationship_state": "NEEDS_REVIEW", "replacement_registration_id": null, "current_successor_bound": false, "limitation": "current registration identity does not supply or bind an approved rice-use label" }
       }
     ],
     "regulatory_use_assertions": [
@@ -276,6 +379,7 @@
         "limitations": ["no official approved label or certificate sharing registration 405-2555", "registration 405-2555 expired on 22 March 2024", "no current successor registration is bound", "official guidance and manufacturer claims cannot be converted into Case-specific advice"]
       },
       "regulatory_positive_search_id": "RR-089R-TH-RICE-POSITIVE-001/v1",
+      "product_comparison_id": "PC-090P-RICE-INSECT-001/v1",
       "management_option_link": "CHEMICAL_REVIEW_INFORMATION_ONLY"
     },
     { "id": "WV-MSI-BLAST-001/v1", "subject_id": "BIO-BLAST", "title": "Rice blast integrated knowledge", "case_assertions": ["AS-CASE-BLAST-001"], "scientific_assertions": ["AS-SCI-BLAST-001"], "moa_assertions": ["AS-FRAC-TRI-001"], "regulatory_assertions": [], "manufacturer_assertions": [], "relationship_ids": ["REL-BLAST-TRI", "REL-CASE-BLAST-CONFLICT"], "management_option_link": "NO_CHEMICAL_SELECTION" }

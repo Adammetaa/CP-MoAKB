@@ -239,6 +239,30 @@ const renderGovernedBatch = () => {
 
 const integrationStates = new Set(["SUPPORTED", "INCOMPLETE", "CONFLICTING", "AUTHORITY_BLOCKED", "NEEDS_REVIEW", "NOT_APPLICABLE"]);
 
+const projectProductComparison = (data, comparisonId) => {
+  const comparison = data.product_comparisons?.find((item) => item.id === comparisonId);
+  if (!comparison) throw new Error(`Unknown product comparison: ${comparisonId}`);
+  const products = new Map(data.entities.products.map((item) => [item.id, item]));
+  const chemicals = new Map(data.entities.chemicals.map((item) => [item.id, item]));
+  const manufacturers = new Map(data.entities.manufacturers.map((item) => [item.id, item]));
+  const registrations = new Map(data.entities.registrations.map((item) => [item.product_id, item]));
+  const regulatoryCandidates = new Map(data.regulatory_positive_search.candidates.map((item) => [item.id, item]));
+  const sources = new Map(data.sources.map((item) => [item.id, item]));
+  const candidates = comparison.candidates.map((candidate) => {
+    const product = products.get(candidate.product_id);
+    const regulatoryCandidate = regulatoryCandidates.get(candidate.regulatory_candidate_id);
+    if (!product || !regulatoryCandidate) throw new Error(`Invalid comparison candidate: ${candidate.id}`);
+    const registration = registrations.get(product.id);
+    const activeIngredient = chemicals.get(product.active_ingredient_id);
+    const manufacturer = manufacturers.get(product.manufacturer_id);
+    if (!registration || !activeIngredient || !manufacturer) throw new Error(`Incomplete comparison identity: ${candidate.id}`);
+    const sourceIds = [...new Set([product.source_identity, candidate.moa.source_id, ...candidate.official_source_ids].filter(Boolean))];
+    return { ...candidate, product, registration, activeIngredient, manufacturer, regulatoryCandidate, provenance: sourceIds.map((id) => sources.get(id)).filter(Boolean) };
+  }).sort((left, right) => left.neutral_sort_key.localeCompare(right.neutral_sort_key, "en"));
+  if (candidates.map((item) => item.id).join("|") !== comparison.candidate_ids.join("|")) throw new Error(`Non-deterministic comparison order: ${comparisonId}`);
+  return { ...comparison, candidates, recommendation: null, ranking: null, score: null, treatmentSelection: null };
+};
+
 const projectIntegratedKnowledge = (data, viewId) => {
   const view = data.views.find((item) => item.id === viewId);
   if (!view) throw new Error(`Unknown integrated Knowledge View: ${viewId}`);
@@ -271,9 +295,20 @@ const projectIntegratedKnowledge = (data, viewId) => {
     managementReview: view.management_review || null,
     regulatoryBinding: view.regulatory_binding || null,
     regulatoryPositiveSearch: view.regulatory_positive_search_id === data.regulatory_positive_search?.id ? data.regulatory_positive_search : null,
+    productComparison: view.product_comparison_id ? projectProductComparison(data, view.product_comparison_id) : null,
     humanReviewRequired: projectedRelationships.some((relationship) => ["INCOMPLETE", "CONFLICTING", "AUTHORITY_BLOCKED", "NEEDS_REVIEW"].includes(relationship.state)),
     recommendation: null, ranking: null, prescription: null, execution: null, canonicalPromotion: false,
   };
+};
+
+const renderProductComparison = (comparison, locale) => {
+  const labels = locale === "th" ? {
+    context: "บริบท", why: "เหตุผลที่แสดง", identity: "อัตลักษณ์ผลิตภัณฑ์", authority: "สถานะอำนาจ", sources: "แหล่งข้อมูลแยกตามบทบาท", gaps: "ข้อมูลที่ยังขาด", history: "การใช้ก่อนหน้า / ประวัติเคส", important: "สำคัญ",
+  } : {
+    context: "Context", why: "Why is this product shown?", identity: "Product Identity", authority: "Authority", sources: "Sources by role", gaps: "What is unresolved?", history: "Previous Application / Case History", important: "Important",
+  };
+  const cards = comparison.candidates.map((candidate) => `<article class="knowledge-card"><p class="eyebrow">${escapeHtml(candidate.target_context)}</p><h3>${escapeHtml(candidate.product.product_name)}</h3><p><strong>${escapeHtml(labels.why)}</strong><br>${escapeHtml(candidate.why_shown)}</p><h4>${escapeHtml(labels.identity)}</h4><ul><li>Manufacturer / registrant: ${escapeHtml(candidate.manufacturer.name)}</li><li>Active ingredient: ${escapeHtml(candidate.activeIngredient.normalized_name)}</li><li>Concentration / formulation: ${escapeHtml(candidate.product.concentration)} Â· ${escapeHtml(candidate.product.formulation)}</li><li>MoA: ${escapeHtml(candidate.moa.system)} ${escapeHtml(candidate.moa.group)} Â· descriptive only</li><li>Registration: ${escapeHtml(candidate.registration.registration_number)} Â· <strong>${escapeHtml(candidate.registration.current_status)}</strong></li></ul><h4>${escapeHtml(labels.authority)}</h4><ul><li>Rice Authority: ${escapeHtml(candidate.authority.crop)}</li><li>Exact Target Authority: ${escapeHtml(candidate.authority.exact_target)}</li><li>Exact CTU: <strong>${escapeHtml(candidate.authority.exact_ctu)}</strong></li></ul><h4>${escapeHtml(labels.sources)}</h4><p>Manufacturer Source: ${escapeHtml(candidate.manufacturer_source.status)}<small>${escapeHtml(candidate.manufacturer_source.limitation)}</small></p><p>Regulatory Authority: ${escapeHtml(candidate.official_source_ids.join("; "))}</p><p>Scientific Source: ${escapeHtml(candidate.scientific_source.scope)}</p>${candidate.source_facts.length ? `<p>${candidate.source_facts.map(escapeHtml).join("; ")}</p>` : ""}<h4>${escapeHtml(labels.gaps)}</h4><ul>${candidate.gaps.map((gap) => `<li>${escapeHtml(gap)}</li>`).join("")}</ul><p><strong>${escapeHtml(labels.history)}:</strong> ${escapeHtml(candidate.previous_case_use.state)} Â· no efficacy or resistance conclusion</p><p>Human Review: ${escapeHtml(candidate.human_review)} Â· cannot upgrade missing authority</p><p><strong>CP-MoAKB does not conclude:</strong> ${escapeHtml(candidate.not_concluded.join("; "))}</p><small>Provenance: ${candidate.provenance.map((source) => `${escapeHtml(source.id)} Â· ${escapeHtml(source.version_date)} Â· ${escapeHtml(source.class)}`).join("; ")}</small></article>`).join("");
+  return `<article class="knowledge-card product-comparison" style="grid-column: 1 / -1"><div class="section-heading"><div><p class="eyebrow">${escapeHtml(comparison.id)}</p><h3>${escapeHtml(comparison.title)}</h3><p><strong>${escapeHtml(labels.context)}:</strong> ${escapeHtml(comparison.context.label)}</p><p>${escapeHtml(comparison.context.scope)}</p></div><span class="tag">Neutral alphabetical order</span></div><p>${escapeHtml(comparison.inclusion_rule)}</p><div class="grid-3 corpus-grid">${cards}</div><aside class="boundary-note"><span aria-hidden="true">!</span><div><strong>${escapeHtml(labels.important)}</strong><p>Products are shown for governed knowledge comparison only. Their presence does not constitute a CP-MoAKB recommendation. No score, winner, commercial priority, treatment selection, or automatic Learn promotion is produced. Current registration â‰  exact crop-target-use authority.</p></div></aside></article>`;
 };
 
 const renderIntegratedKnowledge = () => {
@@ -302,6 +337,12 @@ const renderIntegratedKnowledge = () => {
   const positiveSearch = projection.regulatoryPositiveSearch;
   const positiveSearchCard = positiveSearch ? `<article class="knowledge-card"><h3>Current Thai Regulatory Positive-Path Search</h3><p><strong>${escapeHtml(positiveSearch.result)}</strong></p><p>${escapeHtml(positiveSearch.classification)}</p><ul>${positiveSearch.candidates.map((candidate) => `<li><strong>${escapeHtml(candidate.result)}</strong> · ${escapeHtml(candidate.target)}<small>${escapeHtml(candidate.product || "no product identity")} · registration ${escapeHtml(candidate.registration_id || "not established")} · ${escapeHtml(candidate.current_status)} · label ${candidate.official_label_found ? "FOUND" : "NOT FOUND"} · stable ID ${candidate.stable_identifier ? "SUPPORTED" : "BLOCKED"}</small><small>${escapeHtml(candidate.limitation)}</small></li>`).join("")}</ul><p>Qualified current chains: ${escapeHtml(positiveSearch.qualified_positive_slices)}</p><small>${escapeHtml(positiveSearch.next_gap)}</small><p><strong>Current registration identity ≠ approved rice-target-use authority</strong></p></article>` : "";
   target.innerHTML = `<div class="section-heading"><div><p class="eyebrow">${escapeHtml(projection.id)}</p><h2>${escapeHtml(projection.title)}</h2></div><span class="tag tag-real">${escapeHtml(projection.managementOptionLink)}</span></div><div class="grid-3 corpus-grid">${assertionList(labels.observed, projection.observedInCase)}${assertionList(labels.scientific, projection.generalKnowledge)}${management}${assertionList(labels.moa, projection.moaKnowledge)}${assertionList(labels.regulatory, projection.regulatoryKnowledge)}${regulatoryBinding}${positiveSearchCard}<article class="knowledge-card"><h3>${escapeHtml(labels.products)}</h3><ul>${products}</ul><p><strong>Product information ≠ recommendation</strong></p></article><article class="knowledge-card"><h3>${escapeHtml(labels.gaps)}</h3><ul>${gaps}</ul><p>Human Review: ${projection.humanReviewRequired ? "REQUIRED" : "NOT REQUIRED"}</p></article></div><div class="detail-grid"><div><h3>${escapeHtml(labels.provenance)}</h3><ul>${provenance}</ul></div><aside class="boundary-note"><span aria-hidden="true">!</span><div><strong>Case Evidence ≠ Canonical Knowledge</strong><p>Manufacturer claim ≠ Regulatory Authority · Registration identity ≠ crop-target-use authority · approved rate fact ≠ Case recommendation · official label fact ≠ Case recommendation · CHEMICAL_REVIEW ≠ product selection.</p></div></aside></div>`;
+  if (projection.productComparison) {
+    const comparisonHtml = renderProductComparison(projection.productComparison, language)
+      .replaceAll("\u00c2\u00b7", "\u00b7")
+      .replaceAll("\u00e2\u2030\u00a0", "\u2260");
+    target.querySelector(".grid-3.corpus-grid")?.insertAdjacentHTML("beforeend", comparisonHtml);
+  }
 };
 
 const renderPage = () => {
@@ -368,6 +409,7 @@ globalThis.__explorerLocalization = Object.freeze({
   applyDocumentLanguage,
   languageToggleState,
   localizedResultCount,
+  projectProductComparison,
   projectIntegratedKnowledge,
   readLanguagePreference,
   searchKnowledge,
