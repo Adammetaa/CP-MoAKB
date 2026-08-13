@@ -69,4 +69,4 @@ def test_investigation_resistance_hrac_and_recommendation_boundaries_hold() -> N
 
 
 def test_documentation_verifier_includes_weed_corpus() -> None:
-    assert len(verify()) == 682
+    assert len(verify()) == 683

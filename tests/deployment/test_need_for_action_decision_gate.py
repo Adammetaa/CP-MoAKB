@@ -88,11 +88,14 @@ def test_bph_below_and_at_threshold_form_working_vertical_slice() -> None:
     assert "SPRAY_REQUIRED" not in json.dumps(reached)
 
 
-def test_leaffolder_reference_evidence_is_not_thai_trigger() -> None:
+def test_leaffolder_thai_evidence_requires_stage_specific_measurement() -> None:
     result = decide(supported("leaffolder", progressionState="PROGRESSION_SUPPORTED"))
-    assert result["actionEvidence"]["thresholdType"] == "Damage importance criterion"
-    assert result["applicability"]["status"] == "REFERENCE_EVIDENCE_ONLY"
-    assert result["needForAction"] == "NO_ACTION_DETERMINATION_SUPPORTED"
+    assert result["actionEvidence"]["thresholdType"] == "ACTION_THRESHOLD"
+    assert (
+        result["applicability"]["status"] == "THAI_OPERATIONAL_EVIDENCE_WITH_LIMITATION"
+    )
+    assert result["needForAction"] == "MORE_EVIDENCE_REQUIRED"
+    assert result["nextBestDecisionEvidence"]["key"] == "LEAFFOLDER_STAGE_INCIDENCE"
 
 
 def test_disease_and_weed_progression_burden_do_not_invent_thresholds() -> None:

@@ -267,7 +267,7 @@
   function evaluateNeedForAction(input = {}) {
     const authority = window.SPDecisionAuthority;
     const subject = input.subject || null;
-    const actionEvidence = subject ? authority?.actionEvidence?.[subject] || null : null;
+    const actionEvidence = subject ? authority?.actionEvidence?.[subject === "leaffolder" && authority.actionEvidence["leaffolder-thai"] ? "leaffolder-thai" : subject] || null : null;
     const identified = ["PROVISIONAL_IDENTIFICATION", "IDENTIFICATION_SUPPORTED"].includes(input.identificationState);
     const alternativesResolved = input.alternativesResolved === true;
     const currentActivity = input.activityState === "CURRENT_ACTIVITY_SUPPORTED";
@@ -319,6 +319,23 @@
         needForAction = "CONTINUE_MONITORING";
         basis = `The observed ${count} insects per plant is below the governed ${actionEvidence.triggerValue} insects-per-plant criterion.`;
         next = { key: "REPEAT_COUNT", question: "When should the same insects-per-plant observation be repeated?" };
+      }
+    } else if (subject === "leaffolder" && actionEvidence?.id === "AE-083-LF-TH-001/v1") {
+      const incidence = input.measurements?.percentAffectedLeaves;
+      const stage = input.cropStage;
+      const trigger = stage === "rice_15_40_days" ? 15 : stage === "flag_leaf" ? 10 : null;
+      if (!Number.isFinite(incidence) || trigger === null) {
+        needForAction = "MORE_EVIDENCE_REQUIRED";
+        basis = "Thai leaffolder Action Evidence is available, but the stage-specific affected-leaf measurement is incomplete.";
+        next = { key: "LEAFFOLDER_STAGE_INCIDENCE", question: "What is the crop stage and percentage of rice leaves damaged?" };
+      } else if (incidence >= trigger) {
+        needForAction = "MANAGEMENT_REVIEW_JUSTIFIED";
+        basis = `The observed ${incidence} percent affected leaves meets the governed ${trigger} percent stage-specific Thai criterion, subject to its sampling limitation.`;
+        next = { key: "MANAGEMENT_OPTIONS", question: "Which governed management option classes are applicable to this Case?" };
+      } else {
+        needForAction = "CONTINUE_MONITORING";
+        basis = `The observed ${incidence} percent affected leaves is below the governed ${trigger} percent stage-specific Thai criterion.`;
+        next = { key: "REPEAT_INCIDENCE", question: "When should affected-leaf incidence be observed again?" };
       }
     } else if (actionEvidence?.thaiApplicability === "REFERENCE_EVIDENCE_ONLY") {
       needForAction = "NO_ACTION_DETERMINATION_SUPPORTED";

@@ -32,4 +32,5 @@ active ingredient, product, formulation, rate, or program.
 - [Rice abiotic differential investigation](rice-abiotic-differential.md)
 - [Application quality and failed-control investigation](application-failed-control-investigation.md)
 - [Need-for-action and management decision gate](need-for-action-decision-gate.md)
+- [Thai decision-authority resolution](thai-decision-authority-resolution.md)
 - [Decision matrix and unresolved issues](decision-matrix-and-issues.md)
