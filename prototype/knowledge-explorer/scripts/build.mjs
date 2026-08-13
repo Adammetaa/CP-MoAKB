@@ -117,7 +117,7 @@ const management = JSON.parse(await readFile(resolve(root, "assets", "data", "cr
 if (management.meta?.status !== "accepted-internal-not-published" || management.counts?.management_options !== 9 || management.counts?.active_ingredients !== 18 || management.counts?.irac_relationships !== 6 || management.counts?.frac_relationships !== 6 || management.counts?.hrac_relationships !== 6 || management.counts?.registration_relationships !== 0) failures.push("crop protection management integration is invalid");
 if (management.meta?.rights !== "source-pages-images-tables-layout-and-passages-suppressed") failures.push("crop protection management rights boundary is invalid");
 const integration = JSON.parse(await readFile(resolve(root, "assets", "data", "multi-source-integration-001.json"), "utf8"));
-if (integration.meta?.model !== "multi-source-knowledge-integration/v1" || integration.meta?.status !== "accepted-internal-not-published" || integration.source_classes?.length !== 5 || integration.views?.length < 2) failures.push("multi-source knowledge integration is invalid");
+if (integration.meta?.model !== "multi-source-knowledge-integration/v1" || integration.meta?.status !== "accepted-internal-not-published" || integration.source_classes?.length !== 6 || integration.views?.length < 2) failures.push("multi-source knowledge integration is invalid");
 if (integration.safety?.recommendation !== null || integration.safety?.ranking !== null || integration.safety?.execution !== null || integration.safety?.automatic_learning !== false) failures.push("multi-source integration crossed the recommendation or Learn boundary");
 if (failures.length) throw new Error(`Prototype validation failed:\n${failures.join("\n")}`);
 

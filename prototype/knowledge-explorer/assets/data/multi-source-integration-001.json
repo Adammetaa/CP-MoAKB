@@ -10,6 +10,7 @@
     { "id": "CASE_EVIDENCE", "authority_role": "Case Evidence", "canonical_authority": false },
     { "id": "SCIENTIFIC_AUTHORITY", "authority_role": "Scientific Authority", "canonical_authority": true },
     { "id": "REGULATORY_AUTHORITY", "authority_role": "Regulatory Authority", "canonical_authority": true },
+    { "id": "REGULATORY_SUPPORTING_OFFICIAL", "authority_role": "Regulatory-supporting Official Material", "canonical_authority": false },
     { "id": "MOA_CLASSIFICATION_AUTHORITY", "authority_role": "MoA Classification Authority", "canonical_authority": true },
     { "id": "MANUFACTURER_COMMERCIAL_SOURCE", "authority_role": "Manufacturer / Commercial Source", "canonical_authority": false }
   ],
@@ -20,7 +21,9 @@
     { "id": "GS-KU-RICE-DISEASES-2020-001/v1", "class": "SCIENTIFIC_AUTHORITY", "title": "Kasetsart University rice-disease source", "version_date": "2020", "retrieved_at": "2026-08-13", "locator": "Rice blast pp.5-10", "scope": "rice-blast lesion and biological context", "limitations": ["morphology is not laboratory confirmation"] },
     { "id": "GS-IRAC-MOA-11.5-001/v1", "class": "MOA_CLASSIFICATION_AUTHORITY", "title": "IRAC Mode of Action Classification Scheme", "version_date": "2026-02", "retrieved_at": "2026-08-13", "locator": "Group 9B: pymetrozine", "scope": "insecticide MoA classification", "limitations": ["classification does not establish efficacy, resistance, suitability, or use authority"] },
     { "id": "GS-FRAC-MOA-2026-001/v1", "class": "MOA_CLASSIFICATION_AUTHORITY", "title": "FRAC Code List", "version_date": "2026-05", "retrieved_at": "2026-08-13", "locator": "tricyclazole group 16.1", "scope": "fungicide MoA classification", "limitations": ["classification does not establish treatment suitability"] },
-    { "id": "GS-DOA-HAZARDOUS-REGISTRY-2568-001/v1", "class": "REGULATORY_AUTHORITY", "title": "Thai DOA 2554-2568 registration listing", "version_date": "2025-09-15", "retrieved_at": "2026-08-13", "locator": "row 765 / PDF p.136", "scope": "registration identity and administrative dates", "limitations": ["no crop, target, use, or approved-label fields"] },
+    { "id": "GS-DOA-HAZARDOUS-REGISTRY-2568-001/v1", "class": "REGULATORY_AUTHORITY", "title": "Thai DOA 2554-2568 registration listing", "organization": "Agricultural Regulatory Division, Department of Agriculture, Thailand", "url": "https://www.doa.go.th/ard/wp-content/uploads/2025/09/%E0%B8%97%E0%B8%B0%E0%B9%80%E0%B8%9A%E0%B8%B5%E0%B8%A2%E0%B8%99%E0%B8%A7%E0%B8%B1%E0%B8%95%E0%B8%96%E0%B8%B8%E0%B8%AD%E0%B8%B1%E0%B8%99%E0%B8%95%E0%B8%A3%E0%B8%B2%E0%B8%A2%E0%B9%81%E0%B8%9A%E0%B9%88%E0%B8%87%E0%B8%8A%E0%B8%99%E0%B8%B4%E0%B8%94-%E0%B8%9B%E0%B8%B5-2554-25681.pdf", "version_date": "2025-09-15", "retrieved_at": "2026-08-13", "locator": "row 765 / PDF p.136", "scope": "registration identity and administrative dates", "limitations": ["no crop, target, use, or approved-label fields"] },
+    { "id": "GS-DOA-HAZARDOUS-REGISTRY-2026-001/v2", "class": "REGULATORY_AUTHORITY", "title": "Thai DOA hazardous-substance registration listing", "organization": "Agricultural Regulatory Division, Department of Agriculture, Thailand", "url": "https://www.doa.go.th/ard/?page_id=386", "version_date": "2026-07-16", "retrieved_at": "2026-08-13", "locator": "official listing link labelled updated 16 July 2026; governed 3,501-page snapshot; registration 405-2555 retains expiry 22 March 2024", "sha256": "8b28fcfa31a40a021645645a33864fe858769af8f2264db22776e549df6916fe", "scope": "current administrative listing context and registration status", "limitations": ["listing has no crop, target, use, or approved-label fields", "no replacement registration or current renewal is bound"] },
+    { "id": "GS-DOA-PPD-INSECT-GUIDANCE-2023-001/v1", "class": "REGULATORY_SUPPORTING_OFFICIAL", "title": "Safe use of insecticides for crop pests", "organization": "Plant Protection Research and Development Office, Department of Agriculture, Thailand", "url": "https://www.doa.go.th/plprotect/wp-content/uploads/2023/12/%E0%B8%84%E0%B8%B3%E0%B9%81%E0%B8%99%E0%B8%B0%E0%B8%99%E0%B8%B3%E0%B8%81%E0%B8%B2%E0%B8%A3%E0%B9%83%E0%B8%8A%E0%B9%89%E0%B8%AA%E0%B8%B2%E0%B8%A3%E0%B8%86%E0%B9%88%E0%B8%B2%E0%B9%81%E0%B8%A1%E0%B8%A5%E0%B8%87%E0%B8%AA%E0%B8%B1%E0%B8%95%E0%B8%A7%E0%B9%8C%E0%B8%A8%E0%B8%B1%E0%B8%95%E0%B8%A3%E0%B8%B9%E0%B8%9E%E0%B8%B7%E0%B8%8A%E0%B8%AD%E0%B8%A2%E0%B9%88%E0%B8%B2%E0%B8%87%E0%B8%9B%E0%B8%A5%E0%B8%AD%E0%B8%94%E0%B8%A0%E0%B8%B1%E0%B8%A21.pdf", "version_date": "2023-12", "retrieved_at": "2026-08-13", "locator": "rice table; Brown Planthopper (Nilaparvata lugens) group; pymetrozine 50% WG row", "scope": "official rice, exact-target, use-pattern, formulation, concentration, and rate facts", "limitations": ["no registration number, certificate number, approved-label identifier, trade name, or product-record identifier", "official technical guidance is not an approved label for registration 405-2555"] },
     { "id": "MS-SYN-PLENUM-001/v1", "class": "MANUFACTURER_COMMERCIAL_SOURCE", "title": "Syngenta product identity lead retained by governed review", "version_date": "unavailable", "retrieved_at": "2026-08-13", "locator": "RR-083-TH-DECISION-AUTHORITY-001/v1 product lead", "scope": "manufacturer-attributed product identity and claimed rice/BPH relationship", "limitations": ["original source version is not established", "manufacturer claim is not regulatory authority"] }
   ],
   "entities": {
@@ -65,7 +68,45 @@
       }
     ],
     "registrations": [
-      { "id": "TH-REG-405-2555", "registration_number": "405-2555", "product_id": "PRODUCT-SYN-PLENUM-50WG-001", "registrant": "Syngenta Crop Protection Co., Ltd.", "active_ingredient_id": "AI-PYMETROZINE", "concentration": "50%", "formulation": "WG", "recorded_expiry": "2024-03-22", "current_status": "CURRENT_RENEWAL_UNRESOLVED", "crop_target_use_authority": "AUTHORITY_BLOCKED", "source_id": "GS-DOA-HAZARDOUS-REGISTRY-2568-001/v1" }
+      {
+        "id": "TH-REG-405-2555",
+        "registration_number": "405-2555",
+        "product_id": "PRODUCT-SYN-PLENUM-50WG-001",
+        "registrant": "Syngenta Crop Protection Co., Ltd.",
+        "active_ingredient_id": "AI-PYMETROZINE",
+        "concentration": "50%",
+        "formulation": "WG",
+        "recorded_issue": "2018-03-23",
+        "recorded_expiry": "2024-03-22",
+        "current_status": "EXPIRED",
+        "status_as_of": "2026-07-16",
+        "cancellation_status": "NOT_RECORDED",
+        "crop_target_use_authority": "AUTHORITY_BLOCKED",
+        "source_ids": ["GS-DOA-HAZARDOUS-REGISTRY-2568-001/v1", "GS-DOA-HAZARDOUS-REGISTRY-2026-001/v2"],
+        "lineage": {
+          "renewal_or_reissue_context": "registration number year 2555 is retained while the listed issue date is 23 March 2018",
+          "relationship_state": "NEEDS_REVIEW",
+          "replacement_registration_id": null,
+          "current_successor_bound": false,
+          "limitation": "the administrative row does not itself classify the event as renewal or establish a successor"
+        }
+      }
+    ],
+    "regulatory_use_assertions": [
+      {
+        "id": "TH-USE-BPH-PYM-UNBOUND-001",
+        "registration_id": "TH-REG-405-2555",
+        "product_id": "PRODUCT-SYN-PLENUM-50WG-001",
+        "crop": { "identity": "rice / ข้าว / Oryza sativa L.", "source_fact_state": "SUPPORTED", "registration_binding_state": "AUTHORITY_BLOCKED" },
+        "target": { "identity": "Brown Planthopper / เพลี้ยกระโดดสีน้ำตาล / Nilaparvata lugens", "source_fact_state": "SUPPORTED", "registration_binding_state": "AUTHORITY_BLOCKED" },
+        "use": { "source_fact_state": "SUPPORTED", "approved_use_binding_state": "AUTHORITY_BLOCKED" },
+        "rate_fact": { "value": "20 g per 20 L water", "source_role": "REGULATORY_SUPPORTING_OFFICIAL", "case_instruction": false },
+        "stable_identifier": null,
+        "binding_status": "AUTHORITY_BLOCKED",
+        "human_review_state": "REQUIRED",
+        "source_id": "GS-DOA-PPD-INSECT-GUIDANCE-2023-001/v1",
+        "limitations": ["the official guidance row has no registration or approved-label identifier", "registration 405-2555 is expired", "rate is a source fact and not a Case-specific recommendation"]
+      }
     ]
   },
   "assertions": [
@@ -76,7 +117,8 @@
     { "id": "AS-IRAC-PYM-001", "subject_id": "AI-PYMETROZINE", "source_id": "GS-IRAC-MOA-11.5-001/v1", "source_role": "MOA_CLASSIFICATION_AUTHORITY", "statement": "IRAC classifies pymetrozine in Group 9B.", "direct": true, "state": "SUPPORTED", "canonical": true },
     { "id": "AS-FRAC-TRI-001", "subject_id": "AI-TRICYCLAZOLE", "source_id": "GS-FRAC-MOA-2026-001/v1", "source_role": "MOA_CLASSIFICATION_AUTHORITY", "statement": "FRAC classifies tricyclazole in Group 16.1.", "direct": true, "state": "SUPPORTED", "canonical": true },
     { "id": "AS-MFR-PLENUM-001", "subject_id": "PRODUCT-SYN-PLENUM-50WG-001", "source_id": "MS-SYN-PLENUM-001/v1", "source_role": "MANUFACTURER_COMMERCIAL_SOURCE", "statement": "The retained manufacturer lead describes the product identity and claims rice/BPH relevance.", "direct": true, "state": "NEEDS_REVIEW", "canonical": false },
-    { "id": "AS-REG-PLENUM-001", "subject_id": "TH-REG-405-2555", "source_id": "GS-DOA-HAZARDOUS-REGISTRY-2568-001/v1", "source_role": "REGULATORY_AUTHORITY", "statement": "The official row confirms registration identity, product, ingredient, formulation, registrant, and a 2024 expiry date.", "direct": true, "state": "SUPPORTED", "canonical": true }
+    { "id": "AS-REG-PLENUM-001", "subject_id": "TH-REG-405-2555", "source_id": "GS-DOA-HAZARDOUS-REGISTRY-2026-001/v2", "source_role": "REGULATORY_AUTHORITY", "statement": "The current official listing context retains registration 405-2555 with the matched product identity and expiry on 22 March 2024; status is EXPIRED.", "details": { "registration_number": "405-2555", "issue_date": "2018-03-23", "expiry_date": "2024-03-22", "status_as_of": "2026-07-16", "current_status": "EXPIRED", "cancellation_status": "NOT_RECORDED" }, "direct": true, "state": "SUPPORTED", "canonical": true },
+    { "id": "AS-REG-BPH-GUIDANCE-001", "subject_id": "TH-USE-BPH-PYM-UNBOUND-001", "source_id": "GS-DOA-PPD-INSECT-GUIDANCE-2023-001/v1", "source_role": "REGULATORY_SUPPORTING_OFFICIAL", "statement": "Official DOA guidance records rice, Brown Planthopper, pymetrozine 50% WG, and 20 g per 20 L water as source facts, without a registration or approved-label identifier.", "details": { "crop": "ข้าว / rice", "target": "เพลี้ยกระโดดสีน้ำตาล / Brown Planthopper / Nilaparvata lugens", "active_ingredient": "pymetrozine", "concentration": "50%", "formulation": "WG", "rate": "20 g per 20 L water", "regulatory_fact_not_recommendation": true }, "direct": true, "state": "SUPPORTED", "canonical": false }
   ],
   "relationships": [
     { "id": "REL-CASE-BPH-SUPPORTS", "from": "AS-CASE-BPH-001", "predicate": "supports_case_investigation_of", "to": "BIO-BPH", "source_assertions": ["AS-CASE-BPH-001"], "state": "SUPPORTED", "direct": true, "limitations": ["Case evidence is not canonical knowledge"] },
@@ -85,13 +127,41 @@
     { "id": "REL-PRODUCT-AI", "from": "PRODUCT-SYN-PLENUM-50WG-001", "predicate": "contains_active_ingredient", "to": "AI-PYMETROZINE", "source_assertions": ["AS-MFR-PLENUM-001", "AS-REG-PLENUM-001"], "state": "SUPPORTED", "direct": true, "limitations": [] },
     { "id": "REL-PRODUCT-MFR", "from": "PRODUCT-SYN-PLENUM-50WG-001", "predicate": "described_by_manufacturer", "to": "MFR-SYNGENTA", "source_assertions": ["AS-MFR-PLENUM-001"], "state": "SUPPORTED", "direct": true, "limitations": ["manufacturer attribution is not regulatory authority"] },
     { "id": "REL-PRODUCT-REG", "from": "PRODUCT-SYN-PLENUM-50WG-001", "predicate": "exact_registration_identity_match", "to": "TH-REG-405-2555", "source_assertions": ["AS-REG-PLENUM-001"], "state": "SUPPORTED", "direct": true, "limitations": ["historical identity match is not current crop-target-use authority"] },
-    { "id": "REL-MFR-CLAIM-CTU", "from": "AS-MFR-PLENUM-001", "predicate": "claims_crop_target_relevance", "to": "BIO-BPH", "source_assertions": ["AS-MFR-PLENUM-001", "AS-REG-PLENUM-001"], "state": "AUTHORITY_BLOCKED", "direct": false, "limitations": ["official crop-target-use join absent", "current renewal status unresolved"] },
+    { "id": "REL-MFR-CLAIM-CTU", "from": "AS-MFR-PLENUM-001", "predicate": "claims_crop_target_relevance", "to": "BIO-BPH", "source_assertions": ["AS-MFR-PLENUM-001", "AS-REG-PLENUM-001"], "state": "AUTHORITY_BLOCKED", "direct": false, "limitations": ["manufacturer claim is not regulatory authority", "registration 405-2555 is expired"] },
+    { "id": "REL-REG-GUIDANCE-CTU-UNBOUND", "from": "TH-USE-BPH-PYM-UNBOUND-001", "predicate": "cannot_bind_approved_use_to_registration", "to": "TH-REG-405-2555", "source_assertions": ["AS-REG-BPH-GUIDANCE-001", "AS-REG-PLENUM-001"], "state": "AUTHORITY_BLOCKED", "direct": true, "limitations": ["no stable identifier connects the guidance row to registration 405-2555", "no official approved label or certificate was located", "the matched registration is expired"] },
     { "id": "REL-BLAST-TRI", "from": "BIO-BLAST", "predicate": "related_active_ingredient_knowledge", "to": "AI-TRICYCLAZOLE", "source_assertions": ["AS-SCI-BLAST-001", "AS-FRAC-TRI-001"], "state": "INCOMPLETE", "direct": false, "limitations": ["disease appearance and MoA data do not authorize chemical review"] },
     { "id": "REL-CASE-BLAST-CONFLICT", "from": "AS-CASE-BLAST-001", "predicate": "conflicts_with_expected_morphology", "to": "AS-SCI-BLAST-001", "source_assertions": ["AS-CASE-BLAST-001", "AS-SCI-BLAST-001"], "state": "CONFLICTING", "direct": true, "limitations": ["retain both assertions", "do not overwrite Field evidence or infer diagnosis"] },
     { "id": "REL-FAILED-CONTROL", "from": "CASE-087-BPH/v1", "predicate": "reported_outcome_does_not_promote", "to": "canonical_resistance_or_efficacy", "source_assertions": ["AS-CASE-BPH-001"], "state": "NOT_APPLICABLE", "direct": true, "limitations": ["failed control does not establish resistance", "Case result does not become efficacy knowledge"] }
   ],
   "views": [
-    { "id": "WV-MSI-BPH-001/v1", "subject_id": "BIO-BPH", "title": "Brown planthopper integrated knowledge", "case_assertions": ["AS-CASE-BPH-001"], "scientific_assertions": ["AS-SCI-BPH-001"], "moa_assertions": ["AS-IRAC-PYM-001"], "regulatory_assertions": ["AS-REG-PLENUM-001"], "manufacturer_assertions": ["AS-MFR-PLENUM-001"], "relationship_ids": ["REL-CASE-BPH-SUPPORTS", "REL-BPH-PYM", "REL-PYM-IRAC", "REL-PRODUCT-AI", "REL-PRODUCT-MFR", "REL-PRODUCT-REG", "REL-MFR-CLAIM-CTU"], "management_review": { "case_count": 10, "unit": "insects_per_plant", "state": "MANAGEMENT_REVIEW_JUSTIFIED", "options_exposed": true, "chemical_information_state": "CHEMICAL_REVIEW_INFORMATION_ONLY", "product_selected": false, "threshold_source": "AE-076-BPH-001/v1", "limitation": "10 insects/plant opens review; it does not require chemical treatment" }, "management_option_link": "CHEMICAL_REVIEW_INFORMATION_ONLY" },
+    {
+      "id": "WV-MSI-BPH-001/v1",
+      "subject_id": "BIO-BPH",
+      "title": "Brown planthopper integrated knowledge",
+      "case_assertions": ["AS-CASE-BPH-001"],
+      "scientific_assertions": ["AS-SCI-BPH-001"],
+      "moa_assertions": ["AS-IRAC-PYM-001"],
+      "regulatory_assertions": ["AS-REG-PLENUM-001", "AS-REG-BPH-GUIDANCE-001"],
+      "manufacturer_assertions": ["AS-MFR-PLENUM-001"],
+      "relationship_ids": ["REL-CASE-BPH-SUPPORTS", "REL-BPH-PYM", "REL-PYM-IRAC", "REL-PRODUCT-AI", "REL-PRODUCT-MFR", "REL-PRODUCT-REG", "REL-MFR-CLAIM-CTU", "REL-REG-GUIDANCE-CTU-UNBOUND"],
+      "management_review": { "case_count": 10, "unit": "insects_per_plant", "state": "MANAGEMENT_REVIEW_JUSTIFIED", "options_exposed": true, "chemical_information_state": "CHEMICAL_REVIEW_INFORMATION_ONLY", "product_selected": false, "threshold_source": "AE-076-BPH-001/v1", "limitation": "10 insects/plant opens review; it does not require chemical treatment" },
+      "regulatory_binding": {
+        "title": "Thai Regulatory Status",
+        "product_identity": "เพลนั่ม 50 ดับบลิวจี / pymetrozine 50% WG",
+        "registration_number": "405-2555",
+        "registration_status": "EXPIRED",
+        "status_as_of": "2026-07-16",
+        "crop": { "label": "Rice / ข้าว / Oryza sativa L.", "source_fact": "SUPPORTED", "registration_binding": "AUTHORITY_BLOCKED" },
+        "target": { "label": "Brown Planthopper / เพลี้ยกระโดดสีน้ำตาล / Nilaparvata lugens", "source_fact": "SUPPORTED", "registration_binding": "AUTHORITY_BLOCKED" },
+        "approved_use": "AUTHORITY_BLOCKED",
+        "rate_fact": "20 g per 20 L water — official guidance fact only; not a Case recommendation",
+        "authority_sources": ["GS-DOA-HAZARDOUS-REGISTRY-2026-001/v2", "GS-DOA-PPD-INSECT-GUIDANCE-2023-001/v1"],
+        "stable_identifier_binding": "BLOCKED_NO_SHARED_IDENTIFIER",
+        "human_review": "REQUIRED",
+        "limitations": ["no official approved label or certificate sharing registration 405-2555", "registration 405-2555 expired on 22 March 2024", "no current successor registration is bound", "official guidance and manufacturer claims cannot be converted into Case-specific advice"]
+      },
+      "management_option_link": "CHEMICAL_REVIEW_INFORMATION_ONLY"
+    },
     { "id": "WV-MSI-BLAST-001/v1", "subject_id": "BIO-BLAST", "title": "Rice blast integrated knowledge", "case_assertions": ["AS-CASE-BLAST-001"], "scientific_assertions": ["AS-SCI-BLAST-001"], "moa_assertions": ["AS-FRAC-TRI-001"], "regulatory_assertions": [], "manufacturer_assertions": [], "relationship_ids": ["REL-BLAST-TRI", "REL-CASE-BLAST-CONFLICT"], "management_option_link": "NO_CHEMICAL_SELECTION" }
   ],
   "conflict_states": ["SUPPORTED", "INCOMPLETE", "CONFLICTING", "AUTHORITY_BLOCKED", "NEEDS_REVIEW", "NOT_APPLICABLE"],

@@ -104,13 +104,13 @@ def test_historical_registration_identity_binds_but_current_ctu_is_blocked() -> 
     )
     assert registration["registration_number"] == "405-2555"
     assert registration["recorded_expiry"] == "2024-03-22"
-    assert registration["current_status"] == "CURRENT_RENEWAL_UNRESOLVED"
+    assert registration["current_status"] == "EXPIRED"
     assert product_binding["state"] == "SUPPORTED"
     assert "historical identity" in product_binding["limitations"][0]
     assert use_binding["state"] == "AUTHORITY_BLOCKED"
     assert set(use_binding["limitations"]) == {
-        "official crop-target-use join absent",
-        "current renewal status unresolved",
+        "manufacturer claim is not regulatory authority",
+        "registration 405-2555 is expired",
     }
 
 
@@ -153,7 +153,7 @@ def test_failed_control_boundary_has_no_resistance_or_instruction_output() -> No
     assert "rate" not in serialized and "moa_switch" not in serialized
 
 
-def test_gap_register_classifies_regulatory_binding_as_dominant_gap() -> None:
+def test_gap_register_classifies_regulatory_source_coverage_as_dominant_gap() -> None:
     document = (
         ROOT
         / "docs"
@@ -179,5 +179,5 @@ def test_gap_register_classifies_regulatory_binding_as_dominant_gap() -> None:
         "Provenance",
     ):
         assert f"| {step} |" in document
-    assert "REGULATORY_BINDING_GAP" in document
+    assert "REGULATORY_SOURCE_COVERAGE_GAP" in document
     assert "AUTHORITY_BLOCKED" in document

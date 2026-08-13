@@ -46,6 +46,7 @@ def test_source_classes_and_authority_roles_stay_separate() -> None:
         "CASE_EVIDENCE",
         "SCIENTIFIC_AUTHORITY",
         "REGULATORY_AUTHORITY",
+        "REGULATORY_SUPPORTING_OFFICIAL",
         "MOA_CLASSIFICATION_AUTHORITY",
         "MANUFACTURER_COMMERCIAL_SOURCE",
     ]
@@ -102,7 +103,8 @@ def test_registration_identity_does_not_become_crop_target_use_authority() -> No
     registration = data()["entities"]["registrations"][0]
     assert registration["registration_number"] == "405-2555"
     assert registration["recorded_expiry"] == "2024-03-22"
-    assert registration["current_status"] == "CURRENT_RENEWAL_UNRESOLVED"
+    assert registration["current_status"] == "EXPIRED"
+    assert registration["status_as_of"] == "2026-07-16"
     assert registration["crop_target_use_authority"] == "AUTHORITY_BLOCKED"
 
 
@@ -196,18 +198,21 @@ def test_every_displayed_assertion_and_relationship_has_provenance() -> None:
 def test_existing_knowledge_explorer_surface_contains_bounded_projection() -> None:
     page = PAGE.read_text(encoding="utf-8")
     app = APP.read_text(encoding="utf-8")
+    surface = page + app + DATA.read_text(encoding="utf-8")
     assert "data-integrated-knowledge" in page
     for required in (
         "Observed in this Case",
         "Scientific Knowledge",
         "Mode of Action",
         "Regulatory Status",
+        "Thai Regulatory Status",
         "Related Product Information",
         "Source & Provenance",
         "Gaps / Conflicts",
         "Product information ≠ recommendation",
+        "approved rate fact ≠ Case recommendation",
     ):
-        assert required in app
+        assert required in surface
     for prohibited in (
         "recommended product",
         "best product",
