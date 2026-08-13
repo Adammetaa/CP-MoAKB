@@ -27,11 +27,11 @@
       dateContext: "current web factsheet at retrieval",
     },
     doaRegistry: {
-      id: "GS-DOA-HAZARDOUS-REGISTRY-2026-001/v1",
+      id: "GS-DOA-HAZARDOUS-REGISTRY-2026-001/v2",
       authority: "Department of Agriculture, Thailand",
       url: "https://www.doa.go.th/ard/?page_id=386",
-      retrievalDate: "2026-08-11",
-      locator: "official hazardous-substance registration listing; local snapshot metadata 2026-07-16",
+      retrievalDate: "2026-08-13",
+      locator: "official hazardous-substance registration listing; page states updated 2026-07-16",
       dateContext: "time-dependent registration context",
     },
     doaAgriFactor: {
@@ -147,10 +147,27 @@
     return "ELIGIBLE_FOR_DECISION_REVIEW";
   }
   const priorityRegulatoryReview = Object.freeze({
-    "brown-planthopper": { sourceCrop: "ข้าว", sourceTarget: "เพลี้ยกระโดดสีน้ำตาล", source: sources.doaInsectGuidance, identity: true, crop: true, target: true, useContext: true, officialEvidence: true, recordIdentifier: null, defensibleJoinKey: false, registrationStatus: "UNRESOLVED", status: "REGULATORY_RELATIONSHIP_AMBIGUOUS", gaps: ["REGULATORY_JOIN_GAP", "REGISTRATION_STATUS_GAP"] },
-    leaffolder: { sourceCrop: "ข้าว", sourceTarget: "หนอนห่อใบข้าว", source: sources.doaInsectGuidance, identity: true, crop: true, target: true, useContext: true, officialEvidence: true, recordIdentifier: null, defensibleJoinKey: false, registrationStatus: "UNRESOLVED", status: "REGULATORY_RELATIONSHIP_AMBIGUOUS", gaps: ["REGULATORY_JOIN_GAP", "REGISTRATION_STATUS_GAP"] },
+    "brown-planthopper": { sourceCrop: "ข้าว", sourceTarget: "เพลี้ยกระโดดสีน้ำตาล", source: sources.doaInsectGuidance, candidateIdentities: ["Imidacloprid", "Buprofezin", "Fipronil"], identity: true, crop: true, target: true, useContext: true, officialEvidence: true, recordIdentifier: null, defensibleJoinKey: false, registrationStatus: "STATUS_UNRESOLVED", humanReviewRequired: true, status: "HUMAN_REVIEW_REQUIRED", gaps: ["REGULATORY_JOIN_GAP", "REGISTRATION_STATUS_GAP"] },
+    leaffolder: { sourceCrop: "ข้าว", sourceTarget: "หนอนห่อใบข้าว", source: sources.doaInsectGuidance, candidateIdentities: ["Cartap hydrochloride", "Fipronil", "Chlorantraniliprole"], identity: true, crop: true, target: true, useContext: true, officialEvidence: true, recordIdentifier: null, defensibleJoinKey: false, registrationStatus: "STATUS_UNRESOLVED", humanReviewRequired: true, status: "HUMAN_REVIEW_REQUIRED", gaps: ["REGULATORY_JOIN_GAP", "REGISTRATION_STATUS_GAP"] },
     blast: { sourceCrop: "ข้าว", sourceTarget: "โรคไหม้", officialEvidence: false, identity: true, crop: false, target: false, useContext: false, recordIdentifier: null, defensibleJoinKey: false, registrationStatus: "UNRESOLVED", status: "REGISTRATION_IDENTITY_MATCH_ONLY", gaps: ["REGULATORY_SOURCE_GAP", "REGULATORY_JOIN_GAP", "REGISTRATION_STATUS_GAP"] },
   });
 
-  window.SPDecisionAuthority = Object.freeze({ version: "action-crop-target-use-authority/v1", chemicalEligibilityVersion: "chemical-eligibility-authority/v1", sources, actionEvidence, unresolved, registration, eligibilityStates, evaluateRegulatoryChain, priorityRegulatoryReview });
+  const regulatoryResolution = Object.freeze({
+    id: "RR-077R-TH-FIRST-CHAIN-001/v1",
+    reviewDate: "2026-08-13",
+    reviewerRole: "Regulatory evidence reviewer",
+    strategy: "record-by-record human review",
+    candidatesInspected: 8,
+    officialLabelsLocated: 0,
+    stableJoins: 0,
+    completeChains: 0,
+    currentEligibleChains: 0,
+    acceptedRelationships: 0,
+    rejectedSimilarityOnlyJoins: 8,
+    unresolvedRelationships: 3,
+    result: "PARTIAL — HUMAN REGULATORY RESOLUTION STILL REQUIRED",
+    recommendationProduced: false,
+  });
+
+  window.SPDecisionAuthority = Object.freeze({ version: "action-crop-target-use-authority/v1", chemicalEligibilityVersion: "chemical-eligibility-authority/v1", sources, actionEvidence, unresolved, registration, eligibilityStates, evaluateRegulatoryChain, priorityRegulatoryReview, regulatoryResolution });
 })();

@@ -24,7 +24,7 @@ def _all() -> str:
 def test_complete_kes_family_is_governed() -> None:
     assert len(KNOWLEDGE_EXTRACTION_DOCUMENTS) == 17
     assert all((ROOT / path).is_file() for path in KNOWLEDGE_EXTRACTION_DOCUMENTS)
-    assert len(verify()) == 676
+    assert len(verify()) == 677
 
 
 def test_pipeline_is_complete_ordered_and_cannot_skip() -> None:

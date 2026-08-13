@@ -16,6 +16,8 @@ canonical object family.
   leaffolder, rice-field broadleaf weeds, or the governed sedge comparison.
 - No complete Thai Rice x Target x Use registration chain is accepted.
 - Eligible chemical options: **0**.
+- Sprint-077R record-by-record review found no stable official join key; the
+  priority insect relationships now explicitly require Human Review.
 
 The slice stops at chemical-review eligibility. It does not rank or recommend an
 active ingredient, product, formulation, rate, or program.
@@ -24,4 +26,5 @@ active ingredient, product, formulation, rate, or program.
 
 - [Action authority](action-authority.md)
 - [Regulatory authority](regulatory-authority.md)
+- [Sprint-077R regulatory resolution](regulatory-resolution.md)
 - [Decision matrix and unresolved issues](decision-matrix-and-issues.md)
