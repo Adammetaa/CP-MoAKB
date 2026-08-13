@@ -28,7 +28,7 @@ def test_exactly_one_real_source_and_two_candidates_are_governed() -> None:
     text = _all()
     assert text.count("# Governed Source Record:") == 1
     assert text.count("# Evidence Candidate EC-GOLDEN-") == 2
-    assert len(verify()) == 677
+    assert len(verify()) == 678
 
 
 def test_source_identity_version_authority_rights_and_provenance_are_explicit() -> None:

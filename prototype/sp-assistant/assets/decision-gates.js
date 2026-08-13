@@ -2,6 +2,12 @@
   "use strict";
 
   const ROLES = Object.freeze({ SUPPORTING: "SUPPORTING", REQUIRED_TO_DISTINGUISH: "REQUIRED_TO_DISTINGUISH", CONTRADICTING: "CONTRADICTING", CONTEXTUAL: "CONTEXTUAL", UNAVAILABLE: "UNAVAILABLE", UNRESOLVED: "UNRESOLVED" });
+  const observationVocabulary = Object.freeze({
+    plantParts: ["whole_plant", "tiller", "leaf", "leaf_sheath", "stem", "node", "panicle", "neck", "root"],
+    features: ["color", "lesion", "feeding_scar", "folding", "rolling", "cutting", "chewing", "drying", "wilting", "deformation", "stunting"],
+    distributions: ["single_plant", "scattered", "patch", "field_wide", "edge_associated", "water_related", "unresolved"],
+    photoScales: ["FIELD", "PLANT", "ORGAN", "DAMAGE", "VISIBLE_CAUSAL_OBJECT"],
+  });
   const requirement = (cue, label, claim, evidence, locator) => ({ cue, label, claim, evidence, locator });
   const profiles = Object.freeze({
     "brown-spot": {
@@ -37,6 +43,43 @@
       contextual: [["inflorescence", "รูปใบ เส้นใบ ลำต้น ดอก และการเจริญ"]], contradictions: [["triangular_stem", "ลำต้นสามเหลี่ยมต้องเปรียบเทียบกับกลุ่มกก"]], confirmation: "หลักฐานรองรับเพียงกลุ่มใบกว้าง; ชื่อผักปอดนาและชื่อวิทยาศาสตร์ยังต้องตรวจลักษณะเพิ่ม",
     },
   });
+
+  const symptomFamilies = Object.freeze({
+    leaf_lesion: { support: "SUPPORTED", cues: ["organ_leaf", "spot"], candidates: ["brown-spot", "blast"], next: { mission: "inspect_leaf_lesion", label: "inspect lesion shape and center", scale: "DAMAGE" }, evidence: ["CL-RDC-001-O/v1", "CL-RDC-003-O/v1"] },
+    yellow_orange_discoloration: { support: "PARTIALLY_SUPPORTED", cues: ["color"], candidates: ["brown-planthopper"], next: { mission: "inspect_plant_base", label: "inspect plant base and compare affected and healthy plants", scale: "PLANT" }, evidence: ["CL-RIC-002-O/v1"] },
+    folded_rolled_leaf: { support: "SUPPORTED", cues: ["organ_leaf", "folded_leaf"], candidates: ["leaffolder"], next: { mission: "unfold_affected_leaf", label: "unfold affected leaf and inspect feeding surface", scale: "DAMAGE" }, evidence: ["CL-RIC-006-O/v1"] },
+    chewed_scraped_leaf: { support: "PARTIALLY_SUPPORTED", cues: ["organ_leaf", "feeding_scar"], candidates: ["leaffolder"], next: { mission: "inspect_leaf_surface", label: "inspect both leaf surfaces and inside folded tissue", scale: "DAMAGE" }, evidence: ["CL-RIC-006-O/v1"] },
+    deadheart_like: { support: "UNSUPPORTED", cues: ["deadheart"], candidates: [], next: { mission: "inspect_inside_stem", label: "inspect tiller base and inside stem", scale: "ORGAN" }, evidence: [] },
+    whitehead_like: { support: "UNSUPPORTED", cues: ["whitehead"], candidates: [], next: { mission: "inspect_panicle_neck", label: "inspect panicle neck and stem interior", scale: "ORGAN" }, evidence: [] },
+    wilting_drying_patch: { support: "PARTIALLY_SUPPORTED", cues: ["wilt", "field_distribution"], candidates: ["brown-planthopper"], next: { mission: "inspect_plant_base", label: "inspect plant base above water level", scale: "ORGAN" }, evidence: ["CL-RIC-002-O/v1"] },
+    stunting_abnormal_tillering: { support: "UNSUPPORTED", cues: ["stunting"], candidates: [], next: { mission: "compare_whole_plants", label: "compare roots, tillers, and whole affected and healthy plants", scale: "PLANT" }, evidence: [] },
+    weed_presence: { support: "SUPPORTED", cues: ["weed_plant"], candidates: ["sedge-group", "rice-field-broadleaf"], next: { mission: "inspect_weed_stem_leaf", label: "inspect stem cross-section, nodes, leaves, and inflorescence", scale: "ORGAN" }, evidence: ["RL-RWC-019/v1", "CL-RWC-004-O/v1"] },
+    post_application_abnormality: { support: "UNSUPPORTED", cues: ["chemical_application_history"], candidates: [], next: { mission: "report_application_history", label: "report product, timing, rate, method, water, and affected distribution", scale: "FIELD" }, evidence: [] },
+  });
+
+  function beginFromObservation(input = {}) {
+    const family = symptomFamilies[input.family];
+    if (!family) return { status: "UNRESOLVED", candidates: [], evidenceRoles: Object.values(ROLES), knowledgeGap: "OBSERVATION_FAMILY_UNRESOLVED", identificationGate: "IDENTIFICATION_NOT_SUPPORTED", chemicalGate: "CHEMICAL_REVIEW_BLOCKED" };
+    const observed = [...new Set([...(input.observations || []), ...family.cues])];
+    const candidates = family.candidates.map((key) => ({ key, name: key, domain: profiles[key].domain }));
+    const projection = evaluate({ observations: observed, candidates, measurements: input.measurements || {} });
+    const context = {
+      cropStage: input.cropStage ? { value: input.cropStage, role: ROLES.CONTEXTUAL, limitation: "chronological age alone does not establish developmental stage" } : { role: ROLES.UNAVAILABLE },
+      environment: input.environment ? { value: input.environment, role: ROLES.CONTEXTUAL, limitation: "environment cannot independently establish identity or diagnosis" } : { role: ROLES.UNAVAILABLE },
+      managementHistory: input.managementHistory ? { value: input.managementHistory, role: ROLES.CONTEXTUAL, limitation: "CONTROL FAILURE ≠ RESISTANCE" } : { role: ROLES.UNAVAILABLE },
+    };
+    return {
+      model: "rice-damage-investigation/v1", start: "UNKNOWN_CAUSE_OBSERVATION", family: input.family, support: family.support,
+      observation: { crop: "rice", plantPart: input.plantPart || "unresolved", feature: input.feature || "unresolved", distribution: input.distribution || "unresolved", observed },
+      differentialCandidates: projection.candidateGates, supportingEvidence: projection.candidateGates.flatMap((gate) => gate.supporting), contradictingEvidence: projection.candidateGates.flatMap((gate) => gate.contradicting),
+      missingDistinguishingEvidence: projection.candidateGates.flatMap((gate) => gate.missing),
+      nextBestEvidence: { ...family.next, action: "PHOTO_MISSION_OR_DIRECT_OBSERVATION", boundary: "Photo received ≠ Photo analyzed" },
+      context, knowledgeGap: family.support === "SUPPORTED" ? null : `${input.family.toUpperCase()}_KNOWLEDGE_${family.support}`,
+      identificationGate: projection.candidateGates.some((gate) => gate.identification === "PROVISIONAL_IDENTIFICATION") ? "PROVISIONAL_IDENTIFICATION" : "IDENTIFICATION_NOT_SUPPORTED",
+      chemicalGate: "CHEMICAL_REVIEW_BLOCKED", recommendation: null,
+      boundaries: projection.boundaries,
+    };
+  }
 
   const has = (observations, cue) => cue === "larva_or_feeding" ? observations.includes("larva") || observations.includes("feeding_scar") : observations.includes(cue);
   function evaluateCandidate(candidate, observations) {
@@ -94,5 +137,5 @@
       boundaries: ["Candidate ≠ Diagnosis", "Severity ≠ Need-for-Action", "Need-for-Action ≠ pesticide recommendation", "Weather alone cannot escalate identification", "Nearby Case cannot escalate identification", "Photo received ≠ Photo analyzed", "CONTROL FAILURE ≠ RESISTANCE"],
     };
   }
-  window.SPDecisionGates = Object.freeze({ evaluate, profiles, roles: ROLES });
+  window.SPDecisionGates = Object.freeze({ evaluate, beginFromObservation, profiles, symptomFamilies, observationVocabulary, roles: ROLES });
 })();

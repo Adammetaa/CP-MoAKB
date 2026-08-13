@@ -27,4 +27,5 @@ active ingredient, product, formulation, rate, or program.
 - [Action authority](action-authority.md)
 - [Regulatory authority](regulatory-authority.md)
 - [Sprint-077R regulatory resolution](regulatory-resolution.md)
+- [Rice damage and symptom investigation](rice-damage-investigation.md)
 - [Decision matrix and unresolved issues](decision-matrix-and-issues.md)
