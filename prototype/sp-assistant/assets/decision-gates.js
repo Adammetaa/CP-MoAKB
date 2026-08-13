@@ -203,6 +203,64 @@
     };
   }
 
+  const applicationQualityStates = Object.freeze(["APPLICATION_CONTEXT_INCOMPLETE", "APPLICATION_CONTEXT_RECORDED", "APPLICATION_QUALITY_NOT_ESTABLISHED", "APPLICATION_ISSUE_PLAUSIBLE", "TARGET_IDENTITY_REVIEW_REQUIRED", "CURRENT_ACTIVITY_REVIEW_REQUIRED", "REINFESTATION_NOT_RESOLVED", "REGULATORY_USE_UNRESOLVED", "RESISTANCE_EVIDENCE_INSUFFICIENT", "RESISTANCE_HYPOTHESIS_REVIEWABLE", "MORE_EVIDENCE_REQUIRED", "HUMAN_REVIEW_REQUIRED"]);
+  const moaAuthority = Object.freeze({
+    imidacloprid: { system: "IRAC", group: "4A", evidence: "EV-IRAC-CPM-001/v1" }, buprofezin: { system: "IRAC", group: "16", evidence: "EV-IRAC-CPM-002/v1" }, fipronil: { system: "IRAC", group: "2B", evidence: "EV-IRAC-CPM-003/v1" },
+    carbendazim: { system: "FRAC", group: "1", evidence: "EV-FRAC-CPM-001/v1" }, isoprothiolane: { system: "FRAC", group: "6", evidence: "EV-FRAC-CPM-002/v1" }, propiconazole: { system: "FRAC", group: "3", evidence: "EV-FRAC-CPM-003/v1" }, tricyclazole: { system: "FRAC", group: "16.1", evidence: "EV-FRAC-CPM-004/v1" }, validamycin: { system: "FRAC", group: "U18", evidence: "EV-FRAC-CPM-005/v1" }, mancozeb: { system: "FRAC", group: "M03", evidence: "EV-FRAC-CPM-006/v1" },
+    "cyhalofop-butyl": { system: "HRAC", group: "1 / A", evidence: "EV-HRAC-CPM-001/v1" }, "bispyribac-sodium": { system: "HRAC", group: "2 / B", evidence: "EV-HRAC-CPM-002/v1" }, "bensulfuron-methyl": { system: "HRAC", group: "2 / B", evidence: "EV-HRAC-CPM-003/v1" }, penoxsulam: { system: "HRAC", group: "2 / B", evidence: "EV-HRAC-CPM-004/v1" }, quinclorac: { system: "HRAC", group: "4/29 / O.L", evidence: "EV-HRAC-CPM-005/v1" }, propanil: { system: "HRAC", group: "5 / C2", evidence: "EV-HRAC-CPM-006/v1" },
+  });
+
+  function evaluateFailedControl(input = {}) {
+    const outcome = input.outcomeObservation || {};
+    const intervention = input.intervention || {};
+    const identity = input.targetIdentity || {};
+    const activity = input.activityReview || {};
+    const originalRate = intervention.rate ? { ...intervention.rate, source: "USER", normalized: false } : { status: "UNKNOWN", source: "USER" };
+    const waterVolume = intervention.waterVolume ? { ...intervention.waterVolume, source: "USER" } : { status: "UNKNOWN", source: "USER" };
+    let arithmetic = { status: "NOT_CALCULATED" };
+    if (Number.isFinite(waterVolume.tankVolume) && Number.isFinite(waterVolume.treatedAreaPerTank) && waterVolume.treatedAreaPerTank > 0) arithmetic = { status: "CALCULATED", waterVolumePerRai: waterVolume.tankVolume / waterVolume.treatedAreaPerTank, unit: "reported_volume_per_rai", role: "CALCULATION", interpretation: null };
+    const history = (input.moaHistory || []).map((item) => { const authority = item.activeIngredient ? moaAuthority[String(item.activeIngredient).toLowerCase()] : null; return { originalIdentity: item.activeIngredient || null, identityResolved: Boolean(authority), classification: authority || null, source: authority ? "GOVERNED_MOA_AUTHORITY" : "USER_UNRESOLVED" }; });
+    const resolvedGroups = history.filter((item) => item.classification).map((item) => `${item.classification.system}:${item.classification.group}`);
+    const moaSummary = !history.length ? "MOA_HISTORY_INCOMPLETE" : history.some((item) => !item.identityResolved) ? "ACTIVE_IDENTITY_UNRESOLVED" : new Set(resolvedGroups).size === 1 && resolvedGroups.length > 1 ? "SAME_MOA_OBSERVED_REPEATEDLY" : "MULTIPLE_MOA_GROUPS_OBSERVED";
+    const regulatoryReview = identity.candidate && window.SPDecisionAuthority?.priorityRegulatoryReview?.[identity.candidate];
+    const regulatoryStatus = regulatoryReview ? window.SPDecisionAuthority.evaluateRegulatoryChain(regulatoryReview) : window.SPDecisionAuthority?.registration?.status || "NO_REGULATORY_EVIDENCE";
+    const applicationFields = ["applicationDate", "applicationTime", "product", "method"];
+    const contextComplete = applicationFields.every((field) => intervention[field]);
+    const applicationConcern = Boolean(input.applicationQualityObservation && (input.applicationQualityObservation.missedStrip || input.applicationQualityObservation.overlap || input.applicationQualityObservation.interruption || input.applicationQualityObservation.inconsistentPass));
+    const resistancePrerequisites = [identity.resolved, activity.currentActivitySupported, Boolean(intervention.applicationDate), Boolean(intervention.rate), Boolean(intervention.method), Boolean(input.weatherAtApplication), Boolean(input.fieldWater), history.length > 0, !["NO_REGULATORY_EVIDENCE", "REGISTRATION_IDENTITY_MATCH_ONLY", "HUMAN_REVIEW_REQUIRED"].includes(regulatoryStatus), input.reinfestationReviewed === true, input.alternativesReviewed === true];
+    const resistanceState = resistancePrerequisites.every(Boolean) ? "RESISTANCE_HYPOTHESIS_REVIEWABLE" : input.reportedControlFailure ? "RESISTANCE_EVIDENCE_INSUFFICIENT" : "RESISTANCE_NOT_ASSESSED";
+    const gaps = [];
+    if (!outcome.observed) gaps.push({ key: "OUTCOME_OBSERVATION", question: "What exactly remained or changed after the intervention?" });
+    if (!identity.resolved) gaps.push({ key: "TARGET_IDENTITY", question: "What target or damage source is currently observable?" });
+    if (!activity.currentActivitySupported && !activity.historicalDamageSupported) gaps.push({ key: "ACTIVITY_OR_DAMAGE_AGE", question: "Is there new damage or current activity, or only old visible damage?" });
+    if (!intervention.applicationDate) gaps.push({ key: "APPLICATION_TIME", question: "When was the application made and when was the outcome assessed?" });
+    if (!intervention.product) gaps.push({ key: "PRODUCT_IDENTITY", question: "What exact product wording was used?" });
+    if (!intervention.rate) gaps.push({ key: "RATE", question: "What rate, unit, and denominator were reported?" });
+    if (!intervention.waterVolume) gaps.push({ key: "WATER_VOLUME", question: "How much water and treated area per tank were reported?" });
+    if (!intervention.method) gaps.push({ key: "APPLICATION_METHOD", question: "Was the application by drone, ground sprayer, manual equipment, or another method?" });
+    if (!input.weatherAtApplication) gaps.push({ key: "WEATHER_AT_APPLICATION", question: "Was rain, wind, temperature, or humidity recorded at application time?" });
+    if (!input.fieldWater) gaps.push({ key: "FIELD_WATER", question: "What was the rice-field water condition at application?" });
+    const states = [contextComplete ? "APPLICATION_CONTEXT_RECORDED" : "APPLICATION_CONTEXT_INCOMPLETE", "APPLICATION_QUALITY_NOT_ESTABLISHED", applicationConcern ? "APPLICATION_ISSUE_PLAUSIBLE" : null, identity.resolved ? null : "TARGET_IDENTITY_REVIEW_REQUIRED", activity.currentActivitySupported || activity.historicalDamageSupported ? null : "CURRENT_ACTIVITY_REVIEW_REQUIRED", input.reinfestationReviewed === true ? null : "REINFESTATION_NOT_RESOLVED", regulatoryStatus === "ELIGIBLE_FOR_DECISION_REVIEW" ? null : "REGULATORY_USE_UNRESOLVED", resistanceState, gaps.length ? "MORE_EVIDENCE_REQUIRED" : null, "HUMAN_REVIEW_REQUIRED"].filter(Boolean);
+    return {
+      model: "application-failed-control-investigation/v1", start: input.reportedControlFailure ? "REPORTED_CONTROL_FAILURE" : "OUTCOME_UNRESOLVED", states: [...new Set(states)], evidenceRoles: Object.values(ROLES),
+      outcomeObservation: { expected: outcome.expected || null, observed: outcome.observed || null, observationTime: outcome.observationTime || null, affectedArea: outcome.affectedArea || null, treatedArea: outcome.treatedArea || null, untreatedComparison: outcome.untreatedComparison || null, targetStillObservable: outcome.targetStillObservable ?? null, newDamage: outcome.newDamage ?? null, oldDamage: outcome.oldDamage ?? null, progression: outcome.progression ?? null, cropInjury: outcome.cropInjury ?? null, boundary: "EXPECTED OUTCOME ≠ GOVERNED EFFICACY STANDARD" },
+      targetIdentity: { ...identity, role: ROLES.REQUIRED_TO_DISTINGUISH }, activityReview: { ...activity, boundary: "DAMAGE PRESENT ≠ CURRENT ACTIVITY" },
+      interventionHistory: { originalUserWording: intervention.originalUserWording || null, applicationDate: intervention.applicationDate || null, applicationTime: intervention.applicationTime || null, product: intervention.product || null, activeIngredient: intervention.activeIngredient || null, formulation: intervention.formulation || null, rate: originalRate, waterVolume, treatedArea: intervention.treatedArea || null, method: intervention.method || "unknown", applicationCount: intervention.applicationCount || null, interval: intervention.interval || null, tankMixture: intervention.tankMixture || [], adjuvant: intervention.adjuvant || null, fertilizerInTank: intervention.fertilizerInTank || null, operator: intervention.operator || null, equipment: intervention.equipment || null, notes: intervention.notes || null },
+      waterArithmetic: arithmetic, moaHistory: { records: history, summary: moaSummary, boundary: "SAME MOA REPEATED ≠ RESISTANCE" },
+      droneContext: intervention.method === "agricultural_drone" ? { role: ROLES.CONTEXTUAL, model: intervention.drone?.model || null, nozzleOrAtomizer: intervention.drone?.nozzleOrAtomizer || null, flightHeight: intervention.drone?.flightHeight || null, flightSpeed: intervention.drone?.flightSpeed || null, routeSpacing: intervention.drone?.routeSpacing || null, flowRate: intervention.drone?.flowRate || null, dropletSetting: intervention.drone?.dropletSetting || null, tankVolume: intervention.drone?.tankVolume || null, treatedAreaPerTank: intervention.drone?.treatedAreaPerTank || null, operationMode: intervention.drone?.operationMode || null, operatorEvents: intervention.drone?.operatorEvents || [], boundary: "DRONE TELEMETRY ≠ BIOLOGICAL DEPOSITION CONFIRMATION" } : { role: ROLES.UNAVAILABLE },
+      coverageDeposition: { observations: input.applicationQualityObservation || {}, role: ROLES.CONTEXTUAL, quality: "NOT_ESTABLISHED", boundary: "SPRAY OCCURRED ≠ TARGET RECEIVED EFFECTIVE DEPOSITION" },
+      weather: { atApplication: input.weatherAtApplication ? { value: input.weatherAtApplication, role: ROLES.CONTEXTUAL, retrieval: "USER_INITIATED_ONLY" } : { role: ROLES.UNAVAILABLE }, atObservation: input.weatherAtObservation ? { value: input.weatherAtObservation, role: ROLES.CONTEXTUAL } : { role: ROLES.UNAVAILABLE }, automaticCoordinateTransmission: false, thresholds: [] },
+      fieldWater: input.fieldWater ? { value: input.fieldWater, role: ROLES.CONTEXTUAL } : { role: ROLES.UNAVAILABLE }, reinfestation: { status: input.reinfestationReviewed === true ? "REVIEWED_NOT_PROVEN" : "UNRESOLVED", boundary: "PEST PRESENT AFTER APPLICATION ≠ SURVIVING ORIGINAL POPULATION; NEARBY CASE ≠ SOURCE OF REINFESTATION" },
+      regulatoryUse: { status: regulatoryStatus, cropTargetUseRegistration: "PRESERVED_SEPARATELY", boundary: "REGISTRATION ≠ EFFICACY" }, resistance: { status: resistanceState, prerequisites: resistancePrerequisites, confirmationAvailable: false, boundary: "CONTROL FAILURE ≠ RESISTANCE" },
+      differential: ["target_identity_unresolved", "wrong_or_mixed_target", "historical_damage_only", "current_activity_or_progression", "timing_or_stage_unresolved", "application_context_or_deposition", "environment_or_field_water", "product_or_mixture_identity", "regulatory_use_unresolved", "reinfestation_or_new_exposure", "resistance_hypothesis_unresolved"],
+      missingEvidence: gaps, nextBestEvidence: gaps[0] ? { action: "ASK_ONE_QUESTION", ...gaps[0] } : { action: "HUMAN_REVIEW" },
+      photoMission: { action: "HUMAN_CONFIRMED_CAPTURE", missions: ["CURRENT_TARGET_ACTIVITY", "NEW_VS_OLD_DAMAGE", "TREATED_VS_UNTREATED", "FIELD_PATTERN", "MISSED_OR_OVERLAP_PATTERN", "CROP_INJURY", "PLANT_BASE", "FOLDED_LEAF_INTERIOR"], automaticImageAnalysis: false, boundary: "Photo received ≠ Photo analyzed" },
+      economics: { inputsPreserved: ["treatedArea", "applicationCount", "productAmount", "applicationMethod", "reapplicationReported"], recommendation: null }, executionReadiness: "CASE_OBSERVATIONS_ONLY", learnReadiness: { sequence: ["Intervention", "T1", "T2", "Outcome observation"], boundary: "FIELD OUTCOME ≠ CANONICAL EFFICACY CLAIM" },
+      management: { readiness: "EVIDENCE_PREPARATION_ONLY", humanReviewRequired: true, reapplication: null, productRecommendation: null, activeIngredientRecommendation: null, doseIncreaseDecision: null, moaRotationRecommendation: null, chemicalGate: "CHEMICAL_REVIEW_BLOCKED" },
+      boundaries: ["OLD DAMAGE ≠ CONTROL FAILURE", "CURRENT ACTIVITY ≠ CHEMICAL ACTION REQUIRED", "APPLICATION BEFORE OUTCOME ≠ CAUSATION", "APPLICATION ISSUE PLAUSIBLE ≠ APPLICATION FAILURE CONFIRMED", "PRODUCT REGISTERED ≠ EFFECTIVE IN THIS CASE", "WEATHER ASSOCIATION ≠ CAUSATION"],
+    };
+  }
+
   const has = (observations, cue) => cue === "larva_or_feeding" ? observations.includes("larva") || observations.includes("feeding_scar") : observations.includes(cue);
   function evaluateCandidate(candidate, observations) {
     const profile = profiles[candidate.key];
@@ -259,5 +317,5 @@
       boundaries: ["Candidate ≠ Diagnosis", "Severity ≠ Need-for-Action", "Need-for-Action ≠ pesticide recommendation", "Weather alone cannot escalate identification", "Nearby Case cannot escalate identification", "Photo received ≠ Photo analyzed", "CONTROL FAILURE ≠ RESISTANCE"],
     };
   }
-  window.SPDecisionGates = Object.freeze({ evaluate, beginFromObservation, evaluateProgression, evaluateAbioticDifferential, compareTemporalObservations, profiles, symptomFamilies, observationVocabulary, progressionStates, lifeStageProfiles, abioticProfiles, abioticInvestigationStates, roles: ROLES });
+  window.SPDecisionGates = Object.freeze({ evaluate, beginFromObservation, evaluateProgression, evaluateAbioticDifferential, evaluateFailedControl, compareTemporalObservations, profiles, symptomFamilies, observationVocabulary, progressionStates, lifeStageProfiles, abioticProfiles, abioticInvestigationStates, applicationQualityStates, moaAuthority, roles: ROLES });
 })();

@@ -30,4 +30,5 @@ active ingredient, product, formulation, rate, or program.
 - [Rice damage and symptom investigation](rice-damage-investigation.md)
 - [Rice damage progression and life-stage investigation](rice-damage-progression.md)
 - [Rice abiotic differential investigation](rice-abiotic-differential.md)
+- [Application quality and failed-control investigation](application-failed-control-investigation.md)
 - [Decision matrix and unresolved issues](decision-matrix-and-issues.md)
