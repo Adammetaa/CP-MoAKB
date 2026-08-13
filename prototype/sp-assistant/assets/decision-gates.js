@@ -32,6 +32,12 @@
       required: [requirement("organ_stem", "ตรวจบริเวณโคนต้นเหนือระดับน้ำ", "CL-RIC-002-O/v1", "EV-RIC-002/v1", "RD printed pp.4-7 / PDF pp.15-18"), requirement("hopper", "พบเพลี้ยกระโดดบริเวณโคน", "CL-RIC-002-O/v1", "EV-RIC-002/v1", "RD printed pp.4-7 / PDF pp.15-18")],
       contextual: [["field_distribution", "ความเสียหายเป็นหย่อม"], ["wilt", "ต้นเหลืองหรือแห้ง"]], contradictions: [], confirmation: "การพบพาหะไม่ยืนยันการติดเชื้อไวรัส และอาการเสียหายอย่างเดียวไม่ยืนยันชนิดแมลง",
     },
+    "stem-borer-group": {
+      domain: "Insect", level: "group-level investigation only",
+      required: [requirement("organ_stem", "inspect affected tiller or stem interior", "CL-RIC-007-O/v1", "EV-RIC-007/v1", "RD printed pp.20-23 / PDF pp.31-34"), requirement("boring_evidence", "larva or boring evidence inside stem", "CL-RIC-007-B/v1", "EV-RIC-007/v1", "RD printed pp.20-23 / PDF pp.31-34")],
+      contextual: [["deadheart", "deadheart-like symptom before heading"], ["whitehead", "whitehead-like symptom after heading"], ["crop_stage", "explicit developmental stage, not age alone"]], contradictions: [],
+      confirmation: "deadheart or whitehead alone does not establish stem borer; source groups four named species and requires interior inspection",
+    },
     "sedge-group": {
       domain: "Weed", level: "group-level provisional identification",
       required: [requirement("weed_plant", "เป็นต้นวัชพืชในนาข้าว", "RL-RWC-019/v1", "EV-RWC-004/v1", "DOA printed p.3-45 / PDF p.50"), requirement("triangular_stem", "ลำต้นมีแนวโน้มเป็นสามเหลี่ยม", "RL-RWC-019/v1", "EV-RWC-004/v1", "DOA printed p.3-45 / PDF p.50")],
@@ -78,6 +84,57 @@
       identificationGate: projection.candidateGates.some((gate) => gate.identification === "PROVISIONAL_IDENTIFICATION") ? "PROVISIONAL_IDENTIFICATION" : "IDENTIFICATION_NOT_SUPPORTED",
       chemicalGate: "CHEMICAL_REVIEW_BLOCKED", recommendation: null,
       boundaries: projection.boundaries,
+    };
+  }
+
+  const progressionStates = Object.freeze(["CURRENT_ACTIVITY_SUPPORTED", "CURRENT_ACTIVITY_NOT_ESTABLISHED", "HISTORICAL_DAMAGE_SUPPORTED", "PROGRESSION_SUPPORTED", "PROGRESSION_NOT_ESTABLISHED", "MORE_EVIDENCE_REQUIRED"]);
+  const lifeStageProfiles = Object.freeze({
+    leaffolder: { stages: ["larva"], activityCues: ["larva", "feeding_scar", "webbing"], location: "inside folded leaf", claim: "CL-RIC-006-I/B/O/v1", evidence: "EV-RIC-006/v1", locator: "RD printed pp.16-19 / PDF pp.27-30", next: "unfold newly affected leaves" },
+    "brown-planthopper": { stages: ["nymph", "adult"], activityCues: ["hopper", "nymph", "adult"], location: "plant base above water level", claim: "CL-RIC-002-I/B/O/v1", evidence: "EV-RIC-002/v1", locator: "RD printed pp.4-7 / PDF pp.15-18", next: "inspect plant base again" },
+    "stem-borer-group": { stages: ["larva"], activityCues: ["larva", "boring_evidence", "frass"], location: "inside affected tiller or stem", claim: "CL-RIC-007-I/B/O/v1", evidence: "EV-RIC-007/v1", locator: "RD printed pp.20-23 / PDF pp.31-34", next: "inspect affected tiller interior" },
+    blast: { stages: [], activityCues: [], location: "lesion and newly affected organ", claim: "CL-RDC-001-O/v1", evidence: "EV-RDC-001A/v1; EV-RDC-001B/v1", locator: "KU pp.5-10; RRC pp.2-3", next: "record new lesions or lesion expansion" },
+    "brown-spot": { stages: [], activityCues: [], location: "lesion and newly affected organ", claim: "CL-RDC-003-O/v1", evidence: "EV-RDC-003A/v1; EV-RDC-003B/v1", locator: "KU pp.15-18; RRC pp.3-4", next: "record new lesions or lesion expansion" },
+  });
+
+  function compareTemporalObservations(observations = []) {
+    const ordered = observations.map((item, index) => ({ ...item, sequence: index + 1 }));
+    const latest = ordered.at(-1) || {};
+    const explicitProgression = latest.newAffectedTissue === true || latest.widerDistribution === true || latest.patchExpanded === true || latest.additionalOrgansAffected === true || latest.lesionExpansion === true;
+    const explicitHistorical = latest.oldDamageOnly === true || (latest.sameTissueOnly === true && latest.currentActivityObserved === false);
+    const recovery = latest.newHealthyGrowth === true;
+    return {
+      observations: ordered,
+      progression: explicitProgression ? "PROGRESSION_SUPPORTED" : observations.length > 1 && (latest.sameTissueOnly === true || recovery) ? "PROGRESSION_NOT_ESTABLISHED" : "MORE_EVIDENCE_REQUIRED",
+      damageAge: explicitHistorical ? "HISTORICAL_DAMAGE_SUPPORTED" : "DAMAGE_AGE_UNRESOLVED",
+      recovery: recovery ? "NEW_HEALTHY_GROWTH_OBSERVED" : "RECOVERY_UNRESOLVED",
+      limitation: "first-noticed time is not actual onset; elapsed time alone does not establish progression or biological damage age",
+    };
+  }
+
+  function evaluateProgression(input = {}) {
+    const temporal = compareTemporalObservations(input.observations || []);
+    const profile = lifeStageProfiles[input.candidate];
+    const latest = temporal.observations.at(-1) || {};
+    const cues = latest.activityCues || [];
+    const activityMatches = profile ? profile.activityCues.filter((cue) => cues.includes(cue)) : [];
+    const isDisease = input.candidate === "blast" || input.candidate === "brown-spot";
+    let activity = "CURRENT_ACTIVITY_NOT_ESTABLISHED";
+    if (!isDisease && activityMatches.length) activity = "CURRENT_ACTIVITY_SUPPORTED";
+    if (temporal.damageAge === "HISTORICAL_DAMAGE_SUPPORTED") activity = "HISTORICAL_DAMAGE_SUPPORTED";
+    const cropStage = input.cropStage ? { value: input.cropStage, role: ROLES.CONTEXTUAL, basis: "explicit developmental-stage observation" } : { role: ROLES.UNAVAILABLE, limitation: "crop age alone cannot establish developmental stage" };
+    const stageRelation = input.candidate === "stem-borer-group" ? (latest.symptom === "deadheart" && input.cropStage === "pre_heading" ? "SOURCE_SUPPORTED_DEADHEART_CONTEXT" : latest.symptom === "whitehead" && input.cropStage === "post_heading" ? "SOURCE_SUPPORTED_WHITEHEAD_CONTEXT" : "STAGE_RELATION_UNRESOLVED") : "NOT_APPLICABLE";
+    const next = profile?.next || "repeat direct observation";
+    const needForActionReadiness = activity === "CURRENT_ACTIVITY_SUPPORTED" && input.candidate === "brown-planthopper" ? "ACTION_EVIDENCE_MEASUREMENT_REQUIRED" : "ACTION_EVIDENCE_NOT_READY";
+    return {
+      model: "rice-damage-progression/v1", temporal, activity, progression: temporal.progression, progressionStates,
+      candidate: input.candidate || null,
+      lifeStage: profile ? { supportedStages: profile.stages, observed: activityMatches, inspectionLocation: profile.location, claim: profile.claim, evidence: profile.evidence, locator: profile.locator } : { status: "UNRESOLVED" },
+      diseaseBoundary: isDisease ? "SYMPTOM PROGRESSION ≠ PATHOGEN CONFIRMATION" : null,
+      cropStage, stageRelation,
+      nextBestEvidence: { action: "REPEAT_OBSERVATION_OR_PHOTO_MISSION", prompt: next, captureScales: ["FIELD", "PLANT", "ORGAN_OR_DAMAGE"], preserve: ["observationTime", "source"], automaticImageComparison: false, boundary: "Photo received ≠ Photo analyzed" },
+      needForActionReadiness, chemicalGate: "CHEMICAL_REVIEW_BLOCKED", recommendation: null,
+      context: { weather: { role: ROLES.CONTEXTUAL }, nearbyCase: { role: ROLES.CONTEXTUAL, boundary: "NEARBY CASE ≠ TRANSMISSION" }, failedControl: { role: ROLES.CONTEXTUAL, boundary: "CONTROL FAILURE ≠ RESISTANCE" } },
+      boundaries: ["DAMAGE PRESENT ≠ CAUSE CURRENTLY ACTIVE", "PEST DAMAGE ≠ PEST CURRENTLY PRESENT", "DISEASE SYMPTOM ≠ CURRENT INFECTION EVENT", "OLD DAMAGE ≠ CURRENT MANAGEMENT NEED", "CURRENT ACTIVITY ≠ CHEMICAL MANAGEMENT NEED"],
     };
   }
 
@@ -137,5 +194,5 @@
       boundaries: ["Candidate ≠ Diagnosis", "Severity ≠ Need-for-Action", "Need-for-Action ≠ pesticide recommendation", "Weather alone cannot escalate identification", "Nearby Case cannot escalate identification", "Photo received ≠ Photo analyzed", "CONTROL FAILURE ≠ RESISTANCE"],
     };
   }
-  window.SPDecisionGates = Object.freeze({ evaluate, beginFromObservation, profiles, symptomFamilies, observationVocabulary, roles: ROLES });
+  window.SPDecisionGates = Object.freeze({ evaluate, beginFromObservation, evaluateProgression, compareTemporalObservations, profiles, symptomFamilies, observationVocabulary, progressionStates, lifeStageProfiles, roles: ROLES });
 })();

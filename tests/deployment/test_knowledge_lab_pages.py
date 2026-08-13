@@ -248,7 +248,7 @@ def test_deployment_documentation_covers_owner_controls() -> None:
 
 
 def test_documentation_api_and_engineering_contracts_are_unchanged() -> None:
-    assert len(verify()) == 678
+    assert len(verify()) == 679
     assert sum(len(symbols) for symbols in PUBLIC_API_EXPORTS.values()) == 165
     changed_scope = "\n".join(
         (

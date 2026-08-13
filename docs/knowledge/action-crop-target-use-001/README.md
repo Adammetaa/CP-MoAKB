@@ -28,4 +28,5 @@ active ingredient, product, formulation, rate, or program.
 - [Regulatory authority](regulatory-authority.md)
 - [Sprint-077R regulatory resolution](regulatory-resolution.md)
 - [Rice damage and symptom investigation](rice-damage-investigation.md)
+- [Rice damage progression and life-stage investigation](rice-damage-progression.md)
 - [Decision matrix and unresolved issues](decision-matrix-and-issues.md)
