@@ -371,6 +371,47 @@
     };
   }
 
+  const managementSuitabilityStates = Object.freeze(["SUPPORTED_FOR_REVIEW", "MORE_EVIDENCE_REQUIRED", "NOT_SUPPORTED_BY_CURRENT_EVIDENCE", "BLOCKED_BY_AUTHORITY", "HUMAN_REVIEW_REQUIRED", "NOT_APPLICABLE"]);
+  function evaluateManagementSuitability(input = {}) {
+    const decision = input.needForActionDecision || evaluateNeedForAction(input);
+    const subject = input.subject || decision.subject;
+    const option = (optionClass, state, why, supporting = [], missing = [], limitations = [], humanReview = false) => ({ optionClass, state, why, supporting: supporting.map((item) => ({ item, role: ROLES.SUPPORTING })), missing: missing.map((item) => ({ item, role: ROLES.REQUIRED_TO_DISTINGUISH })), contradictions: [], context: [], whatCouldChangeState: missing[0] || null, limitations, humanReviewRequired: humanReview, suitabilityBoundary: "SUITABILITY FOR REVIEW ≠ RECOMMENDATION" });
+    const options = [];
+    const historicalOnly = input.activityState === "HISTORICAL_DAMAGE_SUPPORTED" && input.newDamage !== true && input.progressionState !== "PROGRESSION_SUPPORTED";
+    const unresolvedIdentity = !["PROVISIONAL_IDENTIFICATION", "IDENTIFICATION_SUPPORTED"].includes(input.identificationState) || input.alternativesResolved !== true;
+    const chemicalReviewRelevant = decision.needForAction === "MANAGEMENT_REVIEW_JUSTIFIED";
+    if (historicalOnly || decision.needForAction === "CONTINUE_MONITORING") options.push(option("MONITORING", "SUPPORTED_FOR_REVIEW", "Historical damage or burden below the applicable criterion supports follow-up observation.", [decision.decisionBasis], [], ["No monitoring interval is inferred."], false));
+    else if (decision.needForAction === "MORE_EVIDENCE_REQUIRED") options.push(option("MONITORING", "MORE_EVIDENCE_REQUIRED", "Monitoring is relevant after the missing decision measurement is defined.", [], [decision.nextBestDecisionEvidence?.question || "define the observation"], ["Observation target must remain explicit."], false));
+    else options.push(option("MONITORING", "NOT_APPLICABLE", "The current decision state does not make monitoring the primary review path."));
+    if (unresolvedIdentity) options.push(option("RE_INSPECTION", "SUPPORTED_FOR_REVIEW", "Candidate differentiation remains unresolved.", [input.identificationState || "unresolved identification"], [], ["Inspection does not establish diagnosis."], false));
+    else if (!input.activityState || input.activityState === "UNRESOLVED") options.push(option("RE_INSPECTION", "SUPPORTED_FOR_REVIEW", "Current activity needs direct field confirmation.", [], [], ["Photo received ≠ Photo analyzed."], false));
+    else options.push(option("RE_INSPECTION", "NOT_APPLICABLE", "No unresolved inspection mission currently changes the option state."));
+    const governedContext = input.governedManagementContext || {};
+    for (const cls of ["CULTURAL_MANAGEMENT", "MECHANICAL_MANAGEMENT", "WATER_MANAGEMENT", "BIOLOGICAL_MANAGEMENT"]) {
+      const record = governedContext[cls];
+      options.push(record?.caseRelevant === true ? option(cls, "SUPPORTED_FOR_REVIEW", "A governed subject/context relationship supports review.", [record.evidence], record.missing || [], record.limitations || [], Boolean(record.humanReviewRequired)) : record ? option(cls, "MORE_EVIDENCE_REQUIRED", "Governed general context exists but Case applicability is unresolved.", [record.evidence], record.missing || ["Case applicability"], record.limitations || [], Boolean(record.humanReviewRequired)) : option(cls, "NOT_SUPPORTED_BY_CURRENT_EVIDENCE", "No governed subject-specific Case relationship supports this option class."));
+    }
+    options.push(chemicalReviewRelevant ? option("CHEMICAL_MANAGEMENT_REVIEW", decision.twoKeyGate?.keyB?.satisfied ? "SUPPORTED_FOR_REVIEW" : "BLOCKED_BY_AUTHORITY", "Need-for-Action supports management review, but chemical readiness remains controlled by regulatory Key B.", [decision.needForAction], decision.twoKeyGate?.keyB?.satisfied ? [] : ["complete current Crop x Target x Use x Registration chain"], ["Chemical-management review does not identify or recommend a product."], !decision.twoKeyGate?.keyB?.satisfied) : option("CHEMICAL_MANAGEMENT_REVIEW", "NOT_SUPPORTED_BY_CURRENT_EVIDENCE", "Need-for-Action does not currently justify chemical-management review."));
+    const expertNeeded = decision.humanReview?.required || Boolean(input.failedControlContext) || input.causeFamily === "ABIOTIC" || ["blast", "brown-spot"].includes(subject);
+    options.push(expertNeeded ? option("EXPERT_REVIEW", "SUPPORTED_FOR_REVIEW", "Unresolved scientific, failed-control, abiotic, or authority evidence requires qualified review.", decision.humanReview?.reasons || [], [], ["Human Review cannot waive missing authority."], true) : option("EXPERT_REVIEW", "NOT_APPLICABLE", "No current Human Review trigger is recorded."));
+    options.push(option("OTHER_GOVERNED_MANAGEMENT", "NOT_SUPPORTED_BY_CURRENT_EVIDENCE", "No other governed management relationship is represented for this Case."));
+    let next = decision.nextBestDecisionEvidence || { key: "FIELD_REVIEW", question: "What evidence would change the current option state?" };
+    if (unresolvedIdentity) {
+      const missions = { leaffolder: "Open folded leaves and inspect for current larvae or fresh feeding.", "brown-planthopper": "Inspect the plant base above water and confirm current insects.", blast: "Compare new and old lesions and record progression.", "brown-spot": "Compare lesion form and newly affected tissue.", "rice-field-broadleaf": "Inspect weed stem, leaves, and distribution.", "sedge-group": "Inspect stem cross-section and inflorescence.", root: "Compare roots of affected and apparently healthy hills." };
+      next = { key: "RE_INSPECTION_MISSION", question: missions[subject] || missions[input.plantPart] || "Compare affected and apparently healthy plants and record distinguishing evidence." };
+    }
+    if (input.applicationQualityObservation && !input.applicationPatternConfirmed) next = { key: "APPLICATION_PATTERN_INSPECTION", question: "Does the observed pattern follow application passes, overlap, interruption, or appear field-wide?" };
+    return {
+      model: "management-case-suitability/v1", decisionTimestamp: input.decisionTimestamp || null, caseReference: input.caseReference || null, subject, workflowOrder: ["MONITORING", "RE_INSPECTION", "CULTURAL_MANAGEMENT", "MECHANICAL_MANAGEMENT", "WATER_MANAGEMENT", "BIOLOGICAL_MANAGEMENT", "CHEMICAL_MANAGEMENT_REVIEW", "EXPERT_REVIEW", "OTHER_GOVERNED_MANAGEMENT"], orderingSemantics: "deterministic workflow order; not best, preferred, effective, ranked, or recommended", optionStates: managementSuitabilityStates, decisionInputs: input, needForAction: decision.needForAction, options,
+      regulatoryGate: { keyB: decision.twoKeyGate?.keyB || { satisfied: false, status: "UNRESOLVED" }, chemicalGate: decision.chemicalGate },
+      nextBestDecisionQuestion: { action: "ASK_EXACTLY_ONE", key: next.key, question: next.question },
+      explainability: { identification: input.identificationState || "UNRESOLVED", currentActivity: input.activityState || "UNRESOLVED", progression: input.progressionState || "UNRESOLVED", burden: input.burdenEvidence || {}, actionEvidence: decision.actionEvidence, needForAction: decision.needForAction, regulatoryGate: decision.chemicalGate, humanReview: decision.humanReview, provenance: decision.traceability },
+      knowledgeGaps: { SCIENTIFIC_KNOWLEDGE_GAP: input.scientificGap || null, ACTION_AUTHORITY_GAP: decision.actionEvidence ? null : subject, MANAGEMENT_APPLICABILITY_GAP: options.filter((item) => ["MORE_EVIDENCE_REQUIRED", "NOT_SUPPORTED_BY_CURRENT_EVIDENCE"].includes(item.state)).map((item) => item.optionClass), REGULATORY_GAP: decision.twoKeyGate?.keyB?.satisfied ? null : decision.twoKeyGate?.keyB?.status || "UNRESOLVED", EFFICACY_GAP: "NOT_ASSESSED", CASE_EVIDENCE_GAP: decision.nextBestDecisionEvidence?.key || null, RESISTANCE_GAP: input.failedControlContext ? "RESISTANCE_HYPOTHESIS_UNRESOLVED" : null },
+      managementRecommendation: null, productRecommendation: null, activeIngredientRecommendation: null, rateRecommendation: null, execution: { planCreated: false, droneMissionCreated: false, scheduleCreated: false }, learn: { canonicalPromotion: false, boundary: "Case outcome ≠ canonical efficacy evidence" },
+      boundaries: ["MANAGEMENT_REVIEW_JUSTIFIED ≠ CHEMICAL_TREATMENT_REQUIRED", "WATER MANAGEMENT RELEVANT ≠ CHANGE WATER LEVEL", "CHEMICAL MANAGEMENT REVIEW ≠ CHEMICAL OPTIONS READY", "OLD LEAF DAMAGE ≠ CURRENT ACTIVITY", "CONTROL FAILURE ≠ RESISTANCE", "DRONE SETTINGS ≠ DEPOSITION CONFIRMATION", "NEARBY CASE ≠ TRANSMISSION", "WEATHER CONTEXT ≠ TREATMENT NEED"],
+    };
+  }
+
   const has = (observations, cue) => cue === "larva_or_feeding" ? observations.includes("larva") || observations.includes("feeding_scar") : observations.includes(cue);
   function evaluateCandidate(candidate, observations) {
     const profile = profiles[candidate.key];
@@ -427,5 +468,5 @@
       boundaries: ["Candidate ≠ Diagnosis", "Severity ≠ Need-for-Action", "Need-for-Action ≠ pesticide recommendation", "Weather alone cannot escalate identification", "Nearby Case cannot escalate identification", "Photo received ≠ Photo analyzed", "CONTROL FAILURE ≠ RESISTANCE"],
     };
   }
-  window.SPDecisionGates = Object.freeze({ evaluate, beginFromObservation, evaluateProgression, evaluateAbioticDifferential, evaluateFailedControl, evaluateNeedForAction, compareTemporalObservations, profiles, symptomFamilies, observationVocabulary, progressionStates, lifeStageProfiles, abioticProfiles, abioticInvestigationStates, applicationQualityStates, needForActionStates, managementOptionClasses, moaAuthority, roles: ROLES });
+  window.SPDecisionGates = Object.freeze({ evaluate, beginFromObservation, evaluateProgression, evaluateAbioticDifferential, evaluateFailedControl, evaluateNeedForAction, evaluateManagementSuitability, compareTemporalObservations, profiles, symptomFamilies, observationVocabulary, progressionStates, lifeStageProfiles, abioticProfiles, abioticInvestigationStates, applicationQualityStates, needForActionStates, managementOptionClasses, managementSuitabilityStates, moaAuthority, roles: ROLES });
 })();

@@ -33,4 +33,5 @@ active ingredient, product, formulation, rate, or program.
 - [Application quality and failed-control investigation](application-failed-control-investigation.md)
 - [Need-for-action and management decision gate](need-for-action-decision-gate.md)
 - [Thai decision-authority resolution](thai-decision-authority-resolution.md)
+- [Management option and Case suitability intelligence](management-case-suitability.md)
 - [Decision matrix and unresolved issues](decision-matrix-and-issues.md)
