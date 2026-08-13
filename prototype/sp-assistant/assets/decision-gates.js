@@ -138,6 +138,71 @@
     };
   }
 
+  const abioticInvestigationStates = Object.freeze(["BIOTIC_CAUSE_REMAINS_PLAUSIBLE", "ABIOTIC_CAUSE_REMAINS_PLAUSIBLE", "MULTIPLE_CAUSE_FAMILIES_REMAIN", "CHEMICAL_INJURY_NOT_ESTABLISHED", "NUTRIENT_CAUSE_NOT_ESTABLISHED", "WATER_ROOT_CAUSE_NOT_ESTABLISHED", "MORE_EVIDENCE_REQUIRED"]);
+  const abioticProfiles = Object.freeze({
+    "nitrogen-related-condition": {
+      domain: "Nutrient", causeFamily: "ABIOTIC", evidence: "EV-RAD-001/v1", claim: "CL-RAD-001-O/v1", locator: "IRRI Rice Knowledge Bank, Nitrogen deficiency, How to identify",
+      required: ["yellow_or_pale", "older_leaves_or_whole_plant"], distinguishing: ["leaf_age_order", "whole_plant_expression", "stunting", "reduced_tillering", "laboratory_test"],
+      limitation: "Yellowing alone does not establish nitrogen deficiency; IRRI identifies sulfur and iron look-alikes and calls for soil and plant laboratory testing to confirm cause.",
+    },
+    "potassium-related-condition": {
+      domain: "Nutrient", causeFamily: "ABIOTIC", evidence: "EV-RAD-002/v1", claim: "CL-RAD-002-O/v1", locator: "IRRI Rice Knowledge Bank, Potassium (K), deficiency symptoms",
+      required: ["older_leaf_tip_or_margin_injury"], distinguishing: ["leaf_age_order", "tip_or_margin_location", "field_distribution", "root_condition", "tungro_evidence"],
+      limitation: "Tip or margin injury alone does not establish potassium deficiency; IRRI identifies tungro as a look-alike.",
+    },
+    "root-knot-context": {
+      domain: "Water / Root", causeFamily: "BIOTIC", evidence: "EV-RDC-011A/v1; EV-RDC-011B/v1", claim: "CL-RDC-011-I/C/O/v1", locator: "governed rice disease corpus: root-knot",
+      required: ["root_galls"], distinguishing: ["inspect_roots", "field_water_observation", "production_context"], limitation: "Yellowing or stunting without root galls does not establish root-knot.",
+    },
+    "akiochi-root-zone-context": {
+      domain: "Water / Root", causeFamily: "ABIOTIC", evidence: "EV-RDC-012A/v1; EV-RDC-012B/v1", claim: "CL-RDC-012-I/C/O/v1", locator: "governed rice disease corpus: Akiochi",
+      required: ["black_root_rot", "tillering_stage"], distinguishing: ["inspect_roots", "residue_decomposition_context", "new_roots_above_soil"], limitation: "Water condition or lower-leaf yellowing alone does not establish Akiochi.",
+    },
+  });
+
+  function evaluateAbioticDifferential(input = {}) {
+    const observations = [...new Set(input.observations || [])];
+    const family = input.observableFamily || "unresolved";
+    const plausible = [];
+    if (["yellowing_paling", "orange_discoloration", "stunting_abnormal_tillering", "uneven_growth"].includes(family)) plausible.push("nitrogen-related-condition", "root-knot-context", "akiochi-root-zone-context", "brown-planthopper");
+    if (["leaf_tip_margin_drying", "leaf_burn_scorch"].includes(family)) plausible.push("potassium-related-condition", "blast", "brown-spot");
+    if (["wilting", "drying_patches", "poor_root_condition"].includes(family)) plausible.push("root-knot-context", "akiochi-root-zone-context", "brown-planthopper");
+    const candidates = [...new Set(plausible)].map((key) => {
+      const profile = abioticProfiles[key];
+      if (!profile) return { key, domain: profiles[key]?.domain || "Unresolved", causeFamily: "BIOTIC", role: ROLES.REQUIRED_TO_DISTINGUISH, status: "REMAINS_PLAUSIBLE" };
+      const present = profile.required.filter((cue) => observations.includes(cue));
+      return { key, domain: profile.domain, causeFamily: profile.causeFamily, role: present.length ? ROLES.SUPPORTING : ROLES.REQUIRED_TO_DISTINGUISH, status: present.length === profile.required.length ? "SOURCE_PATTERN_SUPPORTED_NOT_DIAGNOSIS" : "REMAINS_PLAUSIBLE", present, missing: profile.required.filter((cue) => !present.includes(cue)), distinguishing: profile.distinguishing, claim: profile.claim, evidence: profile.evidence, locator: profile.locator, limitation: profile.limitation };
+    });
+    const hasBiotic = candidates.some((item) => item.causeFamily === "BIOTIC");
+    const hasAbiotic = candidates.some((item) => item.causeFamily === "ABIOTIC");
+    const applicationReported = Boolean(input.applicationContext || family === "post_application_abnormality");
+    const nutrientSupported = candidates.some((item) => item.domain === "Nutrient" && item.status === "SOURCE_PATTERN_SUPPORTED_NOT_DIAGNOSIS");
+    const waterRootSupported = candidates.some((item) => item.domain === "Water / Root" && item.status === "SOURCE_PATTERN_SUPPORTED_NOT_DIAGNOSIS");
+    const states = [hasBiotic ? "BIOTIC_CAUSE_REMAINS_PLAUSIBLE" : null, hasAbiotic ? "ABIOTIC_CAUSE_REMAINS_PLAUSIBLE" : null, hasBiotic && hasAbiotic ? "MULTIPLE_CAUSE_FAMILIES_REMAIN" : null, applicationReported ? "CHEMICAL_INJURY_NOT_ESTABLISHED" : null, nutrientSupported ? null : "NUTRIENT_CAUSE_NOT_ESTABLISHED", waterRootSupported ? null : "WATER_ROOT_CAUSE_NOT_ESTABLISHED", "MORE_EVIDENCE_REQUIRED"].filter(Boolean);
+    const temporal = compareTemporalObservations(input.temporalObservations || []);
+    return {
+      model: "rice-abiotic-differential/v1", observableFamily: family, evidenceRoles: Object.values(ROLES), investigationStates: [...new Set(states)], candidates,
+      observations: {
+        phenotype: input.phenotype || null, plantPart: input.plantPart || "unresolved", distribution: input.distribution || "unresolved", cropStage: input.cropStage || "unresolved",
+        fieldWater: input.fieldWater ? { value: input.fieldWater, role: ROLES.CONTEXTUAL } : { role: ROLES.UNAVAILABLE },
+        rootCondition: input.rootCondition ? { value: input.rootCondition, role: ROLES.REQUIRED_TO_DISTINGUISH } : { role: ROLES.UNAVAILABLE },
+        plantResponse: input.plantResponse ? { value: input.plantResponse, role: ROLES.CONTEXTUAL } : { role: ROLES.UNAVAILABLE },
+        nutrientContext: input.nutrientContext ? { value: input.nutrientContext, role: ROLES.CONTEXTUAL } : { role: ROLES.UNAVAILABLE },
+        applicationContext: applicationReported ? { value: input.applicationContext || {}, role: ROLES.REQUIRED_TO_DISTINGUISH, boundary: "APPLICATION BEFORE SYMPTOM ≠ APPLICATION CAUSED SYMPTOM" } : { role: ROLES.UNAVAILABLE },
+        environment: input.environment ? { value: input.environment, role: ROLES.CONTEXTUAL, boundary: "WEATHER ASSOCIATION ≠ CAUSATION" } : { role: ROLES.UNAVAILABLE },
+      },
+      spatial: { pattern: input.distribution || "unresolved", role: ROLES.CONTEXTUAL, applicationPattern: ["application_line", "overlap_like"].includes(input.distribution || ""), boundary: "SPATIAL PATTERN ≠ CAUSE" },
+      temporal: { ...temporal, eventOrder: input.eventOrder || [], boundary: "TEMPORAL ASSOCIATION ≠ CAUSATION" },
+      nextBestEvidence: ["compare affected and apparently healthy hills", "record which leaves were affected first", "inspect and photograph roots", "record current and recent water conditions", "record recent chemical and fertilizer applications", "compare treated and untreated areas if available"],
+      photoMission: { action: "HUMAN_CONFIRMED_CAPTURE", captureScales: ["FIELD", "PLANT", "ORGAN", "DAMAGE", "COMPARISON", "APPLICATION_CONTEXT"], automaticImageAnalysis: false, boundary: "Photo received ≠ Photo analyzed" },
+      failedControl: { role: ROLES.CONTEXTUAL, alternatives: ["target_identity_unresolved", "old_damage_visible", "current_activity_continues", "application_issue", "environmental_context", "timing_issue", "regulatory_use_mismatch", "resistance_hypothesis_unresolved", "insufficient_evidence"], boundary: "CONTROL FAILURE ≠ RESISTANCE" },
+      knowledgeGaps: { NUTRIENT: "THAI_LOCAL_VALIDATION_REQUIRED", "WATER / ROOT": "ONLY_ROOT_KNOT_AND_AKIOCHI_RELATIONSHIPS_GOVERNED", ENVIRONMENT: "SUBJECT_SPECIFIC_CAUSAL_RELATIONSHIPS_UNRESOLVED", "CHEMICAL INJURY": "PRODUCT_OR_ACTIVE_SPECIFIC_CAUSATION_UNRESOLVED", APPLICATION: "CASE_OBSERVATIONS_ONLY", RECOVERY: "CONDITION_SPECIFIC_RECOVERY_RELATIONSHIPS_UNRESOLVED", "TEMPORAL CAUSALITY": "UNRESOLVED", "FIELD PATTERN": "CONTEXTUAL_ONLY", "THAI-LOCAL VALIDATION": "NUTRIENT_RELATIONSHIPS_REQUIRE_THAI_REVIEW" },
+      understandDomains: ["Crop", "Disease", "Insect", "Weed", "Nutrient", "Water / Root", "Environment", "Chemical / Application Context", "MoA", "Resistance Context"],
+      needForAction: "NOT_EVALUATED", chemicalGate: "CHEMICAL_REVIEW_BLOCKED", recommendation: null,
+      boundaries: ["SYMPTOM ≠ CAUSE", "YELLOWING ≠ NUTRIENT DEFICIENCY", "LEAF BURN ≠ DISEASE", "ABNORMALITY AFTER APPLICATION ≠ CHEMICAL INJURY CONFIRMED", "Identification ≠ Severity ≠ Current Activity ≠ Need-for-Action ≠ Management Selection ≠ Chemical Eligibility"],
+    };
+  }
+
   const has = (observations, cue) => cue === "larva_or_feeding" ? observations.includes("larva") || observations.includes("feeding_scar") : observations.includes(cue);
   function evaluateCandidate(candidate, observations) {
     const profile = profiles[candidate.key];
@@ -194,5 +259,5 @@
       boundaries: ["Candidate ≠ Diagnosis", "Severity ≠ Need-for-Action", "Need-for-Action ≠ pesticide recommendation", "Weather alone cannot escalate identification", "Nearby Case cannot escalate identification", "Photo received ≠ Photo analyzed", "CONTROL FAILURE ≠ RESISTANCE"],
     };
   }
-  window.SPDecisionGates = Object.freeze({ evaluate, beginFromObservation, evaluateProgression, compareTemporalObservations, profiles, symptomFamilies, observationVocabulary, progressionStates, lifeStageProfiles, roles: ROLES });
+  window.SPDecisionGates = Object.freeze({ evaluate, beginFromObservation, evaluateProgression, evaluateAbioticDifferential, compareTemporalObservations, profiles, symptomFamilies, observationVocabulary, progressionStates, lifeStageProfiles, abioticProfiles, abioticInvestigationStates, roles: ROLES });
 })();

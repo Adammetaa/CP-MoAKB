@@ -73,4 +73,4 @@ def test_failed_control_remains_investigation_and_architecture_is_unchanged() ->
 
 
 def test_documentation_verifier_includes_management_integration() -> None:
-    assert len(verify()) == 679
+    assert len(verify()) == 680

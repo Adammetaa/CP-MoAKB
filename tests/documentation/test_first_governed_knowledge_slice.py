@@ -32,7 +32,7 @@ def test_two_real_claim_candidates_have_exact_evidence_traceability() -> None:
         "CL-GOLDEN-002/v1",
     ):
         assert required in text
-    assert len(verify()) == 679
+    assert len(verify()) == 680
 
 
 def test_claim_review_is_complete_deferred_and_preserves_the_blocker() -> None:
