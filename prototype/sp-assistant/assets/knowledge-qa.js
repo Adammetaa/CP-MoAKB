@@ -3,7 +3,7 @@
 
   const STORAGE_KEY = "sp_assistant_spa_reviews_v1";
   const SCHEMA_VERSION = "1.0";
-  const APP_VERSION = "sprint-098";
+  const APP_VERSION = "sprint-099";
   const REVIEW_STATES = Object.freeze(["CORRECT", "PENDING_REVIEW", "SUPPORTED_CORRECTION", "REJECTED_CORRECTION", "SUPERSEDED"]);
   const context = { conversationId: crypto.randomUUID(), subject: null, lastAnswer: null, answers: new Map() };
   const sources = {
@@ -33,10 +33,11 @@
   function route(text) {
     const query = normalize(text);
     if (isCaseFirst(text)) return null;
-    if (/source|ที่มา|มาจากไหน/.test(query)) return "SOURCE_LOOKUP";
+    if (/source|ที่มา|มาจากไหน|แหล่งข้อมูล/.test(query)) return "SOURCE_LOOKUP";
     if (/ทะเบียน|registered|ผลิตภัณฑ์|ชื่อการค้า|ชื่อยา/.test(query)) return "SUBSTANCE_TO_PRODUCT";
     if (/กลุ่มอื่น|กลุ่มเดียว|ใกล้เคียง|related/.test(query)) return "RELATED_SUBSTANCE_LOOKUP";
     if (/ออกฤทธิ์|กลไก|ยับยั้ง|อยู่กลุ่มอะไร|irac|frac|hrac|mechanism|moa/.test(query)) return "MECHANISM_LOOKUP";
+    if (/ใช้กับอะไร|เป้าหมายที่.*เชื่อมโยง|target association/.test(query) && resolveSubject(text)) return "SUBSTANCE_TO_TARGET";
     if (/เพลี้ย|โรคไหม้|วัชพืช|เชื้อรา|แบคทีเรีย|target/.test(query) && !Object.keys(subjects).some((name) => query.includes(name))) return "TARGET_TO_SUBSTANCE";
     if (/คืออะไร|เป็นสารอะไร/.test(query) && explicitSubject(text)) return "ACTIVE_INGREDIENT_LOOKUP";
     return resolveSubject(text) ? "ACTIVE_INGREDIENT_LOOKUP" : null;
@@ -47,6 +48,27 @@
   function productCards(subject) {
     if (!subject.products.length) return "<p>ยังไม่พบระเบียนผลิตภัณฑ์ไทยที่รองรับใน governed knowledge ชุดนี้ — ไม่ได้หมายความว่าไม่มีผลิตภัณฑ์</p>";
     return subject.products.map((product) => `<article class="knowledge-product"><h4>${esc(product.trade)}</h4><dl><dt>สาร / สูตร</dt><dd>${esc(subject.name)} · ${esc(product.formulation)}</dd><dt>เลขทะเบียน</dt><dd>${esc(product.registration)}</dd><dt>ทะเบียนผลิตภัณฑ์</dt><dd><strong>${esc(product.registrationLabel)}</strong> · ${esc(product.registrationState)}</dd><dt>สิทธิ์พืช–เป้าหมาย–การใช้</dt><dd><strong>${esc(product.ctuLabel)}</strong> · ${esc(product.ctu)}</dd><dt>ผู้ขึ้นทะเบียน</dt><dd>${esc(product.registrant)}</dd><dt>ผู้นำเข้า / ผู้จัดจำหน่าย</dt><dd>${esc(product.importer)} / ${esc(product.distributor)}</dd><dt>ออก / หมดอายุ / ยกเลิก</dt><dd>${esc(product.issue)} / ${esc(product.expiry)} / ${esc(product.cancellation)}</dd></dl></article>`).join("");
+  }
+  const missingKnowledge = "ยังไม่พบข้อมูลในชุดความรู้ปัจจุบัน";
+  function compactProducts(subject) {
+    if (!subject.products.length) return `<p>${missingKnowledge}</p>`;
+    return `<ul>${subject.products.map((product) => `<li><strong>${esc(product.trade)}</strong> · ${esc(product.formulation)} · ทะเบียน ${esc(product.registration)} · ${esc(product.registrationState)} · CTU ${esc(product.ctu)}</li>`).join("")}</ul>`;
+  }
+  function richAnswer(subject) {
+    const displayName = `${subject.thai ? `${subject.thai} / ` : ""}${subject.name}`;
+    const related = subject.related.length
+      ? `<ul>${subject.related.map((item) => `<li><strong>${esc(item.name)}</strong> · ${esc(item.relation)} · ${esc(item.group)}</li>`).join("")}</ul>`
+      : `<p>${missingKnowledge}</p>`;
+    const targets = subject.targets.length
+      ? `<ul>${subject.targets.map((target) => `<li>${esc(target)}</li>`).join("")}</ul>`
+      : `<p>${missingKnowledge}</p>`;
+    return {
+      title: displayName,
+      body: `<p class="knowledge-summary"><strong>${esc(displayName)}</strong> เป็น${esc(subject.category)}ในกลุ่ม <strong>${esc(subject.authority)} ${esc(subject.group)}</strong> ตามชุดความรู้ที่กำกับไว้ปัจจุบัน</p><section class="knowledge-section"><h4>กลไกการออกฤทธิ์</h4><p>${esc(subject.mechanism)}</p><p class="section-boundary">กลไก ≠ ประสิทธิภาพภาคสนาม ≠ คำแนะนำ</p></section><section class="knowledge-section"><h4>สารที่เกี่ยวข้อง</h4>${related}<p class="section-boundary">สารที่มีกลไกเกี่ยวข้อง ≠ ใช้แทนกันได้</p></section><section class="knowledge-section"><h4>เป้าหมายที่มีหลักฐานเชื่อมโยง</h4>${targets}</section><section class="knowledge-section"><h4>ผลิตภัณฑ์ที่พบ</h4>${compactProducts(subject)}<p class="section-boundary">ทะเบียนผลิตภัณฑ์ ≠ สิทธิ์พืช–เป้าหมาย–การใช้ (CTU) · ไม่ใช่ catalog ทั้งหมด · ไม่มีการจัดอันดับ</p></section>`,
+    };
+  }
+  function followUpActions() {
+    return `<nav class="knowledge-follow-ups" aria-label="คำถามต่อเนื่อง"><button type="button" data-knowledge-follow-up="ออกฤทธิ์ยังไง">ออกฤทธิ์ยังไง</button><button type="button" data-knowledge-follow-up="ใช้กับอะไร">ใช้กับอะไร</button><button type="button" data-knowledge-follow-up="มีกลุ่มอื่นไหม">มีกลุ่มอื่นไหม</button><button type="button" data-knowledge-follow-up="มีชื่อยาอะไรบ้าง">มีชื่อยาอะไรบ้าง</button><button type="button" data-knowledge-follow-up="ดูแหล่งข้อมูล">ดูแหล่งข้อมูล</button></nav>`;
   }
   function compose(intent, subjectKey, text) {
     const unresolved = explicitSubject(text)?.replace("UNRESOLVED:", "");
@@ -60,9 +82,10 @@
     if (!subject) return null;
     if (intent === "MECHANISM_LOOKUP") return { subjectKey, title: `กลไกของ ${subject.name}`, body: `<p><strong>${subject.authority} ${subject.group}</strong></p><p>${esc(subject.mechanism)}</p>`, evidence: subject.evidence, limitation: "Mechanism ≠ field efficacy ≠ recommendation" };
     if (intent === "RELATED_SUBSTANCE_LOOKUP") return { subjectKey, title: `สารที่เกี่ยวข้องกับ ${subject.name}`, body: subject.related.length ? subject.related.map((item) => `<p><strong>${esc(item.relation)}</strong> · ${esc(item.name)} · ${esc(item.group)}</p>`).join("") : "<p>ยังไม่พบ related active ingredient ที่รองรับใน governed knowledge ชุดนี้</p>", evidence: subject.evidence, limitation: "same MoA ≠ interchangeable; different MoA ≠ better or a resistance solution" };
+    if (intent === "SUBSTANCE_TO_TARGET") return { subjectKey, title: `เป้าหมายที่มีหลักฐานเชื่อมโยงกับ ${subject.name}`, body: subject.targets.length ? `<ul>${subject.targets.map((target) => `<li>${esc(target)}</li>`).join("")}</ul>` : `<p>${missingKnowledge}</p>`, evidence: subject.evidence, limitation: "Target association ≠ field suitability, efficacy or recommendation" };
     if (intent === "SUBSTANCE_TO_PRODUCT") return { subjectKey, title: `ผลิตภัณฑ์ไทยที่มี ${subject.name}`, body: productCards(subject), evidence: subject.evidence, limitation: "Registration status and CTU authority are independent; no dose or ranking is provided" };
     if (intent === "SOURCE_LOOKUP") return { subjectKey, title: `แหล่งข้อมูลของ ${subject.name}`, body: "<p>แสดง authority, version, locator และข้อจำกัดแยกตามแหล่งด้านล่าง</p>", evidence: subject.evidence, limitation: "Evidence scope is bounded to governed records currently loaded" };
-    return { subjectKey, title: `${subject.thai ? `${subject.thai} / ` : ""}${subject.name}`, body: `<dl><dt>ประเภท</dt><dd>${esc(subject.category)}</dd><dt>กลุ่ม</dt><dd>${esc(subject.authority)} ${esc(subject.group)}</dd><dt>กลไกที่กำกับแล้ว</dt><dd>${esc(subject.mechanism)}</dd><dt>เป้าหมายที่มีหลักฐานเชื่อมโยง</dt><dd>${subject.targets.map(esc).join(" · ") || "ยังไม่พบในชุดความรู้นี้"}</dd><dt>ระเบียนผลิตภัณฑ์ไทย</dt><dd>${subject.products.length} ระเบียนที่รองรับ (ไม่ใช่ catalog ทั้งหมด)</dd></dl>`, evidence: subject.evidence, limitation: "Knowledge answer ≠ diagnosis, efficacy claim, prescription or rate recommendation" };
+    return { subjectKey, ...richAnswer(subject), evidence: subject.evidence, limitation: "คำตอบจาก Knowledge ≠ การวินิจฉัย ประสิทธิภาพ คำสั่งใช้ หรือคำแนะนำอัตรา" };
   }
 
   function reviews() { try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]"); } catch { return []; } }
@@ -78,7 +101,8 @@
     const stream = document.querySelector("[data-conversation-stream]"); const output = document.querySelector("[data-engine-output]");
     document.querySelector("[data-empty-intro]").hidden = true; stream.hidden = false;
     document.querySelector("[data-question-panel]").hidden = true; document.querySelector("[data-investigation-tools]").hidden = true;
-    const turns = `<article class="timeline-turn user-turn"><div class="message-bubble"><span>${esc(text)}</span></div></article><article class="timeline-turn assistant-turn knowledge-answer" data-message-id="${messageId}"><span class="avatar">SP</span><div class="message-bubble"><p class="eyebrow">${esc(intent)} · GOVERNED KNOWLEDGE</p><h3>${answer.title}</h3>${answer.body}<p class="boundary-copy">${esc(answer.limitation)}</p>${sourceDetails(answer.evidence)}${reviewPanel(messageId)}</div></article>`;
+    const contextualActions = subjects[answer.subjectKey] ? followUpActions() : "";
+    const turns = `<article class="timeline-turn user-turn"><div class="message-bubble"><span>${esc(text)}</span></div></article><article class="timeline-turn assistant-turn knowledge-answer" data-message-id="${messageId}"><span class="avatar">SP</span><div class="message-bubble"><p class="eyebrow">${esc(intent)} · GOVERNED KNOWLEDGE</p><h3>${answer.title}</h3>${answer.body}<p class="boundary-copy">${esc(answer.limitation)}</p>${sourceDetails(answer.evidence)}${contextualActions}${reviewPanel(messageId)}</div></article>`;
     const timeline = output.querySelector("[data-knowledge-timeline]");
     if (timeline) { timeline.insertAdjacentHTML("beforeend", turns); output.querySelector(".review-history")?.remove(); output.insertAdjacentHTML("beforeend", renderHistory()); }
     else output.innerHTML = `<div class="message-timeline" data-knowledge-timeline>${turns}</div>${renderHistory()}`;
@@ -87,6 +111,7 @@
   function upsertReview(review) { const records = reviews(); const previous = records.filter((item) => item.message_id === review.message_id && item.review_state !== "SUPERSEDED").at(-1); if (previous) { previous.review_state = "SUPERSEDED"; previous.updated_at = review.created_at; review.supersession_reference = previous.review_id; } records.push(review); save(records); }
   function createReview(reviewState, messageId, correction = {}) { const now = new Date().toISOString(); const answer = context.answers.get(messageId); return { review_id: crypto.randomUUID(), conversation_id: context.conversationId, message_id: answer.messageId, question_text: answer.question, subject_reference: answer.subject, answer_reference: answer.answerReference, answer_snapshot_or_hash: answer.snapshot, review_state: reviewState, correction_type: correction.type || null, correction_text: correction.text || null, source_reference_optional: correction.source || null, reviewer_role: "SPA", created_at: now, updated_at: now, supersession_reference: null, knowledge_version_reference_if_available: APP_VERSION }; }
   function bind(root) {
+    root.querySelectorAll("[data-knowledge-follow-up]").forEach((button) => { if (button.dataset.bound) return; button.dataset.bound = "true"; button.addEventListener("click", () => ask(button.dataset.knowledgeFollowUp)); });
     root.querySelectorAll("[data-review]").forEach((button) => { if (button.dataset.bound) return; button.dataset.bound = "true"; button.addEventListener("click", () => { const panel = button.closest(".spa-review"); const form = panel.querySelector("[data-correction-form]"); if (button.dataset.review === "CORRECT") { upsertReview(createReview("CORRECT", panel.dataset.reviewFor)); panel.querySelector("[data-review-status]").textContent = "บันทึก CORRECT ใน browser นี้แล้ว"; root.querySelector(".review-history")?.remove(); root.insertAdjacentHTML("beforeend", renderHistory()); bind(root); } else { form.hidden = false; form.dataset.reviewState = button.dataset.review; form.querySelector("select").focus(); } }); });
     root.querySelectorAll("[data-correction-form]").forEach((form) => { if (form.dataset.bound) return; form.dataset.bound = "true"; form.addEventListener("submit", (event) => { event.preventDefault(); const data = new FormData(form); const panel = form.closest(".spa-review"); upsertReview(createReview("PENDING_REVIEW", panel.dataset.reviewFor, { type: data.get("correction_type"), text: data.get("correction_text"), source: data.get("source_reference") })); form.hidden = true; panel.querySelector("[data-review-status]").textContent = `${form.dataset.reviewState} บันทึกเป็น PENDING_REVIEW · ยังไม่เปลี่ยน Canonical Knowledge`; root.querySelector(".review-history")?.remove(); root.insertAdjacentHTML("beforeend", renderHistory()); bind(root); }); });
     root.querySelector("[data-export-review]")?.addEventListener("click", exportReviews);

@@ -141,7 +141,7 @@ def test_privacy_cloud_and_learning_boundaries() -> None:
 
 def test_mobile_review_controls_wrap_without_horizontal_layout() -> None:
     assert ".review-actions{display:flex;flex-wrap:wrap" in CSS
-    assert ".review-actions>*{flex:1 1 100%}" in CSS
+    assert ".review-actions>*{flex:1 1 30%" in CSS
     assert (
         ".knowledge-answer dl,.knowledge-product dl{grid-template-columns:1fr}" in CSS
     )
