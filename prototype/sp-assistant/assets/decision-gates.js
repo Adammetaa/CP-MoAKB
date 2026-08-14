@@ -212,6 +212,7 @@
     blast: { location: "leaf_or_affected_organ", evidence: "GOVERNED_DISEASE_CONTEXT", limitation: "Lesion appearance and application history do not confirm a pathogen or fungicide failure." },
   });
   const depositionEvidenceStates = Object.freeze(["MEASURED", "OBSERVED", "NOT_MEASURED", "SAMPLING_INCOMPLETE", "TARGET_LOCATION_UNMEASURED", "POTENTIAL_COVERAGE_GAP", "CONFLICTING_MEASUREMENTS", "NEEDS_REVIEW", "NOT_APPLICABLE"]);
+  const outcomeComparisonStates = Object.freeze(["DECREASE_OBSERVED", "INCREASE_OBSERVED", "NO_CLEAR_CHANGE", "NEW_DAMAGE_OBSERVED", "NO_NEW_DAMAGE_OBSERVED", "COMPARISON_LIMITED", "NOT_COMPARABLE", "NEEDS_REVIEW"]);
 
   function evaluateDepositionEvidence(input = {}) {
     const records = (input.measurements || []).map((record) => ({
@@ -269,6 +270,79 @@
       learn: { automaticPromotion: false, thresholdLearning: false, settingsOptimization: false, efficacyLearning: false, resistanceLearning: false },
       privacy: { persistence: "BROWSER_LOCAL_ONLY", telemetryUpload: false, automaticGps: false, cloudImageAnalysis: false, equipmentTracking: false, analytics: false, operatorMonitoring: false },
       boundaries: ["COVERAGE â‰  DEPOSITION", "MEASURED DEPOSITION â‰  BIOLOGICAL EFFICACY", "LOW OR UNKNOWN DEPOSITION â‰  CAUSAL CONTROL FAILURE", "FAILED CONTROL â‰  RESISTANCE", "DEPOSITION MEASUREMENT â‰  SPRAY SETTING RECOMMENDATION"],
+    };
+  }
+
+  function evaluateOutcomeReview(input = {}) {
+    const acceptedPhases = new Set(["T0", "T1", "T2"]);
+    const submitted = (input.observations || []).filter((item) => item.submittedExplicitly === true && acceptedPhases.has(item.phase));
+    const rejected = (input.observations || []).filter((item) => item.submittedExplicitly !== true || !acceptedPhases.has(item.phase));
+    const observations = submitted.map((item, index) => ({
+      id: item.id || null,
+      caseReference: item.caseReference || input.caseReference || null,
+      applicationEventReference: item.applicationEventReference || input.applicationEventReference || null,
+      phase: item.phase,
+      timestamp: item.timestamp || null,
+      elapsedSinceApplication: item.elapsedSinceApplication || null,
+      subject: item.subject || input.subject || null,
+      value: item.value ?? null,
+      unit: item.unit || null,
+      denominator: item.denominator || null,
+      countBasis: item.countBasis || null,
+      sampleSize: item.sampleSize ?? null,
+      samplingContext: item.samplingContext || {},
+      source: item.source || "UNKNOWN",
+      evidenceState: item.evidenceState || "OBSERVED",
+      method: item.method || "UNKNOWN",
+      limitations: item.limitations || [],
+      supersedesObservationId: item.supersedesObservationId || null,
+      provenance: item.provenance || [],
+      submittedExplicitly: true,
+      sequence: index + 1,
+    }));
+    const supersededIds = new Set(observations.map((item) => item.supersedesObservationId).filter(Boolean));
+    const effective = observations.filter((item) => !supersededIds.has(item.id));
+    const byPhase = Object.fromEntries(["T0", "T1", "T2"].map((phase) => [phase, effective.filter((item) => item.phase === phase).at(-1) || null]));
+    const available = Object.values(byPhase).filter(Boolean);
+    const same = (field) => available.length > 0 && new Set(available.map((item) => JSON.stringify(item[field]))).size === 1;
+    const hardComparable = available.length === 3 && same("unit") && same("denominator") && same("countBasis") && same("method");
+    const contextComparable = hardComparable && same("sampleSize") && same("samplingContext");
+    const samplingComparability = !hardComparable ? "NOT_COMPARABLE" : contextComparable ? "SUPPORTED" : "COMPARISON_LIMITED";
+    const comparison = input.humanComparison?.submittedExplicitly === true && outcomeComparisonStates.includes(input.humanComparison.state)
+      ? { state: input.humanComparison.state, statement: input.humanComparison.statement || null, source: input.humanComparison.source || "HUMAN_REVIEW", submittedExplicitly: true, limitations: input.humanComparison.limitations || [] }
+      : { state: available.length === 3 ? "NEEDS_REVIEW" : "COMPARISON_LIMITED", statement: null, source: null, submittedExplicitly: false, limitations: ["progression and outcome are not inferred from elapsed time or raw values"] };
+    const missingPhase = ["T1", "T2"].find((phase) => !byPhase[phase]) || null;
+    const reviewReasons = [...new Set((input.humanReviewReasons || []).concat(samplingComparability !== "SUPPORTED" ? ["sampling comparability is limited or unsupported"] : [], input.depositionLimitations || [], input.applicationContextLimitations || [], comparison.submittedExplicitly ? [] : ["explicit human comparison is missing"]))];
+    return {
+      model: "governed-outcome-review/v1",
+      caseReference: input.caseReference || null,
+      applicationEventReference: input.applicationEventReference || null,
+      applicationContextReference: input.applicationContextReference || null,
+      depositionEvidenceReference: input.depositionEvidenceReference || null,
+      observations,
+      effectiveObservations: byPhase,
+      rejectedSubmissions: rejected.map((item) => ({ id: item.id || null, phase: item.phase || null, reason: item.submittedExplicitly === true ? "INVALID_PHASE" : "EXPLICIT_SUBMISSION_REQUIRED" })),
+      correctionHistory: observations.filter((item) => item.supersedesObservationId).map((item) => ({ observationId: item.id, supersedesObservationId: item.supersedesObservationId })),
+      comparison,
+      samplingComparability: { state: samplingComparability, unitsMatch: same("unit"), denominatorsMatch: same("denominator"), countBasisMatches: same("countBasis"), methodsMatch: same("method"), sampleSizesMatch: same("sampleSize"), contextsMatch: same("samplingContext"), conversionApplied: false },
+      derivedChange: null,
+      alternativeExplanations: (input.alternativeExplanations || ["natural_population_change", "weather", "predator_or_natural_enemy_activity", "crop_development", "sampling_variation", "target_movement", "application_context", "deposition_or_coverage_uncertainty", "timing", "target_misidentification", "product_biology", "biological_tolerance", "unknown_factor"]).map((domain) => ({ domain, rank: null, conclusion: null })),
+      nextBestEvidence: missingPhase ? { architecture: "field-action-handoff/v1", count: 1, action_type: "RECORD", subject: `${missingPhase}_observation`, completion: "EXPLICIT_HUMAN_SUBMISSION_REQUIRED", treatmentTask: false, reSprayTask: false, doseAdjustmentTask: false, instruction: null } : { architecture: "field-action-handoff/v1", count: 0, action_type: null, subject: null, completion: null, treatmentTask: false, reSprayTask: false, doseAdjustmentTask: false, instruction: null },
+      subjectBoundaries: {
+        leaffolder: "historical folded leaves remain separate from live larvae, fresh feeding, or new damage",
+        "stem-borer-group": "persistent deadheart or whitehead may be old irreversible damage and does not establish treatment failure",
+        blast: "old lesions remaining visible do not establish new disease progression or fungicide efficacy",
+        abiotic: "outcome capture is not restricted to pesticide performance",
+      },
+      productComparisonInteraction: { orderingChanged: false, scoreChanged: false, preferredProduct: null, winner: null },
+      regulatoryInteraction: { authorityWaived: false, authorityState: input.regulatoryState || "PRESERVED_SEPARATELY" },
+      manufacturerBoundary: { caseOutcomeValidatesClaim: false, claimsRemainSeparate: true },
+      humanReview: { required: reviewReasons.length > 0, reasons: reviewReasons, canPromoteCanonicalKnowledge: false, canInventCausality: false },
+      nonConclusions: { productEfficacy: null, causality: null, productFailure: null, resistance: null, recommendation: null, ranking: null, performanceScore: null },
+      localPerformancePreparation: { caseScoped: true, futureReviewedAggregationReady: true, automaticAggregation: false, canonicalPromotion: false },
+      learn: { automaticLearning: false, efficacyClaim: false, resistanceClaim: false, performanceScore: false, recommendationMetric: false, thresholdLearning: false, settingsLearning: false },
+      privacy: { persistence: "BROWSER_LOCAL_ONLY", backend: false, telemetry: false, cloudOutcomeDatabase: false, gpsTracking: false, operatorScoring: false, productAnalytics: false, externalTransmission: false },
+      boundaries: ["OUTCOME != EFFICACY", "IMPROVEMENT != CAUSALITY", "NO IMPROVEMENT != RESISTANCE", "FAILED CONTROL != RESISTANCE", "TEMPORAL ORDER != CAUSATION"],
     };
   }
 
@@ -720,5 +794,5 @@
       boundaries: ["Candidate ≠ Diagnosis", "Severity ≠ Need-for-Action", "Need-for-Action ≠ pesticide recommendation", "Weather alone cannot escalate identification", "Nearby Case cannot escalate identification", "Photo received ≠ Photo analyzed", "CONTROL FAILURE ≠ RESISTANCE"],
     };
   }
-  window.SPDecisionGates = Object.freeze({ evaluate, beginFromObservation, evaluateProgression, evaluateAbioticDifferential, evaluateApplicationContext, evaluateDepositionEvidence, evaluateFailedControl, evaluateNeedForAction, evaluateManagementSuitability, evaluateManagementOptions, createFieldAction, applyFieldActionResult, prepareExpertHandoff, compareTemporalObservations, profiles, symptomFamilies, observationVocabulary, progressionStates, lifeStageProfiles, abioticProfiles, abioticInvestigationStates, applicationQualityStates, applicationSuitabilityStates, depositionEvidenceStates, targetLocationProfiles, needForActionStates, managementOptionClasses, managementSuitabilityStates, governedManagementOptionClasses, managementOptionEligibilityStates, fieldActionTypes, fieldActionStates, moaAuthority, roles: ROLES });
+  window.SPDecisionGates = Object.freeze({ evaluate, beginFromObservation, evaluateProgression, evaluateAbioticDifferential, evaluateApplicationContext, evaluateDepositionEvidence, evaluateOutcomeReview, evaluateFailedControl, evaluateNeedForAction, evaluateManagementSuitability, evaluateManagementOptions, createFieldAction, applyFieldActionResult, prepareExpertHandoff, compareTemporalObservations, profiles, symptomFamilies, observationVocabulary, progressionStates, lifeStageProfiles, abioticProfiles, abioticInvestigationStates, applicationQualityStates, applicationSuitabilityStates, depositionEvidenceStates, outcomeComparisonStates, targetLocationProfiles, needForActionStates, managementOptionClasses, managementSuitabilityStates, governedManagementOptionClasses, managementOptionEligibilityStates, fieldActionTypes, fieldActionStates, moaAuthority, roles: ROLES });
 })();

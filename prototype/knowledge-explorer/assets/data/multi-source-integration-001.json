@@ -326,6 +326,45 @@
       "privacy": { "persistence": "BROWSER_LOCAL_ONLY", "telemetry_upload": false, "automatic_gps": false, "cloud_image_analysis": false, "equipment_tracking": false, "analytics": false, "operator_monitoring": false }
     }
   ],
+  "outcome_review_views": [
+    {
+      "id": "ORV-093P-BPH-001/v1",
+      "model": "governed-outcome-review/v1",
+      "case_reference": "CASE-087-BPH/v1",
+      "application_event_reference": "APP-EVENT-091-BPH-001",
+      "application_context_reference": "ACV-091P-BPH-001/v1",
+      "deposition_evidence_reference": "DCV-092K-BPH-001/v1",
+      "subject": "Brown Planthopper / Nilaparvata lugens",
+      "observations": [
+        { "id": "OUT-093-BPH-T0-001", "phase": "T0", "timestamp": "2026-08-10T07:00:00+07:00", "elapsed_since_application": "BEFORE_APPLICATION", "value": 10, "unit": "insects", "denominator": "plant", "count_basis": "direct plant-base count", "sample_size": 20, "sampling_context": { "field_zone": "field_interior", "method": "same marked hills", "observer": "same human observer", "time_of_day": "morning" }, "source": "CASE_EVIDENCE", "evidence_state": "MEASURED", "method": "direct plant-base count", "limitations": ["representative governed Case data; not canonical efficacy evidence"], "supersedes_observation_id": null, "submitted_explicitly": true, "provenance": ["CASE-087-BPH/v1", "OBS-087-BPH-001", "explicit human submission"] },
+        { "id": "OUT-093-BPH-T1-ORIGINAL", "phase": "T1", "timestamp": "2026-08-11T07:30:00+07:00", "elapsed_since_application": "24 hours", "value": 7, "unit": "insects", "denominator": "plant", "count_basis": "direct plant-base count", "sample_size": 20, "sampling_context": { "field_zone": "field_interior", "method": "same marked hills", "observer": "same human observer", "time_of_day": "morning" }, "source": "HUMAN_MEASUREMENT", "evidence_state": "SUPERSEDED", "method": "direct plant-base count", "limitations": ["transcription corrected by explicit submission"], "supersedes_observation_id": null, "submitted_explicitly": true, "provenance": ["CASE-087-BPH/v1", "APP-EVENT-091-BPH-001", "explicit human submission"] },
+        { "id": "OUT-093-BPH-T1-001", "phase": "T1", "timestamp": "2026-08-11T07:30:00+07:00", "elapsed_since_application": "24 hours", "value": 6, "unit": "insects", "denominator": "plant", "count_basis": "direct plant-base count", "sample_size": 20, "sampling_context": { "field_zone": "field_interior", "method": "same marked hills", "observer": "same human observer", "time_of_day": "morning" }, "source": "HUMAN_MEASUREMENT", "evidence_state": "MEASURED", "method": "direct plant-base count", "limitations": ["single Case observation; temporal sequence does not establish response"], "supersedes_observation_id": "OUT-093-BPH-T1-ORIGINAL", "submitted_explicitly": true, "provenance": ["CASE-087-BPH/v1", "APP-EVENT-091-BPH-001", "explicit corrected human submission"] },
+        { "id": "OUT-093-BPH-T2-001", "phase": "T2", "timestamp": "2026-08-13T07:30:00+07:00", "elapsed_since_application": "72 hours", "value": 3, "unit": "insects", "denominator": "plant", "count_basis": "direct plant-base count", "sample_size": 20, "sampling_context": { "field_zone": "field_interior", "method": "same marked hills", "observer": "same human observer", "time_of_day": "morning" }, "source": "HUMAN_MEASUREMENT", "evidence_state": "MEASURED", "method": "direct plant-base count", "limitations": ["single Case observation; alternative explanations remain unresolved"], "supersedes_observation_id": null, "submitted_explicitly": true, "provenance": ["CASE-087-BPH/v1", "APP-EVENT-091-BPH-001", "explicit human submission"] }
+      ],
+      "effective_observations": { "T0": "OUT-093-BPH-T0-001", "T1": "OUT-093-BPH-T1-001", "T2": "OUT-093-BPH-T2-001" },
+      "human_comparison": { "state": "DECREASE_OBSERVED", "statement": "Recorded BPH burden decreased across the explicitly submitted observations.", "submitted_explicitly": true, "source": "HUMAN_REVIEW", "limitations": ["descriptive Case comparison only; not efficacy or causality"] },
+      "sampling_comparability": { "state": "SUPPORTED", "units_match": true, "denominators_match": true, "count_basis_matches": true, "methods_match": true, "sample_sizes_match": true, "contexts_match": true, "conversion_applied": false, "limitation": "comparable submitted samples support descriptive comparison only" },
+      "derived_change": null,
+      "application_context_summary": { "method": "agricultural_drone", "water_volume": "3 L/rai — recorded source fact", "canopy": "dense — operator reported", "weather": "7 km/h wind — human reported", "limitations": ["contextual evidence does not establish cause"] },
+      "deposition_summary": { "upper_canopy": "18% COVERAGE", "plant_base": "NOT_MEASURED", "state": "POTENTIAL_COVERAGE_GAP", "limitations": ["target-location deposition remains unknown", "measured coverage does not prove biological exposure"] },
+      "alternative_explanations": ["natural population change", "weather", "predator or natural enemy activity", "crop development", "sampling variation", "target movement", "application context", "deposition or coverage uncertainty", "timing", "target misidentification", "product biology", "biological tolerance", "unknown factor"],
+      "subject_boundaries": [
+        { "subject": "leaffolder", "boundary": "historical folded leaves remain separate from live larvae, fresh feeding, and new damage; no new damage does not prove efficacy" },
+        { "subject": "stem-borer-group", "boundary": "persistent deadheart or whitehead may be old irreversible damage and does not establish treatment failure" },
+        { "subject": "blast", "boundary": "old lesions remaining visible do not establish new progression or fungicide efficacy" },
+        { "subject": "abiotic", "boundary": "outcome capture also supports non-chemical symptom progression and is not forced into pesticide-performance analysis" }
+      ],
+      "next_best_evidence": { "architecture": "field-action-handoff/v1", "count": 0, "action_type": null, "subject": null, "completion": null, "treatment_task": false, "respray_task": false, "dose_adjustment_task": false },
+      "human_review": { "required": true, "reasons": ["plant-base deposition not measured", "alternative explanations remain material", "Case observations cannot establish causality"], "can_promote_canonical_knowledge": false },
+      "non_conclusions": { "product_efficacy": null, "causality": null, "product_failure": null, "resistance": null, "recommendation": null, "ranking": null, "performance_score": null },
+      "product_comparison_interaction": { "ordering_changed": false, "score_changed": false, "preferred_product": null, "winner": null },
+      "regulatory_interaction": { "authority_waived": false, "authority_state": "AUTHORITY_BLOCKED" },
+      "manufacturer_boundary": { "case_outcome_validates_claim": false, "claims_remain_separate": true },
+      "local_performance_preparation": { "case_scoped": true, "future_reviewed_aggregation_ready": true, "automatic_aggregation": false, "canonical_promotion": false },
+      "learn": { "automatic_learning": false, "efficacy_claim": false, "resistance_claim": false, "performance_score": false, "recommendation_confidence": false, "threshold_learning": false, "settings_learning": false },
+      "privacy": { "persistence": "BROWSER_LOCAL_ONLY", "backend": false, "telemetry": false, "cloud_outcome_database": false, "gps_tracking": false, "operator_scoring": false, "product_performance_analytics": false, "external_transmission": false }
+    }
+  ],
   "entities": {
     "biological": [
       { "id": "BIO-BPH", "type": "pest", "normalized_name": "brown planthopper", "thai_name": "เพลี้ยกระโดดสีน้ำตาล", "english_name": "Brown Planthopper", "scientific_name": "Nilaparvata lugens", "crop_relationship": "rice", "aliases": ["BPH"], "canonical_reference": "rice-insect-corpus-001:BPH", "identity_state": "SUPPORTED", "duplicate_identity_state": "NO_DUPLICATE_IN_INTEGRATION_SLICE" },
@@ -495,6 +534,7 @@
       "product_comparison_id": "PC-090P-RICE-INSECT-001/v1",
       "application_context_view_id": "ACV-091P-BPH-001/v1",
       "deposition_coverage_view_id": "DCV-092K-BPH-001/v1",
+      "outcome_review_view_id": "ORV-093P-BPH-001/v1",
       "management_option_link": "CHEMICAL_REVIEW_INFORMATION_ONLY"
     },
     { "id": "WV-MSI-BLAST-001/v1", "subject_id": "BIO-BLAST", "title": "Rice blast integrated knowledge", "case_assertions": ["AS-CASE-BLAST-001"], "scientific_assertions": ["AS-SCI-BLAST-001"], "moa_assertions": ["AS-FRAC-TRI-001"], "regulatory_assertions": [], "manufacturer_assertions": [], "relationship_ids": ["REL-BLAST-TRI", "REL-CASE-BLAST-CONFLICT"], "management_option_link": "NO_CHEMICAL_SELECTION" }

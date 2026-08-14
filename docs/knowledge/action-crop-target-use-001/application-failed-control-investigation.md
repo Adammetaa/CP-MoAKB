@@ -2,6 +2,36 @@
 
 Status: accepted bounded investigation foundation; not published
 
+## Sprint-093P governed outcome capture
+
+### Outcome capture
+
+`governed-outcome-review/v1` retains independently traceable `T0`, `T1`, and `T2` Case observations around one Application Event. Each explicitly submitted observation preserves phase metadata, timestamp, elapsed time, subject, raw value, unit, denominator, count basis, sample size, method, sampling context, source, limitations, correction/supersession, and provenance. Explicit phase metadata controls phase identity; chronological order alone does not create T1 or T2, and post-application evidence never overwrites T0.
+
+### Sampling comparability
+
+Direct comparison requires compatible units, denominators, count bases, methods, sample sizes, and sampling context. Different plants, quadrats, field zones, observers, methods, crop stages, activity conditions, or denominators remain visible as `COMPARISON_LIMITED` or `NOT_COMPARABLE`; the system does not silently normalize `insects/plant` with `insects/10 sweeps` or invent a conversion.
+
+### Human comparison
+
+Progression and outcome require an explicit human submission using bounded states such as `DECREASE_OBSERVED`, `INCREASE_OBSERVED`, `NO_CLEAR_CHANGE`, `NEW_DAMAGE_OBSERVED`, `NO_NEW_DAMAGE_OBSERVED`, `COMPARISON_LIMITED`, `NOT_COMPARABLE`, or `NEEDS_REVIEW`. Raw values and elapsed time do not automatically create a comparison. A corrected observation preserves its predecessor, identifies the superseded record, and deterministically reruns comparison from the effective observation set.
+
+### Outcome versus efficacy and causality boundary
+
+Observed improvement is not a product-efficacy claim, observed deterioration is not product failure, and no change is not resistance. Temporal order does not establish causality. The representative BPH Case may state that recorded burden decreased from T0 through explicitly submitted T1 and T2 observations, but it does not calculate control efficacy or claim that the recorded product caused the change.
+
+### Failed-control boundary
+
+A Case may record that an outcome did not meet user expectation while retaining target identity, timing, weather, natural enemies, crop development, sampling variation, movement, application context, deposition uncertainty, product biology, biological tolerance, and unknown factors as unranked explanation domains. `FAILED CONTROL != RESISTANCE`; outcome review does not create a higher-rate, re-treatment, MoA-switch, or product-selection task.
+
+### Application context and deposition interaction
+
+Sprint-091P Application Context and Sprint-092K Deposition/Coverage evidence are linked as limitations, not causes. Recorded water volume, equipment, weather, canopy, and timing remain contextual. Upper-canopy coverage with unmeasured plant-base deposition limits BPH interpretation; measured coverage still does not prove biological exposure.
+
+### Product comparison and local performance preparation
+
+Case outcomes cannot reorder, score, promote, or demote Product Comparison candidates and cannot waive `AUTHORITY_BLOCKED` or validate a manufacturer claim. The records are cleanly Case-scoped so a future governed process could review many genuinely comparable Cases, but Sprint-093P performs no aggregation, canonical promotion, efficacy learning, resistance learning, performance scoring, ranking, recommendation-confidence update, or automatic Learn operation.
+
 ## Sprint-092K target-specific deposition evidence
 
 ### Deposition evidence
