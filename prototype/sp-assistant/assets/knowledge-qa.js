@@ -25,24 +25,32 @@
   };
 
   const esc = (value) => String(value ?? "").replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[char]));
-  const normalize = (text) => text.toLowerCase().replaceAll("ไทอะมีทอกแซม", "thiamethoxam").replaceAll("ไพมีโทรซีน", "pymetrozine").replaceAll("ไตรไซคลาโซล", "tricyclazole");
-  function resolveSubject(text) { const query = normalize(text); return Object.keys(subjects).find((name) => query.includes(name)) || context.subject; }
+  const terminologyAliases = Object.freeze({ "เพทิลาคลอร์": "pretilachlor", "พรีทิลาคลอร์": "pretilachlor" });
+  const normalize = (text) => Object.entries(terminologyAliases).reduce((value, [alias, name]) => value.replaceAll(alias, name), text.toLowerCase().replaceAll("ไทอะมีทอกแซม", "thiamethoxam").replaceAll("ไพมีโทรซีน", "pymetrozine").replaceAll("ไตรไซคลาโซล", "tricyclazole"));
+  function explicitSubject(text) { const query = normalize(text); return Object.keys(subjects).find((name) => query.includes(name)) || (query.includes("pretilachlor") ? "UNRESOLVED:pretilachlor" : null); }
+  function resolveSubject(text) { const explicit = explicitSubject(text); return explicit?.startsWith("UNRESOLVED:") ? null : explicit || context.subject; }
+  function isCaseFirst(text) { const query = normalize(text); return /ควรพ่น|ใช้อะไรดี|ใช้.+กับ.+ได้ไหม|แปลงนี้|ข้าว\s*\d+\s*วัน/.test(query); }
   function route(text) {
     const query = normalize(text);
+    if (isCaseFirst(text)) return null;
     if (/source|ที่มา|มาจากไหน/.test(query)) return "SOURCE_LOOKUP";
     if (/ทะเบียน|registered|ผลิตภัณฑ์|ชื่อการค้า|ชื่อยา/.test(query)) return "SUBSTANCE_TO_PRODUCT";
     if (/กลุ่มอื่น|กลุ่มเดียว|ใกล้เคียง|related/.test(query)) return "RELATED_SUBSTANCE_LOOKUP";
-    if (/ออกฤทธิ์|กลไก|mechanism|moa/.test(query)) return "MECHANISM_LOOKUP";
+    if (/ออกฤทธิ์|กลไก|ยับยั้ง|อยู่กลุ่มอะไร|irac|frac|hrac|mechanism|moa/.test(query)) return "MECHANISM_LOOKUP";
     if (/เพลี้ย|โรคไหม้|วัชพืช|เชื้อรา|แบคทีเรีย|target/.test(query) && !Object.keys(subjects).some((name) => query.includes(name))) return "TARGET_TO_SUBSTANCE";
+    if (/คืออะไร|เป็นสารอะไร/.test(query) && explicitSubject(text)) return "ACTIVE_INGREDIENT_LOOKUP";
     return resolveSubject(text) ? "ACTIVE_INGREDIENT_LOOKUP" : null;
   }
   function isKnowledgeQuery(text) { return Boolean(route(text)); }
+  function classify(text) { const explicit = explicitSubject(text); const unresolved = explicit?.replace("UNRESOLVED:", "") || null; const subject = resolveSubject(text) || unresolved; if (explicit && !explicit.startsWith("UNRESOLVED:")) context.subject = explicit; return { intent: route(text), subject, resolved: Boolean(resolveSubject(text)) }; }
   function sourceDetails(evidence) { return `<details class="knowledge-provenance"><summary>หลักฐาน / provenance</summary>${evidence.map((source) => `<p><strong>${esc(source.authority)}</strong> · ${esc(source.id)} · ${esc(source.version)}<br>${esc(source.locator)}<br><small>${esc(source.limitation)}</small></p>`).join("")}</details>`; }
   function productCards(subject) {
     if (!subject.products.length) return "<p>ยังไม่พบระเบียนผลิตภัณฑ์ไทยที่รองรับใน governed knowledge ชุดนี้ — ไม่ได้หมายความว่าไม่มีผลิตภัณฑ์</p>";
     return subject.products.map((product) => `<article class="knowledge-product"><h4>${esc(product.trade)}</h4><dl><dt>สาร / สูตร</dt><dd>${esc(subject.name)} · ${esc(product.formulation)}</dd><dt>เลขทะเบียน</dt><dd>${esc(product.registration)}</dd><dt>ทะเบียนผลิตภัณฑ์</dt><dd><strong>${esc(product.registrationLabel)}</strong> · ${esc(product.registrationState)}</dd><dt>สิทธิ์พืช–เป้าหมาย–การใช้</dt><dd><strong>${esc(product.ctuLabel)}</strong> · ${esc(product.ctu)}</dd><dt>ผู้ขึ้นทะเบียน</dt><dd>${esc(product.registrant)}</dd><dt>ผู้นำเข้า / ผู้จัดจำหน่าย</dt><dd>${esc(product.importer)} / ${esc(product.distributor)}</dd><dt>ออก / หมดอายุ / ยกเลิก</dt><dd>${esc(product.issue)} / ${esc(product.expiry)} / ${esc(product.cancellation)}</dd></dl></article>`).join("");
   }
   function compose(intent, subjectKey, text) {
+    const unresolved = explicitSubject(text)?.replace("UNRESOLVED:", "");
+    if (!subjectKey && unresolved) return { subjectKey: unresolved, unresolved: true, title: `ต้องยืนยันชื่อสาร: ${esc(unresolved)}`, body: `<p>governed knowledge ปัจจุบันยังไม่มีระเบียนที่ยืนยันตัวตนของ <strong>${esc(unresolved)}</strong></p><p><strong>หมายถึง pretilachlor ใช่หรือไม่?</strong> โปรดระบุ common/English name หรือการสะกดบนฉลาก</p>`, evidence: [], limitation: "Terminology alias routes to Knowledge clarification only; no identity, MoA, product or use fact is inferred" };
     if (intent === "TARGET_TO_SUBSTANCE") {
       const q = normalize(text);
       const hits = q.includes("เพลี้ยกระโดด") ? [subjects.pymetrozine] : q.includes("โรคไหม้") ? [subjects.tricyclazole] : [];
@@ -63,7 +71,7 @@
   function renderHistory() { const records = reviews(); return `<section class="review-history"><header><strong>ผลตรวจในอุปกรณ์นี้ ${records.length} รายการ</strong>${records.length ? '<a href="#" role="button" data-export-review>ส่งออกผลการตรวจ (JSON)</a>' : '<span class="export-disabled">ยังไม่มีผลตรวจสำหรับส่งออก</span>'}</header>${records.slice(-5).reverse().map((record) => `<p>${esc(record.subject_reference)} · ${esc(record.review_state)} · <time>${esc(record.updated_at)}</time></p>`).join("")}</section>`; }
   function ask(text) {
     const intent = route(text); const subjectKey = resolveSubject(text); const answer = compose(intent, subjectKey, text); if (!answer) return false;
-    context.subject = answer.subjectKey === "target" ? context.subject : answer.subjectKey;
+    if (!answer.unresolved) context.subject = answer.subjectKey === "target" ? context.subject : answer.subjectKey;
     const messageId = `KMSG-${Date.now()}`; const answerReference = `${answer.subjectKey}:${intent}:${APP_VERSION}`;
     context.lastAnswer = { messageId, question: text, subject: answer.subjectKey, answerReference, snapshot: `${answer.title}|${answer.limitation}` };
     context.answers.set(messageId, context.lastAnswer);
@@ -84,5 +92,5 @@
     root.querySelector("[data-export-review]")?.addEventListener("click", exportReviews);
   }
   function exportReviews(event) { const records = reviews(); const payload = { exported_at: new Date().toISOString(), schema_version: SCHEMA_VERSION, record_count: records.length, application_version: APP_VERSION, privacy: "No GPS, device identifier, IP, personal name, phone, email or browser fingerprint", records }; const link = event?.currentTarget || document.createElement("a"); link.href = `data:application/json;charset=utf-8,${encodeURIComponent(JSON.stringify(payload, null, 2))}`; link.download = `sp-assistant-spa-review-${new Date().toISOString().slice(0, 10)}.json`; if (!event) { link.hidden = true; document.body.append(link); link.click(); link.remove(); } }
-  window.SPKnowledgeQA = Object.freeze({ isKnowledgeQuery, route, ask, reviews, exportReviews, STORAGE_KEY });
+  window.SPKnowledgeQA = Object.freeze({ isKnowledgeQuery, route, classify, ask, reviews, exportReviews, STORAGE_KEY });
 })();
