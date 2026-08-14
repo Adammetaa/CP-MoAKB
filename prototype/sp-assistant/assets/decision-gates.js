@@ -213,6 +213,8 @@
   });
   const depositionEvidenceStates = Object.freeze(["MEASURED", "OBSERVED", "NOT_MEASURED", "SAMPLING_INCOMPLETE", "TARGET_LOCATION_UNMEASURED", "POTENTIAL_COVERAGE_GAP", "CONFLICTING_MEASUREMENTS", "NEEDS_REVIEW", "NOT_APPLICABLE"]);
   const outcomeComparisonStates = Object.freeze(["DECREASE_OBSERVED", "INCREASE_OBSERVED", "NO_CLEAR_CHANGE", "NEW_DAMAGE_OBSERVED", "NO_NEW_DAMAGE_OBSERVED", "COMPARISON_LIMITED", "NOT_COMPARABLE", "NEEDS_REVIEW"]);
+  const crossCaseComparabilityStates = Object.freeze(["COMPARABLE", "PARTIALLY_COMPARABLE", "NOT_COMPARABLE", "INSUFFICIENT_INFORMATION", "NEEDS_HUMAN_REVIEW"]);
+  const comparisonDimensionStates = Object.freeze(["MATCH", "ACCEPTABLE_DIFFERENCE", "MATERIAL_DIFFERENCE", "UNKNOWN", "NOT_APPLICABLE", "NEEDS_REVIEW"]);
 
   function evaluateDepositionEvidence(input = {}) {
     const records = (input.measurements || []).map((record) => ({
@@ -343,6 +345,113 @@
       learn: { automaticLearning: false, efficacyClaim: false, resistanceClaim: false, performanceScore: false, recommendationMetric: false, thresholdLearning: false, settingsLearning: false },
       privacy: { persistence: "BROWSER_LOCAL_ONLY", backend: false, telemetry: false, cloudOutcomeDatabase: false, gpsTracking: false, operatorScoring: false, productAnalytics: false, externalTransmission: false },
       boundaries: ["OUTCOME != EFFICACY", "IMPROVEMENT != CAUSALITY", "NO IMPROVEMENT != RESISTANCE", "FAILED CONTROL != RESISTANCE", "TEMPORAL ORDER != CAUSATION"],
+    };
+  }
+
+  function evaluateCrossCaseComparability(input = {}) {
+    const granularity = ["PRODUCT_LEVEL", "ACTIVE_INGREDIENT_LEVEL", "TARGET_LEVEL"].includes(input.granularity) ? input.granularity : "TARGET_LEVEL";
+    const cases = (input.cases || []).map((item) => ({
+      id: item.id || null,
+      outcomeReviewReference: item.outcomeReviewReference || null,
+      applicationEventReference: item.applicationEventReference || null,
+      applicationContextReference: item.applicationContextReference || null,
+      depositionEvidenceReference: item.depositionEvidenceReference || null,
+      target: item.target || null,
+      crop: item.crop || null,
+      cropStage: item.cropStage || null,
+      outcomeMeasurement: item.outcomeMeasurement || null,
+      observationTiming: item.observationTiming || null,
+      applicationMethod: item.applicationMethod || null,
+      productIdentity: item.productIdentity || null,
+      activeIngredient: item.activeIngredient || null,
+      moa: item.moa || null,
+      regulatoryContext: item.regulatoryContext || null,
+      waterVolume: item.waterVolume || null,
+      equipmentContext: item.equipmentContext || null,
+      weatherContext: item.weatherContext || null,
+      canopyContext: item.canopyContext || null,
+      depositionContext: item.depositionContext || null,
+      samplingLimitations: item.samplingLimitations || [],
+      alternativeExplanations: item.alternativeExplanations || [],
+      effectiveOutcomePhases: item.effectiveOutcomePhases || [],
+      humanComparison: item.humanComparison || null,
+      sourceRevision: item.sourceRevision || null,
+      comparisonRevision: item.comparisonRevision || null,
+      correctionLineage: item.correctionLineage || [],
+      provenance: item.provenance || [],
+    }));
+    const valueKnown = (value) => value !== null && value !== undefined && value !== "UNKNOWN";
+    const stateFor = (values, options = {}) => {
+      if (options.notApplicable) return "NOT_APPLICABLE";
+      if (!values.every(valueKnown)) return "UNKNOWN";
+      if (new Set(values.map((value) => JSON.stringify(value))).size === 1) return "MATCH";
+      if (options.hard) return "MATERIAL_DIFFERENCE";
+      if (options.acceptable) return "ACCEPTABLE_DIFFERENCE";
+      return "NEEDS_REVIEW";
+    };
+    const dimension = (id, label, getter, options = {}) => {
+      const values = cases.map((item) => ({ caseId: item.id, value: getter(item) }));
+      const state = stateFor(values.map((item) => item.value), options);
+      return { id, label, state, values, material: state === "MATERIAL_DIFFERENCE", hiddenWeight: null, reason: options.reason || null };
+    };
+    const dimensions = [
+      dimension("biological_target", "Biological Target", (item) => item.target, { hard: true, reason: "different targets cannot form one target-specific local pattern" }),
+      dimension("crop_identity", "Crop Identity", (item) => item.crop, { hard: true, reason: "different crop species are not silently combined" }),
+      dimension("crop_stage", "Crop Stage", (item) => item.cropStage),
+      dimension("outcome_measurement", "Outcome Measurement", (item) => item.outcomeMeasurement, { hard: true, reason: "metric, unit, denominator, count basis, method, and sample basis require compatibility" }),
+      dimension("observation_timing", "Observation Timing", (item) => item.observationTiming),
+      dimension("application_method", "Application Method", (item) => item.applicationMethod),
+      dimension("product_identity", "Product Identity", (item) => item.productIdentity, { hard: granularity === "PRODUCT_LEVEL", acceptable: granularity !== "PRODUCT_LEVEL", reason: `identity is evaluated at ${granularity}` }),
+      dimension("active_ingredient", "Active Ingredient", (item) => item.activeIngredient, { hard: granularity === "PRODUCT_LEVEL" || granularity === "ACTIVE_INGREDIENT_LEVEL", acceptable: granularity === "TARGET_LEVEL" }),
+      dimension("moa", "MoA", (item) => item.moa, { acceptable: true, reason: "MoA remains descriptive and does not establish efficacy" }),
+      dimension("registration_authority", "Registration / Authority", (item) => item.regulatoryContext, { acceptable: true, reason: "authority context is preserved separately from biological comparability" }),
+      dimension("water_volume", "Water Volume", (item) => item.waterVolume),
+      dimension("equipment_context", "Equipment Context", (item) => item.equipmentContext),
+      dimension("weather_context", "Weather Context", (item) => item.weatherContext),
+      dimension("crop_canopy_context", "Crop / Canopy Context", (item) => item.canopyContext),
+      dimension("target_deposition_coverage", "Target-Specific Deposition / Coverage", (item) => item.depositionContext),
+      dimension("sampling_limitations", "Sampling Quality / Limitations", (item) => item.samplingLimitations),
+      dimension("alternative_explanations", "Alternative Explanations / Confounders", (item) => item.alternativeExplanations),
+    ];
+    const missingCriticalCaseEvidence = cases.some((item) => !item.outcomeReviewReference || !item.applicationEventReference || !item.effectiveOutcomePhases.includes("T0") || (!item.effectiveOutcomePhases.includes("T1") && !item.effectiveOutcomePhases.includes("T2")) || !item.humanComparison);
+    const staleCases = cases.filter((item) => item.sourceRevision && item.comparisonRevision && item.sourceRevision !== item.comparisonRevision).map((item) => item.id);
+    const material = dimensions.filter((item) => item.state === "MATERIAL_DIFFERENCE");
+    const reviewable = dimensions.filter((item) => item.state === "NEEDS_REVIEW");
+    const unknown = dimensions.filter((item) => item.state === "UNKNOWN");
+    let overallComparability = "COMPARABLE";
+    if (!input.reviewQuestion || cases.length < 2 || missingCriticalCaseEvidence) overallComparability = "INSUFFICIENT_INFORMATION";
+    else if (material.length) overallComparability = "NOT_COMPARABLE";
+    else if (staleCases.length || unknown.length) overallComparability = "NEEDS_HUMAN_REVIEW";
+    else if (reviewable.length) overallComparability = "PARTIALLY_COMPARABLE";
+    const submittedReview = input.humanReview?.submittedExplicitly === true;
+    const reviewDecision = submittedReview ? input.humanReview.decision || "REQUEST_MORE_EVIDENCE" : "PENDING";
+    const requestedIncluded = submittedReview ? input.humanReview.includeCaseIds || [] : [];
+    const includedCaseIds = requestedIncluded.filter((id) => cases.some((item) => item.id === id));
+    const excludedCases = cases.filter((item) => !includedCaseIds.includes(item.id)).map((item) => ({ caseId: item.id, reason: input.humanReview?.exclusionReasons?.[item.id] || "not included by explicit Human Review" }));
+    const candidateAllowed = submittedReview && reviewDecision === "INCLUDE_TOGETHER" && ["COMPARABLE", "PARTIALLY_COMPARABLE"].includes(overallComparability) && includedCaseIds.length >= 2 && staleCases.length === 0;
+    const patternState = candidateAllowed ? "PATTERN_CANDIDATE" : material.length ? "PATTERN_CONFLICTING" : submittedReview ? "PATTERN_INCONCLUSIVE" : "PATTERN_NEEDS_REVIEW";
+    return {
+      model: "cross-case-comparability-set/v1",
+      comparisonId: input.comparisonId || null,
+      reviewQuestion: input.reviewQuestion || null,
+      granularity,
+      cases,
+      includedCaseIds,
+      excludedCases,
+      dimensions,
+      overallComparability,
+      reasons: { materialDifferences: material.map((item) => item.id), reviewableDifferences: reviewable.map((item) => item.id), missingDimensions: unknown.map((item) => item.id), missingCriticalCaseEvidence, staleCases },
+      deterministicLogic: { hardIncompatibilities: ["biological_target", "crop_identity", "outcome_measurement", granularity === "PRODUCT_LEVEL" ? "product_identity" : null, ["PRODUCT_LEVEL", "ACTIVE_INGREDIENT_LEVEL"].includes(granularity) ? "active_ingredient" : null].filter(Boolean), hiddenWeighting: false, score: null, opaqueModel: false, manufacturerPreference: false, productPreference: false },
+      humanReview: { required: true, submittedExplicitly: submittedReview, decision: reviewDecision, options: ["INCLUDE_TOGETHER", "SEPARATE_SUBGROUPS", "REJECT_COMPARISON", "REQUEST_MORE_EVIDENCE"], canCreateEfficacyClaim: false, reopenRequired: staleCases.length > 0 },
+      localPatternCandidate: candidateAllowed ? { state: patternState, evidenceClass: "CASE_DERIVED_LOCAL_EVIDENCE", caseIds: includedCaseIds, comparisonBasis: input.reviewQuestion, comparabilityState: overallComparability, observedDescriptivePattern: input.humanReview.descriptivePattern || null, limitations: input.humanReview.limitations || [], conflicts: material.map((item) => item.id), provenance: cases.filter((item) => includedCaseIds.includes(item.id)).flatMap((item) => item.provenance), canonical: false, efficacyClaim: null, resistanceClaim: null, recommendation: null } : { state: patternState, evidenceClass: "CASE_DERIVED_LOCAL_EVIDENCE", caseIds: [], canonical: false, efficacyClaim: null, resistanceClaim: null, recommendation: null },
+      aggregation: { automatic: false, meanEfficacy: null, pooledControlPercent: null, successRate: null, performanceScore: null, weightedAverage: null, successLikelihoodEstimate: null, syntheticAverageCase: null },
+      productComparisonInteraction: { orderingChanged: false, badgesAdded: false, rankingChanged: false, preferredProduct: null },
+      regulatoryInteraction: { authorityWaived: false, authorityStates: cases.map((item) => ({ caseId: item.id, value: item.regulatoryContext })) },
+      authorityBoundaries: { manufacturerClaimsValidated: false, scientificAuthoritySuperseded: false },
+      failedControlBoundary: "REPEATED POOR OUTCOMES != RESISTANCE OR LOW EFFICACY",
+      learn: { automaticLearning: false, canonicalPromotion: false, localEfficacyKnowledge: false, resistanceKnowledge: false, learnedSettings: false, learnedThresholds: false },
+      privacy: { persistence: "BROWSER_LOCAL_ONLY", backendAnalytics: false, cloudAggregation: false, crossUserPooling: false, telemetry: false, operatorScoring: false, farmerProfiling: false, hiddenProductTracking: false },
+      nonConclusions: { productEfficacy: null, productRanking: null, resistance: null, recommendation: null, causality: null },
     };
   }
 
@@ -794,5 +903,5 @@
       boundaries: ["Candidate ≠ Diagnosis", "Severity ≠ Need-for-Action", "Need-for-Action ≠ pesticide recommendation", "Weather alone cannot escalate identification", "Nearby Case cannot escalate identification", "Photo received ≠ Photo analyzed", "CONTROL FAILURE ≠ RESISTANCE"],
     };
   }
-  window.SPDecisionGates = Object.freeze({ evaluate, beginFromObservation, evaluateProgression, evaluateAbioticDifferential, evaluateApplicationContext, evaluateDepositionEvidence, evaluateOutcomeReview, evaluateFailedControl, evaluateNeedForAction, evaluateManagementSuitability, evaluateManagementOptions, createFieldAction, applyFieldActionResult, prepareExpertHandoff, compareTemporalObservations, profiles, symptomFamilies, observationVocabulary, progressionStates, lifeStageProfiles, abioticProfiles, abioticInvestigationStates, applicationQualityStates, applicationSuitabilityStates, depositionEvidenceStates, outcomeComparisonStates, targetLocationProfiles, needForActionStates, managementOptionClasses, managementSuitabilityStates, governedManagementOptionClasses, managementOptionEligibilityStates, fieldActionTypes, fieldActionStates, moaAuthority, roles: ROLES });
+  window.SPDecisionGates = Object.freeze({ evaluate, beginFromObservation, evaluateProgression, evaluateAbioticDifferential, evaluateApplicationContext, evaluateDepositionEvidence, evaluateOutcomeReview, evaluateCrossCaseComparability, evaluateFailedControl, evaluateNeedForAction, evaluateManagementSuitability, evaluateManagementOptions, createFieldAction, applyFieldActionResult, prepareExpertHandoff, compareTemporalObservations, profiles, symptomFamilies, observationVocabulary, progressionStates, lifeStageProfiles, abioticProfiles, abioticInvestigationStates, applicationQualityStates, applicationSuitabilityStates, depositionEvidenceStates, outcomeComparisonStates, crossCaseComparabilityStates, comparisonDimensionStates, targetLocationProfiles, needForActionStates, managementOptionClasses, managementSuitabilityStates, governedManagementOptionClasses, managementOptionEligibilityStates, fieldActionTypes, fieldActionStates, moaAuthority, roles: ROLES });
 })();

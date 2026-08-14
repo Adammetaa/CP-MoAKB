@@ -2,6 +2,34 @@
 
 Status: accepted bounded investigation foundation; not published
 
+## Sprint-094K governed cross-Case comparability
+
+### Cross-Case comparability
+
+`cross-case-comparability-set/v1` compares governed Outcome Review records rather than raw free text, isolated product records, or Application Events. Every participating Case remains independently traceable to T0, its Application Event and Context, Deposition/Coverage evidence, effective non-superseded T1/T2 observations, explicit Human Comparison, limitations, corrections, and provenance. The system never merges source records into a synthetic average Case.
+
+### Review question and granularity
+
+Every set retains one explicit review question because comparability is purpose-dependent. `PRODUCT_LEVEL`, `ACTIVE_INGREDIENT_LEVEL`, and `TARGET_LEVEL` remain distinct: Cases compatible for a target-direction pattern may still be incompatible for exact-product performance review. Product identity, active ingredient, and descriptive IRAC/FRAC/HRAC classification are never silently collapsed.
+
+### Comparison dimensions and material difference
+
+The review exposes biological target, crop and stage, metric, unit, denominator, count basis, method, sample size, timing windows, application method, product and ingredient identity, MoA, authority context, water volume, equipment, weather, canopy, target-specific deposition, sampling limitations, and alternative explanations. Each dimension retains `MATCH`, `ACCEPTABLE_DIFFERENCE`, `MATERIAL_DIFFERENCE`, `UNKNOWN`, `NOT_APPLICABLE`, or `NEEDS_REVIEW`; no hidden weight or numerical comparability score determines the result.
+
+Different targets, crops, or incompatible outcome measurements can be hard incompatibilities. Timing, stage, equipment, weather, canopy, water-volume, deposition, sampling, and confounder differences remain explicit and normally require review rather than being normalized or ranked. `COMPARABLE`, `PARTIALLY_COMPARABLE`, `NOT_COMPARABLE`, `INSUFFICIENT_INFORMATION`, and `NEEDS_HUMAN_REVIEW` are deterministic explainable states.
+
+### Human Review and correction
+
+Human Review may include Cases together, separate subgroups, reject comparison, or request more evidence. It cannot create efficacy or causal knowledge. When a source Outcome Review is corrected, revision mismatch marks the comparison stale, reopens Human Review, and prevents a stale pattern candidate; prior correction lineage remains traceable.
+
+### Local pattern candidate and outcome boundary
+
+An explicitly reviewed compatible subset may create only `PATTERN_CANDIDATE` with Case IDs, comparison basis, descriptive direction, limitations, conflicts, and provenance. It remains `CASE_DERIVED_LOCAL_EVIDENCE`, not canonical knowledge. Two reviewed Cases showing a similar direction of recorded burden change does not mean that a product is locally effective, and no mean efficacy, pooled control percentage, success rate, performance score, weighted average, probability, or synthetic average Case is produced.
+
+### Failed-control, regulatory, authority, and Learn boundaries
+
+Repeated poor outcomes remain reviewable evidence and do not prove resistance, low efficacy, wrong MoA, or weak product. Local patterns cannot alter neutral Product Comparison ordering, waive `AUTHORITY_BLOCKED`, validate manufacturer claims, or supersede scientific authority. No local-efficacy knowledge, resistance knowledge, recommendation metric, learned setting, learned threshold, automatic aggregation, or canonical promotion is created; comparison remains browser-local without analytics, cloud pooling, telemetry, operator scoring, profiling, or hidden product tracking.
+
 ## Sprint-093P governed outcome capture
 
 ### Outcome capture
