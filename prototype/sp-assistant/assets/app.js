@@ -253,6 +253,10 @@ function evaluateCandidates(observations) {
 function selectQuestions(observations, activeCandidates) {
   const keys = [];
   if (observations.includes("failed_control")) return ["chemical_history", "spray"].filter((key) => !caseState.answerRecords?.[key]).map((key) => ({ key, text: questionBank[key] }));
+  const bph = activeCandidates.some((item) => item.key === "brown-planthopper");
+  if (bph && !caseState.answerRecords?.bph_current_activity) return [{ key: "bph_current_activity", text: "ตอนนี้ยังพบตัวแมลงมีชีวิตบริเวณโคนต้นหรือไม่?" }];
+  if (bph && caseState.answerRecords?.bph_current_activity?.value === "found" && !caseState.answerRecords?.action_insects_per_plant) return [{ key: "action_insects_per_plant", text: "พบเฉลี่ยกี่ตัวต่อต้น?" }];
+  if (bph && Number(caseState.answerRecords?.action_insects_per_plant?.value) >= 10 && !caseState.answerRecords?.previous_treatment) return [{ key: "previous_treatment", text: "ครั้งล่าสุดใช้สารกำจัดแมลงอะไร?" }];
   if (!observations.includes("rice_age")) keys.push("rice_age");
   if (observations.includes("spot")) keys.push("lesion_shape");
   if (!observations.includes("field_distribution")) keys.push("field_distribution");
@@ -288,6 +292,9 @@ function renderEnvironmentalContext(candidate) {
 }
 
 const guidedQuestionControls = {
+  bph_current_activity: { type: "chips", label: "ตอนนี้ยังพบตัวแมลงมีชีวิตบริเวณโคนต้นหรือไม่?", why: "Current activity ต้องแยกจากรอยเสียหายเก่า", options: [["พบ", "found"], ["ไม่พบ", "not_found"], ["ไม่แน่ใจ", "unknown"]] },
+  action_insects_per_plant: { type: "number", label: "พบเฉลี่ยกี่ตัวต่อต้น?", why: "ใช้หน่วย insects / plant ตาม Action Evidence; ไม่แปลงจากจุดสุ่ม" },
+  previous_treatment: { type: "select", label: "ครั้งล่าสุดใช้สารกำจัดแมลงอะไร?", why: "เก็บบริบท active ingredient / MoA / failed control โดยไม่สรุป resistance", options: [["", "เลือกเท่าที่ทราบ"], ["none", "ไม่เคยใช้"], ["pymetrozine", "pymetrozine / IRAC 9B"], ["imidacloprid", "imidacloprid / IRAC 4A"], ["unknown", "จำไม่ได้"]] },
   rice_age: { type: "number", label: "อายุข้าวประมาณกี่วัน?", why: "อายุข้าวช่วยจัดบริบทระยะพืช แต่ไม่ยืนยันสาเหตุ" },
   lesion_shape: { type: "chips", label: "ลักษณะแผลใกล้เคียงแบบไหน?", why: "รูปร่างแผลช่วยแยกสิ่งที่ควรตรวจต่อ แต่ไม่ยืนยันโรค", options: [["จุดกลมหรือรี", "จุดกลมหรือรี"], ["แผลยาว/กระสวย", "แผลรูปตาหรือกระสวย"], ["แผลเป็นขีด", "แผลเป็นขีด"], ["ดูไม่แน่ใจ", "ไม่แน่ใจ"]] },
   field_distribution: { type: "chips", label: "อาการกระจายแบบไหน?", why: "รูปแบบการกระจายช่วยกำหนดจุดตรวจในแปลง", options: [["ไม่กี่ต้น", "ไม่กี่ต้น"], ["เป็นหย่อม", "เป็นหย่อม"], ["หลายจุดทั่วแปลง", "กระจายหลายจุดทั่วแปลง"], ["เกือบทั้งแปลง", "เกือบทั้งแปลง"], ["ไม่แน่ใจ", "ไม่แน่ใจ"]] },
@@ -378,10 +385,16 @@ function render() {
   caseState.questions = selectQuestions(observations, caseState.candidates);
   caseState.measurements = measurements;
   caseState.decision = window.SPDecisionGates?.evaluate({ observations, candidates: caseState.candidates, measurements }) ?? null;
+  caseState.chemicalSlice = window.SPChemicalSlice?.evaluate({
+    isBph: caseState.candidates.some((item) => item.key === "brown-planthopper"),
+    currentActivity: caseState.answerRecords?.bph_current_activity?.value,
+    insectsPerPlant: caseState.answerRecords?.action_insects_per_plant?.value,
+    previousTreatment: caseState.answerRecords?.previous_treatment?.value,
+  }) ?? null;
   const decisionGap = caseState.decision?.nextBestEvidence;
-  if (decisionGap?.action === "ASK_OBSERVATION" && !observations.includes("failed_control")) {
+  if (decisionGap?.action === "ASK_OBSERVATION" && !observations.includes("failed_control") && !caseState.questions.some((question) => ["bph_current_activity", "action_insects_per_plant", "previous_treatment"].includes(question.key))) {
     caseState.questions = [{ key: `gate_${decisionGap.cue}`, text: `เพื่อแยก ${decisionGap.candidate} ต้องตรวจ: ${decisionGap.label}` }, ...caseState.questions].slice(0, 5);
-  } else if (caseState.decision?.needForAction.status === "MORE_EVIDENCE_REQUIRED" && caseState.decision.needForAction.requiredMeasurement === "average insects per rice plant" && !observations.includes("failed_control")) {
+  } else if (caseState.decision?.needForAction.status === "MORE_EVIDENCE_REQUIRED" && caseState.decision.needForAction.requiredMeasurement === "average insects per rice plant" && !observations.includes("failed_control") && !caseState.questions.some((question) => ["bph_current_activity", "action_insects_per_plant", "previous_treatment"].includes(question.key))) {
     caseState.questions = [{ key: "action_insects_per_plant", text: "สุ่มนับเพลี้ยบริเวณโคนต้นแล้วพบเฉลี่ยกี่ตัวต่อต้น?" }, ...caseState.questions].slice(0, 5);
   }
   const workflowStatus = document.querySelector(".chat-status small");
@@ -396,6 +409,8 @@ function render() {
   const decisionSummary = leadingGate ? `<p><strong>Identification Gate:</strong> ${leadingGate.identification}</p><p>${leadingGate.identification === "PROVISIONAL_IDENTIFICATION" ? `ลักษณะที่พบสอดคล้องกับ ${escapeHtml(leadingGate.name)} ในระดับเบื้องต้น แต่ไม่ใช่การยืนยันสาเหตุ` : `ข้อมูลยังไม่พอสำหรับแยก ${escapeHtml(leadingGate.name)} · ยังขาด ${leadingGate.missing.map((item) => escapeHtml(item.label)).join(" · ") || "การทบทวนทางวิทยาศาสตร์"}`}</p>` : "";
   output.innerHTML = `<div class="message-timeline" data-message-timeline>${renderConversationHistory()}</div><article class="message assistant-message current-assistant"><span class="avatar">SP</span><div class="message-bubble"><p><strong>${caseState.lastAnswerUncertain ? "ไม่ต้องเดาครับ เราจะเก็บหลักฐานเพิ่ม" : "รับทราบครับ"}</strong></p><p>${investigationProgress()} · ${evidenceCompleteness()}</p>${failed ? `<p class="inline-warning"><strong>⚠️ CONTROL FAILURE ≠ RESISTANCE</strong><br>ต้องตรวจสาร เวลา วิธีใช้ สภาพแวดล้อม และการกลับเข้าทำลายก่อน โดยระบบไม่แนะนำให้เพิ่มอัตราใช้</p>` : ""}<button type="button" class="detail-trigger" data-detail-toggle>ดูรายละเอียดเคสและ Candidate</button></div></article><dialog class="case-detail-sheet" data-detail-sheet aria-label="รายละเอียดเคส"><button type="button" class="sheet-close" data-detail-close>ปิด</button><h2>รายละเอียดเคส</h2><p>${observations.length ? observations.map((item) => escapeHtml(item.replaceAll("_", " "))).join(" · ") : "ยังไม่มี Observation ที่รู้จัก"}</p><h3>Candidate Knowledge</h3><p class="ordering-note">ลำดับทำงาน ไม่ใช่ probability หรือ confidence</p><div class="candidate-list">${candidateDetails}</div>${renderEnvironmentalContext(caseState.candidates[0])}<p class="boundary-copy">Candidate Knowledge ≠ Diagnosis · Photo received ≠ Photo analyzed · Nearby ≠ Transmission</p></dialog>`;
   const assistantBubble = output.querySelector(".current-assistant .message-bubble");
+  const chemicalHtml = window.SPChemicalSlice?.render(caseState.chemicalSlice) || "";
+  if (chemicalHtml) assistantBubble?.insertAdjacentHTML("beforeend", chemicalHtml);
   assistantBubble?.querySelector(".detail-trigger")?.insertAdjacentHTML("beforebegin", decisionSummary);
   output.querySelector(".case-detail-sheet .boundary-copy")?.insertAdjacentHTML("beforebegin", decisionDetails);
   const nextAction = nextBestAction();
