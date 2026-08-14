@@ -390,6 +390,7 @@ function render() {
     currentActivity: caseState.answerRecords?.bph_current_activity?.value,
     insectsPerPlant: caseState.answerRecords?.action_insects_per_plant?.value,
     previousTreatment: caseState.answerRecords?.previous_treatment?.value,
+    decision: caseState.decision,
   }) ?? null;
   const decisionGap = caseState.decision?.nextBestEvidence;
   if (decisionGap?.action === "ASK_OBSERVATION" && !observations.includes("failed_control") && !caseState.questions.some((question) => ["bph_current_activity", "action_insects_per_plant", "previous_treatment"].includes(question.key))) {
@@ -411,6 +412,11 @@ function render() {
   const assistantBubble = output.querySelector(".current-assistant .message-bubble");
   const chemicalHtml = window.SPChemicalSlice?.render(caseState.chemicalSlice) || "";
   if (chemicalHtml) assistantBubble?.insertAdjacentHTML("beforeend", chemicalHtml);
+  assistantBubble?.querySelectorAll("[data-decision-follow-up]").forEach((button) => button.addEventListener("click", () => {
+    const answer = window.SPChemicalSlice?.renderFollowUp(caseState.chemicalSlice, button.dataset.decisionFollowUp) || "";
+    if (!answer) return;
+    button.closest("[data-chemical-slice]")?.querySelector("[data-decision-follow-up-output]")?.insertAdjacentHTML("beforeend", answer);
+  }));
   assistantBubble?.querySelector(".detail-trigger")?.insertAdjacentHTML("beforebegin", decisionSummary);
   output.querySelector(".case-detail-sheet .boundary-copy")?.insertAdjacentHTML("beforebegin", decisionDetails);
   const nextAction = nextBestAction();
