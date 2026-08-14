@@ -483,9 +483,18 @@ function handleNextAction(action) {
   if (action === "REQUEST_EXPERT_HANDOFF") { $("[data-escalate]").click(); return; }
 }
 
+function collapseComposerAfterKnowledge() { setComposerExpanded(false); }
+
 function startCase() {
   const text = problem.value.trim();
   if (!text) return problem.focus();
+  if (window.SPKnowledgeQA?.isKnowledgeQuery(text)) {
+    window.SPKnowledgeQA.ask(text);
+    problem.value = "";
+    updateSendState();
+    collapseComposerAfterKnowledge();
+    return;
+  }
   if (caseState) {
     caseState.userText += ` ${text}`;
     caseState.conversationHistory.push({ role: "USER", type: "USER_TEXT", text });
