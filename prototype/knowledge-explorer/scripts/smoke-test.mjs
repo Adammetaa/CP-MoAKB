@@ -124,6 +124,8 @@ try {
     "sp-assistant/assets/polish.css",
     "sp-assistant/assets/decision-authority.js",
     "sp-assistant/assets/decision-gates.js",
+    "sp-assistant/assets/chemical-slice.js",
+    "sp-assistant/assets/knowledge-qa.js",
     "sp-assistant/assets/app.js",
     "sp-assistant/deployment.json",
   ]) {

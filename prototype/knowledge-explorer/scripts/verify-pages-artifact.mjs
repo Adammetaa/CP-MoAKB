@@ -41,6 +41,8 @@ const approved = new Set([
   "sp-assistant/deployment.json",
   "sp-assistant/assets/decision-authority.js",
   "sp-assistant/assets/decision-gates.js",
+  "sp-assistant/assets/chemical-slice.js",
+  "sp-assistant/assets/knowledge-qa.js",
   "sp-assistant/assets/app.js",
   "sp-assistant/assets/chat.css",
   "sp-assistant/assets/polish.css",
@@ -63,8 +65,8 @@ export const verifyArtifact = async (root) => {
   const resolvedRoot = resolve(root);
   const files = await walk(resolvedRoot);
   const relativeFiles = files.map((path) => relative(resolvedRoot, path).split(sep).join("/"));
-  if (relativeFiles.length !== 61 || approved.size !== 61) {
-    throw new Error("Pages artifact must contain exactly 61 approved files");
+  if (relativeFiles.length !== 63 || approved.size !== 63) {
+    throw new Error("Pages artifact must contain exactly 63 approved files");
   }
   const unexpected = relativeFiles.filter((path) => !approved.has(path));
   const missing = [...approved].filter((path) => !relativeFiles.includes(path));
@@ -218,8 +220,17 @@ export const verifyArtifact = async (root) => {
   for (const conversationBoundary of ["guidedQuestionControls", "nextBestAction", "answerRecords", "conversationHistory", "Photo received ≠ Photo analyzed", "CONTROL FAILURE ≠ RESISTANCE", "โหมดทดสอบภาคสนาม"]) {
     if (!assistantApp.includes(conversationBoundary)) throw new Error(`SP Assistant lost guided-conversation boundary: ${conversationBoundary}`);
   }
+  const assistantCommit = assistant.match(/<p data-build-version>Build: ([0-9a-f]{12})<\/p>/)?.[1];
+  if (!assistantCommit) throw new Error("SP Assistant lost visible build identity");
+  for (const asset of ["decision-authority.js", "decision-gates.js", "chemical-slice.js", "knowledge-qa.js", "app.js"]) {
+    if (!assistant.includes(`src="assets/${asset}?v=${assistantCommit}"`)) throw new Error(`SP Assistant asset is not tied to visible build identity: ${asset}`);
+  }
+  const assistantKnowledge = await readFile(resolve(resolvedRoot, "sp-assistant", "assets", "knowledge-qa.js"), "utf8");
+  for (const routingBoundary of ["window.SPKnowledgeQA", "MECHANISM_LOOKUP", "terminologyAliases", "isCaseFirst", 'data-review="CORRECT"', "data-export-review"]) {
+    if (!assistantKnowledge.includes(routingBoundary)) throw new Error(`SP Assistant lost current knowledge routing or review capability: ${routingBoundary}`);
+  }
   const assistantMetadata = JSON.parse(await readFile(resolve(resolvedRoot, "sp-assistant", "deployment.json"), "utf8"));
-  if (assistantMetadata.deployment_mode !== "preview" || assistantMetadata.prototype !== "sp-assistant" || assistantMetadata.status !== "local-demo-not-published" || !/^[0-9a-f]{40}$/.test(assistantMetadata.commit)) throw new Error("SP Assistant deployment metadata is unsafe or incomplete");
+  if (assistantMetadata.deployment_mode !== "preview" || assistantMetadata.prototype !== "sp-assistant" || assistantMetadata.status !== "local-demo-not-published" || !/^[0-9a-f]{40}$/.test(assistantMetadata.commit) || Number.isNaN(Date.parse(assistantMetadata.build_timestamp)) || assistantCommit !== assistantMetadata.commit.slice(0, 12)) throw new Error("SP Assistant deployment metadata is unsafe or incomplete");
 
   const landing = await readFile(resolve(resolvedRoot, "index.html"), "utf8");
   for (const requirement of [

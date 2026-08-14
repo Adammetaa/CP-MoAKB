@@ -9,7 +9,7 @@ CSS = (ASSISTANT / "assets" / "styles.css").read_text(encoding="utf-8")
 
 
 def test_knowledge_query_runs_inside_sp_assistant() -> None:
-    assert 'src="assets/knowledge-qa.js"' in HTML
+    assert 'src="assets/knowledge-qa.js?v=source-tree"' in HTML
     assert "window.SPKnowledgeQA?.isKnowledgeQuery(text)" in APP
     assert "window.SPKnowledgeQA.ask(text)" in APP
     for intent in (

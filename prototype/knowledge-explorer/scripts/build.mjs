@@ -162,11 +162,20 @@ await writeFile(
   `${JSON.stringify({ deployment_mode: "preview", prototype: "knowledge-lab", commit, package_version: packageVersion, status: "fictional-placeholder" }, null, 2)}\n`,
   "utf8",
 );
-await cp(resolve(assistantRoot, "index.html"), resolve(assistantOutput, "index.html"));
+const assistantVersion = commit.slice(0, 12);
+const assistantSource = await readFile(resolve(assistantRoot, "index.html"), "utf8");
+if (!assistantSource.includes("?v=source-tree") || !assistantSource.includes("Build: source-tree")) {
+  throw new Error("SP Assistant source is missing build-version placeholders");
+}
+await writeFile(
+  resolve(assistantOutput, "index.html"),
+  assistantSource.replaceAll("?v=source-tree", `?v=${assistantVersion}`).replace("Build: source-tree", `Build: ${assistantVersion}`),
+  "utf8",
+);
 await cp(resolve(assistantRoot, "assets"), resolve(assistantOutput, "assets"), { recursive: true });
 await writeFile(
   resolve(assistantOutput, "deployment.json"),
-  `${JSON.stringify({ deployment_mode: "preview", prototype: "sp-assistant", commit, package_version: packageVersion, status: "local-demo-not-published" }, null, 2)}\n`,
+  `${JSON.stringify({ deployment_mode: "preview", prototype: "sp-assistant", commit, build_timestamp: buildTimestamp, package_version: packageVersion, status: "local-demo-not-published" }, null, 2)}\n`,
   "utf8",
 );
 
