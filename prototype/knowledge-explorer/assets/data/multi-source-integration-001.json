@@ -413,6 +413,53 @@
       "privacy": { "persistence": "BROWSER_LOCAL_ONLY", "backend_analytics": false, "cloud_aggregation": false, "cross_user_pooling": false, "telemetry": false, "operator_scoring": false, "farmer_profiling": false, "hidden_product_tracking": false }
     }
   ],
+  "local_pattern_adjudications": [
+    {
+      "id": "LPA-095-BPH-001/v1",
+      "model": "local-pattern-adjudication/v1",
+      "pattern_candidate": { "id": "LPC-094-BPH-001/v1", "comparison_set_id": "CCS-094K-BPH-001/v1", "review_question": "Are these BPH Case outcomes comparable enough at the exact product-identity level to examine as one local descriptive pattern?", "granularity": "PRODUCT_LEVEL", "included_case_ids": ["CASE-087-BPH-A/v1", "CASE-094-BPH-B/v1"], "excluded_cases": [{ "case_id": "CASE-094-BPH-C/v1", "reason": "separate subgroup retained because application method, crop stage, timing, canopy, water volume, deposition context, and direction differ" }], "descriptive_pattern": "Two Human-reviewed Cases show a similar direction of recorded BPH burden change.", "limitations": ["two included Cases", "independence beyond separate Case and Application Event identities needs review", "plant-base deposition unmeasured", "same-season locality context is incomplete"], "correction_lineage": ["OUT-093-BPH-T1-001 supersedes OUT-093-BPH-T1-ORIGINAL"], "provenance": ["CCS-094K-BPH-001/v1", "CASE-087-BPH-A/v1", "CASE-094-BPH-B/v1", "CASE-094-BPH-C/v1"] },
+      "case_counts": { "total_considered": 3, "included": 2, "excluded": 1, "comparable": 2, "partially_comparable": 1, "universal_minimum": null },
+      "evidence_dimensions": [
+        { "id": "case_count", "state": "LIMITED", "reason": "two Cases support exploratory review only; no universal minimum is asserted" },
+        { "id": "case_independence", "state": "LIMITED", "reason": "separate Case and Application Event identities are present; field/operator dependence needs verification" },
+        { "id": "spatial_diversity", "state": "MISSING", "reason": "farm and locality diversity are not established" },
+        { "id": "temporal_diversity", "state": "LIMITED", "reason": "both included Cases are same-season evidence" },
+        { "id": "target_consistency", "state": "ADEQUATE", "reason": "both included Cases retain exact BPH identity" },
+        { "id": "crop_stage_consistency", "state": "ADEQUATE", "reason": "both included Cases concern rice at tillering" },
+        { "id": "outcome_completeness", "state": "ADEQUATE", "reason": "effective T0, T1, T2, Human Comparison, and correction status are present" },
+        { "id": "sampling_consistency", "state": "ADEQUATE", "reason": "metric, denominator, count basis, method, sample size, and field-zone context match" },
+        { "id": "application_context_completeness", "state": "LIMITED", "reason": "method, water volume, canopy, and wind are recorded; model, nozzle, rain, temperature, and RH remain incomplete" },
+        { "id": "target_deposition_evidence", "state": "LIMITED", "reason": "upper-canopy coverage exists but plant-base deposition remains unmeasured" },
+        { "id": "outcome_direction", "state": "ADEQUATE", "reason": "both included Human Comparisons are DECREASE_OBSERVED; this is not efficacy" },
+        { "id": "magnitude_compatibility", "state": "LIMITED", "reason": "raw magnitudes are preserved but not pooled" },
+        { "id": "conflicting_evidence", "state": "LIMITED", "reason": "excluded Case C records NO_CLEAR_CHANGE and remains visible as a separate subgroup" },
+        { "id": "alternative_explanations", "state": "LIMITED", "reason": "weather, natural enemies, sampling variation, crop development, and deposition uncertainty remain unresolved" },
+        { "id": "source_completeness", "state": "ADEQUATE", "reason": "Case, outcome, Application Event, Context, Deposition, Human Comparison, and correction references are retained" },
+        { "id": "correction_staleness", "state": "ADEQUATE", "reason": "adjudication uses the corrected effective T1 record" }
+      ],
+      "statistical_method": { "descriptive_review": "NOT_REQUIRED_FOR_CURRENT_REVIEW", "stronger_inference": "METHOD_REQUIRED_BEFORE_STRONGER_INFERENCE", "governed_method_reference": null, "computations_executed": [] },
+      "human_adjudication": { "required": true, "submitted_explicitly": true, "state": "DEFERRED_PENDING_EVIDENCE", "decision": "REQUEST_MORE_EVIDENCE", "reviewer": "REVIEWER-095-AGRONOMIC-001", "reviewer_role": "AGRONOMIC_REVIEWER", "reviewer_scope": "local evidence sufficiency only; no scientific, regulatory, or recommendation authority", "rationale": "Comparable direction and complete outcomes justify continued review, but independence, spatial context, target-location deposition, and confounders remain materially limited", "can_declare_efficacy": false, "can_create_authority": false },
+      "evidence_request": { "architecture": "field-action-handoff/v1", "count": 1, "action_type": "RECORD", "subject": "case_independence_and_spatial_context", "completion": "EXPLICIT_HUMAN_SUBMISSION_REQUIRED", "treatment_task": false, "repeat_treatment_task": false, "dose_increase_task": false },
+      "adjudication_state": "DEFERRED_PENDING_EVIDENCE",
+      "missing_evidence": ["verified field/farm independence", "spatial diversity", "plant-base deposition", "complete weather/equipment context"],
+      "reviewed_local_pattern": null,
+      "promotion": { "canonical": false, "automatic": false },
+      "boundaries": { "sufficiency_means_efficacy": false, "resistance_confirmed": false, "product_ranking": false, "recommendation": false, "regulatory_authority_waived": false, "manufacturer_claim_validated": false, "scientific_authority_superseded": false },
+      "privacy": { "persistence": "BROWSER_LOCAL_ONLY", "backend_review_database": false, "cloud_adjudication": false, "cross_user_pooling": false, "operator_scoring": false, "reviewer_analytics": false, "hidden_product_tracking": false, "telemetry": false }
+    },
+    {
+      "id": "LPA-095-BPH-CONFLICT-001/v1",
+      "model": "local-pattern-adjudication/v1",
+      "pattern_candidate": { "id": "LPC-095-BPH-CONFLICT-001/v1", "comparison_set_id": "CCS-094K-BPH-001/v1", "review_question": "Can all three BPH Cases form one product-level directional pattern?", "granularity": "PRODUCT_LEVEL", "included_case_ids": ["CASE-087-BPH-A/v1", "CASE-094-BPH-B/v1", "CASE-094-BPH-C/v1"], "descriptive_pattern": "Two Cases decrease while one Case records no clear change.", "conflicts": ["Case C direction, method, stage, timing, canopy, water volume, and deposition context differ"], "provenance": ["CCS-094K-BPH-001/v1", "CASE-087-BPH-A/v1", "CASE-094-BPH-B/v1", "CASE-094-BPH-C/v1"] },
+      "evidence_dimensions": [{ "id": "outcome_direction", "state": "CONFLICTING", "reason": "DECREASE_OBSERVED and NO_CLEAR_CHANGE are both retained" }, { "id": "application_context", "state": "CONFLICTING", "reason": "drone/tillering/dense-canopy and knapsack/booting/sparse-canopy contexts require separate review" }],
+      "human_adjudication": { "required": true, "submitted_explicitly": true, "state": "CONFLICTING_EVIDENCE", "decision": "SPLIT_PATTERN", "reviewer": "REVIEWER-095-AGRONOMIC-001", "reviewer_role": "AGRONOMIC_REVIEWER", "rationale": "conflicting direction and materially different context cannot remain one pattern" },
+      "pattern_splitting": { "performed": true, "parent_retained": true, "parent_pattern_candidate_id": "LPC-095-BPH-CONFLICT-001/v1", "groups": [{ "id": "SUBPATTERN-095-DRONE-TILLERING", "case_ids": ["CASE-087-BPH-A/v1", "CASE-094-BPH-B/v1"] }, { "id": "SUBPATTERN-095-KNAPSACK-BOOTING", "case_ids": ["CASE-094-BPH-C/v1"] }] },
+      "adjudication_state": "CONFLICTING_EVIDENCE",
+      "rejection": { "rejected_as_single_pattern": true, "traceable": true, "history_deleted": false },
+      "promotion": { "canonical": false, "automatic": false },
+      "boundaries": { "efficacy_claim": null, "resistance_claim": null, "recommendation": null }
+    }
+  ],
   "entities": {
     "biological": [
       { "id": "BIO-BPH", "type": "pest", "normalized_name": "brown planthopper", "thai_name": "เพลี้ยกระโดดสีน้ำตาล", "english_name": "Brown Planthopper", "scientific_name": "Nilaparvata lugens", "crop_relationship": "rice", "aliases": ["BPH"], "canonical_reference": "rice-insect-corpus-001:BPH", "identity_state": "SUPPORTED", "duplicate_identity_state": "NO_DUPLICATE_IN_INTEGRATION_SLICE" },
@@ -584,6 +631,8 @@
       "deposition_coverage_view_id": "DCV-092K-BPH-001/v1",
       "outcome_review_view_id": "ORV-093P-BPH-001/v1",
       "cross_case_comparison_set_id": "CCS-094K-BPH-001/v1",
+      "local_pattern_adjudication_id": "LPA-095-BPH-001/v1",
+      "local_pattern_conflict_adjudication_id": "LPA-095-BPH-CONFLICT-001/v1",
       "management_option_link": "CHEMICAL_REVIEW_INFORMATION_ONLY"
     },
     { "id": "WV-MSI-BLAST-001/v1", "subject_id": "BIO-BLAST", "title": "Rice blast integrated knowledge", "case_assertions": ["AS-CASE-BLAST-001"], "scientific_assertions": ["AS-SCI-BLAST-001"], "moa_assertions": ["AS-FRAC-TRI-001"], "regulatory_assertions": [], "manufacturer_assertions": [], "relationship_ids": ["REL-BLAST-TRI", "REL-CASE-BLAST-CONFLICT"], "management_option_link": "NO_CHEMICAL_SELECTION" }

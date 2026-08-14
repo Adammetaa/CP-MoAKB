@@ -2,6 +2,32 @@
 
 Status: accepted bounded investigation foundation; not published
 
+## Sprint-095K governed local pattern adjudication
+
+### Local pattern adjudication and evidence sufficiency
+
+`local-pattern-adjudication/v1` reviews a traceable `PATTERN_CANDIDATE`, not a product, ingredient, single Case, application, registration, or manufacturer assertion. The candidate retains its review question, granularity, included and excluded Cases, comparability findings, descriptive direction, limitations, conflicts, correction lineage, and provenance. `SUFFICIENT_FOR_FURTHER_REVIEW` means only that governed Case-derived evidence justifies additional structured expert evaluation; sufficiency is not efficacy, recommendation, or canonical knowledge.
+
+### Case independence and evidence dimensions
+
+Duplicate Case identities, repeated representation of one Application Event, same-plot splits, and other dependent records cannot inflate the evidence base. The adjudication exposes Case count without a universal minimum; independence; spatial and temporal diversity; target, crop, and stage consistency; T0/T1/T2 and Human Comparison completeness; sampling consistency; Application Context; target-specific deposition; direction and raw magnitude; conflicting evidence; alternative explanations; provenance completeness; and correction/staleness. Each dimension remains `ADEQUATE`, `LIMITED`, `MISSING`, `CONFLICTING`, `NOT_APPLICABLE`, or `NEEDS_REVIEW`, with no hidden weighting or numerical sufficiency score.
+
+### Conflicting evidence and resistance boundary
+
+Conflicting or poor-outcome Cases are first-class evidence. They are not silently excluded, suppressed, or cherry-picked. Repeated poor outcomes may justify expert investigation but do not confirm resistance, low efficacy, wrong MoA, or weak product. The BPH conflict slice retains two `DECREASE_OBSERVED` Cases and one `NO_CLEAR_CHANGE` Case and preserves the original candidate when Human Review separates application-method and crop-stage subgroups.
+
+### Statistical method boundary
+
+Descriptive pattern review may use governed Case comparison and normally records `NOT_REQUIRED_FOR_CURRENT_REVIEW`. Stronger inference stops at `METHOD_REQUIRED_BEFORE_STRONGER_INFERENCE` unless a future separately governed method defines the question, assumptions, compatible data, sample requirements, computation, and interpretation limits. Sprint-095K executes no formal inferential computation, pooled effect, or significance procedure.
+
+### Human adjudication, splitting, and rejection
+
+Human adjudication is mandatory and retains reviewer identity, role, scope, rationale, and explicit submission. Review may mark evidence sufficient for further review, insufficient, conflicting, deferred, or stale; request one evidence item through `field-action-handoff/v1`; split a pattern while retaining parent lineage; or reject a pattern without erasing it. Reviewer title does not create scientific, regulatory, recommendation, or canonical authority, and no universal two-reviewer rule is invented.
+
+### Reviewed local pattern and promotion boundary
+
+Where explicitly adjudicated as sufficient, the safest downstream object is only `GOVERNED_LOCAL_PATTERN_REVIEW_INPUT`: a Human-reviewed input suitable for continued governed evaluation. It is not validated efficacy, a locally effective badge, product ranking, resistance confirmation, or recommendation. Pattern evidence cannot waive `AUTHORITY_BLOCKED`, validate manufacturer claims, supersede scientific authority, or move directly into canonical knowledge. Automatic Learn, learned efficacy, learned resistance, settings, thresholds, and knowledge promotion remain disabled.
+
 ## Sprint-094K governed cross-Case comparability
 
 ### Cross-Case comparability

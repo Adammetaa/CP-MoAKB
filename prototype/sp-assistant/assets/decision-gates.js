@@ -215,6 +215,8 @@
   const outcomeComparisonStates = Object.freeze(["DECREASE_OBSERVED", "INCREASE_OBSERVED", "NO_CLEAR_CHANGE", "NEW_DAMAGE_OBSERVED", "NO_NEW_DAMAGE_OBSERVED", "COMPARISON_LIMITED", "NOT_COMPARABLE", "NEEDS_REVIEW"]);
   const crossCaseComparabilityStates = Object.freeze(["COMPARABLE", "PARTIALLY_COMPARABLE", "NOT_COMPARABLE", "INSUFFICIENT_INFORMATION", "NEEDS_HUMAN_REVIEW"]);
   const comparisonDimensionStates = Object.freeze(["MATCH", "ACCEPTABLE_DIFFERENCE", "MATERIAL_DIFFERENCE", "UNKNOWN", "NOT_APPLICABLE", "NEEDS_REVIEW"]);
+  const evidenceSufficiencyStates = Object.freeze(["SUFFICIENT_FOR_FURTHER_REVIEW", "INSUFFICIENT_EVIDENCE", "CONFLICTING_EVIDENCE", "DEFERRED_PENDING_EVIDENCE", "NEEDS_EXPERT_REVIEW", "STALE_REVIEW_REQUIRED"]);
+  const sufficiencyDimensionStates = Object.freeze(["ADEQUATE", "LIMITED", "MISSING", "CONFLICTING", "NOT_APPLICABLE", "NEEDS_REVIEW"]);
 
   function evaluateDepositionEvidence(input = {}) {
     const records = (input.measurements || []).map((record) => ({
@@ -452,6 +454,80 @@
       learn: { automaticLearning: false, canonicalPromotion: false, localEfficacyKnowledge: false, resistanceKnowledge: false, learnedSettings: false, learnedThresholds: false },
       privacy: { persistence: "BROWSER_LOCAL_ONLY", backendAnalytics: false, cloudAggregation: false, crossUserPooling: false, telemetry: false, operatorScoring: false, farmerProfiling: false, hiddenProductTracking: false },
       nonConclusions: { productEfficacy: null, productRanking: null, resistance: null, recommendation: null, causality: null },
+    };
+  }
+
+  function evaluateLocalPatternAdjudication(input = {}) {
+    const candidate = input.patternCandidate || {};
+    const cases = input.cases || [];
+    const includedIds = candidate.caseIds || [];
+    const included = cases.filter((item) => includedIds.includes(item.id));
+    const excluded = cases.filter((item) => !includedIds.includes(item.id));
+    const duplicateCaseIds = [...new Set(included.map((item) => item.id).filter((id, index, all) => all.indexOf(id) !== index))];
+    const eventIds = included.map((item) => item.applicationEventReference).filter(Boolean);
+    const duplicatedEvents = [...new Set(eventIds.filter((id, index, all) => all.indexOf(id) !== index))];
+    const sourceStale = included.filter((item) => item.sourceRevision && item.adjudicationRevision && item.sourceRevision !== item.adjudicationRevision).map((item) => item.id);
+    const allHave = (predicate) => included.length > 0 && included.every(predicate);
+    const distinct = (getter) => new Set(included.map(getter).filter((value) => value !== null && value !== undefined && value !== "UNKNOWN"));
+    const assessment = (id, label, state, reason, details = {}) => ({ id, label, state, reason, hiddenWeight: null, ...details });
+    const outcomeComplete = allHave((item) => ["T0", "T1", "T2"].every((phase) => (item.effectiveOutcomePhases || []).includes(phase)) && Boolean(item.humanComparison));
+    const provenanceComplete = allHave((item) => item.caseReference && item.outcomeReviewReference && item.applicationEventReference && item.applicationContextReference && item.depositionEvidenceReference && item.humanComparison && (item.provenance || []).length > 0);
+    const targetValues = distinct((item) => item.target);
+    const cropValues = distinct((item) => item.crop);
+    const stageValues = distinct((item) => item.cropStage);
+    const directionValues = distinct((item) => item.humanComparison);
+    const dimensions = [
+      assessment("case_count", "Number of Comparable Cases", included.length >= 2 ? "LIMITED" : "MISSING", included.length >= 2 ? "case count supports exploratory review only; no universal minimum is asserted" : "fewer than two included Cases cannot form a cross-Case pattern", { totalConsidered: cases.length, included: included.length, excluded: excluded.length, comparable: input.comparableCaseCount ?? null, partiallyComparable: input.partiallyComparableCaseCount ?? null, universalMinimum: null }),
+      assessment("case_independence", "Case Independence", duplicateCaseIds.length || duplicatedEvents.length ? "CONFLICTING" : allHave((item) => item.independenceState === "INDEPENDENT") ? "ADEQUATE" : "LIMITED", duplicateCaseIds.length || duplicatedEvents.length ? "duplicate Case or Application Event representation cannot count as independent evidence" : "independence is retained as an explicit contextual assessment", { duplicateCaseIds, duplicatedEvents }),
+      assessment("spatial_diversity", "Spatial Diversity", allHave((item) => item.spatialContext) ? (distinct((item) => item.spatialContext).size > 1 ? "ADEQUATE" : "LIMITED") : "MISSING", "field, farm, and locality diversity are contextual and do not establish efficacy"),
+      assessment("temporal_diversity", "Temporal Diversity", allHave((item) => item.temporalContext) ? (distinct((item) => item.temporalContext).size > 1 ? "ADEQUATE" : "LIMITED") : "MISSING", "date and season diversity remain descriptive; no universal multi-season rule is created"),
+      assessment("target_consistency", "Biological Target Consistency", targetValues.size === 1 && allHave((item) => item.targetIdentityState !== "UNCERTAIN") ? "ADEQUATE" : targetValues.size > 1 ? "CONFLICTING" : "NEEDS_REVIEW", "different or uncertain target identities cannot be pooled"),
+      assessment("crop_stage_consistency", "Crop / Stage Consistency", cropValues.size > 1 ? "CONFLICTING" : stageValues.size === 1 && allHave((item) => item.crop && item.cropStage) ? "ADEQUATE" : allHave((item) => item.crop) ? "LIMITED" : "MISSING", "crop and stage compatibility depends on the explicit review question"),
+      assessment("outcome_completeness", "Outcome Completeness", outcomeComplete ? "ADEQUATE" : included.some((item) => (item.effectiveOutcomePhases || []).length > 0) ? "LIMITED" : "MISSING", "T0, T1, T2, explicit Human Comparison, and effective correction state remain visible"),
+      assessment("sampling_consistency", "Sampling Consistency", allHave((item) => item.samplingState === "COMPATIBLE") ? "ADEQUATE" : included.some((item) => item.samplingState === "INCOMPATIBLE") ? "CONFLICTING" : allHave((item) => item.samplingState) ? "LIMITED" : "MISSING", "metric, denominator, method, sample size, zone, and observer context are never silently standardized"),
+      assessment("application_context_completeness", "Application Context Completeness", allHave((item) => item.applicationContextState === "COMPLETE") ? "ADEQUATE" : allHave((item) => item.applicationContextReference) ? "LIMITED" : "MISSING", "method, water volume, equipment, timing, weather, and canopy affect interpretability without proving cause"),
+      assessment("target_deposition_evidence", "Target-Specific Deposition Evidence", allHave((item) => item.depositionState === "TARGET_LOCATION_MEASURED") ? "ADEQUATE" : allHave((item) => item.depositionEvidenceReference) ? "LIMITED" : input.depositionRequired === false ? "NOT_APPLICABLE" : "MISSING", "deposition importance is target- and question-specific; it is not universally required"),
+      assessment("outcome_direction", "Outcome Direction Consistency", directionValues.size === 1 && included.length > 0 ? "ADEQUATE" : directionValues.size > 1 ? "CONFLICTING" : "MISSING", "similar descriptive direction is not product efficacy; mixed direction remains first-class evidence"),
+      assessment("magnitude_compatibility", "Magnitude Compatibility", allHave((item) => item.rawOutcomeValues) ? "LIMITED" : "MISSING", "raw magnitudes are preserved but never pooled without a separately governed statistical method"),
+      assessment("conflicting_evidence", "Conflicting Evidence", (candidate.conflicts || []).length || input.retainedConflictingCases?.length ? "CONFLICTING" : "ADEQUATE", "contradictory or subgroup Cases remain visible and are not removed to strengthen a pattern", { retainedCases: input.retainedConflictingCases || [] }),
+      assessment("alternative_explanations", "Alternative Explanations", included.some((item) => (item.alternativeExplanations || []).length > 0) ? "LIMITED" : "ADEQUATE", "confounders remain unranked and are not statistically adjusted"),
+      assessment("source_completeness", "Source / Provenance Completeness", provenanceComplete ? "ADEQUATE" : "MISSING", "Case, outcome, Application Event, Context, Deposition, Human Comparison, and correction provenance are required"),
+      assessment("correction_staleness", "Correction / Staleness", sourceStale.length ? "CONFLICTING" : "ADEQUATE", sourceStale.length ? "source evidence changed after the adjudication revision" : "effective evidence revisions match the adjudication basis", { staleCaseIds: sourceStale }),
+    ];
+    const dimensionMap = Object.fromEntries(dimensions.map((item) => [item.id, item]));
+    const criticalMissing = ["outcome_completeness", "source_completeness"].filter((id) => dimensionMap[id].state === "MISSING");
+    const hardConflicts = ["case_independence", "target_consistency", "crop_stage_consistency", "sampling_consistency", "outcome_direction"].filter((id) => dimensionMap[id].state === "CONFLICTING");
+    const requestedState = input.humanAdjudication?.submittedExplicitly === true && evidenceSufficiencyStates.includes(input.humanAdjudication.state) ? input.humanAdjudication.state : null;
+    let adjudicationState = requestedState || "NEEDS_EXPERT_REVIEW";
+    if (sourceStale.length) adjudicationState = "STALE_REVIEW_REQUIRED";
+    else if (duplicateCaseIds.length || duplicatedEvents.length || hardConflicts.length) adjudicationState = "CONFLICTING_EVIDENCE";
+    else if (criticalMissing.length || included.length < 2) adjudicationState = "INSUFFICIENT_EVIDENCE";
+    else if (!requestedState) adjudicationState = "NEEDS_EXPERT_REVIEW";
+    const statisticalMethodState = input.intendedReviewStrength === "STRONGER_INFERENCE" ? "METHOD_REQUIRED_BEFORE_STRONGER_INFERENCE" : input.governedStatisticalMethod?.approved === true ? "METHOD_APPROVED" : input.statisticalMethodRequired === true ? "METHOD_NOT_DEFINED" : "NOT_REQUIRED_FOR_CURRENT_REVIEW";
+    const missingEvidence = dimensions.filter((item) => ["MISSING", "LIMITED", "NEEDS_REVIEW"].includes(item.state)).map((item) => item.id);
+    const nextEvidence = missingEvidence[0] || null;
+    const splitGroups = input.humanAdjudication?.decision === "SPLIT_PATTERN" ? (input.humanAdjudication.splitGroups || []).map((group) => ({ ...group, parentPatternCandidateId: candidate.id || null, canonical: false })) : [];
+    const rejected = input.humanAdjudication?.decision === "REJECT_PATTERN";
+    const furtherReviewReady = adjudicationState === "SUFFICIENT_FOR_FURTHER_REVIEW" && input.humanAdjudication?.submittedExplicitly === true;
+    return {
+      model: "local-pattern-adjudication/v1",
+      adjudicationId: input.adjudicationId || null,
+      patternCandidate: { id: candidate.id || null, reviewQuestion: candidate.reviewQuestion || null, granularity: candidate.granularity || null, descriptivePattern: candidate.descriptivePattern || null, includedCaseIds: includedIds, excludedCases: candidate.excludedCases || [], comparisonFindings: candidate.comparisonFindings || [], limitations: candidate.limitations || [], conflicts: candidate.conflicts || [], correctionLineage: candidate.correctionLineage || [], provenance: candidate.provenance || [] },
+      cases,
+      dimensions,
+      adjudicationState,
+      rationale: { criticalMissing, hardConflicts, staleCaseIds: sourceStale, limitedDimensions: dimensions.filter((item) => item.state === "LIMITED").map((item) => item.id), noUniversalMinimumCaseCount: true, hiddenWeighting: false, sufficiencyScore: null, opaqueModel: false },
+      statisticalMethod: { state: statisticalMethodState, intendedReviewStrength: input.intendedReviewStrength || "EXPLORATORY_PATTERN", governedMethodReference: input.governedStatisticalMethod?.reference || null, computationsExecuted: [], strongerInferenceAuthorized: false },
+      humanAdjudication: { required: true, submittedExplicitly: input.humanAdjudication?.submittedExplicitly === true, state: requestedState, decision: input.humanAdjudication?.decision || "PENDING", reviewer: input.humanAdjudication?.reviewer || null, reviewerRole: input.humanAdjudication?.reviewerRole || null, reviewerScope: input.humanAdjudication?.reviewerScope || null, rationale: input.humanAdjudication?.rationale || null, canCreateAuthority: false, canDeclareEfficacy: false, twoReviewerPreparation: { primaryReviewer: input.humanAdjudication?.reviewer || null, independentReviewer: null, disagreementResolution: null, universallyRequired: false } },
+      evidenceRequest: nextEvidence ? { architecture: "field-action-handoff/v1", count: 1, action_type: "RECORD", subject: nextEvidence, completion: "EXPLICIT_HUMAN_OR_DEVICE_SUBMISSION_REQUIRED", treatmentTask: false, repeatTreatmentTask: false, doseIncreaseTask: false, instruction: null } : { architecture: "field-action-handoff/v1", count: 0, action_type: null, subject: null, completion: null, treatmentTask: false, repeatTreatmentTask: false, doseIncreaseTask: false, instruction: null },
+      patternSplitting: { performed: splitGroups.length > 0, parentRetained: true, groups: splitGroups },
+      rejection: { rejected, traceable: true, reason: rejected ? input.humanAdjudication.rationale || "Human Review rejected the candidate" : null },
+      furtherReviewInput: furtherReviewReady ? { state: "GOVERNED_LOCAL_PATTERN_REVIEW_INPUT", patternCandidateId: candidate.id || null, canonical: false, efficacyClaim: null, resistanceClaim: null, recommendation: null } : null,
+      boundaries: { sufficiencyMeansEfficacy: false, canonicalPromotion: false, resistanceConfirmed: false, productRanking: false, recommendation: false, regulatoryAuthorityWaived: false, manufacturerClaimValidated: false, scientificAuthoritySuperseded: false },
+      productComparisonInteraction: { orderingChanged: false, badgesAdded: false, scoreChanged: false, preferredProduct: null },
+      learn: { automaticLearning: false, knowledgePromotion: false, efficacyLearning: false, resistanceLearning: false, settingsLearning: false, thresholdLearning: false },
+      privacy: { persistence: "BROWSER_LOCAL_ONLY", backendReviewDatabase: false, cloudAdjudication: false, crossUserPooling: false, operatorScoring: false, reviewerAnalytics: false, hiddenProductTracking: false, telemetry: false },
+      provenance: [...(candidate.provenance || []), ...cases.flatMap((item) => item.provenance || []), input.adjudicationId || null].filter(Boolean),
     };
   }
 
@@ -903,5 +979,5 @@
       boundaries: ["Candidate ≠ Diagnosis", "Severity ≠ Need-for-Action", "Need-for-Action ≠ pesticide recommendation", "Weather alone cannot escalate identification", "Nearby Case cannot escalate identification", "Photo received ≠ Photo analyzed", "CONTROL FAILURE ≠ RESISTANCE"],
     };
   }
-  window.SPDecisionGates = Object.freeze({ evaluate, beginFromObservation, evaluateProgression, evaluateAbioticDifferential, evaluateApplicationContext, evaluateDepositionEvidence, evaluateOutcomeReview, evaluateCrossCaseComparability, evaluateFailedControl, evaluateNeedForAction, evaluateManagementSuitability, evaluateManagementOptions, createFieldAction, applyFieldActionResult, prepareExpertHandoff, compareTemporalObservations, profiles, symptomFamilies, observationVocabulary, progressionStates, lifeStageProfiles, abioticProfiles, abioticInvestigationStates, applicationQualityStates, applicationSuitabilityStates, depositionEvidenceStates, outcomeComparisonStates, crossCaseComparabilityStates, comparisonDimensionStates, targetLocationProfiles, needForActionStates, managementOptionClasses, managementSuitabilityStates, governedManagementOptionClasses, managementOptionEligibilityStates, fieldActionTypes, fieldActionStates, moaAuthority, roles: ROLES });
+  window.SPDecisionGates = Object.freeze({ evaluate, beginFromObservation, evaluateProgression, evaluateAbioticDifferential, evaluateApplicationContext, evaluateDepositionEvidence, evaluateOutcomeReview, evaluateCrossCaseComparability, evaluateLocalPatternAdjudication, evaluateFailedControl, evaluateNeedForAction, evaluateManagementSuitability, evaluateManagementOptions, createFieldAction, applyFieldActionResult, prepareExpertHandoff, compareTemporalObservations, profiles, symptomFamilies, observationVocabulary, progressionStates, lifeStageProfiles, abioticProfiles, abioticInvestigationStates, applicationQualityStates, applicationSuitabilityStates, depositionEvidenceStates, outcomeComparisonStates, crossCaseComparabilityStates, comparisonDimensionStates, evidenceSufficiencyStates, sufficiencyDimensionStates, targetLocationProfiles, needForActionStates, managementOptionClasses, managementSuitabilityStates, governedManagementOptionClasses, managementOptionEligibilityStates, fieldActionTypes, fieldActionStates, moaAuthority, roles: ROLES });
 })();
