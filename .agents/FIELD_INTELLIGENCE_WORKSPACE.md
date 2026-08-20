@@ -112,3 +112,24 @@ adapters. No direct OpenAI browser integration or exposed API key was found.
   presentation/orchestration shape should be decomposed incrementally.
 - The operational nine-stage CMP configuration is visible; alternative stage
   taxonomies stay backend-only until a later execution block.
+
+## Execution Block 2 runtime
+
+The first usable field-intelligence loop reuses the Block 1 repository and
+service boundaries. `GuidanceService` creates field/season/user-scoped,
+configuration-driven guidance; `InvestigationService` owns generic question
+progression and persisted observations; `EvidenceService` records photo receipt
+without claiming analysis; `ConversationService` enforces field- and case-scoped
+conversation isolation; and `DecisionService` produces bounded management
+options and selection-only `DecisionLog` records. The browser UI renders these
+contracts and contains no scientific entity routing.
+
+The generic flow definitions currently cover insect, disease, weed, and abiotic
+inspection domains. They intentionally contain observation prompts rather than
+entity diagnoses or treatment claims. The local `LLMGateway` has no provider and
+reports an unavailable state without blocking the deterministic workflow.
+
+Remaining legacy debt is confined to the separately routed legacy investigation
+controller and its entity-oriented cues. It is retained as a compatibility
+screen and should continue to be strangled behind governed flow and knowledge
+adapters rather than rewritten into a second architecture.

@@ -1,16 +1,17 @@
-import { STAGE_PROVENANCE, resolveMockUser, validateFieldName } from "./field-core.js";
-import { FieldService, GuidanceService, LocationService, MapService, StageService, WeatherService, WorkspaceRepository, loadFieldConfiguration } from "./field-services.js";
+import { CONVERSATION_SCOPES, PHOTO_EVIDENCE_BOUNDARY, STAGE_PROVENANCE, resolveMockUser, validateFieldName } from "./field-core.js";
+import { ConversationService, DecisionService, EvidenceService, FieldService, GuidanceService, InvestigationService, LLMGateway, LocationService, MapService, StageService, WeatherService, WorkspaceRepository, loadFieldConfiguration, loadInvestigationConfiguration } from "./field-services.js";
 
 const root = document.querySelector("#field-app");
 const repository = new WorkspaceRepository(window.localStorage);
 const fieldService = new FieldService(repository);
 const locationService = new LocationService(navigator.geolocation, repository);
 const mapService = new MapService();
-const guidanceService = new GuidanceService();
 const weatherService = new WeatherService();
+const llmGateway = new LLMGateway();
 
-let configuration = null;
+let configuration = null, workflowConfiguration = null;
 let stageService = null;
+let guidanceService = null, investigationService = null, evidenceService = null, conversationService = null, decisionService = null;
 let route = "loading";
 let gpsState = null;
 let weatherState;
@@ -19,6 +20,7 @@ let formError = null;
 let selectedFieldId = null;
 let draft = createDraft();
 let mapDrag = null;
+let activeCaseId = null, activeConversationId = null, selectedManagementOptionId = null;
 
 function createDraft() {
   const location = repository.load().location_context;
@@ -33,10 +35,15 @@ function createDraft() {
 function escapeHtml(value) { return String(value ?? "").replace(/[&<>'"]/g, (character) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;" })[character]); }
 function workspace() { return repository.load(); }
 function currentUser() { const state = workspace(); return state.users.find((user) => user.user_id === state.active_user_id) ?? null; }
-function selectedField() { const state = workspace(); const id = selectedFieldId ?? state.selected_field_id; return state.fields.find((field) => field.field_id === id) ?? null; }
+function selectedField() { const state = workspace(), user = currentUser(), id = selectedFieldId ?? state.selected_field_id; return state.fields.find((field) => field.field_id === id && field.owner_user_id === user?.user_id) ?? null; }
 function thaiDate(value) { if (!value) return "ยังไม่ระบุ"; return new Intl.DateTimeFormat("th-TH", { day: "numeric", month: "short", year: "numeric" }).format(new Date(`${value}T00:00:00`)); }
 function formatArea(area) { return area ? `${area.rai.toFixed(area.rai < 10 ? 2 : 1)} ไร่` : "0.00 ไร่"; }
 function cropAge(field) { const date = field.planting_date ?? field.expected_planting_date; return date && stageService ? stageService.calculate_crop_age(date) : null; }
+function fieldContext(field = selectedField()) { const user = currentUser(); if (!user || !field) throw new Error("กรุณาเลือกแปลง"); return { user_id: user.user_id, field_id: field.field_id, season_id: field.season_id }; }
+function caseContext(caseId = activeCaseId, field = selectedField()) { return { ...fieldContext(field), case_id: caseId }; }
+function conversationContext(conversationId = activeConversationId, caseId = activeCaseId, field = selectedField()) { return { ...fieldContext(field), case_id: caseId ?? undefined, conversation_id: conversationId }; }
+function domainIcon(domain) { return ({ INSECT: "🪲", WEED: "🌱", DISEASE: "🍃", ABIOTIC: "💧" })[domain] ?? "⌕"; }
+function domainLabel(domain) { return ({ INSECT: "แมลง", WEED: "วัชพืช", DISEASE: "อาการพืช", ABIOTIC: "สภาพแวดล้อม" })[domain] ?? domain; }
 
 function brandMarkup(compact = false) {
   return `<a class="workspace-brand ${compact ? "compact" : ""}" href="#home" data-route="home" aria-label="SP Assistant หน้าหลัก"><span class="workspace-brand-mark" aria-hidden="true">🌾</span><span><strong>SP <em>Assistant</em></strong><small>ผู้ช่วยชาวนา เพื่ออนาคตของการผลิต</small></span></a>`;
@@ -48,7 +55,7 @@ function appHeader({ back = null, bell = false } = {}) {
 }
 
 function bottomNavigation(active) {
-  const items = [["home", "⌂", "หน้าหลัก"], ["fields", "▦", "แปลง"], ["investigate", "▢", "แชท"], ["learn", "▤", "เรียนรู้"], ["profile", "♙", "โปรไฟล์"]];
+  const items = [["home", "⌂", "หน้าหลัก"], ["fields", "▦", "แปลง"], ["free-chat", "▢", "แชท"], ["learn", "▤", "เรียนรู้"], ["profile", "♙", "โปรไฟล์"]];
   return `<nav class="field-bottom-nav" aria-label="เมนูหลัก">${items.map(([id, icon, label]) => `<button type="button" class="${active === id ? "active" : ""}" data-route="${id}"><span aria-hidden="true">${icon}</span>${label}</button>`).join("")}</nav>`;
 }
 
@@ -84,8 +91,8 @@ function emptyFieldMarkup() {
 function renderHome() {
   const user = currentUser(); const fields = fieldService.list_fields(user.user_id); const field = selectedField() ?? fields[0] ?? null;
   if (field && !selectedFieldId) selectedFieldId = field.field_id;
-  const guidance = guidanceService.get_guidance(field);
-  root.innerHTML = `${appHeader({ bell: true })}<main class="app-main home-main"><section class="home-hero"><div><p class="eyebrow">FIELD INTELLIGENCE WORKSPACE</p><h1>สวัสดีครับ คุณ${escapeHtml(user.display_name)} <span>👋</span></h1><p>${field ? "วันนี้มาดูแลแปลงของคุณให้พร้อมกัน" : "เริ่มจากสร้างแปลงแรก หรือสำรวจความรู้สำหรับฤดูกาลนี้"}</p></div>${weatherMarkup()}</section>${notice ? `<div class="toast-message">${escapeHtml(notice)}</div>` : ""}${field ? `<section class="home-field">${fieldCardMarkup(field)}<div class="field-cta-row"><button class="primary-action" type="button" data-action="create-field">＋ สร้างแปลงใหม่</button><button class="secondary-action" type="button" data-field-open="${field.field_id}">⌖ ดูแผนที่แปลง</button></div></section>` : emptyFieldMarkup()}<section class="today-section"><header class="section-heading"><div><p class="eyebrow">รายการภาคสนาม</p><h2>${field ? "วันนี้ควรตรวจอะไรบ้าง" : "เริ่มเรียนรู้ได้ทันที"}</h2></div><button type="button" data-route="learn">ดูทั้งหมด ›</button></header><div class="guidance-grid">${guidance.map((item, index) => `<button class="guidance-card tone-${index + 1}" type="button" ${field ? `data-route="investigate"` : `data-route="learn"`}><span>${["🌱", "💧", "✎"][index] ?? "▤"}</span><strong>${escapeHtml(item.title)}</strong><small>${field ? "แตะเพื่อเริ่มตรวจ" : "เปิดศูนย์เรียนรู้"}</small></button>`).join("")}</div></section>${field ? `<section class="tip-card"><span>💡</span><div><strong>เคล็ดลับวันนี้</strong><p>บันทึกสิ่งที่สังเกตเห็นตามจริง และแยกข้อสังเกตออกจากสาเหตุที่ยังไม่ยืนยัน</p></div></section>` : ""}</main>${bottomNavigation("home")}`;
+  const guidance = field ? guidanceService.get_guidance(fieldContext(field), { previous_cases: workspace().cases.filter((item) => item.field_id === field.field_id), weather: weatherState }) : [{ title: "เรียนรู้การบันทึกข้อมูลแปลง", short_instruction: "เริ่มจากข้อสังเกตที่เห็นจริง", domain: "ABIOTIC" }];
+  root.innerHTML = `${appHeader({ bell: true })}<main class="app-main home-main"><section class="home-hero"><div><p class="eyebrow">FIELD INTELLIGENCE WORKSPACE</p><h1>สวัสดีครับ คุณ${escapeHtml(user.display_name)} <span>👋</span></h1><p>${field ? "วันนี้มาดูแลแปลงของคุณให้พร้อมกัน" : "เริ่มจากสร้างแปลงแรก หรือสำรวจความรู้สำหรับฤดูกาลนี้"}</p></div>${weatherMarkup()}</section>${notice ? `<div class="toast-message">${escapeHtml(notice)}</div>` : ""}${field ? `<section class="home-field">${fieldCardMarkup(field)}<div class="field-cta-row"><button class="primary-action" type="button" data-field-open="${field.field_id}">เปิดพื้นที่ทำงานแปลง</button><button class="secondary-action" type="button" data-action="create-field">＋ สร้างแปลงใหม่</button></div></section>` : emptyFieldMarkup()}<section class="today-section"><header class="section-heading"><div><p class="eyebrow">รายการภาคสนาม</p><h2>${field ? "วันนี้ควรตรวจอะไรบ้าง" : "เริ่มเรียนรู้ได้ทันที"}</h2></div>${field ? `<button type="button" data-field-open="${field.field_id}">ดูทั้งหมด ›</button>` : `<button type="button" data-route="learn">ดูทั้งหมด ›</button>`}</header><div class="guidance-grid">${guidance.slice(0, 3).map((item, index) => `<button class="guidance-card tone-${index + 1} ${item.status === "COMPLETED" ? "completed" : ""}" type="button" ${field ? `data-field-open="${field.field_id}"` : `data-route="learn"`}><span>${domainIcon(item.domain)}</span><strong>${escapeHtml(item.title)}</strong><small>${escapeHtml(item.short_instruction ?? "เปิดเพื่อดูรายละเอียด")}</small></button>`).join("")}</div></section>${field ? `<section class="tip-card"><span>💡</span><div><strong>เคล็ดลับวันนี้</strong><p>${escapeHtml(guidanceService.get_tip(fieldContext(field))?.text_th ?? "บันทึกสิ่งที่เห็นตามจริง")}</p></div></section>` : ""}</main>${bottomNavigation("home")}`;
   if (weatherState === undefined) refreshWeather();
 }
 
@@ -138,8 +145,73 @@ function polygonPreview(field) {
 
 function renderFieldDetail() {
   const field = selectedField(); if (!field) { route = "fields"; render(); return; }
-  const age = cropAge(field);
-  root.innerHTML = `${appHeader({ back: "home", bell: true })}<main class="app-main field-detail-main"><section class="field-detail-hero"><div class="field-detail-map">${polygonPreview(field)}<span>⌖</span><strong>${formatArea(field.area)}</strong></div><div class="field-detail-summary"><p class="eyebrow">แปลงที่เลือกอยู่ · ${escapeHtml(field.field_id)}</p><h1>${escapeHtml(field.name)} <span>★</span></h1><dl><div><dt>พันธุ์ข้าว</dt><dd>${escapeHtml(field.variety)}</dd></div><div><dt>${age.state === "PLANNED" ? "กำหนดปลูก" : "อายุข้าว"}</dt><dd>${age.state === "PLANNED" ? `อีก ${age.days_until_planting} วัน` : `${age.crop_age_days} วัน`}</dd></div><div><dt>วิธีปลูก</dt><dd>${escapeHtml((configuration?.planting_methods ?? []).find((item) => item.id === field.planting_method)?.label_th ?? field.planting_method)}</dd></div><div><dt>วันที่อ้างอิง</dt><dd>${thaiDate(field.planting_date ?? field.expected_planting_date)}</dd></div></dl></div></section><section class="stage-workspace"><div><p class="eyebrow">ระยะปัจจุบัน</p><h2>🌱 ${escapeHtml(field.current_crop_stage.label)}</h2><p>${escapeHtml(field.current_cmp_stage.stage_id)} · ${escapeHtml(field.stage_provenance)}</p></div><span class="stage-badge">${escapeHtml(field.current_cmp_stage.label)}</span></section><section class="workspace-actions"><button class="primary-action" type="button" data-route="investigate">⌕ เริ่มตรวจสุขภาพแปลง</button><button class="secondary-action" type="button" data-route="home">⌂ ดูคำแนะนำวันนี้</button></section><section class="identity-card"><h2>ข้อมูลอ้างอิงแปลง</h2><dl><div><dt>รหัสแปลง</dt><dd>${escapeHtml(field.field_id)}</dd></div><div><dt>รหัสฤดูปลูก</dt><dd>${escapeHtml(field.season_id)}</dd></div><div><dt>จุดกึ่งกลาง</dt><dd>${field.centroid.latitude.toFixed(6)}, ${field.centroid.longitude.toFixed(6)}</dd></div><div><dt>พื้นที่คำนวณ</dt><dd>${field.area.square_meters.toFixed(0)} ตร.ม. · ค่าประมาณ</dd></div></dl></section></main>${bottomNavigation("fields")}`;
+  const age = cropAge(field), context = fieldContext(field), state = workspace();
+  const guidance = guidanceService.get_guidance(context, { recent_activities: state.activities.filter((item) => item.field_id === field.field_id), previous_cases: state.cases.filter((item) => item.field_id === field.field_id), weather: weatherState });
+  const pending = guidance.filter((item) => item.status === "PENDING" || item.status === "IN_PROGRESS"), completed = guidance.filter((item) => item.status === "COMPLETED" || item.status === "SKIPPED"), history = investigationService.list_case_history(context);
+  const ageLabel = age.state === "PLANNED" ? `อีก ${age.days_until_planting} วันถึงวันปลูก` : `อายุข้าว ${age.crop_age_days} วัน`;
+  root.innerHTML = `${appHeader({ back: "home", bell: true })}<main class="app-main field-workspace-main"><section class="field-workspace-header"><div class="field-context-copy"><p class="eyebrow">แปลงที่เลือกอยู่ · ${escapeHtml(field.field_id)}</p><h1>${escapeHtml(field.name)} <span>★</span></h1><div class="field-context-facts"><span>🌾 ${escapeHtml(field.variety)}</span><span>▦ ${thaiDate(field.planting_date ?? field.expected_planting_date)}</span><span>🍃 ${ageLabel}</span></div><div class="cmp-primary"><small>ระยะ CMP ปัจจุบัน</small><strong>${escapeHtml(field.current_cmp_stage.label)}</strong><span>${escapeHtml(field.current_crop_stage.label)} · ${escapeHtml(field.stage_provenance)}</span></div></div><div class="workspace-map-weather"><div class="workspace-mini-map">${polygonPreview(field)}<span>⌖</span><small>${formatArea(field.area)}</small></div>${weatherMarkup()}</div></section><section class="workspace-guidance"><header class="section-heading"><div><p class="eyebrow">สิ่งที่ควรตรวจวันนี้</p><h2>รายการตรวจตามบริบทแปลง</h2></div><span class="pending-count">${pending.length} รายการรอตรวจ</span></header><div class="guidance-list">${pending.map((item) => `<button class="guidance-row ${item.status.toLowerCase()}" type="button" data-guidance-start="${item.guidance_item_id}"><span class="guidance-domain">${domainIcon(item.domain)}</span><span><strong>${escapeHtml(item.title)}</strong><small>${escapeHtml(item.short_instruction)}</small><em>${escapeHtml(item.reason)}</em></span><b>${item.status === "IN_PROGRESS" ? "ทำต่อ ›" : "เริ่ม ›"}</b></button>`).join("") || `<div class="empty-inline">✓ ตรวจรายการที่แนะนำครบแล้ว</div>`}${completed.length ? `<details class="completed-guidance"><summary>ตรวจแล้ว ${completed.length} รายการ</summary>${completed.map((item) => `<button type="button" data-guidance-start="${item.guidance_item_id}" disabled><span>✓</span><span><strong>${escapeHtml(item.title)}</strong><small>${thaiDate(item.completed_at?.slice(0,10))}</small></span></button>`).join("")}</details>` : ""}</div><div class="workspace-actions"><button class="primary-action" type="button" data-action="start-full-inspection" ${pending.length ? "" : "disabled"}>⌕ เริ่มตรวจสุขภาพแปลง</button><button class="secondary-action" type="button" data-action="open-free-chat">▢ ถาม SP Assistant</button></div></section><section class="tip-card"><span>💡</span><div><strong>เคล็ดลับวันนี้</strong><p>${escapeHtml(guidanceService.get_tip(context)?.text_th ?? "บันทึกสิ่งที่เห็นตามจริง")}</p></div></section><section class="case-history"><header class="section-heading"><div><p class="eyebrow">CASE HISTORY</p><h2>ประวัติการตรวจแปลง</h2></div><span>${history.length} เคส</span></header>${history.length ? `<div class="history-list">${history.map((item) => `<button type="button" data-case-open="${item.case_id}"><span class="history-icon">${domainIcon(item.domain)}</span><span><strong>${domainLabel(item.domain)} · ${item.status === "COMPLETED" ? "ตรวจเสร็จแล้ว" : "กำลังตรวจ"}</strong><small>${new Intl.DateTimeFormat("th-TH", { dateStyle:"medium", timeStyle:"short" }).format(new Date(item.created_at))}</small><em>${escapeHtml(item.summary?.candidate_interpretation ?? "ยังไม่มีสรุป")}</em>${item.decision_log ? `<mark>เลือก: ${escapeHtml(item.decision_log.option_class)}</mark>` : ""}</span><b>›</b></button>`).join("")}</div>` : `<div class="empty-history"><span>▤</span><p>ยังไม่มีประวัติการตรวจในแปลงนี้</p></div>`}</section></main>${bottomNavigation("fields")}`;
+  if (weatherState === undefined) refreshWeather();
+}
+
+function ensureCaseConversation(context) {
+  const state = workspace();
+  let conversation = state.conversations.find((item) => item.case_id === context.case_id && item.user_id === context.user_id && item.field_id === context.field_id && item.season_id === context.season_id);
+  if (!conversation) conversation = conversationService.create_conversation(context, CONVERSATION_SCOPES.CASE_SCOPED);
+  activeConversationId = conversation.conversation_id;
+  return conversation;
+}
+
+function startInspection(guidanceItemId) {
+  const field = selectedField(), context = fieldContext(field), guidance = guidanceService.get_guidance(context), item = guidance.find((entry) => entry.guidance_item_id === guidanceItemId);
+  if (!item || !["PENDING", "IN_PROGRESS"].includes(item.status)) throw new Error("รายการตรวจไม่พร้อมใช้งาน");
+  const existing = workspace().cases.find((entry) => entry.user_id === context.user_id && entry.field_id === context.field_id && entry.season_id === context.season_id && entry.guidance_item_id === item.guidance_item_id && entry.status === "OPEN");
+  if (existing) {
+    activeCaseId = existing.case_id;
+    ensureCaseConversation(caseContext());
+    route = "inspection";
+    render();
+    return;
+  }
+  guidanceService.update_status(context, item.guidance_item_id, "IN_PROGRESS");
+  const record = investigationService.start_case(context, { guidance_item_id: item.guidance_item_id, inspection_flow: item.inspection_flow });
+  activeCaseId = record.case_id;
+  const conversation = ensureCaseConversation(caseContext());
+  const question = investigationService.get_next_question(caseContext());
+  if (question) conversationService.append_message(conversationContext(conversation.conversation_id, record.case_id), { role: "ASSISTANT", content: question.prompt_th, message_type: "QUESTION" });
+  route = "inspection"; render();
+}
+
+function renderInspection() {
+  const field = selectedField(); if (!field || !activeCaseId) { route = "field-detail"; render(); return; }
+  const context = caseContext(), caseRecord = investigationService.get_case(context), question = investigationService.get_next_question(context), state = workspace();
+  const observations = state.observations.filter((item) => item.case_id === activeCaseId), evidence = evidenceService.get_evidence({ ...context, conversation_id: activeConversationId }), flow = workflowConfiguration.flows.find((item) => item.flow_id === caseRecord.inspection_flow);
+  const progress = flow?.questions.length ? Math.round((observations.length / flow.questions.length) * 100) : 0;
+  root.innerHTML = `${appHeader({ back: "field-detail" })}<main class="inspection-main"><section class="inspection-context"><div><p class="eyebrow">กำลังตรวจ · ${domainLabel(caseRecord.domain)}</p><h1>${escapeHtml(field.name)}</h1><span>${escapeHtml(field.current_cmp_stage.label)} · ${escapeHtml(field.field_id)}</span></div><button class="finish-inspection" type="button" data-action="finish-inspection">จบการตรวจ</button></section><div class="inspection-progress"><span style="width:${progress}%"></span></div><section class="inspection-thread">${observations.map((item) => `<article class="inspection-answer"><small>${escapeHtml(flow?.questions.find((q) => q.question_id === item.question_id)?.prompt_th ?? item.question_id)}</small><p>${item.uncertain ? "? " : ""}${escapeHtml(item.original_text || item.value || "ข้ามคำถาม")}</p></article>`).join("")}${evidence.map((item) => `<article class="photo-evidence-message"><span>▧</span><div><strong>PHOTO RECEIVED</strong><p>${escapeHtml(item.file_name || "ภาพจากผู้ใช้")} · ยังไม่ได้วิเคราะห์ และยังไม่ใช่การยืนยันสาเหตุ</p></div></article>`).join("")}${question ? `<article class="current-question"><div class="assistant-badge">SP</div><div><p class="eyebrow">คำถามที่ ${observations.length + 1} จาก ${flow.questions.length}</p><h2>${escapeHtml(question.prompt_th)}</h2><div class="suggestion-chips">${question.suggestions.map((option) => `<button type="button" data-inspection-response="${option.value}">${escapeHtml(option.label)}</button>`).join("")}${question.allow_skip ? `<button type="button" class="skip-chip" data-inspection-response="SKIP">ข้ามตอนนี้</button>` : ""}</div><p class="question-help">เลือกคำตอบ หรือพิมพ์สิ่งที่เห็นจริงได้เสมอ · รูปที่ส่งจะถูกบันทึกเป็นหลักฐานจากผู้ใช้เท่านั้น</p></div></article>` : `<article class="inspection-complete-card"><span>✓</span><h2>ตอบคำถามในชุดตรวจครบแล้ว</h2><p>กด “จบการตรวจ” เพื่อบันทึกเคสและดูสรุป</p></article>`}</section><form class="inspection-composer" data-inspection-form><label class="camera-control" aria-label="แนบรูป"><input type="file" accept="image/*" capture="environment" data-inspection-photo><span>▣</span></label><input name="observation" placeholder="พิมพ์สิ่งที่สังเกตเห็น…" ${question ? "" : "disabled"}><button type="submit" aria-label="ส่งคำตอบ" ${question ? "" : "disabled"}>↑</button></form></main>${bottomNavigation("fields")}`;
+}
+
+function ensureSummary(context = caseContext()) {
+  const existing = investigationService.get_case_summary(context); if (existing) return existing;
+  const state = workspace(), caseRecord = investigationService.get_case(context), observations = state.observations.filter((item) => item.case_id === context.case_id), evidence = state.evidence.filter((item) => item.case_id === context.case_id), decision = decisionService.get_management_options(context);
+  return investigationService.save_case_summary(context, { inspection_at: caseRecord.completed_at ?? caseRecord.created_at, domain: caseRecord.domain, observed_findings: observations.map((item) => ({ observation_id: item.observation_id, question_id: item.question_id, value: item.original_text || item.value, uncertain: item.uncertain, provenance: item.provenance })), evidence_summary: evidence.map((item) => ({ evidence_id: item.evidence_id, source_type: item.source_type, analysis_state: item.analysis_state, boundary: item.boundary })), candidate_interpretation: `การตรวจในหมวด${domainLabel(caseRecord.domain)}ยังไม่ยืนยันสาเหตุ`, uncertainty: observations.some((item) => item.uncertain || item.skipped) ? "มีข้อมูลที่ผู้ใช้ยังไม่แน่ใจหรือข้ามไว้" : "ยังไม่มีการยืนยันสาเหตุจากการตรวจนี้", need_for_action: decision.need_for_action, management_options: decision.options, suggestion_message: decision.suggestion_message, application_guidance: decisionService.application_guidance(), next_step: decision.need_for_action.state === "MORE_EVIDENCE_REQUIRED" ? "เก็บข้อสังเกตเพิ่มหรือนำหลักฐานให้ผู้เชี่ยวชาญทบทวน" : "ติดตามการเปลี่ยนแปลงและเปิดเคสใหม่เมื่อมีข้อมูลเพิ่ม", evidence_provenance: [...new Set(observations.map((item) => item.provenance).concat(evidence.flatMap((item) => item.lineage)))] });
+}
+
+function renderSummary() {
+  const field = selectedField(); if (!field || !activeCaseId) { route = "field-detail"; render(); return; }
+  const context = caseContext(), summary = ensureSummary(context), decisionLog = decisionService.get_decision_log(context), caseRecord = investigationService.get_case(context);
+  const applicationMissing = summary.application_guidance.evidence_state === "UNAVAILABLE";
+  root.innerHTML = `${appHeader({ back: "field-detail" })}<main class="app-main summary-main"><header class="summary-heading"><div><p class="eyebrow">สรุปหลังการตรวจ</p><h1>${escapeHtml(field.name)}</h1><p>${domainIcon(caseRecord.domain)} ${domainLabel(caseRecord.domain)} · ${new Intl.DateTimeFormat("th-TH", { dateStyle:"medium", timeStyle:"short" }).format(new Date(summary.inspection_at))}</p></div><span class="need-state">${escapeHtml(summary.need_for_action.state)}</span></header><section class="summary-overview"><article><small>ระยะ CMP</small><strong>${escapeHtml(field.current_cmp_stage.label)}</strong></article><article><small>ข้อสังเกต</small><strong>${summary.observed_findings.length} รายการ</strong></article><article><small>หลักฐานภาพ</small><strong>${summary.evidence_summary.length} รายการ</strong></article><article><small>สถานะเคส</small><strong>${escapeHtml(caseRecord.status)}</strong></article></section><section class="summary-card"><h2>สิ่งที่พบและความไม่แน่นอน</h2><p class="candidate-boundary">${escapeHtml(summary.candidate_interpretation)} · Candidate ≠ Diagnosis</p><ul>${summary.observed_findings.map((item) => `<li><span>${item.uncertain ? "?" : "✓"}</span>${escapeHtml(item.value || "ข้ามคำถาม")}</li>`).join("") || `<li>ยังไม่มีข้อสังเกต</li>`}</ul><p class="uncertainty-note">ⓘ ${escapeHtml(summary.uncertainty)}</p></section><section class="management-section"><header><p class="eyebrow">แนวทางการจัดการ</p><h2>ตัวเลือกที่ระบบอนุญาตให้พิจารณา</h2><p>${escapeHtml(summary.suggestion_message)}</p></header><div class="management-options">${summary.management_options.map((option) => `<button type="button" class="management-option ${selectedManagementOptionId === option.management_option_id || decisionLog?.management_option_id === option.management_option_id ? "selected" : ""}" data-management-select="${option.management_option_id}" ${option.eligibility_state === "eligible" ? "" : "disabled"}><span class="option-radio">${selectedManagementOptionId === option.management_option_id || decisionLog?.management_option_id === option.management_option_id ? "●" : "○"}</span><span><strong>${escapeHtml(option.title)}</strong><small>${escapeHtml(option.objective)}</small><em>เหตุผล: ${escapeHtml(option.why_shown)}</em><mark>${escapeHtml(option.eligibility_state)}</mark></span></button>`).join("")}</div><label class="decision-notes">หมายเหตุการเลือก (ไม่บังคับ)<textarea data-decision-notes placeholder="บันทึกเหตุผลของคุณ…">${escapeHtml(decisionLog?.notes ?? "")}</textarea></label><button class="primary-action" type="button" data-action="save-decision" ${selectedManagementOptionId || decisionLog ? "" : "disabled"}>${decisionLog ? "✓ บันทึกทางเลือกแล้ว" : "บันทึกทางเลือกที่เลือก"}</button><p class="selection-boundary">การเลือกนี้เป็น DecisionLog เท่านั้น · USER SELECTED OPTION ≠ FIELD ACTION PERFORMED</p></section><section class="summary-card application-boundary"><h2>ข้อมูลการใช้อุปกรณ์และการประยุกต์ใช้</h2><p>${applicationMissing ? "ยังไม่มีข้อมูลที่ผ่านการยืนยันในชุดความรู้ปัจจุบัน" : "มีข้อมูลที่ผ่านการกำกับ"}</p><dl><div><dt>วิธีและอุปกรณ์</dt><dd>${summary.application_guidance.application_method ?? "—"} / ${summary.application_guidance.equipment_type ?? "—"}</dd></div><div><dt>ปริมาณน้ำ / อัตราไหล</dt><dd>${summary.application_guidance.water_volume ?? "—"} / ${summary.application_guidance.flow_rate ?? "—"}</dd></div><div><dt>ความสูง / ความเร็ว / ความกว้างแนว</dt><dd>${summary.application_guidance.height ?? "—"} / ${summary.application_guidance.speed ?? "—"} / ${summary.application_guidance.swath_width ?? "—"}</dd></div></dl></section><section class="summary-card next-step"><h2>ขั้นตอนถัดไป</h2><p>${escapeHtml(summary.next_step)}</p><details><summary>ดูหลักฐานและที่มา</summary><p>${summary.evidence_provenance.map(escapeHtml).join(" · ") || "ไม่มีหลักฐานภายนอก"}</p><p>${PHOTO_EVIDENCE_BOUNDARY}</p></details></section><div class="summary-actions"><button class="secondary-action" type="button" data-route="field-detail">กลับไปหน้าแปลง</button><button class="primary-action" type="button" data-action="open-free-chat">ถาม SP Assistant</button></div></main>${bottomNavigation("fields")}`;
+}
+
+function ensureFieldConversation() {
+  const context = fieldContext(); let conversation = conversationService.find_field_conversation(context);
+  if (!conversation) conversation = conversationService.create_conversation(context, CONVERSATION_SCOPES.FIELD_SCOPED);
+  activeConversationId = conversation.conversation_id; activeCaseId = null; return conversation;
+}
+
+function renderFreeChat() {
+  const field = selectedField(); if (!field) { route = "fields"; render(); return; }
+  const conversation = ensureFieldConversation(), context = conversationContext(conversation.conversation_id, null, field), messages = conversationService.list_messages(context);
+  root.innerHTML = `${appHeader({ back: "field-detail" })}<main class="free-chat-main"><section class="chat-field-context"><span>✓ แปลงที่เลือกอยู่</span><strong>${escapeHtml(field.name)}</strong><small>${escapeHtml(field.current_cmp_stage.label)} · ${escapeHtml(field.field_id)}</small></section><section class="free-chat-thread">${messages.length ? messages.map((message) => `<article class="free-message ${message.role.toLowerCase()}"><span>${message.role === "USER" ? "คุณ" : "SP"}</span><div><p>${escapeHtml(message.content)}</p>${message.evidence_id ? `<small>PHOTO RECEIVED · ยังไม่ได้วิเคราะห์</small>` : ""}<time>${new Intl.DateTimeFormat("th-TH", { hour:"2-digit", minute:"2-digit" }).format(new Date(message.created_at))}</time></div></article>`).join("") : `<article class="free-message assistant"><span>SP</span><div><p>สวัสดีครับ ถามเรื่องแปลงนี้ได้เลย หรือเริ่มการตรวจแบบมีขั้นตอนได้ครับ</p><small>ข้อมูลกำกับยังมาจาก CP-MoAKB · บริการ AI ภายนอกยังไม่เชื่อมต่อ</small></div></article>`}<div class="chat-suggestions"><button type="button" data-action="start-full-inspection">⌕ เริ่มตรวจสุขภาพแปลง</button><button type="button" data-chat-prompt="ช่วยจัดสิ่งที่ควรสังเกตในแปลงนี้">สิ่งที่ควรสังเกต</button><button type="button" data-chat-prompt="ผมมีภาพจากแปลง">ส่งภาพจากแปลง</button></div></section><form class="free-chat-composer" data-free-chat-form><label class="camera-control" aria-label="แนบรูป"><input type="file" accept="image/*" capture="environment" data-chat-photo><span>▣</span></label><input name="message" placeholder="พิมพ์ข้อความ…" required><button type="submit" aria-label="ส่งข้อความ">↑</button></form></main>${bottomNavigation("free-chat")}`;
 }
 
 function renderLearn() {
@@ -151,16 +223,16 @@ function renderProfile() {
   root.innerHTML = `${appHeader({ back: "home" })}<main class="app-main simple-page"><div class="profile-card"><div class="large-avatar">👨🏽‍🌾</div><p class="eyebrow">บัญชีต้นแบบ</p><h1>${escapeHtml(user.display_name)}</h1><p>${escapeHtml(user.username)} · ${escapeHtml(user.role)}</p><dl><div><dt>รหัสผู้ใช้</dt><dd>${escapeHtml(user.user_id)}</dd></div><div><dt>โหมดเข้าสู่ระบบ</dt><dd>${escapeHtml(user.session.authentication_mode)}</dd></div></dl><button class="secondary-action" type="button" data-action="logout">ออกจากระบบ</button></div></main>${bottomNavigation("profile")}`;
 }
 
-function renderInvestigate() { root.innerHTML = `<button class="legacy-return" type="button" data-route="home">← กลับหน้าหลักแปลง</button>`; }
+function renderLegacyInvestigation() { root.innerHTML = `<button class="legacy-return" type="button" data-route="field-detail">← กลับหน้าหลักแปลง</button>`; }
 function renderError() { root.innerHTML = `<main class="state-view"><div class="error-state-icon">!</div><h1>เตรียมพื้นที่ทำงานไม่สำเร็จ</h1><p>${escapeHtml(formError ?? "เกิดข้อผิดพลาดที่ไม่คาดคิด")}</p><button class="primary-action compact-action" type="button" data-action="reload">ลองใหม่</button></main>`; }
 
 function render() {
   document.body.dataset.route = route;
-  if (route === "loading") renderLoading(); else if (route === "login") renderLogin(); else if (route === "gps") renderGps(); else if (route === "home") renderHome(); else if (route === "fields") renderFields(); else if (route === "create") renderCreateField(); else if (route === "field-detail") renderFieldDetail(); else if (route === "learn") renderLearn(); else if (route === "profile") renderProfile(); else if (route === "investigate") renderInvestigate(); else renderError();
+  if (route === "loading") renderLoading(); else if (route === "login") renderLogin(); else if (route === "gps") renderGps(); else if (route === "home") renderHome(); else if (route === "fields") renderFields(); else if (route === "create") renderCreateField(); else if (route === "field-detail") renderFieldDetail(); else if (route === "inspection") renderInspection(); else if (route === "summary") renderSummary(); else if (route === "free-chat") renderFreeChat(); else if (route === "learn") renderLearn(); else if (route === "profile") renderProfile(); else if (route === "legacy") renderLegacyInvestigation(); else renderError();
   window.scrollTo({ top: 0, behavior: "instant" });
 }
 
-async function refreshWeather() { weatherState = await weatherService.get_weather(locationService.get_current_location()); if (route === "home") renderHome(); }
+async function refreshWeather() { weatherState = await weatherService.get_weather(locationService.get_current_location()); if (route === "home") renderHome(); else if (route === "field-detail") renderFieldDetail(); }
 async function requestGps() { gpsState = { status: "REQUESTING" }; renderGps(); gpsState = await locationService.request_location(); weatherState = undefined; if (route === "gps") renderGps(); }
 function persistUser(user) { const state = workspace(); state.users = state.users.filter((item) => item.user_id !== user.user_id); state.users.push(user); state.active_user_id = user.user_id; repository.save(state); }
 
@@ -169,7 +241,7 @@ function updateStagePreview() {
   if (!draft.date) { target.innerHTML = `<p class="stage-placeholder">ⓘ เลือกวันที่ ระบบจะแสดงอายุข้าว ระยะ และ CMP โดยอัตโนมัติ</p>`; return; }
   if (!stageService) { target.innerHTML = `<p class="stage-placeholder error">ไม่สามารถโหลดแบบจำลองระยะข้าวได้</p>`; return; }
   draft.stageEstimate = stageService.calculate_crop_stage(draft.date); const age = stageService.calculate_crop_age(draft.date);
-  target.innerHTML = `<header><strong>ข้อมูลที่ระบบคำนวณอัตโนมัติ</strong><span>อ้างอิง ${escapeHtml(draft.stageEstimate.model_version)}</span></header><div class="stage-result-grid"><div><small>อายุข้าว</small><strong>${age.state === "PLANNED" ? `อีก ${age.days_until_planting} วันถึงวันปลูก` : `${age.crop_age_days} วัน`}</strong></div><div><small>ระยะข้าว</small><strong>${escapeHtml(draft.stageEstimate.crop_stage_label)}</strong></div><div><small>ระยะตาม CMP</small><strong>${escapeHtml(draft.stageEstimate.cmp_stage)}</strong></div></div><p>ค่าประเมินจากวันที่ปลูก วิธีปลูก และแบบจำลองที่กำกับไว้ ไม่ได้บันทึกเป็นข้อมูลที่ผู้ใช้กรอกเอง</p>`;
+  target.innerHTML = `<header><strong>ข้อมูลที่ระบบคำนวณอัตโนมัติ</strong><span>อ้างอิง ${escapeHtml(draft.stageEstimate.model_version)}</span></header><div class="stage-result-grid"><div><small>อายุข้าว</small><strong>${age.state === "PLANNED" ? `อีก ${age.days_until_planting} วันถึงวันปลูก` : `${age.crop_age_days} วัน`}</strong></div><div><small>ระยะข้าว (หลังบ้าน)</small><strong>${escapeHtml(draft.stageEstimate.crop_stage_label)}</strong></div><div><small>ระยะตาม CMP</small><strong>${escapeHtml(draft.stageEstimate.cmp_stage_label)}</strong></div></div><p>ค่าประเมินจากวันที่ปลูก วิธีปลูก และแบบจำลองที่กำกับไว้ ไม่ได้บันทึกเป็นข้อมูลที่ผู้ใช้กรอกเอง</p>`;
 }
 
 function setMapPoint(x, y) { if (draft.closed) return; const longitude = draft.base.longitude + (x - 0.5) * 0.012; const latitude = draft.base.latitude + (0.5 - y) * 0.009; draft.points.push({ x, y, latitude, longitude }); formError = null; renderCreateField(); }
@@ -180,7 +252,7 @@ root.addEventListener("input", (event) => {
   if (event.target.closest("[data-details-form]")) { updateDraftFromDetailsForm(event.target.form); if (event.target.name === "date") { draft.stageChoice = STAGE_PROVENANCE.SYSTEM_ESTIMATED; draft.overrideCmpStage = ""; updateStagePreview(); } }
 });
 
-root.addEventListener("submit", (event) => {
+root.addEventListener("submit", async (event) => {
   if (event.target.matches("[data-login-form]")) {
     event.preventDefault(); const data = new FormData(event.target);
     try { const user = resolveMockUser(data.get("username"), data.get("password")); persistUser(user); formError = null; route = "gps"; render(); requestGps(); } catch (error) { formError = error.message; renderLogin(); }
@@ -197,12 +269,43 @@ root.addEventListener("submit", (event) => {
       selectedFieldId = field.field_id; draft.step = 3; formError = null; notice = "บันทึกแปลงเรียบร้อยแล้ว"; renderCreateField();
     } catch (error) { formError = error.message; renderCreateField(); }
   }
+  if (event.target.matches("[data-inspection-form]")) {
+    event.preventDefault();
+    const question = investigationService.get_next_question(caseContext()), text = String(new FormData(event.target).get("observation") ?? "").trim();
+    if (!question || !text) return;
+    const observation = investigationService.submit_observation(caseContext(), { question_id: question.question_id, observation_type: question.observation_type, value: text, original_text: text, response_mode: "FREE_TEXT", conversation_id: activeConversationId, uncertain: false });
+    const chatContext = conversationContext(activeConversationId, activeCaseId);
+    conversationService.append_message(chatContext, { role: "USER", content: text, message_type: "OBSERVATION", observation_id: observation.observation_id });
+    const next = investigationService.get_next_question(caseContext());
+    if (next) conversationService.append_message(chatContext, { role: "ASSISTANT", content: next.prompt_th, message_type: "QUESTION" });
+    event.target.reset(); renderInspection();
+  }
+  if (event.target.matches("[data-free-chat-form]")) {
+    event.preventDefault();
+    const text = String(new FormData(event.target).get("message") ?? "").trim(); if (!text) return;
+    const context = conversationContext(activeConversationId, null); conversationService.append_message(context, { role: "USER", content: text });
+    const response = await llmGateway.chat({ scope: "FIELD_SCOPED", field_id: context.field_id, season_id: context.season_id, message: text });
+    conversationService.append_message(context, { role: "ASSISTANT", content: response.message, message_type: response.status });
+    event.target.reset(); renderFreeChat();
+  }
 });
 
 root.addEventListener("click", (event) => {
   const routeTarget = event.target.closest("[data-route]");
   if (routeTarget) { event.preventDefault(); const next = routeTarget.dataset.route; if (next === "create" && route === "create" && draft.step > 1) draft.step -= 1; else route = next; formError = null; render(); return; }
-  const fieldTarget = event.target.closest("[data-field-open]"); if (fieldTarget) { selectedFieldId = fieldTarget.dataset.fieldOpen; fieldService.select_field(selectedFieldId); route = "field-detail"; render(); return; }
+  const fieldTarget = event.target.closest("[data-field-open]"); if (fieldTarget) { selectedFieldId = fieldTarget.dataset.fieldOpen; fieldService.select_field(selectedFieldId, currentUser().user_id); route = "field-detail"; render(); return; }
+  const historyTarget = event.target.closest("[data-case-open]");
+  if (historyTarget) { activeCaseId = historyTarget.dataset.caseOpen; const record = investigationService.get_case(caseContext()); const conversation = workspace().conversations.find((item) => item.case_id === activeCaseId); activeConversationId = conversation?.conversation_id ?? null; route = record.status === "COMPLETED" ? "summary" : "inspection"; selectedManagementOptionId = decisionService.get_decision_log(caseContext())?.management_option_id ?? null; render(); return; }
+  const guidanceTarget = event.target.closest("[data-guidance-start]"); if (guidanceTarget && !guidanceTarget.disabled) { try { startInspection(guidanceTarget.dataset.guidanceStart); } catch (error) { formError = error.message; renderFieldDetail(); } return; }
+  const inspectionResponse = event.target.closest("[data-inspection-response]")?.dataset.inspectionResponse;
+  if (inspectionResponse) {
+    if (inspectionResponse === "OTHER") { const input = root.querySelector('[data-inspection-form] input[name="observation"]'); input.placeholder = "พิมพ์สิ่งที่พบจริง…"; input.focus(); return; }
+    const question = investigationService.get_next_question(caseContext()), skipped = inspectionResponse === "SKIP", uncertain = inspectionResponse === "UNSURE";
+    const observation = investigationService.submit_observation(caseContext(), { question_id: question.question_id, observation_type: question.observation_type, value: skipped ? null : inspectionResponse, original_text: skipped ? "ข้ามคำถาม" : question.suggestions.find((item) => item.value === inspectionResponse)?.label ?? inspectionResponse, response_mode: skipped ? "SKIP" : "SUGGESTION", conversation_id: activeConversationId, uncertain, skipped });
+    const chatContext = conversationContext(activeConversationId, activeCaseId); conversationService.append_message(chatContext, { role: "USER", content: observation.original_text, message_type: "OBSERVATION" }); const next = investigationService.get_next_question(caseContext()); if (next) conversationService.append_message(chatContext, { role: "ASSISTANT", content: next.prompt_th, message_type: "QUESTION" }); renderInspection(); return;
+  }
+  const managementTarget = event.target.closest("[data-management-select]"); if (managementTarget && !managementTarget.disabled) { selectedManagementOptionId = managementTarget.dataset.managementSelect; renderSummary(); return; }
+  const chatPrompt = event.target.closest("[data-chat-prompt]")?.dataset.chatPrompt; if (chatPrompt) { const input = root.querySelector('[data-free-chat-form] input[name="message"]'); input.value = chatPrompt; input.focus(); return; }
   const mode = event.target.closest("[data-map-mode]"); if (mode) { draft.mode = mode.dataset.mapMode; renderCreateField(); return; }
   const mapAction = event.target.closest("[data-map-action]")?.dataset.mapAction;
   if (mapAction === "location") { const location = locationService.get_current_location(); if (location?.status === "AVAILABLE") { draft.base = { latitude: location.latitude, longitude: location.longitude }; notice = "จัดกึ่งกลางที่ตำแหน่งปัจจุบันแล้ว"; } else formError = "ยังไม่มีตำแหน่งปัจจุบัน คุณสามารถวาดบนแผนที่ต่อได้"; renderCreateField(); return; }
@@ -216,9 +319,13 @@ root.addEventListener("click", (event) => {
   if (action === "forgot-password") { formError = "ระบบกู้รหัสผ่านจะเปิดให้ใช้งานในรุ่นถัดไป"; renderLogin(); return; }
   if (action === "gps-skip") { gpsState = { status: "SKIPPED", message: "ข้ามการใช้ตำแหน่งแล้ว คุณยังใช้งานส่วนอื่นได้" }; route = "home"; render(); return; }
   if (action === "gps-retry") { requestGps(); return; }
-  if (action === "weather-refresh") { weatherState = undefined; renderHome(); refreshWeather(); return; }
+  if (action === "weather-refresh") { weatherState = undefined; render(); refreshWeather(); return; }
   if (action === "notifications") { notice = "ศูนย์แจ้งเตือนพื้นที่จะเปิดใน Execution Block ถัดไป"; renderHome(); return; }
   if (action === "create-field") { draft = createDraft(); formError = null; notice = null; route = "create"; render(); return; }
+  if (action === "start-full-inspection") { const field = selectedField(); if (!field) { route = "fields"; render(); return; } const pending = guidanceService.get_guidance(fieldContext(field)).find((item) => item.status === "PENDING" || item.status === "IN_PROGRESS"); if (pending) startInspection(pending.guidance_item_id); else { notice = "ตรวจรายการที่แนะนำครบแล้ว"; route = "field-detail"; render(); } return; }
+  if (action === "open-free-chat") { if (!selectedField()) { route = "fields"; render(); return; } activeCaseId = null; ensureFieldConversation(); route = "free-chat"; render(); return; }
+  if (action === "finish-inspection") { const context = caseContext(), caseRecord = investigationService.finish_case(context); if (caseRecord.guidance_item_id) guidanceService.update_status(fieldContext(), caseRecord.guidance_item_id, "COMPLETED"); ensureSummary(context); selectedManagementOptionId = null; route = "summary"; render(); return; }
+  if (action === "save-decision") { const existing = decisionService.get_decision_log(caseContext()), optionId = selectedManagementOptionId ?? existing?.management_option_id, notes = root.querySelector("[data-decision-notes]")?.value ?? ""; if (!optionId) return; try { decisionService.select_management_option(caseContext(), optionId, notes); selectedManagementOptionId = optionId; notice = "บันทึก DecisionLog แล้ว โดยยังไม่ถือว่าได้ลงมือในแปลง"; renderSummary(); } catch (error) { formError = error.message; renderSummary(); } return; }
   if (action === "map-next") { const checked = validateFieldName(draft.name); if (!checked.valid) { formError = checked.error; renderCreateField(); return; } if (!draft.closed) { formError = "กรุณาปิดรูปแปลงก่อนดำเนินการต่อ"; renderCreateField(); return; } draft.name = checked.value; draft.step = 2; formError = null; renderCreateField(); return; }
   if (action === "details-back") { draft.step = 1; renderCreateField(); return; }
   if (action === "logout") { const state = workspace(); state.active_user_id = null; repository.save(state); selectedFieldId = null; route = "login"; render(); return; }
@@ -227,9 +334,28 @@ root.addEventListener("click", (event) => {
   const map = event.target.closest("[data-map-canvas]"); if (map && draft.mode === "tap" && !event.target.closest("button")) { const bounds = map.getBoundingClientRect(); setMapPoint(Math.max(0.04, Math.min(0.96, (event.clientX - bounds.left) / bounds.width)), Math.max(0.06, Math.min(0.82, (event.clientY - bounds.top) / bounds.height))); }
 });
 
+root.addEventListener("change", async (event) => {
+  if (event.target.matches("[data-inspection-photo]")) {
+    const file = event.target.files?.[0]; if (!file) return;
+    const context = { ...caseContext(), conversation_id: activeConversationId }, lastObservation = workspace().observations.filter((item) => item.case_id === activeCaseId).at(-1);
+    const evidence = evidenceService.add_evidence(context, { observation_id: lastObservation?.observation_id ?? null, conversation_id: activeConversationId, source_type: "PHOTO_UPLOAD", file_name: file.name, media_type: file.type, size_bytes: file.size, user_provenance: "USER_SUBMITTED_DURING_INSPECTION" });
+    conversationService.append_message(conversationContext(activeConversationId, activeCaseId), { role: "USER", content: `ส่งภาพ ${file.name}`, message_type: "PHOTO", evidence_id: evidence.evidence_id });
+    await llmGateway.analyze_image({ evidence_id: evidence.evidence_id });
+    event.target.value = ""; renderInspection(); return;
+  }
+  if (event.target.matches("[data-chat-photo]")) {
+    const file = event.target.files?.[0]; if (!file) return;
+    const context = conversationContext(activeConversationId, null), evidence = evidenceService.add_evidence(context, { conversation_id: activeConversationId, source_type: "PHOTO_UPLOAD", file_name: file.name, media_type: file.type, size_bytes: file.size, user_provenance: "USER_SUBMITTED_IN_FIELD_CHAT" });
+    conversationService.append_message(context, { role: "USER", content: `ส่งภาพ ${file.name}`, message_type: "PHOTO", evidence_id: evidence.evidence_id });
+    const result = await llmGateway.analyze_image({ evidence_id: evidence.evidence_id });
+    conversationService.append_message(context, { role: "ASSISTANT", content: result.message, message_type: result.status });
+    event.target.value = ""; renderFreeChat();
+  }
+});
+
 root.addEventListener("pointerdown", (event) => { const map = event.target.closest("[data-map-canvas]"); if (!map || draft.mode !== "center" || event.target.closest("button")) return; mapDrag = { x: event.clientX, y: event.clientY, width: map.clientWidth, height: map.clientHeight }; map.setPointerCapture(event.pointerId); });
 root.addEventListener("pointermove", (event) => { const map = event.target.closest("[data-map-canvas]"); if (!map || !mapDrag || draft.mode !== "center") return; const dx = event.clientX - mapDrag.x, dy = event.clientY - mapDrag.y; draft.mapOffset.x += dx; draft.mapOffset.y += dy; draft.base.longitude -= dx * 0.000012; draft.base.latitude += dy * 0.000009; draft.points.forEach((point) => { point.x += dx / mapDrag.width; point.y += dy / mapDrag.height; }); map.style.setProperty("--map-x", `${draft.mapOffset.x}px`); map.style.setProperty("--map-y", `${draft.mapOffset.y}px`); mapDrag.x = event.clientX; mapDrag.y = event.clientY; });
 root.addEventListener("pointerup", () => { const wasDragging = Boolean(mapDrag); mapDrag = null; if (wasDragging && route === "create" && draft.step === 1) renderCreateField(); }); root.addEventListener("pointercancel", () => { mapDrag = null; });
 
-async function boot() { renderLoading(); try { configuration = await loadFieldConfiguration(); stageService = new StageService(configuration); route = currentUser() ? "home" : "login"; render(); } catch (error) { formError = error.message; route = "error"; render(); } }
+async function boot() { renderLoading(); try { [configuration, workflowConfiguration] = await Promise.all([loadFieldConfiguration(), loadInvestigationConfiguration()]); stageService = new StageService(configuration); guidanceService = new GuidanceService(repository, workflowConfiguration); investigationService = new InvestigationService(repository, workflowConfiguration); evidenceService = new EvidenceService(repository); conversationService = new ConversationService(repository); decisionService = new DecisionService(repository, workflowConfiguration); route = currentUser() ? "home" : "login"; render(); } catch (error) { formError = error.message; route = "error"; render(); } }
 boot();

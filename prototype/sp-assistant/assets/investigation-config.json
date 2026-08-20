@@ -1,0 +1,103 @@
+{
+  "version": "field-investigation-flows/v1",
+  "guidance_rules": [
+    {
+      "rule_id": "GUIDE-INSECT-OBSERVATION/v1",
+      "domain": "INSECT",
+      "title": "ตรวจแมลงและร่องรอยการกิน",
+      "short_instruction": "สำรวจต้น ใบ และโคนกอ แล้วบันทึกเฉพาะสิ่งที่พบ",
+      "reason_template": "ตรวจตามบริบท {cmp_stage}; การสังเกตยังไม่ใช่การยืนยันสาเหตุ",
+      "priority": 10,
+      "status": "PENDING",
+      "cmp_stages": ["CMP-02", "CMP-03", "CMP-04", "CMP-05", "CMP-06", "CMP-07", "CMP-08", "CMP-09"],
+      "inspection_flow": "FLOW-INSECT-GENERIC/v1",
+      "source_rule_provenance": ["field-observation-workflow/v1", "ADR-002"]
+    },
+    {
+      "rule_id": "GUIDE-DISEASE-OBSERVATION/v1",
+      "domain": "DISEASE",
+      "title": "ตรวจอาการผิดปกติของต้นและใบ",
+      "short_instruction": "ดูตำแหน่ง รูปร่าง การกระจาย และการเปลี่ยนแปลงของอาการ",
+      "reason_template": "ตรวจความเปลี่ยนแปลงใน {cmp_stage} โดยไม่สรุปเป็นโรคจากอาการเดียว",
+      "priority": 20,
+      "status": "PENDING",
+      "cmp_stages": ["CMP-02", "CMP-03", "CMP-04", "CMP-05", "CMP-06", "CMP-07", "CMP-08", "CMP-09"],
+      "inspection_flow": "FLOW-DISEASE-GENERIC/v1",
+      "source_rule_provenance": ["conceptual-decision-support/v1", "ADR-002"]
+    },
+    {
+      "rule_id": "GUIDE-WEED-OBSERVATION/v1",
+      "domain": "WEED",
+      "title": "ตรวจพืชอื่นและการกระจายในแปลง",
+      "short_instruction": "บันทึกลักษณะและตำแหน่งที่พบโดยยังไม่ฝืนระบุชนิด",
+      "reason_template": "สำรวจพืชอื่นที่เห็นใน {cmp_stage} และเก็บลักษณะเพื่อแยกกลุ่มภายหลัง",
+      "priority": 30,
+      "status": "PENDING",
+      "cmp_stages": ["CMP-01", "CMP-02", "CMP-03", "CMP-04", "CMP-05"],
+      "inspection_flow": "FLOW-WEED-GENERIC/v1",
+      "source_rule_provenance": ["field-observation-workflow/v1", "evidence-need-model/v1"]
+    },
+    {
+      "rule_id": "GUIDE-ABIOTIC-CONTEXT/v1",
+      "domain": "ABIOTIC",
+      "title": "ตรวจน้ำ ดิน และรูปแบบทั้งแปลง",
+      "short_instruction": "เปรียบเทียบจุดปกติกับจุดผิดปกติ และบันทึกสภาพแวดล้อม",
+      "reason_template": "เก็บบริบทแวดล้อมของ {cmp_stage}; บริบทไม่ยืนยันสาเหตุ",
+      "priority": 40,
+      "status": "PENDING",
+      "cmp_stages": ["CMP-01", "CMP-02", "CMP-03", "CMP-04", "CMP-05", "CMP-06", "CMP-07", "CMP-08", "CMP-09"],
+      "inspection_flow": "FLOW-ABIOTIC-GENERIC/v1",
+      "source_rule_provenance": ["conceptual-decision-support/v1", "ADR-002"]
+    }
+  ],
+  "flows": [
+    {
+      "flow_id": "FLOW-INSECT-GENERIC/v1",
+      "domain": "INSECT",
+      "title": "ตรวจแมลงแบบมีขั้นตอน",
+      "questions": [
+        { "question_id": "INSECT-PRESENCE", "prompt_th": "เมื่อสำรวจต้น ใบ และโคนกอ คุณพบตัวแมลงหรือร่องรอยที่สงสัยหรือไม่?", "suggestions": [{"value":"FOUND","label":"พบ"},{"value":"NOT_FOUND","label":"ไม่พบ"},{"value":"UNSURE","label":"ไม่แน่ใจ"},{"value":"OTHER","label":"อื่น ๆ"}], "allow_free_text": true, "allow_photo": true, "allow_skip": true, "observation_type": "DIRECT_FIELD_OBSERVATION" },
+        { "question_id": "INSECT-LOCATION", "prompt_th": "สิ่งที่พบอยู่บริเวณใดของต้นหรือแปลง?", "suggestions": [{"value":"LEAF","label":"ใบ"},{"value":"BASE","label":"โคนกอ"},{"value":"STEM","label":"ลำต้น"},{"value":"FIELD_PATTERN","label":"กระจายในแปลง"},{"value":"UNSURE","label":"ไม่แน่ใจ"}], "allow_free_text": true, "allow_photo": true, "allow_skip": true, "observation_type": "OBSERVED_LOCATION" },
+        { "question_id": "INSECT-PROGRESSION", "prompt_th": "เมื่อเทียบกับครั้งก่อน สิ่งที่สังเกตเห็นเปลี่ยนแปลงอย่างไร?", "suggestions": [{"value":"INCREASED","label":"เพิ่มขึ้น"},{"value":"SAME","label":"ใกล้เคียงเดิม"},{"value":"DECREASED","label":"ลดลง"},{"value":"FIRST_CHECK","label":"ตรวจครั้งแรก"},{"value":"UNSURE","label":"ไม่แน่ใจ"}], "allow_free_text": true, "allow_photo": true, "allow_skip": true, "observation_type": "PROGRESSION_OBSERVATION" }
+      ]
+    },
+    {
+      "flow_id": "FLOW-WEED-GENERIC/v1",
+      "domain": "WEED",
+      "title": "ตรวจพืชอื่นแบบมีขั้นตอน",
+      "questions": [
+        { "question_id": "WEED-PRESENCE", "prompt_th": "พบพืชอื่นขึ้นร่วมกับข้าวในบริเวณที่ตรวจหรือไม่?", "suggestions": [{"value":"FOUND","label":"พบ"},{"value":"NOT_FOUND","label":"ไม่พบ"},{"value":"UNSURE","label":"ไม่แน่ใจ"},{"value":"OTHER","label":"อื่น ๆ"}], "allow_free_text": true, "allow_photo": true, "allow_skip": true, "observation_type": "DIRECT_FIELD_OBSERVATION" },
+        { "question_id": "WEED-FORM", "prompt_th": "ลักษณะที่เห็นใกล้เคียงแบบใด?", "suggestions": [{"value":"NARROW_LEAF","label":"ใบแคบ"},{"value":"BROAD_LEAF","label":"ใบกว้าง"},{"value":"SEDGE_LIKE","label":"คล้ายกก"},{"value":"MIXED","label":"หลายแบบ"},{"value":"UNSURE","label":"ไม่แน่ใจ"}], "allow_free_text": true, "allow_photo": true, "allow_skip": true, "observation_type": "MORPHOLOGY_OBSERVATION" },
+        { "question_id": "WEED-DISTRIBUTION", "prompt_th": "พืชอื่นกระจายตัวในแปลงอย่างไร?", "suggestions": [{"value":"SCATTERED","label":"กระจาย"},{"value":"PATCHY","label":"เป็นหย่อม"},{"value":"EDGE","label":"ตามขอบแปลง"},{"value":"UNIFORM","label":"ค่อนข้างทั่วแปลง"},{"value":"UNSURE","label":"ไม่แน่ใจ"}], "allow_free_text": true, "allow_photo": true, "allow_skip": true, "observation_type": "DISTRIBUTION_OBSERVATION" }
+      ]
+    },
+    {
+      "flow_id": "FLOW-DISEASE-GENERIC/v1",
+      "domain": "DISEASE",
+      "title": "ตรวจอาการผิดปกติแบบมีขั้นตอน",
+      "questions": [
+        { "question_id": "DISEASE-PART", "prompt_th": "อาการผิดปกติอยู่ที่ส่วนใดของต้น?", "suggestions": [{"value":"LEAF","label":"ใบ"},{"value":"STEM","label":"ลำต้น/กาบ"},{"value":"ROOT_BASE","label":"ราก/โคน"},{"value":"PANICLE","label":"รวง"},{"value":"UNSURE","label":"ไม่แน่ใจ"}], "allow_free_text": true, "allow_photo": true, "allow_skip": true, "observation_type": "AFFECTED_PART" },
+        { "question_id": "DISEASE-APPEARANCE", "prompt_th": "อธิบายสิ่งที่เห็นด้วยคำของคุณเอง หรือเลือกคำใกล้เคียง", "suggestions": [{"value":"COLOR_CHANGE","label":"สีเปลี่ยน"},{"value":"SPOT_OR_LESION","label":"มีจุด/แผล"},{"value":"WILT_OR_DRY","label":"เหี่ยว/แห้ง"},{"value":"STUNTED","label":"โตช้า"},{"value":"UNSURE","label":"ไม่แน่ใจ"},{"value":"OTHER","label":"อื่น ๆ"}], "allow_free_text": true, "allow_photo": true, "allow_skip": true, "observation_type": "SYMPTOM_DESCRIPTION" },
+        { "question_id": "DISEASE-PATTERN", "prompt_th": "อาการกระจายตัวในแปลงอย่างไร?", "suggestions": [{"value":"SCATTERED","label":"กระจาย"},{"value":"PATCHY","label":"เป็นหย่อม"},{"value":"EDGE","label":"ตามขอบ"},{"value":"UNIFORM","label":"ค่อนข้างทั่วแปลง"},{"value":"UNSURE","label":"ไม่แน่ใจ"}], "allow_free_text": true, "allow_photo": true, "allow_skip": true, "observation_type": "DISTRIBUTION_OBSERVATION" }
+      ]
+    },
+    {
+      "flow_id": "FLOW-ABIOTIC-GENERIC/v1",
+      "domain": "ABIOTIC",
+      "title": "ตรวจบริบทแวดล้อมแบบมีขั้นตอน",
+      "questions": [
+        { "question_id": "ABIOTIC-WATER", "prompt_th": "สภาพน้ำในจุดผิดปกติแตกต่างจากจุดปกติหรือไม่?", "suggestions": [{"value":"DIFFERENT","label":"แตกต่าง"},{"value":"SIMILAR","label":"ใกล้เคียงกัน"},{"value":"NO_COMPARISON","label":"ยังไม่ได้เทียบ"},{"value":"UNSURE","label":"ไม่แน่ใจ"}], "allow_free_text": true, "allow_photo": true, "allow_skip": true, "observation_type": "ENVIRONMENTAL_CONTEXT" },
+        { "question_id": "ABIOTIC-PATTERN", "prompt_th": "ความผิดปกติสัมพันธ์กับพื้นที่ต่ำ ทางน้ำ คันนา หรือแนวงานหรือไม่?", "suggestions": [{"value":"RELATED_PATTERN","label":"เห็นความสัมพันธ์"},{"value":"NO_CLEAR_PATTERN","label":"ไม่เห็นชัด"},{"value":"UNSURE","label":"ไม่แน่ใจ"},{"value":"OTHER","label":"อื่น ๆ"}], "allow_free_text": true, "allow_photo": true, "allow_skip": true, "observation_type": "SPATIAL_CONTEXT" },
+        { "question_id": "ABIOTIC-HISTORY", "prompt_th": "ก่อนพบอาการ มีเหตุการณ์หรือกิจกรรมในแปลงที่ควรบันทึกหรือไม่?", "suggestions": [{"value":"HAS_CONTEXT","label":"มี"},{"value":"NONE_RECALLED","label":"นึกไม่ออก"},{"value":"UNSURE","label":"ไม่แน่ใจ"}], "allow_free_text": true, "allow_photo": true, "allow_skip": true, "observation_type": "MANAGEMENT_HISTORY" }
+      ]
+    }
+  ],
+  "management_options": [
+    { "option_class": "CONTINUE_MONITORING", "title_th": "ติดตามและตรวจซ้ำ", "objective_th": "เก็บหลักฐานเพิ่มเติมและติดตามการเปลี่ยนแปลง", "eligibility_rule": "ALWAYS", "source_provenance": ["governed-management-option-selection/v1"], "limitations": ["การติดตามไม่ใช่การยืนยันสาเหตุหรือการไม่ต้องดำเนินการถาวร"] },
+    { "option_class": "EXPERT_REVIEW", "title_th": "ขอผู้เชี่ยวชาญทบทวน", "objective_th": "ทบทวนหลักฐานที่ยังไม่แน่นอนหรือขัดแย้ง", "eligibility_rule": "WHEN_UNCERTAIN_OR_PHOTO", "source_provenance": ["governed-management-option-selection/v1"], "limitations": ["ยังไม่มีการส่งข้อมูลหรือสร้างงานให้ผู้เชี่ยวชาญโดยอัตโนมัติ"] },
+    { "option_class": "NO_ACTION_CURRENTLY_JUSTIFIED", "title_th": "ยังไม่ดำเนินการในขณะนี้", "objective_th": "หลีกเลี่ยงการดำเนินการที่ยังไม่มีหลักฐานรองรับ", "eligibility_rule": "WHEN_ACTION_NOT_JUSTIFIED", "source_provenance": ["need-for-action-decision/v1"], "limitations": ["เป็นสถานะชั่วคราวและควรทบทวนเมื่อมีข้อมูลใหม่"] }
+  ],
+  "neutral_tips": [
+    { "tip_id": "TIP-OBSERVE-FIRST/v1", "text_th": "บันทึกสิ่งที่เห็นตามจริง แยกข้อสังเกตออกจากสาเหตุที่ยังไม่ยืนยัน", "source_provenance": ["ADR-002"] }
+  ]
+}

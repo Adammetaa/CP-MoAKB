@@ -8,7 +8,7 @@ async function createFieldInput(ownerUserId, name, offset = 0, date = "2026-08-3
   const polygon = map.create_polygon(trianglePoints(offset));
   const config = await loadConfiguration();
   const stage = new StageService(config, () => new Date("2026-08-20T12:00:00Z")).calculate_crop_stage(date);
-  return { owner_user_id: ownerUserId, name, polygon, centroid: map.calculate_centroid(polygon), area: map.calculate_area(polygon), crop: "rice", variety: "ข้อมูลทดสอบ", planting_method: "TRANSPLANTED", planting_date: null, expected_planting_date: date, current_crop_stage: { code: stage.crop_stage, label: stage.crop_stage_label }, current_cmp_stage: { stage_id: stage.cmp_stage, label: stage.crop_stage_label }, stage_provenance: stage.provenance };
+  return { owner_user_id: ownerUserId, name, polygon, centroid: map.calculate_centroid(polygon), area: map.calculate_area(polygon), crop: "rice", variety: "ข้อมูลทดสอบ", planting_method: "TRANSPLANTED", planting_date: null, expected_planting_date: date, current_crop_stage: { code: stage.crop_stage, label: stage.crop_stage_label }, current_cmp_stage: { stage_id: stage.cmp_stage, label: stage.cmp_stage_label }, stage_provenance: stage.provenance };
 }
 
 test("future planting date, polygon, season, and activity persist across refresh", async () => {

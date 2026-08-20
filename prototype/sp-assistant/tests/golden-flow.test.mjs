@@ -18,7 +18,7 @@ test("golden flow: SPA1 login to GPS fallback to persisted field reopen", async 
   const map = new MapService();
   const polygon = map.create_polygon(trianglePoints());
   const stage = new StageService(await loadConfiguration(), () => new Date("2026-08-20T08:00:00Z")).calculate_crop_stage("2026-08-10");
-  const created = fields.create_field({ owner_user_id: user.user_id, name: "นาบ้านทุ่งทอง", polygon, centroid: map.calculate_centroid(polygon), area: map.calculate_area(polygon), crop: "rice", variety: "พันธุ์ทดสอบ", planting_method: "DIRECT_SEEDED_WET", planting_date: "2026-08-10", expected_planting_date: null, current_crop_stage: { code: stage.crop_stage, label: stage.crop_stage_label }, current_cmp_stage: { stage_id: stage.cmp_stage, label: stage.crop_stage_label }, stage_provenance: stage.provenance });
+  const created = fields.create_field({ owner_user_id: user.user_id, name: "นาบ้านทุ่งทอง", polygon, centroid: map.calculate_centroid(polygon), area: map.calculate_area(polygon), crop: "rice", variety: "พันธุ์ทดสอบ", planting_method: "DIRECT_SEEDED_WET", planting_date: "2026-08-10", expected_planting_date: null, current_crop_stage: { code: stage.crop_stage, label: stage.crop_stage_label }, current_cmp_stage: { stage_id: stage.cmp_stage, label: stage.cmp_stage_label }, stage_provenance: stage.provenance });
 
   const afterRefresh = new FieldService(new WorkspaceRepository(storage));
   assert.equal(afterRefresh.get_field(created.field_id).name, "นาบ้านทุ่งทอง");

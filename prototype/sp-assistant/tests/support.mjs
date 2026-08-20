@@ -11,6 +11,10 @@ export async function loadConfiguration() {
   return JSON.parse(await readFile(new URL("../assets/field-config.json", import.meta.url), "utf8"));
 }
 
+export async function loadInvestigationConfiguration() {
+  return JSON.parse(await readFile(new URL("../assets/investigation-config.json", import.meta.url), "utf8"));
+}
+
 export function trianglePoints(offset = 0) {
   return [
     { latitude: 13.75 + offset, longitude: 100.50 + offset },

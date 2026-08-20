@@ -4,20 +4,27 @@ export const STAGE_PROVENANCE = Object.freeze({
   USER_OVERRIDDEN: "USER_OVERRIDDEN",
 });
 
+export const GUIDANCE_STATUSES = Object.freeze(["PENDING", "IN_PROGRESS", "COMPLETED", "SKIPPED", "UNAVAILABLE"]);
+export const CONVERSATION_SCOPES = Object.freeze({ FIELD_SCOPED: "FIELD_SCOPED", CASE_SCOPED: "CASE_SCOPED" });
+export const CASE_STATUSES = Object.freeze({ OPEN: "OPEN", COMPLETED: "COMPLETED" });
+export const PHOTO_EVIDENCE_BOUNDARY = "PHOTO_RECEIVED != PHOTO_ANALYZED != DIAGNOSIS_CONFIRMED";
+export const APPLICATION_GUIDANCE_FIELDS = Object.freeze(["application_method", "equipment_type", "water_volume", "height", "speed", "swath_width", "flow_rate", "droplet_deposition_considerations", "weather_constraints", "source_provenance", "evidence_state"]);
+
 export const MODEL_CONTRACTS = Object.freeze({
   User: ["user_id", "username", "display_name", "role", "session"],
   Field: ["field_id", "owner_user_id", "name", "polygon", "centroid", "area", "crop", "variety", "planting_method", "planting_date", "expected_planting_date", "current_crop_stage", "current_cmp_stage", "season_id", "stage_provenance", "created_at", "updated_at"],
   Season: ["season_id", "field_id", "crop", "started_at", "status"],
   Activity: ["activity_id", "field_id", "season_id", "activity_type", "occurred_at"],
-  Case: ["case_id", "field_id", "season_id", "status", "created_at"],
-  Observation: ["observation_id", "case_id", "observation_type", "value", "provenance"],
-  Evidence: ["evidence_id", "case_id", "observation_id", "source", "lineage"],
-  Conversation: ["conversation_id", "case_id", "created_at"],
-  Message: ["message_id", "conversation_id", "role", "content", "created_at"],
-  GuidanceItem: ["guidance_item_id", "field_id", "title", "state", "source_lineage"],
+  Case: ["case_id", "user_id", "field_id", "season_id", "guidance_item_id", "domain", "inspection_flow", "status", "created_at", "completed_at"],
+  Observation: ["observation_id", "user_id", "field_id", "season_id", "case_id", "conversation_id", "question_id", "observation_type", "value", "response_mode", "uncertain", "provenance", "created_at"],
+  Evidence: ["evidence_id", "user_id", "field_id", "season_id", "case_id", "observation_id", "conversation_id", "source_type", "received_at", "analysis_state", "user_provenance", "lineage", "boundary"],
+  Conversation: ["conversation_id", "user_id", "field_id", "season_id", "case_id", "scope", "created_at"],
+  Message: ["message_id", "user_id", "field_id", "season_id", "case_id", "conversation_id", "role", "content", "created_at"],
+  GuidanceItem: ["guidance_item_id", "user_id", "field_id", "season_id", "domain", "subject_reference", "title", "short_instruction", "reason", "priority", "status", "source_rule_provenance", "inspection_flow", "created_at", "completed_at"],
   Recommendation: ["recommendation_id", "case_id", "status", "evidence_ids"],
   ManagementOption: ["management_option_id", "case_id", "label", "authority_state"],
-  DecisionLog: ["decision_log_id", "case_id", "selected_option_id", "selection_only", "created_at"],
+  DecisionLog: ["decision_log_id", "user_id", "field_id", "season_id", "case_id", "management_option_id", "selected_at", "selection_source", "notes", "selection_only", "field_action_performed"],
+  CaseSummary: ["case_summary_id", "user_id", "field_id", "season_id", "case_id", "observed_findings", "uncertainty", "need_for_action", "management_options", "application_guidance", "next_step", "evidence_provenance", "created_at"],
   FollowUp: ["follow_up_id", "case_id", "due_at", "status"],
   Outcome: ["outcome_id", "case_id", "recorded_at", "value"],
   Alert: ["alert_id", "field_id", "risk_context", "source_lineage", "created_at"],
@@ -83,5 +90,5 @@ export function differenceInCalendarDays(later, earlier) {
 }
 
 export function createEmptyWorkspace() {
-  return { schema_version: 1, users: [], fields: [], seasons: [], activities: [], cases: [], observations: [], evidence: [], conversations: [], messages: [], guidance: [], recommendations: [], management_options: [], decision_logs: [], follow_ups: [], outcomes: [], alerts: [], knowledge_objects: [], active_user_id: null, selected_field_id: null, location_context: null };
+  return { schema_version: 2, users: [], fields: [], seasons: [], activities: [], cases: [], observations: [], evidence: [], conversations: [], messages: [], guidance: [], recommendations: [], management_options: [], decision_logs: [], case_summaries: [], follow_ups: [], outcomes: [], alerts: [], knowledge_objects: [], active_user_id: null, selected_field_id: null, location_context: null };
 }
