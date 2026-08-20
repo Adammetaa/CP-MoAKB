@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { WorkspaceRepository } from "../assets/field-services.js";
 import { DEFAULT_PROTOTYPE_USER, loginToPrototypeWorkspace, resolvePrototypeAccess } from "../assets/prototype-login.js";
+import { findOwnedRouteTarget } from "../assets/route-interactions.js";
 import { MemoryStorage } from "./support.mjs";
 
 const styles = await readFile(new URL("../assets/field-shell.css", import.meta.url), "utf8");
@@ -73,11 +74,56 @@ test("field runtime uses only the fixed-password login transition", () => {
   assert.doesNotMatch(app, /resolveMockUser|login-interactions|toggle-password|forgot-password/);
 });
 
+test("password pointer interactions do not resolve the body as a route or replace the input", () => {
+  const body = { dataset: { route: "login" } };
+  let passwordInput = {
+    value: "1234",
+    closest(selector) { return selector === "[data-route]" ? body : null; },
+  };
+  const originalInput = passwordInput;
+  const root = { contains: (node) => node !== body };
+  let renderCount = 0;
+
+  for (const eventType of ["click", "mouseup"]) {
+    const routeTarget = findOwnedRouteTarget(passwordInput, root);
+    if (routeTarget) {
+      renderCount += 1;
+      passwordInput = { value: "", closest: passwordInput.closest };
+    }
+    assert.equal(passwordInput.value, "1234", `${eventType} must preserve the typed password`);
+  }
+
+  assert.strictEqual(passwordInput, originalInput);
+  assert.equal(renderCount, 0);
+  assert.equal(findOwnedRouteTarget(passwordInput, root), null);
+});
+
+test("body is diagnostic-only while data-route controls inside field-app still navigate", () => {
+  const body = { dataset: { currentRoute: "login" } };
+  const routeButton = { dataset: { route: "home" } };
+  routeButton.closest = (selector) => selector === "[data-route]" ? routeButton : null;
+  const root = { contains: (node) => node === routeButton };
+
+  assert.equal(Object.hasOwn(body.dataset, "route"), false);
+  assert.strictEqual(findOwnedRouteTarget(routeButton, root), routeButton);
+  assert.match(app, /document\.body\.dataset\.currentRoute = route/);
+  assert.doesNotMatch(app, /document\.body\.dataset\.route = route/);
+});
+
+test("native Enter and submit button paths converge on the login submit handler", () => {
+  assert.match(loginRender, /<form class="login-card" data-login-form novalidate>/);
+  assert.match(loginRender, /<button class="primary-action" type="submit">เข้าสู่ระบบ<\/button>/);
+  assert.match(app, /root\.addEventListener\("submit", async \(event\) =>/);
+  assert.match(app, /event\.target\.matches\("\[data-login-form\]"\)/);
+  assert.doesNotMatch(loginRender, /onclick|onkeydown|onkeyup/);
+  assert.doesNotMatch(app, /addEventListener\("keydown"/);
+});
+
 test("normal and legacy documents remain runtime-isolated", () => {
   assert.match(html, /id="field-app"/);
   assert.doesNotMatch(html, /class="workspace"|class="conversation chat-shell"|assets\/styles\.css|assets\/app\.js/);
   assert.match(html, /field-shell\.css\?v=fixed-login-1/);
-  assert.match(html, /field-app\.js\?v=fixed-login-1/);
+  assert.match(html, /field-app\.js\?v=login-route-fix-1/);
   assert.doesNotMatch(legacyHtml, /id="field-app"|field-shell\.css|field-app\.js/);
   assert.match(legacyHtml, /class="workspace"/);
   assert.match(legacyHtml, /assets\/app\.js\?v=legacy-isolated-1/);

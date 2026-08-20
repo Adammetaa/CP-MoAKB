@@ -15,6 +15,7 @@ const fieldCore = await readFile(resolve(root, "assets", "field-core.js"), "utf8
 const fieldServices = await readFile(resolve(root, "assets", "field-services.js"), "utf8");
 const fieldStyles = await readFile(resolve(root, "assets", "field-shell.css"), "utf8");
 const prototypeLogin = await readFile(resolve(root, "assets", "prototype-login.js"), "utf8");
+const routeInteractions = await readFile(resolve(root, "assets", "route-interactions.js"), "utf8");
 const investigationConfig = JSON.parse(await readFile(resolve(root, "assets", "investigation-config.json"), "utf8"));
 const fieldConfig = JSON.parse(await readFile(resolve(root, "assets", "field-config.json"), "utf8"));
 const failures = [];
@@ -69,10 +70,14 @@ for (const required of ["class=\"workspace\"", "chat-shell", "data-problem", "as
 for (const prohibited of ["id=\"field-app\"", "field-shell.css", "field-app.js"]) {
   if (legacyHtml.includes(prohibited)) failures.push(`legacy.html contains Field Workspace surface: ${prohibited}`);
 }
-for (const required of ["field-shell.css?v=fixed-login-1", "field-app.js?v=fixed-login-1"]) {
+for (const required of ["field-shell.css?v=fixed-login-1", "field-app.js?v=login-route-fix-1"]) {
   if (!html.includes(required)) failures.push(`index.html missing fixed-login cache key: ${required}`);
 }
 if (!fieldApp.includes('prototype-login.js?v=fixed-login-1')) failures.push("field-app.js missing fixed prototype login module");
+if (!fieldApp.includes('route-interactions.js?v=login-route-fix-1')) failures.push("field-app.js missing scoped route interaction module");
+if (!fieldApp.includes("document.body.dataset.currentRoute = route")) failures.push("field-app.js missing diagnostic current-route attribute");
+if (fieldApp.includes("document.body.dataset.route = route")) failures.push("field-app.js must not expose body as a delegated data-route target");
+if (!routeInteractions.includes("root.contains(routeTarget)")) failures.push("route interactions must reject targets outside #field-app");
 const loginView = fieldApp.match(/function renderLogin\(\)[\s\S]*?function renderGps\(\)/)?.[0] ?? "";
 for (const required of ['name="password"', 'type="password"', "เข้าสู่ระบบ", "สำหรับทดสอบภายใน"]) {
   if (!loginView.includes(required)) failures.push(`Login missing minimal access control: ${required}`);

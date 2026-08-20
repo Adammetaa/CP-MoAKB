@@ -1,6 +1,7 @@
 import { CONVERSATION_SCOPES, PHOTO_EVIDENCE_BOUNDARY, STAGE_PROVENANCE, validateFieldName } from "./field-core.js?v=fixed-login-1";
 import { ConversationService, DecisionService, EvidenceService, FieldService, GuidanceService, InvestigationService, LLMGateway, LocationService, MapService, StageService, WeatherService, WorkspaceRepository, loadFieldConfiguration, loadInvestigationConfiguration } from "./field-services.js?v=fixed-login-1";
 import { loginToPrototypeWorkspace } from "./prototype-login.js?v=fixed-login-1";
+import { findOwnedRouteTarget } from "./route-interactions.js?v=login-route-fix-1";
 
 const FIELD_RUNTIME_KEY = "__cpmoakbFieldWorkspaceRuntime";
 if (!window[FIELD_RUNTIME_KEY]) {
@@ -243,7 +244,8 @@ function renderProfile() {
 function renderError() { root.innerHTML = `<main class="state-view"><div class="error-state-icon">!</div><h1>เตรียมพื้นที่ทำงานไม่สำเร็จ</h1><p>${escapeHtml(formError ?? "เกิดข้อผิดพลาดที่ไม่คาดคิด")}</p><button class="primary-action compact-action" type="button" data-action="reload">ลองใหม่</button></main>`; }
 
 function render() {
-  document.body.dataset.route = route;
+  document.body.removeAttribute("data-route");
+  document.body.dataset.currentRoute = route;
   if (route === "loading") renderLoading(); else if (route === "login") renderLogin(); else if (route === "gps") renderGps(); else if (route === "home") renderHome(); else if (route === "fields") renderFields(); else if (route === "create") renderCreateField(); else if (route === "field-detail") renderFieldDetail(); else if (route === "inspection") renderInspection(); else if (route === "summary") renderSummary(); else if (route === "free-chat") renderFreeChat(); else if (route === "learn") renderLearn(); else if (route === "profile") renderProfile(); else renderError();
   window.scrollTo({ top: 0, behavior: "instant" });
 }
@@ -306,7 +308,7 @@ root.addEventListener("submit", async (event) => {
 });
 
 root.addEventListener("click", (event) => {
-  const routeTarget = event.target.closest("[data-route]");
+  const routeTarget = findOwnedRouteTarget(event.target, root);
   if (routeTarget) { event.preventDefault(); const next = routeTarget.dataset.route; if (next === "create" && route === "create" && draft.step > 1) draft.step -= 1; else route = next; formError = null; render(); return; }
   const fieldTarget = event.target.closest("[data-field-open]"); if (fieldTarget) { selectedFieldId = fieldTarget.dataset.fieldOpen; fieldService.select_field(selectedFieldId, currentUser().user_id); route = "field-detail"; render(); return; }
   const historyTarget = event.target.closest("[data-case-open]");
