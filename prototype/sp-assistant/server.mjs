@@ -66,6 +66,7 @@ export async function startServer({ port, host, dbPath, exportDir, uploadDir: co
       if (request.method === "GET" && url.pathname === "/api/pilot/data-catalog") return json(response, 200, JSON.parse(await readFile(resolve(ROOT, "data-catalog.json"), "utf8")));
       if (request.method === "GET" && url.pathname === "/api/knowledge/summary") return json(response, 200, { status:"ok", ...knowledge.summary() });
       if (request.method === "GET" && url.pathname === "/api/knowledge/search") return json(response, 200, { status:"ok", query:url.searchParams.get("q") ?? "", results:knowledge.search({ query:url.searchParams.get("q"), domain:url.searchParams.get("domain") || null }) });
+      if (request.method === "GET" && url.pathname === "/api/knowledge/company-program") return json(response, 200, { status:"ok", ...knowledge.program(url.searchParams.get("stage_id") || null) });
       if (request.method === "POST" && url.pathname === "/api/pilot/feedback") { const payload = await readJson(request); if (!payload || Object.keys(payload).some((key) => !["route","subject_id","rating","note"].includes(key))) throw new Error("invalid feedback"); return json(response, 201, { status:"SAVED", ...store.addFeedback(session.user_id, payload) }); }
       if (request.method === "POST" && url.pathname === "/api/pilot/export") return json(response, 200, { status:"EXPORTED", ...(await store.exportAll()) });
       if (request.method === "POST" && url.pathname === "/api/pilot/backup") return json(response, 200, { status:"BACKED_UP", ...store.backup() });

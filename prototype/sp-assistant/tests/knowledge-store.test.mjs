@@ -21,3 +21,17 @@ test("pilot knowledge search rejects unreviewed domains and empty queries", asyn
   assert.throws(() => store.search({ query:"", domain:"DISEASE" }), /invalid knowledge query/);
   assert.throws(() => store.search({ query:"ข้าว", domain:"PRODUCT" }), /invalid knowledge domain/);
 });
+
+test("company rice program is stage-scoped, governed, and keeps wind limitations explicit", async () => {
+  const store = await new PilotKnowledgeStore().open();
+  const all = store.program();
+  assert.equal(all.status, "accepted-internal-pilot");
+  assert.equal(all.stages.length, 9);
+  assert.equal(all.governance.sent_to_openai, false);
+  assert.equal(all.governance.wind_adjusted, false);
+  const stage = store.program("CMP-06").stages[0];
+  assert.equal(stage.stage_id, "CMP-06");
+  assert.ok(stage.items.every(([name, rate]) => name && /ไร่/.test(rate)));
+  assert.match(stage.drone.source_wind_limit, /3 ม\.\/วินาที/);
+  assert.throws(() => store.program("CMP-99"), /invalid company program stage/);
+});

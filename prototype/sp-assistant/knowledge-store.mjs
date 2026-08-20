@@ -21,15 +21,23 @@ function boundedSubject(domain, subject, pack) {
 }
 
 export class PilotKnowledgeStore {
-  constructor() { this.packages = new Map(); this.manifest = null; }
+  constructor() { this.packages = new Map(); this.manifest = null; this.companyProgram = null; }
   async open() {
     for (const [domain, url] of Object.entries(PACKAGES)) { const pack = JSON.parse(await readFile(fileURLToPath(url), "utf8")); if (pack.meta?.status !== "accepted-internal-not-published") throw new Error("knowledge package review state is not allowed"); this.packages.set(domain, pack); }
-    this.manifest = JSON.parse(await readFile(new URL("./source-manifest.json", import.meta.url), "utf8")); return this;
+    this.manifest = JSON.parse(await readFile(new URL("./source-manifest.json", import.meta.url), "utf8"));
+    this.companyProgram = JSON.parse(await readFile(new URL("./company-rice-program.json", import.meta.url), "utf8"));
+    if (this.companyProgram.status !== "accepted-internal-pilot") throw new Error("company program review state is not allowed");
+    return this;
   }
   summary() { return { manifest_version:this.manifest.manifest_version, sources:this.manifest.sources.length, packages:[...this.packages].map(([domain, pack]) => ({ domain, subjects:pack.subjects.length, review_state:pack.meta.status })) }; }
   search({ query, domain, limit = 20 }) {
     const normalized = text(query); if (!normalized || normalized.length > 120) throw new Error("invalid knowledge query");
     const domains = domain ? [String(domain).toUpperCase()] : [...this.packages.keys()]; if (domains.some((item) => !this.packages.has(item))) throw new Error("invalid knowledge domain");
     return domains.flatMap((item) => { const pack = this.packages.get(item); return pack.subjects.map((subject) => boundedSubject(item, subject, pack)); }).filter((record) => text([record.name,record.english,record.scientific,record.observation,record.context,record.group].join(" ")).includes(normalized)).slice(0, Math.min(Number(limit) || 20, 20));
+  }
+  program(stageId = null) {
+    const stages = stageId ? this.companyProgram.stages.filter((stage) => stage.stage_id === stageId) : this.companyProgram.stages;
+    if (stageId && stages.length !== 1) throw new Error("invalid company program stage");
+    return { schema_version:this.companyProgram.schema_version, status:this.companyProgram.status, title:this.companyProgram.title, sources:this.companyProgram.sources, governance:this.companyProgram.governance, stages };
   }
 }

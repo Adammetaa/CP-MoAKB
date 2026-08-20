@@ -18,8 +18,11 @@ test("pilot API requires a session and restores workspace after restart", async 
   const catalog = await (await fetch(`${base}/api/pilot/data-catalog`, { headers:{ cookie } })).json();
   assert.equal(catalog.catalog_version, "pilot-data-catalog/v1"); assert.equal(catalog.datasets.find((item) => item.dataset_id === "FIELD_STAGE_MODEL").status, "INTERNAL_OPERATIONAL_NOT_CANONICAL");
   assert.equal((await fetch(`${base}/api/knowledge/search?q=โรคไหม้`)).status, 401);
+  assert.equal((await fetch(`${base}/api/knowledge/company-program?stage_id=CMP-01`)).status, 401);
   const knowledge = await (await fetch(`${base}/api/knowledge/search?q=โรคไหม้&domain=DISEASE`, { headers:{ cookie } })).json();
   assert.equal(knowledge.status, "ok"); assert.equal(knowledge.results[0].name, "โรคไหม้"); assert.match(knowledge.results[0].limitations[0], /ไม่ใช่การยืนยันการวินิจฉัย/);
+  const companyProgram = await (await fetch(`${base}/api/knowledge/company-program?stage_id=CMP-01`, { headers:{ cookie } })).json();
+  assert.equal(companyProgram.stages[0].stage_id, "CMP-01"); assert.equal(companyProgram.governance.sent_to_openai, false); assert.equal(companyProgram.governance.wind_adjusted, false);
   const feedback = await fetch(`${base}/api/pilot/feedback`, { method:"POST", headers:{ cookie, "content-type":"application/json" }, body:JSON.stringify({ route:"learn", subject_id:knowledge.results[0].record_id, rating:"NEEDS_DATA", note:"ต้องการมิติงานแปลงเพิ่ม" }) });
   assert.equal(feedback.status, 201); assert.equal((await feedback.json()).rating, "NEEDS_DATA");
   const pilotSummary = await (await fetch(`${base}/api/pilot/summary`, { headers:{ cookie } })).json(); assert.equal(pilotSummary.feedback, 1); assert.equal(pilotSummary.storage_mode, "LOCAL_SQLITE");

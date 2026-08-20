@@ -10,4 +10,8 @@ export class ServerKnowledgeAdapter {
     const params = new URLSearchParams({ q:query }); if (domain) params.set("domain", domain);
     return this.request(`/api/knowledge/search?${params}`);
   }
+  companyProgram(stageId = "") {
+    const params = new URLSearchParams(); if (stageId) params.set("stage_id", stageId);
+    return this.request(`/api/knowledge/company-program${params.size ? `?${params}` : ""}`);
+  }
 }
