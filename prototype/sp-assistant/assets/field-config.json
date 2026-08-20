@@ -1,0 +1,21 @@
+{
+  "version": "cmp-operational-stage-model/v1",
+  "crop": "rice",
+  "stage_rules": [
+    { "stage_id": "CMP-01", "label_th": "ก่อนปลูก", "crop_stage": "PRE_PLANTING", "min_day": -36500, "max_day": -1 },
+    { "stage_id": "CMP-02", "label_th": "ตั้งตัว", "crop_stage": "ESTABLISHMENT", "min_day": 0, "max_day": 14 },
+    { "stage_id": "CMP-03", "label_th": "เริ่มแตกกอ", "crop_stage": "EARLY_TILLERING", "min_day": 15, "max_day": 29 },
+    { "stage_id": "CMP-04", "label_th": "แตกกอ", "crop_stage": "TILLERING", "min_day": 30, "max_day": 44 },
+    { "stage_id": "CMP-05", "label_th": "แตกกอสูงสุด", "crop_stage": "MAXIMUM_TILLERING", "min_day": 45, "max_day": 59 },
+    { "stage_id": "CMP-06", "label_th": "สร้างรวงอ่อน", "crop_stage": "PANICLE_INITIATION", "min_day": 60, "max_day": 74 },
+    { "stage_id": "CMP-07", "label_th": "ตั้งท้อง–ออกรวง", "crop_stage": "BOOTING_HEADING", "min_day": 75, "max_day": 89 },
+    { "stage_id": "CMP-08", "label_th": "น้ำนม–แป้ง", "crop_stage": "GRAIN_FILLING", "min_day": 90, "max_day": 109 },
+    { "stage_id": "CMP-09", "label_th": "สุกแก่", "crop_stage": "MATURITY", "min_day": 110, "max_day": 36500 }
+  ],
+  "planting_methods": [
+    { "id": "TRANSPLANTED", "label_th": "ปักดำ" },
+    { "id": "DIRECT_SEEDED_WET", "label_th": "หว่านน้ำตม" },
+    { "id": "DIRECT_SEEDED_DRY", "label_th": "หว่านแห้ง" },
+    { "id": "OTHER", "label_th": "วิธีอื่น" }
+  ]
+}

@@ -9,6 +9,10 @@ const polishStyles = await readFile(resolve(root, "assets", "polish.css"), "utf8
 const app = await readFile(resolve(root, "assets", "app.js"), "utf8");
 const decisionGates = await readFile(resolve(root, "assets", "decision-gates.js"), "utf8");
 const decisionAuthority = await readFile(resolve(root, "assets", "decision-authority.js"), "utf8");
+const fieldApp = await readFile(resolve(root, "assets", "field-app.js"), "utf8");
+const fieldCore = await readFile(resolve(root, "assets", "field-core.js"), "utf8");
+const fieldServices = await readFile(resolve(root, "assets", "field-services.js"), "utf8");
+const fieldStyles = await readFile(resolve(root, "assets", "field-shell.css"), "utf8");
 const failures = [];
 
 for (const required of [
@@ -49,6 +53,24 @@ for (const required of ['font-family:"Prompt"', ".system-turn", ".warning-turn",
 }
 if (/<form\b[^>]*(?:action|method)=/i.test(html)) failures.push("forms must remain local and non-network-submittable");
 if (!html.includes('<html lang="th">') || !html.includes('content="noindex,nofollow"')) failures.push("Thai-first or indexing boundary missing");
+for (const required of ["field-app", "field-shell.css", "Field Intelligence Workspace", "type=\"module\""]) {
+  if (!html.includes(required)) failures.push(`index.html missing field backbone: ${required}`);
+}
+for (const required of ["MODEL_CONTRACTS", "RELATIONSHIP_BACKBONE", "stage_provenance", "field_id", "decision_log_id"]) {
+  if (!fieldCore.includes(required)) failures.push(`field-core.js missing contract: ${required}`);
+}
+for (const required of ["class FieldService", "class LocationService", "class MapService", "class StageService", "class GuidanceService", "class InvestigationService", "class EvidenceService", "class ConversationService", "class KnowledgeService", "class DecisionService", "class ExplanationService", "class LLMGateway"]) {
+  if (!fieldServices.includes(required)) failures.push(`field-services.js missing service: ${required}`);
+}
+for (const required of ["data-login-form", "data-map-mode=\"tap\"", "data-map-mode=\"center\"", "SYSTEM_ESTIMATED", "USER_CONFIRMED", "USER_OVERRIDDEN", "expected_planting_date"]) {
+  if (!fieldApp.includes(required)) failures.push(`field-app.js missing workflow: ${required}`);
+}
+for (const prohibited of ["api.openai.com", "OPENAI_API_KEY", ".setItem(", ".getItem("]) {
+  if (fieldApp.includes(prohibited)) failures.push(`field-app.js contains prohibited coupling: ${prohibited}`);
+}
+for (const required of [".login-view", ".map-mode-switch", ".map-canvas", ".field-bottom-nav", "@media (max-width:820px)", ":focus-visible", "prefers-reduced-motion"]) {
+  if (!fieldStyles.includes(required)) failures.push(`field-shell.css missing reusable/mobile foundation: ${required}`);
+}
 for (const required of ["bounded-case-projection/v1", "REQUIRED_TO_DISTINGUISH", "SUFFICIENT_FOR_PROVISIONAL_IDENTIFICATION", "PROVISIONAL_IDENTIFICATION", "SEVERITY_EVIDENCE_INSUFFICIENT", "NO_ACTION_DETERMINATION_SUPPORTED", "MANAGEMENT_REMAINS_BLOCKED", "chemicalRecommendation: \"BLOCKED\"", "thresholds: []", "CONTROL FAILURE ≠ RESISTANCE", "governed-management-option-selection/v1", "NO_ACTION_CURRENTLY_JUSTIFIED", "authority-blocked", "commercialPreferenceUsed: false", "taskCreated: false", "automaticLearning: false"]) {
   if (!decisionGates.includes(required)) failures.push(`decision-gates.js missing scientific boundary: ${required}`);
 }
