@@ -71,7 +71,7 @@ for (const required of ["class=\"workspace\"", "chat-shell", "data-problem", "as
 for (const prohibited of ["id=\"field-app\"", "field-shell.css", "field-app.js"]) {
   if (legacyHtml.includes(prohibited)) failures.push(`legacy.html contains Field Workspace surface: ${prohibited}`);
 }
-for (const required of ["field-shell.css?v=google-satellite-3", "field-app.js?v=google-satellite-3"]) {
+for (const required of ["field-shell.css?v=real-weather-2", "field-app.js?v=real-weather-2"]) {
   if (!html.includes(required)) failures.push(`index.html missing fixed-login cache key: ${required}`);
 }
 if (!fieldApp.includes('prototype-login.js?v=fixed-login-1')) failures.push("field-app.js missing fixed prototype login module");
@@ -95,6 +95,10 @@ for (const required of ["MODEL_CONTRACTS", "RELATIONSHIP_BACKBONE", "stage_prove
 for (const required of ["class FieldService", "class LocationService", "class MapService", "class StageService", "class GuidanceService", "class InvestigationService", "class EvidenceService", "class ConversationService", "class KnowledgeService", "class DecisionService", "class ExplanationService", "class LLMGateway"]) {
   if (!fieldServices.includes(required)) failures.push(`field-services.js missing service: ${required}`);
 }
+for (const required of ["api.open-meteo.com/v1/forecast", "temperature_2m", "weather_code", "wind_speed_10m", "OPEN_METEO", "LOCATION_REQUIRED", "ไม่ใช่เซนเซอร์ภายในแปลง"]) {
+  if (!fieldServices.includes(required)) failures.push(`field-services.js missing real weather contract: ${required}`);
+}
+if (!fieldApp.includes('source: "FIELD_CENTROID"') || !fieldApp.includes("บริเวณแปลง · Open-Meteo")) failures.push("field-app.js must request and label field-centroid weather");
 for (const required of ["assert_field_context", "assert_case_context", "assert_conversation_context", "get_guidance", "start_case", "submit_observation", "finish_case", "save_case_summary", "list_case_history", "get_management_options", "select_management_option", "PHOTO_RECEIVED", "selection_only", "field_action_performed"]) {
   if (!fieldServices.includes(required)) failures.push(`field-services.js missing Block 2 boundary: ${required}`);
 }

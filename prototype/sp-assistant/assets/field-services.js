@@ -133,8 +133,22 @@ export class GuidanceService {
 }
 
 export class WeatherService {
-  constructor(clock = () => new Date()) { this.clock = clock; }
-  async get_weather(location) { if (!location || location.status !== "AVAILABLE") return { status: "UNAVAILABLE" }; return { status: "AVAILABLE", temperature: 29, condition: "แดดบางส่วน", wind_speed: 8, unit: "กม./ชม.", updated_at: this.clock().toISOString(), provider: "MOCK_ADAPTER" }; }
+  constructor({ fetcher = (...args) => globalThis.fetch(...args), clock = () => new Date(), timeout_ms = 8_000 } = {}) { this.fetcher = fetcher; this.clock = clock; this.timeout_ms = timeout_ms; }
+  static describe_code(code) { const value = Number(code); if (value === 0) return { condition: "ท้องฟ้าแจ่มใส", icon: "☀️" }; if ([1,2].includes(value)) return { condition: "มีเมฆบางส่วน", icon: "🌤️" }; if (value === 3) return { condition: "เมฆมาก", icon: "☁️" }; if ([45,48].includes(value)) return { condition: "มีหมอก", icon: "🌫️" }; if ([51,53,55,56,57].includes(value)) return { condition: "ฝนปรอย", icon: "🌦️" }; if ([61,63,65,66,67,80,81,82].includes(value)) return { condition: "มีฝน", icon: "🌧️" }; if ([95,96,99].includes(value)) return { condition: "พายุฝนฟ้าคะนอง", icon: "⛈️" }; return { condition: "สภาพอากาศแปรปรวน", icon: "🌥️" }; }
+  async get_weather(location) {
+    if (!location || location.status !== "AVAILABLE" || !Number.isFinite(Number(location.latitude)) || !Number.isFinite(Number(location.longitude))) return { status: "UNAVAILABLE", reason: "LOCATION_REQUIRED" };
+    const controller = globalThis.AbortController ? new AbortController() : null;
+    const timeout = controller ? setTimeout(() => controller.abort(), this.timeout_ms) : null;
+    try {
+      const query = new URLSearchParams({ latitude: String(location.latitude), longitude: String(location.longitude), current: "temperature_2m,weather_code,wind_speed_10m,is_day,precipitation", timezone: "auto", wind_speed_unit: "kmh" });
+      const response = await this.fetcher(`https://api.open-meteo.com/v1/forecast?${query}`, controller ? { signal: controller.signal } : undefined);
+      if (!response.ok) throw new Error(`weather provider returned ${response.status}`);
+      const data = await response.json(), current = data.current ?? {}, description = WeatherService.describe_code(current.weather_code);
+      if (![current.temperature_2m, current.wind_speed_10m].every((value) => Number.isFinite(Number(value)))) throw new Error("weather provider response is incomplete");
+      return { status: "AVAILABLE", temperature: Number(current.temperature_2m), condition: description.condition, icon: description.icon, wind_speed: Number(current.wind_speed_10m), unit: "กม./ชม.", precipitation: Number(current.precipitation ?? 0), is_day: Number(current.is_day ?? 1) === 1, observation_at: current.time ?? null, updated_at: this.clock().toISOString(), provider: "OPEN_METEO", timezone: data.timezone ?? null, latitude: Number(data.latitude ?? location.latitude), longitude: Number(data.longitude ?? location.longitude), target: { latitude: Number(location.latitude), longitude: Number(location.longitude), source: location.source ?? "LOCATION", field_id: location.field_id ?? null }, limitations: ["ข้อมูลจากแบบจำลองพยากรณ์ ไม่ใช่เซนเซอร์ภายในแปลง", "พิกัดกริดของผู้ให้บริการอาจอยู่ห่างจากพิกัดแปลง"] };
+    } catch (error) { return { status: "UNAVAILABLE", reason: error?.name === "AbortError" ? "TIMEOUT" : "PROVIDER_ERROR", updated_at: this.clock().toISOString() }; }
+    finally { if (timeout) clearTimeout(timeout); }
+  }
 }
 
 export class InvestigationService {

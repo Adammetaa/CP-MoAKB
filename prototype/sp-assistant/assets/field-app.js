@@ -1,5 +1,5 @@
 import { CONVERSATION_SCOPES, PHOTO_EVIDENCE_BOUNDARY, STAGE_PROVENANCE, validateFieldName } from "./field-core.js?v=fixed-login-1";
-import { ConversationService, DecisionService, EvidenceService, FieldService, GuidanceService, InvestigationService, LLMGateway, LocationService, MapService, StageService, WeatherService, WorkspaceRepository, loadFieldConfiguration, loadInvestigationConfiguration } from "./field-services.js?v=fixed-login-1";
+import { ConversationService, DecisionService, EvidenceService, FieldService, GuidanceService, InvestigationService, LLMGateway, LocationService, MapService, StageService, WeatherService, WorkspaceRepository, loadFieldConfiguration, loadInvestigationConfiguration } from "./field-services.js?v=real-weather-2";
 import { loginToPrototypeWorkspace } from "./prototype-login.js?v=fixed-login-1";
 import { findOwnedRouteTarget } from "./route-interactions.js?v=login-route-fix-1";
 import { createPreferredMapAdapter, mountGoogleFieldPreview } from "./browser-map-adapter.js?v=google-satellite-3";
@@ -93,9 +93,9 @@ function renderGps() {
 
 function weatherMarkup() {
   if (weatherState === undefined) return `<article class="weather-card loading-card"><span class="skeleton short"></span><span class="skeleton"></span></article>`;
-  if (weatherState.status !== "AVAILABLE") return `<article class="weather-card unavailable"><div><strong>สภาพอากาศไม่พร้อมใช้งาน</strong><small>เปิดตำแหน่งเพื่อรับข้อมูลบริบทพื้นที่</small></div><button type="button" data-action="weather-refresh" aria-label="ลองใหม่">↻</button></article>`;
+  if (weatherState.status !== "AVAILABLE") return `<article class="weather-card unavailable"><div><strong>สภาพอากาศไม่พร้อมใช้งาน</strong><small>${weatherState.reason === "LOCATION_REQUIRED" ? "เปิดตำแหน่งหรือเลือกแปลงเพื่อรับข้อมูลบริบทพื้นที่" : "เชื่อมต่อข้อมูลอากาศไม่สำเร็จ กรุณาลองใหม่"}</small></div><button type="button" data-action="weather-refresh" aria-label="ลองใหม่">↻</button></article>`;
   const updated = new Intl.DateTimeFormat("th-TH", { hour: "2-digit", minute: "2-digit" }).format(new Date(weatherState.updated_at));
-  return `<article class="weather-card"><div class="weather-main"><span class="weather-icon">🌤️</span><span><strong>${weatherState.temperature}°C</strong><small>${escapeHtml(weatherState.condition)}</small></span></div><div class="weather-wind"><span>〰</span><strong>${weatherState.wind_speed} ${weatherState.unit}</strong></div><div class="weather-update"><small>อัปเดตล่าสุด</small><strong>${updated}</strong><button type="button" data-action="weather-refresh" aria-label="รีเฟรชสภาพอากาศ">↻</button></div></article>`;
+  return `<article class="weather-card" title="ข้อมูลแบบจำลองบริเวณแปลง ไม่ใช่เซนเซอร์ภายในแปลง"><div class="weather-main"><span class="weather-icon">${weatherState.icon ?? "🌤️"}</span><span><strong>${weatherState.temperature.toFixed(1)}°C</strong><small>${escapeHtml(weatherState.condition)}</small></span></div><div class="weather-wind"><span>〰</span><strong>${weatherState.wind_speed.toFixed(1)} ${weatherState.unit}</strong></div><div class="weather-update"><small>${weatherState.target?.field_id ? "บริเวณแปลง · Open-Meteo" : "ตำแหน่งปัจจุบัน · Open-Meteo"}</small><strong>${updated}</strong><button type="button" data-action="weather-refresh" aria-label="รีเฟรชสภาพอากาศ">↻</button></div></article>`;
 }
 
 function fieldCardMarkup(field) {
@@ -282,7 +282,8 @@ function render() {
   window.scrollTo({ top: 0, behavior: "instant" });
 }
 
-async function refreshWeather() { weatherState = await weatherService.get_weather(locationService.get_current_location()); if (route === "home") renderHome(); else if (route === "field-detail") renderFieldDetail(); }
+function weatherTarget() { const field = selectedField(); return field?.centroid ? { status: "AVAILABLE", latitude: field.centroid.latitude, longitude: field.centroid.longitude, source: "FIELD_CENTROID", field_id: field.field_id } : locationService.get_current_location(); }
+async function refreshWeather() { weatherState = await weatherService.get_weather(weatherTarget()); if (route === "home") renderHome(); else if (route === "field-detail") renderFieldDetail(); }
 async function requestGps() { gpsState = { status: "REQUESTING" }; renderGps(); gpsState = await locationService.request_location(); weatherState = undefined; if (route === "gps") renderGps(); }
 function updateStagePreview() {
   const target = root.querySelector("[data-stage-preview]"); if (!target) return;
@@ -342,7 +343,7 @@ root.addEventListener("submit", async (event) => {
 root.addEventListener("click", (event) => {
   const routeTarget = findOwnedRouteTarget(event.target, root);
   if (routeTarget) { event.preventDefault(); const next = routeTarget.dataset.route; if (next === "create" && route === "create" && draft.step > 1) draft.step -= 1; else route = next; formError = null; render(); return; }
-  const fieldTarget = event.target.closest("[data-field-open]"); if (fieldTarget) { selectedFieldId = fieldTarget.dataset.fieldOpen; fieldService.select_field(selectedFieldId, currentUser().user_id); route = "field-detail"; render(); return; }
+  const fieldTarget = event.target.closest("[data-field-open]"); if (fieldTarget) { const nextFieldId = fieldTarget.dataset.fieldOpen; if (selectedFieldId !== nextFieldId) weatherState = undefined; selectedFieldId = nextFieldId; fieldService.select_field(selectedFieldId, currentUser().user_id); route = "field-detail"; render(); return; }
   const historyTarget = event.target.closest("[data-case-open]");
   if (historyTarget) { activeCaseId = historyTarget.dataset.caseOpen; const record = investigationService.get_case(caseContext()); const conversation = workspace().conversations.find((item) => item.case_id === activeCaseId); activeConversationId = conversation?.conversation_id ?? null; route = record.status === "COMPLETED" ? "summary" : "inspection"; selectedManagementOptionId = decisionService.get_decision_log(caseContext())?.management_option_id ?? null; render(); return; }
   const guidanceTarget = event.target.closest("[data-guidance-start]"); if (guidanceTarget && !guidanceTarget.disabled) { try { startInspection(guidanceTarget.dataset.guidanceStart); } catch (error) { formError = error.message; renderFieldDetail(); } return; }
