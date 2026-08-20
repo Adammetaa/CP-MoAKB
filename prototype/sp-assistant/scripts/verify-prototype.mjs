@@ -73,7 +73,7 @@ for (const required of ["class=\"workspace\"", "chat-shell", "data-problem", "as
 for (const prohibited of ["id=\"field-app\"", "field-shell.css", "field-app.js"]) {
   if (legacyHtml.includes(prohibited)) failures.push(`legacy.html contains Field Workspace surface: ${prohibited}`);
 }
-for (const required of ["field-shell.css?v=pilot-data-1", "field-app.js?v=pilot-data-1"]) {
+for (const required of ["field-shell.css?v=knowledge-pilot-1", "field-app.js?v=knowledge-pilot-1"]) {
   if (!html.includes(required)) failures.push(`index.html missing fixed-login cache key: ${required}`);
 }
 if (!fieldApp.includes('prototype-login.js?v=fixed-login-1')) failures.push("field-app.js missing fixed prototype login module");

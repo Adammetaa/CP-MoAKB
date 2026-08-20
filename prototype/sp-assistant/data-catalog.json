@@ -1,0 +1,54 @@
+{
+  "catalog_version": "pilot-data-catalog/v1",
+  "updated_at": "2026-08-20",
+  "datasets": [
+    {
+      "dataset_id": "FIELD_STAGE_MODEL",
+      "consumer": "Field create, Field cards, guidance routing",
+      "version": "cmp-operational-stage-model/v2",
+      "status": "INTERNAL_OPERATIONAL_NOT_CANONICAL",
+      "source": "assets/field-config.json",
+      "limitations": ["ช่วงวันและชื่อ CMP เป็นแบบจำลองปฏิบัติการภายใน", "ยังไม่มีแหล่งอ้างอิง canonical ใน repository", "ต้องให้ผู้ใช้ยืนยันหรือแก้ไขระยะ"]
+    },
+    {
+      "dataset_id": "RICE_VARIETY",
+      "consumer": "Field create and Field details",
+      "version": "user-reported/v1",
+      "status": "USER_REPORTED_UNVALIDATED",
+      "source": "Field input",
+      "limitations": ["repository ยังไม่มีทะเบียนพันธุ์ข้าว canonical", "ชื่อที่แสดงเป็นข้อความจากผู้ใช้และอาจมีชื่อย่อหรือการสะกดต่างกัน"]
+    },
+    {
+      "dataset_id": "PLANTING_METHOD",
+      "consumer": "Field create",
+      "version": "field-config/v2",
+      "status": "INTERNAL_TAXONOMY",
+      "source": "assets/field-config.json",
+      "limitations": ["ใช้จัดหมวดหมู่ใน Pilot", "ยังไม่ผูกกับ vocabulary object ใน CP-MoAKB runtime"]
+    },
+    {
+      "dataset_id": "FIELD_INVESTIGATION_GUIDANCE",
+      "consumer": "Today guidance, Cases and observations",
+      "version": "field-investigation-flows/v1",
+      "status": "BOUNDED_GENERIC_WORKFLOW",
+      "source": "assets/investigation-config.json",
+      "limitations": ["เป็นคำถามสังเกตทั่วไป ไม่ใช่การวินิจฉัย", "ยังไม่ใช่คำแนะนำเฉพาะศัตรูพืชหรือผลิตภัณฑ์"]
+    },
+    {
+      "dataset_id": "KNOWLEDGE_EXPLORER",
+      "consumer": "Learning Center",
+      "version": "multiple governed prototype packages",
+      "status": "MIXED_INTERNAL_REVIEW_STATES",
+      "source": "../knowledge-explorer/assets/data/*.json",
+      "limitations": ["บาง package ระบุ accepted-internal-not-published", "หน้า Field Workspace ยังไม่ได้ query ผ่าน CP-MoAKB Runtime API", "ห้ามรวมทุก package เป็น canonical โดยไม่ตรวจ review state"]
+    },
+    {
+      "dataset_id": "FIELD_WEATHER",
+      "consumer": "Home and Field details",
+      "version": "Open-Meteo current conditions",
+      "status": "EXTERNAL_CONTEXTUAL",
+      "source": "Open-Meteo API",
+      "limitations": ["ข้อมูลแบบจำลอง ไม่ใช่เซนเซอร์ในแปลง", "ใช้เป็นบริบทและไม่ยืนยันสาเหตุหรือความจำเป็นในการจัดการ"]
+    }
+  ]
+}

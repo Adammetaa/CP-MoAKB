@@ -5,6 +5,7 @@ import { findOwnedRouteTarget } from "./route-interactions.js?v=login-route-fix-
 import { createPreferredMapAdapter, mountGoogleFieldPreview } from "./browser-map-adapter.js?v=google-satellite-3";
 import { ServerLLMAdapter } from "./server-llm-adapter.js?v=server-ai-1";
 import { ServerWorkspaceAdapter } from "./server-workspace-adapter.js?v=pilot-data-1";
+import { ServerKnowledgeAdapter } from "./server-knowledge-adapter.js?v=knowledge-pilot-1";
 
 const FIELD_RUNTIME_KEY = "__cpmoakbFieldWorkspaceRuntime";
 if (!window[FIELD_RUNTIME_KEY]) {
@@ -24,6 +25,7 @@ function assertSingleRuntimeDocument() {
 }
 assertSingleRuntimeDocument();
 const serverWorkspace = new ServerWorkspaceAdapter();
+const serverKnowledge = new ServerKnowledgeAdapter();
 const repository = new WorkspaceRepository(window.localStorage, "cpmoakb.field-workspace.v1", (state) => serverWorkspace.push(state));
 const fieldService = new FieldService(repository);
 const locationService = new LocationService(navigator.geolocation, repository);
@@ -45,7 +47,8 @@ let activeMapAdapter = null;
 let activeFieldPreviewCleanups = [];
 let activeCaseId = null, activeConversationId = null, selectedManagementOptionId = null;
 let chatPending = false, chatRetryText = null;
-let pilotSummary = null;
+let pilotSummary = null, dataCatalog = null;
+let knowledgeResults = [], knowledgeQuery = "", knowledgeDomain = "", knowledgeLoading = false, knowledgeError = null, knowledgeSummary = null, knowledgeSummaryPending = false, feedbackNotice = null;
 
 function createDraft() {
   const location = repository.load().location_context;
@@ -279,7 +282,11 @@ async function sendFieldChat(text, { appendUser = true } = {}) {
 }
 
 function renderLearn() {
-  root.innerHTML = `${appHeader({ back: "home" })}<main class="app-main simple-page"><p class="eyebrow">LEARNING CENTER</p><h1>ศูนย์เรียนรู้</h1><p>เข้าถึงองค์ความรู้ที่ผ่านการกำกับ โดยแยกความรู้ หลักฐาน และการตัดสินใจออกจากกันอย่างชัดเจน</p><div class="learning-grid"><a href="../knowledge-explorer/rice-disease-corpus.html"><span>🍃</span><strong>องค์ความรู้โรคข้าว</strong><small>เรียนรู้เพื่อสังเกต ไม่ใช่วินิจฉัยจากภาพเดียว</small></a><a href="../knowledge-explorer/rice-insect-corpus.html"><span>🪲</span><strong>องค์ความรู้แมลง</strong><small>สำรวจหลักฐานและข้อจำกัด</small></a><a href="../knowledge-explorer/rice-weed-corpus.html"><span>🌱</span><strong>องค์ความรู้วัชพืช</strong><small>ค้นหาจากลักษณะที่สังเกตเห็น</small></a><a href="../knowledge-explorer/crop-protection-management.html"><span>▤</span><strong>การจัดการและกลไก</strong><small>ตรวจสอบอำนาจและแหล่งที่มา</small></a></div></main>${bottomNavigation("learn")}`;
+  if (!knowledgeSummary && !knowledgeSummaryPending) { knowledgeSummaryPending = true; serverKnowledge.summary().then((value) => { knowledgeSummary = value; knowledgeSummaryPending = false; if (route === "learn") renderLearn(); }).catch(() => { knowledgeSummaryPending = false; }); }
+  const counts = Object.fromEntries((knowledgeSummary?.packages ?? []).map((item) => [item.domain, item.subjects]));
+  const categoryMarkup = [["","⌕","ค้นทั้งหมด",Object.values(counts).reduce((sum, value) => sum + value, 0)],["DISEASE","🍃","โรคและอาการ",counts.DISEASE],["INSECT","🪲","แมลง",counts.INSECT],["WEED","🌱","วัชพืช",counts.WEED]].map(([id,icon,label,count]) => `<button type="button" class="knowledge-category ${knowledgeDomain === id ? "active" : ""}" data-knowledge-domain="${id}"><span>${icon}</span><strong>${label}</strong><small>${count ?? "…"} รายการ</small></button>`).join("");
+  const resultMarkup = knowledgeLoading ? `<div class="knowledge-state">กำลังค้นข้อมูลที่ผ่านการทบทวน…</div>` : knowledgeError ? `<div class="knowledge-state error">${escapeHtml(knowledgeError)}</div>` : knowledgeResults.length ? `<div class="knowledge-results">${knowledgeResults.map((item) => `<article class="knowledge-result"><header><span>${domainIcon(item.domain)}</span><div><small>${escapeHtml(domainLabel(item.domain))} · ${escapeHtml(item.review_state)}</small><h2>${escapeHtml(item.name)}</h2>${item.english || item.scientific ? `<p>${escapeHtml([item.english,item.scientific].filter(Boolean).join(" · "))}</p>` : ""}</div></header><div class="knowledge-observation"><strong>สิ่งที่ใช้ช่วยสังเกต</strong><p>${escapeHtml(item.observation || "แหล่งข้อมูลไม่ได้ระบุข้อความสังเกตแบบย่อ")}</p>${item.context ? `<small>บริบท: ${escapeHtml(item.context)}</small>` : ""}</div><details><summary>ที่มาและข้อจำกัด</summary><p>${item.sources.map((source) => `${escapeHtml(source.label)} (${escapeHtml(source.id)})`).join("<br>")}</p><p>ตำแหน่งอ้างอิง: ${escapeHtml(Array.isArray(item.source_locators) ? item.source_locators.join(", ") : item.source_locators || "ไม่ระบุ")}</p><ul>${item.limitations.map((text) => `<li>${escapeHtml(text)}</li>`).join("")}</ul></details></article>`).join("")}</div>` : knowledgeQuery ? `<div class="knowledge-state">ไม่พบรายการที่ตรงกับ “${escapeHtml(knowledgeQuery)}” ลองใช้ชื่ออาการ แมลง โรค หรือวัชพืชที่สั้นลง</div>` : `<div class="knowledge-state">ลองค้นหาด้วยชื่ออาการ ชื่อสิ่งที่พบ หรือชื่อวัชพืช</div>`;
+  root.innerHTML = `${appHeader({ back: "home" })}<main class="app-main simple-page learn-page"><section class="learn-hero"><div><p class="eyebrow">INTERNAL PILOT KNOWLEDGE</p><h1>ศูนย์เรียนรู้</h1><p>ข้อมูลช่วยสังเกตสำหรับงานแปลง พร้อมที่มาและข้อจำกัดที่ตรวจสอบได้</p></div><span>▤</span></section><div class="knowledge-categories">${categoryMarkup}</div><form class="knowledge-search" data-knowledge-search-form><label><span>ค้นจากสิ่งที่พบในแปลง</span><input name="query" maxlength="120" value="${escapeHtml(knowledgeQuery)}" placeholder="กรอกชื่ออาการหรือสิ่งที่พบ" required></label><input type="hidden" name="domain" value="${escapeHtml(knowledgeDomain)}"><button class="primary-action" type="submit" ${knowledgeLoading ? "disabled" : ""}>⌕ ค้นข้อมูล</button></form><p class="knowledge-boundary">ข้อมูลช่วยสังเกต ≠ การยืนยันการวินิจฉัย · ไม่มีอัตราใช้หรือคำแนะนำสารเคมีในผลค้นหา</p>${resultMarkup}<section class="pilot-feedback"><div><p class="eyebrow">TEAM REVIEW</p><h2>หน้านี้ช่วยทำงานได้ไหม?</h2><p>Feedback จะถูกเก็บในถังข้อมูล Pilot พร้อมหน้าที่รีวิว</p></div><div class="feedback-actions"><button type="button" data-feedback-rating="WORKS">✓ ใช้ได้</button><button type="button" data-feedback-rating="MISMATCH">! ข้อมูลไม่ตรง</button><button type="button" data-feedback-rating="NEEDS_DATA">＋ ต้องเพิ่มข้อมูล</button></div>${feedbackNotice ? `<p class="success-note">${escapeHtml(feedbackNotice)}</p>` : ""}</section><details class="legacy-learning"><summary>เปิดคลังความรู้ฉบับตรวจสอบรายละเอียด</summary><div class="learning-grid"><a href="../knowledge-explorer/rice-disease-corpus.html"><span>🍃</span><strong>องค์ความรู้โรคข้าว</strong><small>ดูหลักฐานและที่มา</small></a><a href="../knowledge-explorer/rice-insect-corpus.html"><span>🪲</span><strong>องค์ความรู้แมลง</strong><small>ดูหลักฐานและข้อจำกัด</small></a><a href="../knowledge-explorer/rice-weed-corpus.html"><span>🌱</span><strong>องค์ความรู้วัชพืช</strong><small>ค้นจากลักษณะที่สังเกต</small></a></div></details></main>${bottomNavigation("learn")}`;
 }
 
 function renderProfile() {
@@ -289,7 +296,7 @@ function renderProfile() {
 
 async function renderPilotDiagnostics() {
   root.innerHTML = `${appHeader({ back:"profile" })}<main class="app-main simple-page"><p class="eyebrow">INTERNAL PILOT</p><h1>สถานะระบบและถังข้อมูล</h1><div class="profile-card"><p>กำลังตรวจสอบ…</p></div></main>${bottomNavigation("profile")}`;
-  try { pilotSummary = await serverWorkspace.summary(); root.innerHTML = `${appHeader({ back:"profile" })}<main class="app-main simple-page"><p class="eyebrow">INTERNAL PILOT</p><h1>สถานะระบบและถังข้อมูล</h1><div class="profile-card pilot-diagnostics"><dl><div><dt>ฐานข้อมูล</dt><dd>พร้อมใช้งาน</dd></div><div><dt>OpenAI</dt><dd>${pilotSummary.ai_configured ? "พร้อม" : "ยังไม่ตั้งค่า"} · ${escapeHtml(pilotSummary.model)}</dd></div><div><dt>แปลง / ฤดูปลูก</dt><dd>${pilotSummary.fields} / ${pilotSummary.seasons}</dd></div><div><dt>บทสนทนา / ข้อความ</dt><dd>${pilotSummary.conversations} / ${pilotSummary.messages}</dd></div><div><dt>เคส / หลักฐาน</dt><dd>${pilotSummary.cases} / ${pilotSummary.evidence}</dd></div><div><dt>Export ล่าสุด</dt><dd>${escapeHtml(pilotSummary.last_export_at ?? "ยังไม่มี")}</dd></div><div><dt>Backup ล่าสุด</dt><dd>${escapeHtml(pilotSummary.last_backup_at ?? "ยังไม่มี")}</dd></div></dl><button class="primary-action" type="button" data-action="pilot-export">Export JSON/CSV</button><button class="secondary-action" type="button" data-action="pilot-backup">สร้าง Backup</button>${notice ? `<p class="success-note">${escapeHtml(notice)}</p>` : ""}</div></main>${bottomNavigation("profile")}`; } catch (error) { formError = error.message; renderError(); }
+  try { [pilotSummary, dataCatalog] = await Promise.all([serverWorkspace.summary(), serverWorkspace.dataCatalog()]); root.innerHTML = `${appHeader({ back:"profile" })}<main class="app-main simple-page"><p class="eyebrow">INTERNAL PILOT</p><h1>สถานะระบบและถังข้อมูล</h1><div class="profile-card pilot-diagnostics"><dl><div><dt>ฐานข้อมูล</dt><dd>พร้อมใช้งาน</dd></div><div><dt>OpenAI</dt><dd>${pilotSummary.ai_configured ? "พร้อม" : "ยังไม่ตั้งค่า"} · ${escapeHtml(pilotSummary.model)}</dd></div><div><dt>แปลง / ฤดูปลูก</dt><dd>${pilotSummary.fields} / ${pilotSummary.seasons}</dd></div><div><dt>บทสนทนา / ข้อความ</dt><dd>${pilotSummary.conversations} / ${pilotSummary.messages}</dd></div><div><dt>เคส / หลักฐาน</dt><dd>${pilotSummary.cases} / ${pilotSummary.evidence}</dd></div><div><dt>Export ล่าสุด</dt><dd>${escapeHtml(pilotSummary.last_export_at ?? "ยังไม่มี")}</dd></div><div><dt>Backup ล่าสุด</dt><dd>${escapeHtml(pilotSummary.last_backup_at ?? "ยังไม่มี")}</dd></div></dl><section class="data-readiness"><h2>ความพร้อมของข้อมูลบนเว็บ</h2><p>Catalog ${escapeHtml(dataCatalog.catalog_version)} · อัปเดต ${escapeHtml(dataCatalog.updated_at)}</p>${dataCatalog.datasets.map((item) => `<article><strong>${escapeHtml(item.dataset_id)}</strong><span>${escapeHtml(item.status)}</span><small>${escapeHtml(item.limitations[0])}</small></article>`).join("")}</section><button class="primary-action" type="button" data-action="pilot-export">Export JSON/CSV</button><button class="secondary-action" type="button" data-action="pilot-backup">สร้าง Backup</button>${notice ? `<p class="success-note">${escapeHtml(notice)}</p>` : ""}</div></main>${bottomNavigation("profile")}`; } catch (error) { formError = error.message; renderError(); }
 }
 
 function renderError() { root.innerHTML = `<main class="state-view"><div class="error-state-icon">!</div><h1>เตรียมพื้นที่ทำงานไม่สำเร็จ</h1><p>${escapeHtml(formError ?? "เกิดข้อผิดพลาดที่ไม่คาดคิด")}</p><button class="primary-action compact-action" type="button" data-action="reload">ลองใหม่</button></main>`; }
@@ -323,6 +330,12 @@ root.addEventListener("input", (event) => {
 });
 
 root.addEventListener("submit", async (event) => {
+  if (event.target.matches("[data-knowledge-search-form]")) {
+    event.preventDefault(); const data = new FormData(event.target); knowledgeQuery = String(data.get("query") ?? "").trim(); knowledgeDomain = String(data.get("domain") ?? ""); if (!knowledgeQuery) return;
+    knowledgeLoading = true; knowledgeError = null; renderLearn();
+    try { knowledgeResults = (await serverKnowledge.search(knowledgeQuery, knowledgeDomain)).results; } catch (error) { knowledgeResults = []; knowledgeError = error.message; }
+    knowledgeLoading = false; renderLearn(); return;
+  }
   if (event.target.matches("[data-login-form]")) {
     event.preventDefault();
     const password = event.target.elements.namedItem("password")?.value ?? "";
@@ -359,6 +372,10 @@ root.addEventListener("submit", async (event) => {
 });
 
 root.addEventListener("click", async (event) => {
+  const knowledgeCategory = event.target.closest("[data-knowledge-domain]");
+  if (knowledgeCategory) { knowledgeDomain = knowledgeCategory.dataset.knowledgeDomain; knowledgeResults = []; knowledgeError = null; feedbackNotice = null; renderLearn(); root.querySelector('[data-knowledge-search-form] input[name="query"]')?.focus(); return; }
+  const feedbackRating = event.target.closest("[data-feedback-rating]")?.dataset.feedbackRating;
+  if (feedbackRating) { try { await serverWorkspace.feedback({ route:"learn", subject_id:knowledgeResults[0]?.record_id ?? null, rating:feedbackRating, note:knowledgeQuery || null }); feedbackNotice = "บันทึก Feedback เข้าถังข้อมูล Pilot แล้ว ขอบคุณครับ"; } catch (error) { feedbackNotice = error.message; } renderLearn(); return; }
   const routeTarget = findOwnedRouteTarget(event.target, root);
   if (routeTarget) { event.preventDefault(); const next = routeTarget.dataset.route; if (next === "create" && route === "create" && draft.step > 1) draft.step -= 1; else route = next; formError = null; render(); return; }
   const fieldTarget = event.target.closest("[data-field-open]"); if (fieldTarget) { const nextFieldId = fieldTarget.dataset.fieldOpen; if (selectedFieldId !== nextFieldId) weatherState = undefined; selectedFieldId = nextFieldId; fieldService.select_field(selectedFieldId, currentUser().user_id); route = "field-detail"; render(); return; }

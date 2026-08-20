@@ -4,6 +4,7 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { extname, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { PilotStore } from "./pilot-store.mjs";
+import { PilotKnowledgeStore } from "./knowledge-store.mjs";
 
 const ROOT = fileURLToPath(new URL(".", import.meta.url));
 const MIME = { ".html":"text/html; charset=utf-8", ".js":"text/javascript; charset=utf-8", ".mjs":"text/javascript; charset=utf-8", ".css":"text/css; charset=utf-8", ".json":"application/json; charset=utf-8", ".svg":"image/svg+xml", ".png":"image/png", ".ico":"image/x-icon", ".txt":"text/plain; charset=utf-8" };
@@ -49,7 +50,8 @@ export async function startServer({ port, host, dbPath, exportDir, uploadDir: co
   const selectedPort = Number(port ?? process.env.PORT ?? 4173), selectedHost = host ?? process.env.PILOT_HOST ?? "127.0.0.1";
   if (!["127.0.0.1", "localhost", "::1"].includes(selectedHost) && process.env.PILOT_ALLOW_LAN !== "true") throw new Error("LAN binding requires PILOT_ALLOW_LAN=true");
   const uploadDir = resolve(configuredUploadDir ?? process.env.PILOT_UPLOAD_DIR ?? resolve(ROOT, "data/uploads")); await mkdir(uploadDir, { recursive:true });
-  const store = await new PilotStore({ dbPath: dbPath ?? process.env.PILOT_DB_PATH ?? resolve(ROOT, "data/pilot.sqlite"), exportDir: exportDir ?? process.env.PILOT_EXPORT_DIR ?? resolve(ROOT, "data/exports") }).open(), sessions = new Map();
+  const store = await new PilotStore({ dbPath: dbPath ?? process.env.PILOT_DB_PATH ?? resolve(ROOT, "data/pilot.sqlite"), exportDir: exportDir ?? process.env.PILOT_EXPORT_DIR ?? resolve(ROOT, "data/exports") }).open();
+  const knowledge = await new PilotKnowledgeStore().open(), sessions = new Map();
   const server = createServer(async (request, response) => {
     const url = new URL(request.url, "http://localhost");
     try {
@@ -61,6 +63,10 @@ export async function startServer({ port, host, dbPath, exportDir, uploadDir: co
       if (request.method === "GET" && url.pathname === "/api/pilot/workspace") { const record = store.getWorkspace(session.user_id); return record ? json(response, 200, record) : json(response, 404, { status:"NOT_FOUND" }); }
       if (request.method === "PUT" && url.pathname === "/api/pilot/workspace") { const payload = await readJson(request, 2_000_000); if (!payload || Object.keys(payload).some((key) => key !== "state")) throw new Error("invalid workspace request"); return json(response, 200, { status:"SAVED", ...store.putWorkspace(session.user_id, payload.state) }); }
       if (request.method === "GET" && url.pathname === "/api/pilot/summary") return json(response, 200, { status:"ok", ...store.summary(), ai_configured:Boolean(process.env.OPENAI_API_KEY && !process.env.OPENAI_API_KEY.startsWith("YOUR_")), model:process.env.OPENAI_MODEL || "gpt-5.6-luna" });
+      if (request.method === "GET" && url.pathname === "/api/pilot/data-catalog") return json(response, 200, JSON.parse(await readFile(resolve(ROOT, "data-catalog.json"), "utf8")));
+      if (request.method === "GET" && url.pathname === "/api/knowledge/summary") return json(response, 200, { status:"ok", ...knowledge.summary() });
+      if (request.method === "GET" && url.pathname === "/api/knowledge/search") return json(response, 200, { status:"ok", query:url.searchParams.get("q") ?? "", results:knowledge.search({ query:url.searchParams.get("q"), domain:url.searchParams.get("domain") || null }) });
+      if (request.method === "POST" && url.pathname === "/api/pilot/feedback") { const payload = await readJson(request); if (!payload || Object.keys(payload).some((key) => !["route","subject_id","rating","note"].includes(key))) throw new Error("invalid feedback"); return json(response, 201, { status:"SAVED", ...store.addFeedback(session.user_id, payload) }); }
       if (request.method === "POST" && url.pathname === "/api/pilot/export") return json(response, 200, { status:"EXPORTED", ...(await store.exportAll()) });
       if (request.method === "POST" && url.pathname === "/api/pilot/backup") return json(response, 200, { status:"BACKED_UP", ...store.backup() });
       if (request.method === "POST" && url.pathname === "/api/pilot/evidence") { const payload = await readJson(request, 9_000_000), allowed = { "image/jpeg":"jpg", "image/png":"png", "image/webp":"webp" }; if (!payload || Object.keys(payload).some((key) => !["field_id","season_id","original_filename","media_type","size_bytes","content_base64"].includes(key)) || !allowed[payload.media_type] || !Number.isInteger(payload.size_bytes) || payload.size_bytes > 6_000_000) throw new Error("invalid evidence"); const workspace = store.getWorkspace(session.user_id)?.state; if (!workspace?.fields?.some((item) => item.field_id === payload.field_id && item.owner_user_id === session.user_id) || !workspace?.seasons?.some((item) => item.season_id === payload.season_id && item.field_id === payload.field_id)) throw new Error("evidence context mismatch"); const bytes = Buffer.from(payload.content_base64, "base64"); if (bytes.length !== payload.size_bytes) throw new Error("invalid evidence size"); const storageKey = `${randomUUID()}.${allowed[payload.media_type]}`; await writeFile(resolve(uploadDir, storageKey), bytes, { flag:"wx" }); return json(response, 201, { status:"STORED", storage_key:storageKey, analysis_state:"NOT_ANALYZED" }); }
