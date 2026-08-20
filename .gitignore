@@ -56,3 +56,6 @@ references/**/*.zip
 # OS
 Thumbs.db
 .DS_Store
+
+# Local browser API configuration (never commit keys)
+prototype/sp-assistant/assets/google-maps-key.local.txt

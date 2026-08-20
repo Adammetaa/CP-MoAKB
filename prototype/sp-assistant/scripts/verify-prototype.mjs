@@ -14,6 +14,7 @@ const fieldApp = await readFile(resolve(root, "assets", "field-app.js"), "utf8")
 const fieldCore = await readFile(resolve(root, "assets", "field-core.js"), "utf8");
 const fieldServices = await readFile(resolve(root, "assets", "field-services.js"), "utf8");
 const fieldStyles = await readFile(resolve(root, "assets", "field-shell.css"), "utf8");
+const browserMapAdapter = await readFile(resolve(root, "assets", "browser-map-adapter.js"), "utf8");
 const prototypeLogin = await readFile(resolve(root, "assets", "prototype-login.js"), "utf8");
 const routeInteractions = await readFile(resolve(root, "assets", "route-interactions.js"), "utf8");
 const investigationConfig = JSON.parse(await readFile(resolve(root, "assets", "investigation-config.json"), "utf8"));
@@ -70,7 +71,7 @@ for (const required of ["class=\"workspace\"", "chat-shell", "data-problem", "as
 for (const prohibited of ["id=\"field-app\"", "field-shell.css", "field-app.js"]) {
   if (legacyHtml.includes(prohibited)) failures.push(`legacy.html contains Field Workspace surface: ${prohibited}`);
 }
-for (const required of ["field-shell.css?v=fixed-login-1", "field-app.js?v=login-route-fix-1"]) {
+for (const required of ["field-shell.css?v=google-satellite-3", "field-app.js?v=google-satellite-3"]) {
   if (!html.includes(required)) failures.push(`index.html missing fixed-login cache key: ${required}`);
 }
 if (!fieldApp.includes('prototype-login.js?v=fixed-login-1')) failures.push("field-app.js missing fixed prototype login module");
@@ -100,6 +101,17 @@ for (const required of ["assert_field_context", "assert_case_context", "assert_c
 for (const required of ["data-login-form", "data-map-mode=\"tap\"", "data-map-mode=\"center\"", "SYSTEM_ESTIMATED", "USER_CONFIRMED", "USER_OVERRIDDEN", "expected_planting_date"]) {
   if (!fieldApp.includes(required)) failures.push(`field-app.js missing workflow: ${required}`);
 }
+for (const required of ["createPreferredMapAdapter", "data-real-map", "ปิดพื้นที่", "zoom-in", "zoom-out"]) {
+  if (!fieldApp.includes(required)) failures.push(`field-app.js missing real map workflow: ${required}`);
+}
+for (const required of ["tile.openstreetmap.org/{z}/{x}/{y}.png", "OpenStreetMap contributors", "__CPMOAKB_MAP_CONFIG", "projectWebMercator", "unprojectWebMercator"]) {
+  if (!browserMapAdapter.includes(required)) failures.push(`browser-map-adapter.js missing map contract: ${required}`);
+}
+for (const required of ["GoogleSatelliteMapAdapter", "google-maps-key.local.txt", 'mapTypeId: "satellite"', "createPreferredMapAdapter"]) {
+  if (!browserMapAdapter.includes(required)) failures.push(`browser-map-adapter.js missing Google Satellite contract: ${required}`);
+}
+if (!browserMapAdapter.includes("mountGoogleFieldPreview") || !fieldApp.includes("data-field-satellite-preview")) failures.push("field detail missing live satellite preview");
+if (fieldApp.includes("(x - 0.5) * 0.012") || fieldApp.includes("draft.mapOffset")) failures.push("field-app.js still contains synthetic coordinate scaling");
 for (const required of ["เริ่มตรวจสุขภาพแปลง", "ถาม SP Assistant", "finish-inspection", "data-inspection-photo", "data-management-select", "save-decision", "data-case-open", "FIELD_SCOPED"]) {
   if (!fieldApp.includes(required)) failures.push(`field-app.js missing Block 2 workflow: ${required}`);
 }

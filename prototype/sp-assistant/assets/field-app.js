@@ -2,6 +2,7 @@ import { CONVERSATION_SCOPES, PHOTO_EVIDENCE_BOUNDARY, STAGE_PROVENANCE, validat
 import { ConversationService, DecisionService, EvidenceService, FieldService, GuidanceService, InvestigationService, LLMGateway, LocationService, MapService, StageService, WeatherService, WorkspaceRepository, loadFieldConfiguration, loadInvestigationConfiguration } from "./field-services.js?v=fixed-login-1";
 import { loginToPrototypeWorkspace } from "./prototype-login.js?v=fixed-login-1";
 import { findOwnedRouteTarget } from "./route-interactions.js?v=login-route-fix-1";
+import { createPreferredMapAdapter, mountGoogleFieldPreview } from "./browser-map-adapter.js?v=google-satellite-3";
 
 const FIELD_RUNTIME_KEY = "__cpmoakbFieldWorkspaceRuntime";
 if (!window[FIELD_RUNTIME_KEY]) {
@@ -37,15 +38,16 @@ let notice = null;
 let formError = null;
 let selectedFieldId = null;
 let draft = createDraft();
-let mapDrag = null;
+let activeMapAdapter = null;
+let activeFieldPreviewCleanups = [];
 let activeCaseId = null, activeConversationId = null, selectedManagementOptionId = null;
 
 function createDraft() {
   const location = repository.load().location_context;
   return {
-    step: 1, name: "", mode: "tap", layer: "satellite",
+    step: 1, name: "", mode: "tap", zoom: 17,
     base: { latitude: location?.latitude ?? 13.7563, longitude: location?.longitude ?? 100.5018 },
-    mapOffset: { x: 0, y: 0 }, points: [], closed: false, date: "", variety: "", plantingMethod: "",
+    points: [], closed: false, date: "", variety: "", plantingMethod: "",
     stageEstimate: null, stageChoice: STAGE_PROVENANCE.SYSTEM_ESTIMATED, overrideCmpStage: "",
   };
 }
@@ -99,7 +101,7 @@ function weatherMarkup() {
 function fieldCardMarkup(field) {
   const age = cropAge(field);
   const ageLabel = age?.state === "PLANNED" ? `อีก ${age.days_until_planting} วันถึงวันปลูก` : age ? `${age.crop_age_days} วัน` : "ยังไม่ระบุ";
-  return `<article class="selected-field-card"><div class="field-card-visual"><span class="field-label">✓ แปลงที่เลือกอยู่</span><div class="rice-scene"><span>🌾</span><span>🌾</span><span>🌾</span><span>🌾</span></div></div><div class="field-card-body"><div class="field-card-title"><div><h2>${escapeHtml(field.name)} <span class="favorite">★</span></h2><small>ID: ${escapeHtml(field.field_id.slice(0, 18))}</small></div><button class="icon-button" type="button" data-field-open="${field.field_id}" aria-label="เปิดรายละเอียดแปลง">›</button></div><dl class="field-facts"><div><dt>🌾 พันธุ์ข้าว</dt><dd>${escapeHtml(field.variety || "ยังไม่ระบุ")}</dd></div><div><dt>🍃 อายุข้าว</dt><dd>${ageLabel}</dd></div><div><dt>▦ วันที่ปลูก</dt><dd>${thaiDate(field.planting_date ?? field.expected_planting_date)}</dd></div><div><dt>🌱 ระยะการเจริญเติบโต</dt><dd>${escapeHtml(field.current_crop_stage?.label ?? "ยังไม่ประเมิน")}</dd></div></dl><div class="cmp-row"><span>▣ ระยะตามการจัดการ (CMP)</span><strong>${escapeHtml(field.current_cmp_stage?.label ?? field.current_cmp_stage?.stage_id ?? "ยังไม่ประเมิน")}</strong></div></div></article>`;
+  return `<article class="selected-field-card"><div class="field-card-visual" data-field-satellite-preview="${field.field_id}"><span class="field-label">✓ แปลงที่เลือกอยู่</span><div class="rice-scene"><span>🌾</span><span>🌾</span><span>🌾</span><span>🌾</span></div></div><div class="field-card-body"><div class="field-card-title"><div><h2>${escapeHtml(field.name)} <span class="favorite">★</span></h2><small>ID: ${escapeHtml(field.field_id.slice(0, 18))}</small></div><button class="icon-button" type="button" data-field-open="${field.field_id}" aria-label="เปิดรายละเอียดแปลง">›</button></div><dl class="field-facts"><div><dt>🌾 พันธุ์ข้าว</dt><dd>${escapeHtml(field.variety || "ยังไม่ระบุ")}</dd></div><div><dt>🍃 อายุข้าว</dt><dd>${ageLabel}</dd></div><div><dt>▦ วันที่ปลูก</dt><dd>${thaiDate(field.planting_date ?? field.expected_planting_date)}</dd></div><div><dt>🌱 ระยะการเจริญเติบโต</dt><dd>${escapeHtml(field.current_crop_stage?.label ?? "ยังไม่ประเมิน")}</dd></div></dl><div class="cmp-row"><span>▣ ระยะตามการจัดการ (CMP)</span><strong>${escapeHtml(field.current_cmp_stage?.label ?? field.current_cmp_stage?.stage_id ?? "ยังไม่ประเมิน")}</strong></div></div></article>`;
 }
 
 function emptyFieldMarkup() {
@@ -111,22 +113,18 @@ function renderHome() {
   if (field && !selectedFieldId) selectedFieldId = field.field_id;
   const guidance = field ? guidanceService.get_guidance(fieldContext(field), { previous_cases: workspace().cases.filter((item) => item.field_id === field.field_id), weather: weatherState }) : [{ title: "เรียนรู้การบันทึกข้อมูลแปลง", short_instruction: "เริ่มจากข้อสังเกตที่เห็นจริง", domain: "ABIOTIC" }];
   root.innerHTML = `${appHeader({ bell: true })}<main class="app-main home-main"><section class="home-hero"><div><p class="eyebrow">FIELD INTELLIGENCE WORKSPACE</p><h1>สวัสดีครับ คุณ${escapeHtml(user.display_name)} <span>👋</span></h1><p>${field ? "วันนี้มาดูแลแปลงของคุณให้พร้อมกัน" : "เริ่มจากสร้างแปลงแรก หรือสำรวจความรู้สำหรับฤดูกาลนี้"}</p></div>${weatherMarkup()}</section>${notice ? `<div class="toast-message">${escapeHtml(notice)}</div>` : ""}${field ? `<section class="home-field">${fieldCardMarkup(field)}<div class="field-cta-row"><button class="primary-action" type="button" data-field-open="${field.field_id}">เปิดพื้นที่ทำงานแปลง</button><button class="secondary-action" type="button" data-action="create-field">＋ สร้างแปลงใหม่</button></div></section>` : emptyFieldMarkup()}<section class="today-section"><header class="section-heading"><div><p class="eyebrow">รายการภาคสนาม</p><h2>${field ? "วันนี้ควรตรวจอะไรบ้าง" : "เริ่มเรียนรู้ได้ทันที"}</h2></div>${field ? `<button type="button" data-field-open="${field.field_id}">ดูทั้งหมด ›</button>` : `<button type="button" data-route="learn">ดูทั้งหมด ›</button>`}</header><div class="guidance-grid">${guidance.slice(0, 3).map((item, index) => `<button class="guidance-card tone-${index + 1} ${item.status === "COMPLETED" ? "completed" : ""}" type="button" ${field ? `data-field-open="${field.field_id}"` : `data-route="learn"`}><span>${domainIcon(item.domain)}</span><strong>${escapeHtml(item.title)}</strong><small>${escapeHtml(item.short_instruction ?? "เปิดเพื่อดูรายละเอียด")}</small></button>`).join("")}</div></section>${field ? `<section class="tip-card"><span>💡</span><div><strong>เคล็ดลับวันนี้</strong><p>${escapeHtml(guidanceService.get_tip(fieldContext(field))?.text_th ?? "บันทึกสิ่งที่เห็นตามจริง")}</p></div></section>` : ""}</main>${bottomNavigation("home")}`;
+  if (field) mountFieldSatellitePreviews([field]);
   if (weatherState === undefined) refreshWeather();
 }
 
 function renderFields() {
   const user = currentUser(); const fields = fieldService.list_fields(user.user_id);
-  root.innerHTML = `${appHeader({ back: "home" })}<main class="app-main list-main"><div class="page-heading"><div><p class="eyebrow">ข้อมูลที่บันทึกในอุปกรณ์</p><h1>แปลงของฉัน</h1><p>แปลงแต่ละรายการใช้รหัสเฉพาะ ไม่อ้างอิงชื่อแปลงเป็นตัวตน</p></div><button class="primary-action compact-action" type="button" data-action="create-field">＋ สร้างแปลง</button></div>${fields.length ? `<div class="field-list">${fields.map((field) => `<button type="button" class="field-list-item" data-field-open="${field.field_id}"><span class="mini-map">⌖</span><span><strong>${escapeHtml(field.name)}</strong><small>${formatArea(field.area)} · ${escapeHtml(field.current_cmp_stage?.label ?? "ยังไม่ประเมิน")}</small><em>${escapeHtml(field.field_id)}</em></span><b>›</b></button>`).join("")}</div>` : emptyFieldMarkup()}</main>${bottomNavigation("fields")}`;
+  root.innerHTML = `${appHeader({ back: "home" })}<main class="app-main list-main"><div class="page-heading"><div><p class="eyebrow">ข้อมูลที่บันทึกในอุปกรณ์</p><h1>แปลงของฉัน</h1><p>แปลงแต่ละรายการใช้รหัสเฉพาะ ไม่อ้างอิงชื่อแปลงเป็นตัวตน</p></div><button class="primary-action compact-action" type="button" data-action="create-field">＋ สร้างแปลง</button></div>${fields.length ? `<div class="field-list">${fields.map((field) => `<button type="button" class="field-list-item" data-field-open="${field.field_id}"><span class="mini-map" data-field-satellite-preview="${field.field_id}">⌖</span><span><strong>${escapeHtml(field.name)}</strong><small>${formatArea(field.area)} · ${escapeHtml(field.current_cmp_stage?.label ?? "ยังไม่ประเมิน")}</small><em>${escapeHtml(field.field_id)}</em></span><b>›</b></button>`).join("")}</div>` : emptyFieldMarkup()}</main>${bottomNavigation("fields")}`;
+  mountFieldSatellitePreviews(fields);
 }
 
 function mapToolbarMarkup() {
-  return `<div class="map-mode-switch" role="group" aria-label="วิธีวาดแปลง"><button type="button" class="${draft.mode === "tap" ? "active" : ""}" data-map-mode="tap"><span>☝</span><strong>แตะบนแผนที่</strong><small>แตะทีละจุดเพื่อกำหนดมุมแปลง</small></button><button type="button" class="${draft.mode === "center" ? "active" : ""}" data-map-mode="center"><span>⌖</span><strong>ใช้ตำแหน่งกึ่งกลาง</strong><small>เลื่อนแผนที่แล้วเพิ่มจุด</small></button></div>`;
-}
-
-function mapSvgMarkup() {
-  const polygon = draft.points.map((point) => `${point.x * 100},${point.y * 100}`).join(" ");
-  const shape = draft.closed ? `<polygon points="${polygon}" fill="rgba(173,214,73,.34)" stroke="#d5f05a" stroke-width="1.1" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>` : `<polyline points="${polygon}" fill="none" stroke="#d5f05a" stroke-width="1.1" vector-effect="non-scaling-stroke"/>`;
-  return `<svg class="polygon-layer" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">${draft.points.length > 1 ? shape : ""}${draft.points.map((point, index) => `<circle cx="${point.x * 100}" cy="${point.y * 100}" r="1.8" fill="#fff" stroke="#14643d" stroke-width=".8" vector-effect="non-scaling-stroke"/><text x="${point.x * 100 + 2.4}" y="${point.y * 100 - 2}" fill="#fff" font-size="4">${index + 1}</text>`).join("")}</svg>`;
+  return `<div class="map-mode-switch" role="group" aria-label="วิธีวาดแปลง"><button type="button" class="${draft.mode === "tap" ? "active" : ""}" data-map-mode="tap"><span class="map-mode-icon" aria-hidden="true"><svg viewBox="0 0 32 32"><path d="M9 4v14l4-3 5 11 5-3-5-10h6L9 4Z"/></svg></span><strong>แตะบนแผนที่</strong><small>แตะทีละจุดเพื่อกำหนดมุมแปลง</small></button><button type="button" class="${draft.mode === "center" ? "active" : ""}" data-map-mode="center"><span class="map-mode-icon" aria-hidden="true"><svg viewBox="0 0 32 32"><circle cx="16" cy="16" r="7"/><path d="M16 2v6m0 16v6M2 16h6m16 0h6"/></svg></span><strong>ใช้ตำแหน่งกึ่งกลาง</strong><small>เลื่อนแผนที่แล้วเพิ่มจุดใต้เป้า</small></button></div>`;
 }
 
 function currentDraftGeometry() {
@@ -135,13 +133,32 @@ function currentDraftGeometry() {
 }
 
 function renderCreateField() {
+  activeMapAdapter?.destroy(); activeMapAdapter = null;
   root.innerHTML = `${appHeader({ back: draft.step === 1 ? "home" : "create" })}<main class="create-main"><header class="create-heading"><h1>สร้างแปลงใหม่</h1><ol class="stepper"><li class="${draft.step >= 1 ? "active" : ""}"><span>1</span>วาดแปลง</li><li class="${draft.step >= 2 ? "active" : ""}"><span>2</span>ข้อมูลแปลง</li><li class="${draft.step >= 3 ? "active" : ""}"><span>3</span>บันทึก</li></ol></header>${draft.step === 1 ? renderMapStep() : draft.step === 2 ? renderDetailsStep() : renderSavedStep()}</main>${bottomNavigation("fields")}`;
+  if (draft.step === 1) mountDraftMap();
   if (draft.step === 2) updateStagePreview();
 }
 
 function renderMapStep() {
   const geometry = currentDraftGeometry();
-  return `<section class="map-step"><div class="map-instructions"><h2>วิธีวาดแปลง <small>(เลือกวิธีที่ถนัด)</small></h2>${mapToolbarMarkup()}</div>${formError ? `<div class="form-message error">${escapeHtml(formError)}</div>` : ""}<div class="map-canvas ${draft.layer} ${draft.mode === "center" ? "center-mode" : ""}" data-map-canvas style="--map-x:${draft.mapOffset.x}px;--map-y:${draft.mapOffset.y}px"><div class="map-grid"></div>${mapSvgMarkup()}${draft.mode === "center" ? `<div class="center-crosshair" aria-hidden="true">⌾</div>` : ""}<div class="map-hint">${draft.closed ? "ขอบเขตแปลงปิดแล้ว" : draft.mode === "tap" ? "แตะบนแผนที่เพื่อเพิ่มจุดมุมแปลง" : "ลากแผนที่ให้จุดที่ต้องการอยู่ใต้เป้า"}</div><div class="map-controls"><button type="button" data-map-action="location">⌾<span>ตำแหน่งปัจจุบัน</span></button><button type="button" data-map-action="layer">▱<span>ชั้นข้อมูล</span></button><button type="button" data-map-action="undo" ${draft.points.length ? "" : "disabled"}>↶<span>ย้อนกลับ</span></button><button type="button" data-map-action="clear" ${draft.points.length ? "" : "disabled"}>⌫<span>ล้างแปลง</span></button></div>${draft.mode === "center" && !draft.closed ? `<button class="add-center-point" type="button" data-map-action="add-center">⌖ <strong>เพิ่มจุดที่ตำแหน่งนี้</strong><small>จุดที่ ${draft.points.length + 1}</small></button>` : ""}<div class="map-area-badge">🌾 ${geometry ? formatArea(geometry.area) : "เพิ่มอย่างน้อย 3 จุด"}</div></div><section class="map-bottom-sheet"><div class="sheet-handle"></div><label for="field-name">ชื่อแปลง <b>*</b></label><div class="field-name-row"><input id="field-name" maxlength="50" value="${escapeHtml(draft.name)}" placeholder="เช่น นาบ้านทุ่งทอง, แปลงนาข้าวปี 2569"><span>${draft.name.length} / 50</span></div><p class="field-help">ตั้งชื่อให้สั้นและจำง่าย รองรับภาษาไทย อังกฤษ ตัวเลข เว้นวรรค - _ และวงเล็บ</p><div class="area-summary"><span>ขนาดพื้นที่โดยประมาณ</span><strong>${geometry ? `${formatArea(geometry.area)} (${geometry.area.hectares.toFixed(2)} เฮกตาร์)` : "ยังคำนวณไม่ได้"}</strong></div><p class="soft-warning">ⓘ พื้นที่เป็นค่าประมาณจากจุดที่วาด คุณสามารถแก้ไขจุดก่อนบันทึกได้</p><div class="sheet-actions"><button class="secondary-action" type="button" data-map-action="finish" ${draft.points.length >= 3 && !draft.closed ? "" : "disabled"}>ปิดรูปแปลง</button><button class="primary-action" type="button" data-action="map-next" ${draft.closed ? "" : "disabled"}>ถัดไป</button></div></section></section>`;
+  return `<section class="map-step"><div class="map-instructions"><h2>วิธีวาดแปลง <small>(เลือกวิธีที่ถนัด)</small></h2>${mapToolbarMarkup()}</div>${formError ? `<div class="form-message error">${escapeHtml(formError)}</div>` : ""}<div class="map-canvas ${draft.mode === "center" ? "center-mode" : ""}" data-map-canvas><div class="real-map-mount" data-real-map></div>${draft.mode === "center" ? `<div class="center-crosshair" aria-hidden="true"><span></span></div>` : ""}<div class="map-hint">${draft.closed ? "✓ ปิดพื้นที่แล้ว สามารถแก้ไขหรือไปขั้นถัดไป" : draft.mode === "tap" ? "แตะบนแผนที่เพื่อเพิ่มจุดมุมแปลง" : "เลื่อนแผนที่ให้ตำแหน่งอยู่ใต้เป้า แล้วกดเพิ่มจุด"}</div><div class="map-controls"><button type="button" data-map-action="location" aria-label="ไปตำแหน่งปัจจุบัน"><b aria-hidden="true">◎</b><span>ตำแหน่งปัจจุบัน</span></button><button type="button" data-map-action="zoom-in" aria-label="ขยายแผนที่"><b aria-hidden="true">＋</b><span>ขยาย</span></button><button type="button" data-map-action="zoom-out" aria-label="ย่อแผนที่"><b aria-hidden="true">−</b><span>ย่อ</span></button><button type="button" data-map-action="undo" ${draft.points.length ? "" : "disabled"} aria-label="ย้อนกลับจุดล่าสุด"><b aria-hidden="true">↶</b><span>ย้อนจุดล่าสุด</span></button><button type="button" data-map-action="clear" ${draft.points.length ? "" : "disabled"} aria-label="ล้างพื้นที่"><b aria-hidden="true">×</b><span>ล้างพื้นที่</span></button></div>${draft.mode === "center" && !draft.closed ? `<button class="add-center-point" type="button" data-map-action="add-center"><strong>＋ เพิ่มจุดที่ตำแหน่งนี้</strong><small>จุดที่ ${draft.points.length + 1}</small></button>` : ""}${draft.points.length >= 3 ? `<button class="finish-area-button ${draft.closed ? "closed" : ""}" type="button" data-map-action="${draft.closed ? "reopen" : "finish"}">${draft.closed ? "✎ แก้ไขขอบเขต" : "✓ ปิดพื้นที่"}</button>` : ""}<div class="map-area-badge">${geometry ? `ประมาณ ${formatArea(geometry.area)}` : "เพิ่มอย่างน้อย 3 จุด"}</div></div><section class="map-bottom-sheet"><div class="sheet-handle"></div><label for="field-name">ชื่อแปลง <b>*</b></label><div class="field-name-row"><input id="field-name" maxlength="50" value="${escapeHtml(draft.name)}" placeholder="เช่น นาบ้านทุ่งทอง, แปลงนาข้าวปี 2569"><span>${draft.name.length} / 50</span></div><p class="field-help">ตั้งชื่อให้สั้นและจำง่าย เพื่อค้นหาและจัดการแปลงได้สะดวก</p><div class="area-summary"><span>ขนาดพื้นที่โดยประมาณ</span><strong>${geometry ? `${formatArea(geometry.area)} (${geometry.area.hectares.toFixed(2)} เฮกตาร์)` : "ยังคำนวณไม่ได้"}</strong></div><p class="soft-warning">ⓘ คำนวณจากพิกัดจริงบนแผนที่ ควรตรวจขอบเขตก่อนบันทึก</p><div class="sheet-actions"><button class="secondary-action" type="button" data-route="home">ยกเลิก</button><button class="primary-action" type="button" data-action="map-next" ${draft.closed ? "" : "disabled"}>ถัดไป</button></div></section></section>`;
+}
+
+async function mountDraftMap() {
+  const container = root.querySelector("[data-real-map]");
+  if (!container) return;
+  container.innerHTML = `<div class="real-map-fallback"><strong>กำลังเตรียมภาพถ่ายดาวเทียม…</strong><small>หาก Google Maps ไม่พร้อม ระบบจะใช้แผนที่สำรอง</small></div>`;
+  const adapter = await createPreferredMapAdapter(container);
+  if (!container.isConnected || !root.contains(container)) { adapter.destroy?.(); return; }
+  activeMapAdapter = adapter.mount({
+    center: draft.base,
+    zoom: draft.zoom,
+    points: draft.points,
+    closed: draft.closed,
+    mode: draft.mode,
+    onMapClick: (point) => { if (!draft.closed) addDraftPoint(point); },
+    onViewportChange: ({ center, zoom }) => { draft.base = center; draft.zoom = zoom; },
+  });
 }
 
 function renderDetailsStep() {
@@ -162,13 +179,26 @@ function polygonPreview(field) {
 }
 
 function renderFieldDetail() {
+  clearFieldSatellitePreviews();
   const field = selectedField(); if (!field) { route = "fields"; render(); return; }
   const age = cropAge(field), context = fieldContext(field), state = workspace();
   const guidance = guidanceService.get_guidance(context, { recent_activities: state.activities.filter((item) => item.field_id === field.field_id), previous_cases: state.cases.filter((item) => item.field_id === field.field_id), weather: weatherState });
   const pending = guidance.filter((item) => item.status === "PENDING" || item.status === "IN_PROGRESS"), completed = guidance.filter((item) => item.status === "COMPLETED" || item.status === "SKIPPED"), history = investigationService.list_case_history(context);
   const ageLabel = age.state === "PLANNED" ? `อีก ${age.days_until_planting} วันถึงวันปลูก` : `อายุข้าว ${age.crop_age_days} วัน`;
-  root.innerHTML = `${appHeader({ back: "home", bell: true })}<main class="app-main field-workspace-main"><section class="field-workspace-header"><div class="field-context-copy"><p class="eyebrow">แปลงที่เลือกอยู่ · ${escapeHtml(field.field_id)}</p><h1>${escapeHtml(field.name)} <span>★</span></h1><div class="field-context-facts"><span>🌾 ${escapeHtml(field.variety)}</span><span>▦ ${thaiDate(field.planting_date ?? field.expected_planting_date)}</span><span>🍃 ${ageLabel}</span></div><div class="cmp-primary"><small>ระยะ CMP ปัจจุบัน</small><strong>${escapeHtml(field.current_cmp_stage.label)}</strong><span>${escapeHtml(field.current_crop_stage.label)} · ${escapeHtml(field.stage_provenance)}</span></div></div><div class="workspace-map-weather"><div class="workspace-mini-map">${polygonPreview(field)}<span>⌖</span><small>${formatArea(field.area)}</small></div>${weatherMarkup()}</div></section><section class="workspace-guidance"><header class="section-heading"><div><p class="eyebrow">สิ่งที่ควรตรวจวันนี้</p><h2>รายการตรวจตามบริบทแปลง</h2></div><span class="pending-count">${pending.length} รายการรอตรวจ</span></header><div class="guidance-list">${pending.map((item) => `<button class="guidance-row ${item.status.toLowerCase()}" type="button" data-guidance-start="${item.guidance_item_id}"><span class="guidance-domain">${domainIcon(item.domain)}</span><span><strong>${escapeHtml(item.title)}</strong><small>${escapeHtml(item.short_instruction)}</small><em>${escapeHtml(item.reason)}</em></span><b>${item.status === "IN_PROGRESS" ? "ทำต่อ ›" : "เริ่ม ›"}</b></button>`).join("") || `<div class="empty-inline">✓ ตรวจรายการที่แนะนำครบแล้ว</div>`}${completed.length ? `<details class="completed-guidance"><summary>ตรวจแล้ว ${completed.length} รายการ</summary>${completed.map((item) => `<button type="button" data-guidance-start="${item.guidance_item_id}" disabled><span>✓</span><span><strong>${escapeHtml(item.title)}</strong><small>${thaiDate(item.completed_at?.slice(0,10))}</small></span></button>`).join("")}</details>` : ""}</div><div class="workspace-actions"><button class="primary-action" type="button" data-action="start-full-inspection" ${pending.length ? "" : "disabled"}>⌕ เริ่มตรวจสุขภาพแปลง</button><button class="secondary-action" type="button" data-action="open-free-chat">▢ ถาม SP Assistant</button></div></section><section class="tip-card"><span>💡</span><div><strong>เคล็ดลับวันนี้</strong><p>${escapeHtml(guidanceService.get_tip(context)?.text_th ?? "บันทึกสิ่งที่เห็นตามจริง")}</p></div></section><section class="case-history"><header class="section-heading"><div><p class="eyebrow">CASE HISTORY</p><h2>ประวัติการตรวจแปลง</h2></div><span>${history.length} เคส</span></header>${history.length ? `<div class="history-list">${history.map((item) => `<button type="button" data-case-open="${item.case_id}"><span class="history-icon">${domainIcon(item.domain)}</span><span><strong>${domainLabel(item.domain)} · ${item.status === "COMPLETED" ? "ตรวจเสร็จแล้ว" : "กำลังตรวจ"}</strong><small>${new Intl.DateTimeFormat("th-TH", { dateStyle:"medium", timeStyle:"short" }).format(new Date(item.created_at))}</small><em>${escapeHtml(item.summary?.candidate_interpretation ?? "ยังไม่มีสรุป")}</em>${item.decision_log ? `<mark>เลือก: ${escapeHtml(item.decision_log.option_class)}</mark>` : ""}</span><b>›</b></button>`).join("")}</div>` : `<div class="empty-history"><span>▤</span><p>ยังไม่มีประวัติการตรวจในแปลงนี้</p></div>`}</section></main>${bottomNavigation("fields")}`;
+  root.innerHTML = `${appHeader({ back: "home", bell: true })}<main class="app-main field-workspace-main"><section class="field-workspace-header"><div class="field-context-copy"><p class="eyebrow">แปลงที่เลือกอยู่ · ${escapeHtml(field.field_id)}</p><h1>${escapeHtml(field.name)} <span>★</span></h1><div class="field-context-facts"><span>🌾 ${escapeHtml(field.variety)}</span><span>▦ ${thaiDate(field.planting_date ?? field.expected_planting_date)}</span><span>🍃 ${ageLabel}</span></div><div class="cmp-primary"><small>ระยะ CMP ปัจจุบัน</small><strong>${escapeHtml(field.current_cmp_stage.label)}</strong><span>${escapeHtml(field.current_crop_stage.label)} · ${escapeHtml(field.stage_provenance)}</span></div></div><div class="workspace-map-weather"><div class="workspace-mini-map" data-field-satellite-preview>${polygonPreview(field)}<span>⌖</span><small>${formatArea(field.area)}</small></div>${weatherMarkup()}</div></section><section class="workspace-guidance"><header class="section-heading"><div><p class="eyebrow">สิ่งที่ควรตรวจวันนี้</p><h2>รายการตรวจตามบริบทแปลง</h2></div><span class="pending-count">${pending.length} รายการรอตรวจ</span></header><div class="guidance-list">${pending.map((item) => `<button class="guidance-row ${item.status.toLowerCase()}" type="button" data-guidance-start="${item.guidance_item_id}"><span class="guidance-domain">${domainIcon(item.domain)}</span><span><strong>${escapeHtml(item.title)}</strong><small>${escapeHtml(item.short_instruction)}</small><em>${escapeHtml(item.reason)}</em></span><b>${item.status === "IN_PROGRESS" ? "ทำต่อ ›" : "เริ่ม ›"}</b></button>`).join("") || `<div class="empty-inline">✓ ตรวจรายการที่แนะนำครบแล้ว</div>`}${completed.length ? `<details class="completed-guidance"><summary>ตรวจแล้ว ${completed.length} รายการ</summary>${completed.map((item) => `<button type="button" data-guidance-start="${item.guidance_item_id}" disabled><span>✓</span><span><strong>${escapeHtml(item.title)}</strong><small>${thaiDate(item.completed_at?.slice(0,10))}</small></span></button>`).join("")}</details>` : ""}</div><div class="workspace-actions"><button class="primary-action" type="button" data-action="start-full-inspection" ${pending.length ? "" : "disabled"}>⌕ เริ่มตรวจสุขภาพแปลง</button><button class="secondary-action" type="button" data-action="open-free-chat">▢ ถาม SP Assistant</button></div></section><section class="tip-card"><span>💡</span><div><strong>เคล็ดลับวันนี้</strong><p>${escapeHtml(guidanceService.get_tip(context)?.text_th ?? "บันทึกสิ่งที่เห็นตามจริง")}</p></div></section><section class="case-history"><header class="section-heading"><div><p class="eyebrow">CASE HISTORY</p><h2>ประวัติการตรวจแปลง</h2></div><span>${history.length} เคส</span></header>${history.length ? `<div class="history-list">${history.map((item) => `<button type="button" data-case-open="${item.case_id}"><span class="history-icon">${domainIcon(item.domain)}</span><span><strong>${domainLabel(item.domain)} · ${item.status === "COMPLETED" ? "ตรวจเสร็จแล้ว" : "กำลังตรวจ"}</strong><small>${new Intl.DateTimeFormat("th-TH", { dateStyle:"medium", timeStyle:"short" }).format(new Date(item.created_at))}</small><em>${escapeHtml(item.summary?.candidate_interpretation ?? "ยังไม่มีสรุป")}</em>${item.decision_log ? `<mark>เลือก: ${escapeHtml(item.decision_log.option_class)}</mark>` : ""}</span><b>›</b></button>`).join("")}</div>` : `<div class="empty-history"><span>▤</span><p>ยังไม่มีประวัติการตรวจในแปลงนี้</p></div>`}</section></main>${bottomNavigation("fields")}`;
+  mountFieldSatellitePreviews([field]);
   if (weatherState === undefined) refreshWeather();
+}
+
+function clearFieldSatellitePreviews() { activeFieldPreviewCleanups.forEach((cleanup) => cleanup?.()); activeFieldPreviewCleanups = []; }
+async function mountFieldSatellitePreviews(fields) {
+  clearFieldSatellitePreviews();
+  for (const field of fields) {
+    const container = root.querySelector(`[data-field-satellite-preview="${field.field_id}"]`) ?? (fields.length === 1 ? root.querySelector("[data-field-satellite-preview]") : null);
+    if (!container) continue;
+    try { const cleanup = await mountGoogleFieldPreview(container, field.polygon.coordinates[0].slice(0, -1)); if (cleanup) activeFieldPreviewCleanups.push(cleanup); }
+    catch { /* Keep the existing local polygon/illustration fallback. */ }
+  }
 }
 
 function ensureCaseConversation(context) {
@@ -244,6 +274,8 @@ function renderProfile() {
 function renderError() { root.innerHTML = `<main class="state-view"><div class="error-state-icon">!</div><h1>เตรียมพื้นที่ทำงานไม่สำเร็จ</h1><p>${escapeHtml(formError ?? "เกิดข้อผิดพลาดที่ไม่คาดคิด")}</p><button class="primary-action compact-action" type="button" data-action="reload">ลองใหม่</button></main>`; }
 
 function render() {
+  if (route !== "create" || draft.step !== 1) { activeMapAdapter?.destroy(); activeMapAdapter = null; }
+  if (!['home', 'fields', 'field-detail'].includes(route)) clearFieldSatellitePreviews();
   document.body.removeAttribute("data-route");
   document.body.dataset.currentRoute = route;
   if (route === "loading") renderLoading(); else if (route === "login") renderLogin(); else if (route === "gps") renderGps(); else if (route === "home") renderHome(); else if (route === "fields") renderFields(); else if (route === "create") renderCreateField(); else if (route === "field-detail") renderFieldDetail(); else if (route === "inspection") renderInspection(); else if (route === "summary") renderSummary(); else if (route === "free-chat") renderFreeChat(); else if (route === "learn") renderLearn(); else if (route === "profile") renderProfile(); else renderError();
@@ -260,7 +292,7 @@ function updateStagePreview() {
   target.innerHTML = `<header><strong>ข้อมูลที่ระบบคำนวณอัตโนมัติ</strong><span>อ้างอิง ${escapeHtml(draft.stageEstimate.model_version)}</span></header><div class="stage-result-grid"><div><small>อายุข้าว</small><strong>${age.state === "PLANNED" ? `อีก ${age.days_until_planting} วันถึงวันปลูก` : `${age.crop_age_days} วัน`}</strong></div><div><small>ระยะข้าว (หลังบ้าน)</small><strong>${escapeHtml(draft.stageEstimate.crop_stage_label)}</strong></div><div><small>ระยะตาม CMP</small><strong>${escapeHtml(draft.stageEstimate.cmp_stage_label)}</strong></div></div><p>ค่าประเมินจากวันที่ปลูก วิธีปลูก และแบบจำลองที่กำกับไว้ ไม่ได้บันทึกเป็นข้อมูลที่ผู้ใช้กรอกเอง</p>`;
 }
 
-function setMapPoint(x, y) { if (draft.closed) return; const longitude = draft.base.longitude + (x - 0.5) * 0.012; const latitude = draft.base.latitude + (0.5 - y) * 0.009; draft.points.push({ x, y, latitude, longitude }); formError = null; renderCreateField(); }
+function addDraftPoint(point) { if (draft.closed || !point) return; draft.points.push({ latitude: Number(point.latitude), longitude: Number(point.longitude) }); formError = null; renderCreateField(); }
 function updateDraftFromDetailsForm(form) { const data = new FormData(form); draft.name = String(data.get("name") ?? ""); draft.date = String(data.get("date") ?? ""); draft.variety = String(data.get("variety") ?? "").trim(); draft.plantingMethod = String(data.get("plantingMethod") ?? ""); draft.overrideCmpStage = String(data.get("overrideCmpStage") ?? draft.overrideCmpStage); }
 
 root.addEventListener("input", (event) => {
@@ -325,12 +357,14 @@ root.addEventListener("click", (event) => {
   const chatPrompt = event.target.closest("[data-chat-prompt]")?.dataset.chatPrompt; if (chatPrompt) { const input = root.querySelector('[data-free-chat-form] input[name="message"]'); input.value = chatPrompt; input.focus(); return; }
   const mode = event.target.closest("[data-map-mode]"); if (mode) { draft.mode = mode.dataset.mapMode; renderCreateField(); return; }
   const mapAction = event.target.closest("[data-map-action]")?.dataset.mapAction;
-  if (mapAction === "location") { const location = locationService.get_current_location(); if (location?.status === "AVAILABLE") { draft.base = { latitude: location.latitude, longitude: location.longitude }; notice = "จัดกึ่งกลางที่ตำแหน่งปัจจุบันแล้ว"; } else formError = "ยังไม่มีตำแหน่งปัจจุบัน คุณสามารถวาดบนแผนที่ต่อได้"; renderCreateField(); return; }
-  if (mapAction === "layer") { draft.layer = draft.layer === "satellite" ? "terrain" : "satellite"; renderCreateField(); return; }
+  if (mapAction === "location") { const location = locationService.get_current_location(); if (location?.status === "AVAILABLE") { draft.base = { latitude: location.latitude, longitude: location.longitude }; draft.zoom = Math.max(17, draft.zoom); notice = "จัดกึ่งกลางที่ตำแหน่งปัจจุบันแล้ว"; } else formError = "ยังไม่มีตำแหน่งปัจจุบัน คุณสามารถวาดบนแผนที่ต่อได้"; renderCreateField(); return; }
+  if (mapAction === "zoom-in") { draft.zoom = Math.min(19, draft.zoom + 1); renderCreateField(); return; }
+  if (mapAction === "zoom-out") { draft.zoom = Math.max(3, draft.zoom - 1); renderCreateField(); return; }
   if (mapAction === "undo") { draft.points.pop(); draft.closed = false; renderCreateField(); return; }
   if (mapAction === "clear") { draft.points = []; draft.closed = false; renderCreateField(); return; }
-  if (mapAction === "add-center") { setMapPoint(0.5, 0.5); return; }
+  if (mapAction === "add-center") { addDraftPoint(activeMapAdapter?.getCenter() ?? draft.base); return; }
   if (mapAction === "finish") { if (draft.points.length >= 3) { draft.closed = true; formError = null; renderCreateField(); } return; }
+  if (mapAction === "reopen") { draft.closed = false; formError = null; renderCreateField(); return; }
   const action = event.target.closest("[data-action]")?.dataset.action;
   if (action === "gps-skip") { gpsState = { status: "SKIPPED", message: "ข้ามการใช้ตำแหน่งแล้ว คุณยังใช้งานส่วนอื่นได้" }; route = "home"; render(); return; }
   if (action === "gps-retry") { requestGps(); return; }
@@ -346,7 +380,6 @@ root.addEventListener("click", (event) => {
   if (action === "logout") { const state = workspace(); state.active_user_id = null; repository.save(state); selectedFieldId = null; route = "login"; render(); return; }
   if (action === "reload") { window.location.reload(); return; }
   const stageChoice = event.target.closest("[data-stage-choice]")?.dataset.stageChoice; if (stageChoice) { draft.stageChoice = stageChoice === "confirm" ? STAGE_PROVENANCE.USER_CONFIRMED : stageChoice === "edit" ? STAGE_PROVENANCE.USER_OVERRIDDEN : "UNSURE"; renderCreateField(); return; }
-  const map = event.target.closest("[data-map-canvas]"); if (map && draft.mode === "tap" && !event.target.closest("button")) { const bounds = map.getBoundingClientRect(); setMapPoint(Math.max(0.04, Math.min(0.96, (event.clientX - bounds.left) / bounds.width)), Math.max(0.06, Math.min(0.82, (event.clientY - bounds.top) / bounds.height))); }
 });
 
 root.addEventListener("change", async (event) => {
@@ -367,10 +400,6 @@ root.addEventListener("change", async (event) => {
     event.target.value = ""; renderFreeChat();
   }
 });
-
-root.addEventListener("pointerdown", (event) => { const map = event.target.closest("[data-map-canvas]"); if (!map || draft.mode !== "center" || event.target.closest("button")) return; mapDrag = { x: event.clientX, y: event.clientY, width: map.clientWidth, height: map.clientHeight }; map.setPointerCapture(event.pointerId); });
-root.addEventListener("pointermove", (event) => { const map = event.target.closest("[data-map-canvas]"); if (!map || !mapDrag || draft.mode !== "center") return; const dx = event.clientX - mapDrag.x, dy = event.clientY - mapDrag.y; draft.mapOffset.x += dx; draft.mapOffset.y += dy; draft.base.longitude -= dx * 0.000012; draft.base.latitude += dy * 0.000009; draft.points.forEach((point) => { point.x += dx / mapDrag.width; point.y += dy / mapDrag.height; }); map.style.setProperty("--map-x", `${draft.mapOffset.x}px`); map.style.setProperty("--map-y", `${draft.mapOffset.y}px`); mapDrag.x = event.clientX; mapDrag.y = event.clientY; });
-root.addEventListener("pointerup", () => { const wasDragging = Boolean(mapDrag); mapDrag = null; if (wasDragging && route === "create" && draft.step === 1) renderCreateField(); }); root.addEventListener("pointercancel", () => { mapDrag = null; });
 
 async function boot() { renderLoading(); try { [configuration, workflowConfiguration] = await Promise.all([loadFieldConfiguration(), loadInvestigationConfiguration()]); stageService = new StageService(configuration); guidanceService = new GuidanceService(repository, workflowConfiguration); investigationService = new InvestigationService(repository, workflowConfiguration); evidenceService = new EvidenceService(repository); conversationService = new ConversationService(repository); decisionService = new DecisionService(repository, workflowConfiguration); route = currentUser() ? "home" : "login"; render(); } catch (error) { formError = error.message; route = "error"; render(); } }
 boot();
