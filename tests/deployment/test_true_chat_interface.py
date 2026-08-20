@@ -12,7 +12,7 @@ def _read(path: str) -> str:
 
 
 def test_primary_workspace_is_a_chat_shell_with_initial_assistant_turn() -> None:
-    html = _read("index.html")
+    html = _read("legacy.html")
     css = _read("assets/chat.css")
     assert "chat-shell" in html
     assert "welcome-message" in html
@@ -101,6 +101,6 @@ def test_mobile_chat_respects_composer_navigation_and_overflow() -> None:
 
 
 def test_static_fallback_remains_understandable() -> None:
-    html = _read("index.html")
+    html = _read("legacy.html")
     assert "<noscript>" in html
     assert "ยังเริ่มตรวจสอบได้แม้ไม่ใช้ JavaScript" in html

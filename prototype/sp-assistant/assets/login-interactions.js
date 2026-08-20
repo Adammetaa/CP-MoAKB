@@ -22,6 +22,29 @@ export function handleLoginInteraction(event, root) {
   return togglePasswordVisibility(root, button);
 }
 
+export function captureLoginIdentity(root) {
+  const username = root.querySelector("#username");
+  const password = root.querySelector("#password");
+  return {
+    username,
+    password,
+    usernameValue: username?.value ?? "",
+    passwordValue: password?.value ?? "",
+  };
+}
+
+export function assertLoginIdentity(root, snapshot, consoleApi = console) {
+  const usernameStable = snapshot.username === root.querySelector("#username");
+  const passwordStable = snapshot.password === root.querySelector("#password");
+  const usernameValueStable = snapshot.usernameValue === root.querySelector("#username")?.value;
+  const passwordValueStable = snapshot.passwordValue === root.querySelector("#password")?.value;
+  consoleApi.assert(usernameStable, "SP Assistant: username DOM node was replaced during password toggle");
+  consoleApi.assert(passwordStable, "SP Assistant: password DOM node was replaced during password toggle");
+  consoleApi.assert(usernameValueStable, "SP Assistant: username value changed during password toggle");
+  consoleApi.assert(passwordValueStable, "SP Assistant: password value changed during password toggle");
+  return usernameStable && passwordStable && usernameValueStable && passwordValueStable;
+}
+
 export function readLoginCredentials(form) {
   return {
     username: form.elements.namedItem("username")?.value ?? "",

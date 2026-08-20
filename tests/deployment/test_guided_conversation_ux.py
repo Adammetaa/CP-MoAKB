@@ -111,7 +111,7 @@ def test_progressive_disclosure_keeps_secondary_context_available() -> None:
         "data-weather-request",
         "data-field-watch",
     ):
-        assert retained in _read("index.html")
+        assert retained in _read("legacy.html")
 
 
 def test_new_case_warns_before_clearing_local_state() -> None:

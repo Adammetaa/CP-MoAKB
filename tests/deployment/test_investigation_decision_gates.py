@@ -8,7 +8,7 @@ ASSISTANT = ROOT / "prototype" / "sp-assistant"
 GATES = ASSISTANT / "assets" / "decision-gates.js"
 AUTHORITY = ASSISTANT / "assets" / "decision-authority.js"
 APP = ASSISTANT / "assets" / "app.js"
-HTML = ASSISTANT / "index.html"
+HTML = ASSISTANT / "legacy.html"
 POLISH = ASSISTANT / "assets" / "polish.css"
 NODE = shutil.which("node") or str(
     Path.home()

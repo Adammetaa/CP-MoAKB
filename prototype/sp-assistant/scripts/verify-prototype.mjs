@@ -3,6 +3,7 @@ import { resolve } from "node:path";
 
 const root = resolve(import.meta.dirname, "..");
 const html = await readFile(resolve(root, "index.html"), "utf8");
+const legacyHtml = await readFile(resolve(root, "legacy.html"), "utf8");
 const styles = await readFile(resolve(root, "assets", "styles.css"), "utf8");
 const chatStyles = await readFile(resolve(root, "assets", "chat.css"), "utf8");
 const polishStyles = await readFile(resolve(root, "assets", "polish.css"), "utf8");
@@ -21,7 +22,7 @@ for (const required of [
   "SP Assistant", "chat-shell", "welcome-message", "สวัสดีครับ", "วันนี้พบอะไรในแปลง?",
   "เพิ่มรูปภาพ", "ข้อมูลแปลง", "เริ่มตรวจสอบ", "<noscript>",
   "ไม่ใช่คำวินิจฉัยหรือคำแนะนำ", "../knowledge-explorer/rice-disease-corpus.html",
-]) if (!html.includes(required)) failures.push(`index.html missing: ${required}`);
+]) if (!legacyHtml.includes(required)) failures.push(`legacy.html missing: ${required}`);
 
 for (const required of [
   "message-timeline", "USER_TEXT", "USER_IMAGE", "ASSISTANT_MESSAGE", "SYSTEM / EVIDENCE",
@@ -53,11 +54,24 @@ for (const required of [".chat-composer", ".user-turn", ".assistant-turn", ".att
 for (const required of ['font-family:"Prompt"', ".system-turn", ".warning-turn", "position:fixed!important", "z-index:65", "prefers-reduced-motion", ".jump-latest", ".reply-context"]) {
   if (!polishStyles.includes(required)) failures.push(`polish.css missing freeze requirement: ${required}`);
 }
-if (/<form\b[^>]*(?:action|method)=/i.test(html)) failures.push("forms must remain local and non-network-submittable");
-if (!html.includes('<html lang="th">') || !html.includes('content="noindex,nofollow"')) failures.push("Thai-first or indexing boundary missing");
+if (/<form\b[^>]*(?:action|method)=/i.test(html) || /<form\b[^>]*(?:action|method)=/i.test(legacyHtml)) failures.push("forms must remain local and non-network-submittable");
+if (!html.includes('<html lang="th">') || !html.includes('content="noindex,nofollow"') || !legacyHtml.includes('<html lang="th">')) failures.push("Thai-first or indexing boundary missing");
 for (const required of ["field-app", "field-shell.css", "Field Intelligence Workspace", "type=\"module\""]) {
   if (!html.includes(required)) failures.push(`index.html missing field backbone: ${required}`);
 }
+for (const prohibited of ["class=\"workspace\"", "chat-shell", "data-problem", "assets/styles.css", "assets/app.js"]) {
+  if (html.includes(prohibited)) failures.push(`index.html contains legacy surface: ${prohibited}`);
+}
+for (const required of ["class=\"workspace\"", "chat-shell", "data-problem", "assets/styles.css", "assets/app.js?v=legacy-isolated-1"]) {
+  if (!legacyHtml.includes(required)) failures.push(`legacy.html missing isolated legacy surface: ${required}`);
+}
+for (const prohibited of ["id=\"field-app\"", "field-shell.css", "field-app.js"]) {
+  if (legacyHtml.includes(prohibited)) failures.push(`legacy.html contains Field Workspace surface: ${prohibited}`);
+}
+for (const required of ["field-shell.css?v=hotfix-4", "field-app.js?v=hotfix-4"]) {
+  if (!html.includes(required)) failures.push(`index.html missing hotfix-4 cache key: ${required}`);
+}
+if (!fieldApp.includes('login-interactions.js?v=hotfix-4')) failures.push("field-app.js missing login interaction cache key");
 for (const required of ["MODEL_CONTRACTS", "RELATIONSHIP_BACKBONE", "stage_provenance", "field_id", "decision_log_id"]) {
   if (!fieldCore.includes(required)) failures.push(`field-core.js missing contract: ${required}`);
 }
@@ -95,4 +109,4 @@ for (const required of ["action-crop-target-use-authority/v1", "Economic Thresho
   if (!decisionAuthority.includes(required)) failures.push(`decision-authority.js missing authority boundary: ${required}`);
 }
 if (failures.length) throw new Error(`SP Assistant verification failed:\n${failures.join("\n")}`);
-console.log("SP Assistant verified: true chat, governed details, local images, no backend, Thai-first and mobile-safe");
+console.log("SP Assistant verified: isolated Field Workspace and legacy documents, governed details, no backend, Thai-first and mobile-safe");

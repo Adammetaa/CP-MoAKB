@@ -10,7 +10,7 @@ import {
   differenceInCalendarDays,
   toDateOnly,
   validateFieldName,
-} from "./field-core.js";
+} from "./field-core.js?v=hotfix-4";
 
 export class WorkspaceRepository {
   constructor(storage, key = "cpmoakb.field-workspace.v1") { this.storage = storage; this.key = key; }

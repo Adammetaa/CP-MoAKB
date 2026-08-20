@@ -11,7 +11,7 @@ def _read(path: str) -> str:
 
 
 def test_sp_assistant_is_thai_first_chat_primary_ux() -> None:
-    html = _read("index.html")
+    html = _read("legacy.html")
     assert '<html lang="th">' in html
     assert "SP Assistant" in html
     assert "วันนี้พบอะไรในแปลง?" in html
@@ -29,7 +29,7 @@ def test_sp_assistant_is_thai_first_chat_primary_ux() -> None:
 
 
 def test_image_selection_is_temporary_browser_memory_only() -> None:
-    html = _read("index.html")
+    html = _read("legacy.html")
     app = _read("assets/app.js")
     assert 'type="file" accept="image/*" multiple' in html
     assert "รุ่นทดลองนี้ยังไม่อัปโหลดหรือจัดเก็บรูปภาพ" in html
@@ -51,7 +51,7 @@ def test_image_selection_is_temporary_browser_memory_only() -> None:
 
 
 def test_investigation_states_do_not_diagnose_or_recommend() -> None:
-    html = _read("index.html")
+    html = _read("legacy.html")
     for state in (
         "ข้อมูลที่ยังขาด",
         "องค์ความรู้สำหรับตรวจต่อ",
@@ -67,7 +67,7 @@ def test_investigation_states_do_not_diagnose_or_recommend() -> None:
 
 
 def test_real_governed_corpus_is_reused_without_source_rights_leakage() -> None:
-    html = _read("index.html")
+    html = _read("legacy.html")
     corpus = (
         ROOT
         / "prototype"
@@ -87,7 +87,7 @@ def test_real_governed_corpus_is_reused_without_source_rights_leakage() -> None:
 
 def test_green_gold_mobile_accessibility_system_is_explicit() -> None:
     styles = _read("assets/styles.css")
-    html = _read("index.html")
+    html = _read("legacy.html")
     assert "--green:#165c3b" in styles
     assert "--gold:#d4a017" in styles
     assert ":focus-visible" in styles
@@ -126,7 +126,7 @@ def test_static_build_and_workflow_include_sp_assistant_subpath() -> None:
 
 
 def test_deterministic_case_engine_is_interactive_and_non_diagnostic() -> None:
-    html = _read("index.html")
+    html = _read("legacy.html")
     app = _read("assets/app.js")
     for token in (
         "cueRules",
@@ -149,7 +149,7 @@ def test_deterministic_case_engine_is_interactive_and_non_diagnostic() -> None:
 
 def test_all_three_domains_management_and_authorities_are_reused() -> None:
     app = _read("assets/app.js")
-    html = _read("index.html")
+    html = _read("legacy.html")
     for domain in ('domain: "Disease"', 'domain: "Insect"', 'domain: "Weed"'):
         assert domain in app
     for authority in ("IRAC v11.5", "FRAC 2026", "HRAC 2026"):
@@ -159,7 +159,7 @@ def test_all_three_domains_management_and_authorities_are_reused() -> None:
 
 
 def test_manual_image_annotation_and_local_handoff_are_explicit() -> None:
-    html = _read("index.html")
+    html = _read("legacy.html")
     app = _read("assets/app.js")
     assert "จากรูปนี้ ฉันเห็น" in html
     for value in ("leaf_spots", "folded_leaf", "insect_under_leaf", "dry_shoot"):
@@ -169,7 +169,7 @@ def test_manual_image_annotation_and_local_handoff_are_explicit() -> None:
 
 
 def test_photo_mission_requires_case_and_adapts_to_three_domains() -> None:
-    html = _read("index.html")
+    html = _read("legacy.html")
     app = _read("assets/app.js")
     assert "data-photo-mission-start" in html
     assert "ช่วยฉันเก็บภาพและตรวจแปลง" in html
@@ -196,7 +196,7 @@ def test_photo_mission_captures_field_organ_detail_and_safe_inspection() -> None
 
 
 def test_photo_does_not_create_observation_but_manual_confirmation_does() -> None:
-    html = _read("index.html")
+    html = _read("legacy.html")
     app = _read("assets/app.js")
     assert "รูปภาพเป็นเพียงหลักฐานประกอบ" in html
     assert "ภาพนี้ยังไม่ยืนยัน Observation" in app
@@ -231,7 +231,7 @@ def test_photo_mission_preserves_local_image_and_scientific_boundaries() -> None
 
 
 def test_spatial_case_location_is_optional_explicit_and_browser_local() -> None:
-    html = _read("index.html")
+    html = _read("legacy.html")
     app = _read("assets/app.js")
     assert "ใช้ตำแหน่งปัจจุบัน" in html
     assert "data-location-request" in html
@@ -256,7 +256,7 @@ def test_spatial_case_preserves_device_accuracy_without_fake_precision() -> None
 
 
 def test_manual_field_time_crop_context_and_preview_are_structured() -> None:
-    html = _read("index.html")
+    html = _read("legacy.html")
     app = _read("assets/app.js")
     for token in (
         "data-field-id",

@@ -12,7 +12,7 @@ def _read(path: str) -> str:
 
 
 def test_weather_lookup_is_explicit_and_discloses_coordinate_transfer() -> None:
-    html = _read("index.html")
+    html = _read("legacy.html")
     app = _read("assets/app.js")
     assert "data-weather-request" in html
     assert "การเปิดเผยข้อมูล" in html
@@ -125,8 +125,8 @@ def test_provider_failure_is_bounded_and_handoff_preserves_layers() -> None:
         "Limitations",
     ):
         assert token in app
-    assert "data-weather-section" in _read("index.html")
-    assert "data-photo-mission-start" in _read("index.html")
+    assert "data-weather-section" in _read("legacy.html")
+    assert "data-photo-mission-start" in _read("legacy.html")
 
 
 def test_provider_review_documents_class_resolution_and_attribution() -> None:

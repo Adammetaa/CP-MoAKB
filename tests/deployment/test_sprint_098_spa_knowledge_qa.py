@@ -4,7 +4,7 @@ ROOT = Path(__file__).resolve().parents[2]
 ASSISTANT = ROOT / "prototype" / "sp-assistant"
 QA = (ASSISTANT / "assets" / "knowledge-qa.js").read_text(encoding="utf-8")
 APP = (ASSISTANT / "assets" / "app.js").read_text(encoding="utf-8")
-HTML = (ASSISTANT / "index.html").read_text(encoding="utf-8")
+HTML = (ASSISTANT / "legacy.html").read_text(encoding="utf-8")
 CSS = (ASSISTANT / "assets" / "styles.css").read_text(encoding="utf-8")
 
 

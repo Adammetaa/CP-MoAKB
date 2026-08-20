@@ -73,7 +73,7 @@ def test_rights_diagnosis_resistance_and_recommendation_boundaries_hold() -> Non
 
 
 def test_explorer_and_sp_assistant_surface_weed_corpus() -> None:
-    assistant = (ROOT / "prototype" / "sp-assistant" / "index.html").read_text(
+    assistant = (ROOT / "prototype" / "sp-assistant" / "legacy.html").read_text(
         encoding="utf-8"
     )
     assert 'href="rice-weed-corpus.html"' in (EXPLORER / "index.html").read_text(

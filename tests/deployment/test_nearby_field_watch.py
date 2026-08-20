@@ -11,7 +11,7 @@ def _read(path: str) -> str:
 
 
 def test_current_case_compares_with_structured_demo_cases() -> None:
-    html = _read("index.html")
+    html = _read("legacy.html")
     app = _read("assets/app.js")
     assert "data-field-watch" in html
     assert "CURRENT CASE" in app
@@ -21,7 +21,7 @@ def test_current_case_compares_with_structured_demo_cases() -> None:
 
 
 def test_demo_cases_are_unconfirmed_and_visibly_labelled() -> None:
-    html = _read("index.html")
+    html = _read("legacy.html")
     app = _read("assets/app.js")
     assert "ข้อมูลจำลองสำหรับทดสอบระบบ" in html and "ข้อมูลจำลองสำหรับทดสอบระบบ" in app
     assert "candidate knowledge · unresolved" in app
@@ -31,7 +31,7 @@ def test_demo_cases_are_unconfirmed_and_visibly_labelled() -> None:
 
 def test_haversine_distance_is_transparent_and_non_biological() -> None:
     app = _read("assets/app.js")
-    html = _read("index.html")
+    html = _read("legacy.html")
     assert "function haversineDistanceKm" in app
     assert "6371.0088" in app
     assert "Math.atan2" in app
@@ -105,7 +105,7 @@ def test_surveillance_case_creation_preserves_operational_provenance() -> None:
 
 
 def test_photo_case_spatial_weather_and_handoff_regressions_are_retained() -> None:
-    html = _read("index.html")
+    html = _read("legacy.html")
     app = _read("assets/app.js")
     for token in (
         "data-photo-mission-start",
@@ -126,7 +126,7 @@ def test_photo_case_spatial_weather_and_handoff_regressions_are_retained() -> No
 
 def test_no_new_network_persistence_map_or_treatment_boundary() -> None:
     app = _read("assets/app.js")
-    html = _read("index.html")
+    html = _read("legacy.html")
     assert "<canvas" not in html and "<svg" not in html
     for prohibited in (
         "google.maps",

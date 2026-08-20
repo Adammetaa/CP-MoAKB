@@ -29,7 +29,7 @@ def test_prompt_font_has_safe_thai_and_english_fallbacks() -> None:
 
 def test_starters_retire_when_case_begins() -> None:
     app = _read("assets/app.js")
-    html = _read("index.html")
+    html = _read("legacy.html")
     assert 'button.closest(".starter-replies")' in app
     assert "startCase()" in app
     assert '$("[data-empty-intro]").hidden = true' in app
@@ -181,7 +181,7 @@ def test_governed_regressions_and_boundaries_remain() -> None:
 
 def test_secondary_surfaces_are_above_composer_and_fallback_remains() -> None:
     css = _read("assets/polish.css")
-    html = _read("index.html")
+    html = _read("legacy.html")
     assert (
         ".field-panel,.case-context,.photo-mission,.weather-context,.field-watch{z-index:70}"
         in css

@@ -1,11 +1,12 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
-import { handleLoginInteraction, readLoginCredentials } from "../assets/login-interactions.js";
+import { assertLoginIdentity, captureLoginIdentity, handleLoginInteraction, readLoginCredentials } from "../assets/login-interactions.js";
 
 const styles = await readFile(new URL("../assets/field-shell.css", import.meta.url), "utf8");
 const app = await readFile(new URL("../assets/field-app.js", import.meta.url), "utf8");
 const html = await readFile(new URL("../index.html", import.meta.url), "utf8");
+const legacyHtml = await readFile(new URL("../legacy.html", import.meta.url), "utf8");
 
 function ruleFor(selectorFragment) {
   const escaped = selectorFragment.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -36,6 +37,7 @@ test("eye interaction preserves DOM identity, values, focus, and caret across bo
   const h = loginHarness();
   const usernameNode = h.root.querySelector("#username");
   const passwordNode = h.root.querySelector("#password");
+  const identity = captureLoginIdentity(h.root);
 
   assert.equal(handleLoginInteraction(h.event, h.root), true);
   assert.strictEqual(h.root.querySelector("#username"), usernameNode);
@@ -49,6 +51,7 @@ test("eye interaction preserves DOM identity, values, focus, and caret across bo
   assert.equal(h.attributes.get("aria-label"), "ซ่อนรหัสผ่าน");
   assert.equal(h.event.defaultPrevented, true);
   assert.equal(h.event.propagationStopped, true);
+  assert.equal(assertLoginIdentity(h.root, identity, { assert: (condition) => assert.equal(condition, true) }), true);
 
   h.password.focused = false;
   assert.equal(handleLoginInteraction(h.event, h.root), true);
@@ -67,13 +70,27 @@ test("login submit reads the current form values without persisting the password
   assert.doesNotMatch(app, /localStorage[^\n]*(?:password|credentials)|(?:password|credentials)[^\n]*localStorage/i);
 });
 
-test("new and legacy runtimes have isolated bootstrap ownership", () => {
+test("normal document contains only the Field Workspace runtime", () => {
+  assert.match(html, /id="field-app"/);
+  assert.doesNotMatch(html, /class="workspace"|class="conversation chat-shell"|data-problem|data-new-case/);
+  assert.doesNotMatch(html, /assets\/styles\.css|assets\/app\.js/);
+  assert.match(html, /field-shell\.css\?v=hotfix-4/);
+  assert.match(html, /field-app\.js\?v=hotfix-4/);
+  assert.match(app, /login-interactions\.js\?v=hotfix-4/);
   assert.doesNotMatch(html, /<script\s+src="assets\/app\.js/);
-  assert.match(html, /field-app\.js\?v=hotfix-3/);
   assert.match(app, /FIELD_RUNTIME_KEY/);
-  assert.match(app, /location\.hash === "#legacy"/);
-  assert.match(app, /script\.dataset\.legacyRuntime = "true"/);
+  assert.match(app, /assertSingleRuntimeDocument/);
+  assert.doesNotMatch(app, /loadLegacyRuntime|renderLegacyInvestigation|location\.hash === "#legacy"/);
   assert.match(app, /handleLoginInteraction\(event, root\)/);
   const loginClickBranch = app.match(/root\.addEventListener\("click"[\s\S]*?root\.addEventListener\("change"/)?.[0] ?? "";
   assert.doesNotMatch(loginClickBranch, /action === "toggle-password"[\s\S]*render(?:Login)?\(/);
+});
+
+test("legacy investigation has its own document, CSS, and controller", () => {
+  assert.doesNotMatch(legacyHtml, /id="field-app"|field-shell\.css|field-app\.js/);
+  assert.match(legacyHtml, /class="workspace"/);
+  assert.match(legacyHtml, /class="conversation chat-shell"/);
+  assert.match(legacyHtml, /data-problem/);
+  assert.match(legacyHtml, /assets\/styles\.css/);
+  assert.match(legacyHtml, /assets\/app\.js\?v=legacy-isolated-1/);
 });

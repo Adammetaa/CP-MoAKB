@@ -18,7 +18,7 @@ def test_visible_guided_bph_path_uses_one_question_at_a_time() -> None:
     assert 'return [{ key: "bph_current_activity"' in app
     assert 'return [{ key: "action_insects_per_plant"' in app
     assert 'return [{ key: "previous_treatment"' in app
-    assert "ข้าวมีเพลี้ยตรงโคนต้น" in read("index.html")
+    assert "ข้าวมีเพลี้ยตรงโคนต้น" in read("legacy.html")
 
 
 def test_real_product_evidence_preserves_authority_classes_and_rate_semantics() -> None:

@@ -83,7 +83,7 @@ def test_rights_product_dose_and_recommendation_boundaries_hold() -> None:
 
 
 def test_explorer_and_assistant_link_management_view() -> None:
-    assistant = (ROOT / "prototype" / "sp-assistant" / "index.html").read_text(
+    assistant = (ROOT / "prototype" / "sp-assistant" / "legacy.html").read_text(
         encoding="utf-8"
     )
     assert 'href="crop-protection-management.html"' in (

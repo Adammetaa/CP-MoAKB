@@ -53,7 +53,7 @@ def test_rights_registration_resistance_and_diagnosis_boundaries_hold() -> None:
 
 
 def test_explorer_and_sp_assistant_surface_insect_corpus_without_ranking() -> None:
-    assistant = (ROOT / "prototype" / "sp-assistant" / "index.html").read_text(encoding="utf-8")
+    assistant = (ROOT / "prototype" / "sp-assistant" / "legacy.html").read_text(encoding="utf-8")
     assert 'href="rice-insect-corpus.html"' in (EXPLORER / "index.html").read_text(encoding="utf-8")
     assert 'href="rice-insect-corpus.html"' in (EXPLORER / "browse.html").read_text(encoding="utf-8")
     assert "../knowledge-explorer/rice-insect-corpus.html" in assistant

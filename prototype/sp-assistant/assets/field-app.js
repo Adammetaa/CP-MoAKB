@@ -1,6 +1,6 @@
-import { CONVERSATION_SCOPES, PHOTO_EVIDENCE_BOUNDARY, STAGE_PROVENANCE, resolveMockUser, validateFieldName } from "./field-core.js";
-import { ConversationService, DecisionService, EvidenceService, FieldService, GuidanceService, InvestigationService, LLMGateway, LocationService, MapService, StageService, WeatherService, WorkspaceRepository, loadFieldConfiguration, loadInvestigationConfiguration } from "./field-services.js";
-import { handleLoginInteraction, readLoginCredentials } from "./login-interactions.js";
+import { CONVERSATION_SCOPES, PHOTO_EVIDENCE_BOUNDARY, STAGE_PROVENANCE, resolveMockUser, validateFieldName } from "./field-core.js?v=hotfix-4";
+import { ConversationService, DecisionService, EvidenceService, FieldService, GuidanceService, InvestigationService, LLMGateway, LocationService, MapService, StageService, WeatherService, WorkspaceRepository, loadFieldConfiguration, loadInvestigationConfiguration } from "./field-services.js?v=hotfix-4";
+import { assertLoginIdentity, captureLoginIdentity, handleLoginInteraction, readLoginCredentials } from "./login-interactions.js?v=hotfix-4";
 
 const FIELD_RUNTIME_KEY = "__cpmoakbFieldWorkspaceRuntime";
 if (!window[FIELD_RUNTIME_KEY]) {
@@ -8,6 +8,17 @@ window[FIELD_RUNTIME_KEY] = { initialized_at: new Date().toISOString() };
 
 const root = document.querySelector("#field-app");
 root.dataset.runtimeOwner = "field-workspace";
+const developmentMode = ["localhost", "127.0.0.1", "[::1]"].includes(location.hostname) || new URLSearchParams(location.search).has("debug");
+function assertSingleRuntimeDocument() {
+  if (!developmentMode) return;
+  const roots = document.querySelectorAll("#field-app");
+  const owners = document.querySelectorAll("[data-runtime-owner]");
+  console.debug("SP Assistant active runtime owners:", owners.length);
+  console.assert(roots.length === 1, "SP Assistant: normal page must contain exactly one #field-app");
+  console.assert(owners.length === 1 && owners[0] === root, "SP Assistant: multiple runtime owners detected");
+  console.assert(!document.querySelector(".workspace"), "SP Assistant: legacy workspace must not exist on normal routes");
+}
+assertSingleRuntimeDocument();
 const repository = new WorkspaceRepository(window.localStorage);
 const fieldService = new FieldService(repository);
 const locationService = new LocationService(navigator.geolocation, repository);
@@ -229,19 +240,11 @@ function renderProfile() {
   root.innerHTML = `${appHeader({ back: "home" })}<main class="app-main simple-page"><div class="profile-card"><div class="large-avatar">👨🏽‍🌾</div><p class="eyebrow">บัญชีต้นแบบ</p><h1>${escapeHtml(user.display_name)}</h1><p>${escapeHtml(user.username)} · ${escapeHtml(user.role)}</p><dl><div><dt>รหัสผู้ใช้</dt><dd>${escapeHtml(user.user_id)}</dd></div><div><dt>โหมดเข้าสู่ระบบ</dt><dd>${escapeHtml(user.session.authentication_mode)}</dd></div></dl><button class="secondary-action" type="button" data-action="logout">ออกจากระบบ</button></div></main>${bottomNavigation("profile")}`;
 }
 
-function loadLegacyRuntime() {
-  if (document.querySelector("script[data-legacy-runtime]")) return;
-  const script = document.createElement("script");
-  script.src = "assets/app.js?v=legacy-isolated-1";
-  script.dataset.legacyRuntime = "true";
-  document.head.append(script);
-}
-function renderLegacyInvestigation() { root.innerHTML = `<button class="legacy-return" type="button" data-action="exit-legacy">← กลับพื้นที่ทำงานแปลง</button>`; loadLegacyRuntime(); }
 function renderError() { root.innerHTML = `<main class="state-view"><div class="error-state-icon">!</div><h1>เตรียมพื้นที่ทำงานไม่สำเร็จ</h1><p>${escapeHtml(formError ?? "เกิดข้อผิดพลาดที่ไม่คาดคิด")}</p><button class="primary-action compact-action" type="button" data-action="reload">ลองใหม่</button></main>`; }
 
 function render() {
   document.body.dataset.route = route;
-  if (route === "loading") renderLoading(); else if (route === "login") renderLogin(); else if (route === "gps") renderGps(); else if (route === "home") renderHome(); else if (route === "fields") renderFields(); else if (route === "create") renderCreateField(); else if (route === "field-detail") renderFieldDetail(); else if (route === "inspection") renderInspection(); else if (route === "summary") renderSummary(); else if (route === "free-chat") renderFreeChat(); else if (route === "learn") renderLearn(); else if (route === "profile") renderProfile(); else if (route === "legacy") renderLegacyInvestigation(); else renderError();
+  if (route === "loading") renderLoading(); else if (route === "login") renderLogin(); else if (route === "gps") renderGps(); else if (route === "home") renderHome(); else if (route === "fields") renderFields(); else if (route === "create") renderCreateField(); else if (route === "field-detail") renderFieldDetail(); else if (route === "inspection") renderInspection(); else if (route === "summary") renderSummary(); else if (route === "free-chat") renderFreeChat(); else if (route === "learn") renderLearn(); else if (route === "profile") renderProfile(); else renderError();
   window.scrollTo({ top: 0, behavior: "instant" });
 }
 
@@ -304,7 +307,8 @@ root.addEventListener("submit", async (event) => {
 });
 
 root.addEventListener("click", (event) => {
-  if (handleLoginInteraction(event, root)) return;
+  const loginIdentity = developmentMode && event.target.closest?.('[data-action="toggle-password"]') ? captureLoginIdentity(root) : null;
+  if (handleLoginInteraction(event, root)) { if (loginIdentity) assertLoginIdentity(root, loginIdentity); return; }
   const routeTarget = event.target.closest("[data-route]");
   if (routeTarget) { event.preventDefault(); const next = routeTarget.dataset.route; if (next === "create" && route === "create" && draft.step > 1) draft.step -= 1; else route = next; formError = null; render(); return; }
   const fieldTarget = event.target.closest("[data-field-open]"); if (fieldTarget) { selectedFieldId = fieldTarget.dataset.fieldOpen; fieldService.select_field(selectedFieldId, currentUser().user_id); route = "field-detail"; render(); return; }
@@ -330,7 +334,6 @@ root.addEventListener("click", (event) => {
   if (mapAction === "finish") { if (draft.points.length >= 3) { draft.closed = true; formError = null; renderCreateField(); } return; }
   const action = event.target.closest("[data-action]")?.dataset.action;
   if (action === "forgot-password") { formError = "ระบบกู้รหัสผ่านจะเปิดให้ใช้งานในรุ่นถัดไป"; renderLogin(); return; }
-  if (action === "exit-legacy") { history.replaceState(null, "", `${location.pathname}${location.search}`); location.reload(); return; }
   if (action === "gps-skip") { gpsState = { status: "SKIPPED", message: "ข้ามการใช้ตำแหน่งแล้ว คุณยังใช้งานส่วนอื่นได้" }; route = "home"; render(); return; }
   if (action === "gps-retry") { requestGps(); return; }
   if (action === "weather-refresh") { weatherState = undefined; render(); refreshWeather(); return; }
@@ -371,6 +374,6 @@ root.addEventListener("pointerdown", (event) => { const map = event.target.close
 root.addEventListener("pointermove", (event) => { const map = event.target.closest("[data-map-canvas]"); if (!map || !mapDrag || draft.mode !== "center") return; const dx = event.clientX - mapDrag.x, dy = event.clientY - mapDrag.y; draft.mapOffset.x += dx; draft.mapOffset.y += dy; draft.base.longitude -= dx * 0.000012; draft.base.latitude += dy * 0.000009; draft.points.forEach((point) => { point.x += dx / mapDrag.width; point.y += dy / mapDrag.height; }); map.style.setProperty("--map-x", `${draft.mapOffset.x}px`); map.style.setProperty("--map-y", `${draft.mapOffset.y}px`); mapDrag.x = event.clientX; mapDrag.y = event.clientY; });
 root.addEventListener("pointerup", () => { const wasDragging = Boolean(mapDrag); mapDrag = null; if (wasDragging && route === "create" && draft.step === 1) renderCreateField(); }); root.addEventListener("pointercancel", () => { mapDrag = null; });
 
-async function boot() { renderLoading(); try { [configuration, workflowConfiguration] = await Promise.all([loadFieldConfiguration(), loadInvestigationConfiguration()]); stageService = new StageService(configuration); guidanceService = new GuidanceService(repository, workflowConfiguration); investigationService = new InvestigationService(repository, workflowConfiguration); evidenceService = new EvidenceService(repository); conversationService = new ConversationService(repository); decisionService = new DecisionService(repository, workflowConfiguration); route = location.hash === "#legacy" ? "legacy" : currentUser() ? "home" : "login"; render(); } catch (error) { formError = error.message; route = "error"; render(); } }
+async function boot() { renderLoading(); try { [configuration, workflowConfiguration] = await Promise.all([loadFieldConfiguration(), loadInvestigationConfiguration()]); stageService = new StageService(configuration); guidanceService = new GuidanceService(repository, workflowConfiguration); investigationService = new InvestigationService(repository, workflowConfiguration); evidenceService = new EvidenceService(repository); conversationService = new ConversationService(repository); decisionService = new DecisionService(repository, workflowConfiguration); route = currentUser() ? "home" : "login"; render(); } catch (error) { formError = error.message; route = "error"; render(); } }
 boot();
 }
