@@ -1,7 +1,13 @@
 import { CONVERSATION_SCOPES, PHOTO_EVIDENCE_BOUNDARY, STAGE_PROVENANCE, resolveMockUser, validateFieldName } from "./field-core.js";
 import { ConversationService, DecisionService, EvidenceService, FieldService, GuidanceService, InvestigationService, LLMGateway, LocationService, MapService, StageService, WeatherService, WorkspaceRepository, loadFieldConfiguration, loadInvestigationConfiguration } from "./field-services.js";
+import { handleLoginInteraction, readLoginCredentials } from "./login-interactions.js";
+
+const FIELD_RUNTIME_KEY = "__cpmoakbFieldWorkspaceRuntime";
+if (!window[FIELD_RUNTIME_KEY]) {
+window[FIELD_RUNTIME_KEY] = { initialized_at: new Date().toISOString() };
 
 const root = document.querySelector("#field-app");
+root.dataset.runtimeOwner = "field-workspace";
 const repository = new WorkspaceRepository(window.localStorage);
 const fieldService = new FieldService(repository);
 const locationService = new LocationService(navigator.geolocation, repository);
@@ -62,7 +68,7 @@ function bottomNavigation(active) {
 function renderLoading() { root.innerHTML = `<main class="state-view"><div class="loading-orb">🌾</div><h1>กำลังเตรียมพื้นที่ทำงาน</h1><p>โหลดข้อมูลแปลงและบริการที่จำเป็น…</p></main>`; }
 
 function renderLogin() {
-  root.innerHTML = `<main class="login-view" aria-labelledby="login-title"><section class="login-shell"><div class="login-brand">${brandMarkup()}</div><div class="login-intro"><h1 id="login-title">ผู้ช่วยคู่ใจของชาวนา</h1><p>วางแผนการปลูก ติดตามผลผลิต และรับคำแนะนำที่แม่นยำ</p></div><form class="login-card" data-login-form novalidate><div class="form-message ${formError ? "error" : ""}" ${formError ? "" : "hidden"}>${escapeHtml(formError)}</div><label for="username">ชื่อผู้ใช้</label><div class="input-with-icon"><span aria-hidden="true">♙</span><input id="username" name="username" autocomplete="username" placeholder="SPA1 / CA1 / AG1" required></div><p class="field-help">ตัวอย่างชื่อผู้ใช้: SPA1 / CA1 / AG1</p><label for="password">รหัสผ่าน</label><div class="input-with-icon"><span aria-hidden="true">▣</span><input id="password" name="password" type="password" autocomplete="current-password" placeholder="รหัสผ่าน" required><button type="button" data-action="toggle-password" aria-label="แสดงรหัสผ่าน">◉</button></div><button class="primary-action" type="submit">เข้าสู่ระบบ</button><button class="login-help" type="button" data-action="forgot-password">▣ ลืมรหัสผ่าน</button><p class="prototype-hint">รุ่นต้นแบบสำหรับทดสอบภายใน · รหัสผ่านใดก็ได้ที่ไม่เว้นว่าง</p></form></section></main>`;
+  root.innerHTML = `<main class="login-view" aria-labelledby="login-title"><section class="login-shell"><div class="login-brand">${brandMarkup()}</div><div class="login-intro"><h1 id="login-title">ผู้ช่วยคู่ใจของชาวนา</h1><p>วางแผนการปลูก ติดตามผลผลิต และรับคำแนะนำที่แม่นยำ</p></div><form class="login-card" data-login-form novalidate><div class="form-message ${formError ? "error" : ""}" ${formError ? "" : "hidden"}>${escapeHtml(formError)}</div><label for="username">ชื่อผู้ใช้</label><div class="input-with-icon"><span aria-hidden="true">♙</span><input id="username" name="username" autocomplete="username" placeholder="SPA1 / CA1 / AG1" required></div><p class="field-help">ตัวอย่างชื่อผู้ใช้: SPA1 / CA1 / AG1</p><label for="password">รหัสผ่าน</label><div class="input-with-icon"><span aria-hidden="true">▣</span><input id="password" name="password" type="password" autocomplete="current-password" placeholder="รหัสผ่าน" required><button type="button" data-action="toggle-password" aria-pressed="false" aria-label="แสดงรหัสผ่าน">◉</button></div><button class="primary-action" type="submit">เข้าสู่ระบบ</button><button class="login-help" type="button" data-action="forgot-password">▣ ลืมรหัสผ่าน</button><p class="prototype-hint">รุ่นต้นแบบสำหรับทดสอบภายใน · รหัสผ่านใดก็ได้ที่ไม่เว้นว่าง</p></form></section></main>`;
 }
 
 function renderGps() {
@@ -223,7 +229,14 @@ function renderProfile() {
   root.innerHTML = `${appHeader({ back: "home" })}<main class="app-main simple-page"><div class="profile-card"><div class="large-avatar">👨🏽‍🌾</div><p class="eyebrow">บัญชีต้นแบบ</p><h1>${escapeHtml(user.display_name)}</h1><p>${escapeHtml(user.username)} · ${escapeHtml(user.role)}</p><dl><div><dt>รหัสผู้ใช้</dt><dd>${escapeHtml(user.user_id)}</dd></div><div><dt>โหมดเข้าสู่ระบบ</dt><dd>${escapeHtml(user.session.authentication_mode)}</dd></div></dl><button class="secondary-action" type="button" data-action="logout">ออกจากระบบ</button></div></main>${bottomNavigation("profile")}`;
 }
 
-function renderLegacyInvestigation() { root.innerHTML = `<button class="legacy-return" type="button" data-route="field-detail">← กลับหน้าหลักแปลง</button>`; }
+function loadLegacyRuntime() {
+  if (document.querySelector("script[data-legacy-runtime]")) return;
+  const script = document.createElement("script");
+  script.src = "assets/app.js?v=legacy-isolated-1";
+  script.dataset.legacyRuntime = "true";
+  document.head.append(script);
+}
+function renderLegacyInvestigation() { root.innerHTML = `<button class="legacy-return" type="button" data-action="exit-legacy">← กลับพื้นที่ทำงานแปลง</button>`; loadLegacyRuntime(); }
 function renderError() { root.innerHTML = `<main class="state-view"><div class="error-state-icon">!</div><h1>เตรียมพื้นที่ทำงานไม่สำเร็จ</h1><p>${escapeHtml(formError ?? "เกิดข้อผิดพลาดที่ไม่คาดคิด")}</p><button class="primary-action compact-action" type="button" data-action="reload">ลองใหม่</button></main>`; }
 
 function render() {
@@ -254,8 +267,8 @@ root.addEventListener("input", (event) => {
 
 root.addEventListener("submit", async (event) => {
   if (event.target.matches("[data-login-form]")) {
-    event.preventDefault(); const data = new FormData(event.target);
-    try { const user = resolveMockUser(data.get("username"), data.get("password")); persistUser(user); formError = null; route = "gps"; render(); requestGps(); } catch (error) { formError = error.message; renderLogin(); }
+    event.preventDefault(); const credentials = readLoginCredentials(event.target);
+    try { const user = resolveMockUser(credentials.username, credentials.password); persistUser(user); formError = null; route = "gps"; render(); requestGps(); } catch (error) { formError = error.message; renderLogin(); }
   }
   if (event.target.matches("[data-details-form]")) {
     event.preventDefault(); updateDraftFromDetailsForm(event.target);
@@ -291,6 +304,7 @@ root.addEventListener("submit", async (event) => {
 });
 
 root.addEventListener("click", (event) => {
+  if (handleLoginInteraction(event, root)) return;
   const routeTarget = event.target.closest("[data-route]");
   if (routeTarget) { event.preventDefault(); const next = routeTarget.dataset.route; if (next === "create" && route === "create" && draft.step > 1) draft.step -= 1; else route = next; formError = null; render(); return; }
   const fieldTarget = event.target.closest("[data-field-open]"); if (fieldTarget) { selectedFieldId = fieldTarget.dataset.fieldOpen; fieldService.select_field(selectedFieldId, currentUser().user_id); route = "field-detail"; render(); return; }
@@ -315,8 +329,8 @@ root.addEventListener("click", (event) => {
   if (mapAction === "add-center") { setMapPoint(0.5, 0.5); return; }
   if (mapAction === "finish") { if (draft.points.length >= 3) { draft.closed = true; formError = null; renderCreateField(); } return; }
   const action = event.target.closest("[data-action]")?.dataset.action;
-  if (action === "toggle-password") { const input = root.querySelector("#password"); input.type = input.type === "password" ? "text" : "password"; return; }
   if (action === "forgot-password") { formError = "ระบบกู้รหัสผ่านจะเปิดให้ใช้งานในรุ่นถัดไป"; renderLogin(); return; }
+  if (action === "exit-legacy") { history.replaceState(null, "", `${location.pathname}${location.search}`); location.reload(); return; }
   if (action === "gps-skip") { gpsState = { status: "SKIPPED", message: "ข้ามการใช้ตำแหน่งแล้ว คุณยังใช้งานส่วนอื่นได้" }; route = "home"; render(); return; }
   if (action === "gps-retry") { requestGps(); return; }
   if (action === "weather-refresh") { weatherState = undefined; render(); refreshWeather(); return; }
@@ -357,5 +371,6 @@ root.addEventListener("pointerdown", (event) => { const map = event.target.close
 root.addEventListener("pointermove", (event) => { const map = event.target.closest("[data-map-canvas]"); if (!map || !mapDrag || draft.mode !== "center") return; const dx = event.clientX - mapDrag.x, dy = event.clientY - mapDrag.y; draft.mapOffset.x += dx; draft.mapOffset.y += dy; draft.base.longitude -= dx * 0.000012; draft.base.latitude += dy * 0.000009; draft.points.forEach((point) => { point.x += dx / mapDrag.width; point.y += dy / mapDrag.height; }); map.style.setProperty("--map-x", `${draft.mapOffset.x}px`); map.style.setProperty("--map-y", `${draft.mapOffset.y}px`); mapDrag.x = event.clientX; mapDrag.y = event.clientY; });
 root.addEventListener("pointerup", () => { const wasDragging = Boolean(mapDrag); mapDrag = null; if (wasDragging && route === "create" && draft.step === 1) renderCreateField(); }); root.addEventListener("pointercancel", () => { mapDrag = null; });
 
-async function boot() { renderLoading(); try { [configuration, workflowConfiguration] = await Promise.all([loadFieldConfiguration(), loadInvestigationConfiguration()]); stageService = new StageService(configuration); guidanceService = new GuidanceService(repository, workflowConfiguration); investigationService = new InvestigationService(repository, workflowConfiguration); evidenceService = new EvidenceService(repository); conversationService = new ConversationService(repository); decisionService = new DecisionService(repository, workflowConfiguration); route = currentUser() ? "home" : "login"; render(); } catch (error) { formError = error.message; route = "error"; render(); } }
+async function boot() { renderLoading(); try { [configuration, workflowConfiguration] = await Promise.all([loadFieldConfiguration(), loadInvestigationConfiguration()]); stageService = new StageService(configuration); guidanceService = new GuidanceService(repository, workflowConfiguration); investigationService = new InvestigationService(repository, workflowConfiguration); evidenceService = new EvidenceService(repository); conversationService = new ConversationService(repository); decisionService = new DecisionService(repository, workflowConfiguration); route = location.hash === "#legacy" ? "legacy" : currentUser() ? "home" : "login"; render(); } catch (error) { formError = error.message; route = "error"; render(); } }
 boot();
+}
