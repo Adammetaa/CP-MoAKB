@@ -122,8 +122,8 @@ test("native Enter and submit button paths converge on the login submit handler"
 test("normal and legacy documents remain runtime-isolated", () => {
   assert.match(html, /id="field-app"/);
   assert.doesNotMatch(html, /class="workspace"|class="conversation chat-shell"|assets\/styles\.css|assets\/app\.js/);
-  assert.match(html, /field-shell\.css\?v=real-weather-2/);
-  assert.match(html, /field-app\.js\?v=real-weather-2/);
+  assert.match(html, /field-shell\.css\?v=server-ai-1/);
+  assert.match(html, /field-app\.js\?v=server-ai-1/);
   assert.doesNotMatch(legacyHtml, /id="field-app"|field-shell\.css|field-app\.js/);
   assert.match(legacyHtml, /class="workspace"/);
   assert.match(legacyHtml, /assets\/app\.js\?v=legacy-isolated-1/);

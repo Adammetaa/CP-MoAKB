@@ -3,6 +3,7 @@ import { ConversationService, DecisionService, EvidenceService, FieldService, Gu
 import { loginToPrototypeWorkspace } from "./prototype-login.js?v=fixed-login-1";
 import { findOwnedRouteTarget } from "./route-interactions.js?v=login-route-fix-1";
 import { createPreferredMapAdapter, mountGoogleFieldPreview } from "./browser-map-adapter.js?v=google-satellite-3";
+import { ServerLLMAdapter } from "./server-llm-adapter.js?v=server-ai-1";
 
 const FIELD_RUNTIME_KEY = "__cpmoakbFieldWorkspaceRuntime";
 if (!window[FIELD_RUNTIME_KEY]) {
@@ -26,7 +27,7 @@ const fieldService = new FieldService(repository);
 const locationService = new LocationService(navigator.geolocation, repository);
 const mapService = new MapService();
 const weatherService = new WeatherService();
-const llmGateway = new LLMGateway();
+const llmGateway = new LLMGateway(new ServerLLMAdapter());
 
 let configuration = null, workflowConfiguration = null;
 let stageService = null;

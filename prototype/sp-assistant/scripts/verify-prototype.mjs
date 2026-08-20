@@ -17,6 +17,8 @@ const fieldStyles = await readFile(resolve(root, "assets", "field-shell.css"), "
 const browserMapAdapter = await readFile(resolve(root, "assets", "browser-map-adapter.js"), "utf8");
 const prototypeLogin = await readFile(resolve(root, "assets", "prototype-login.js"), "utf8");
 const routeInteractions = await readFile(resolve(root, "assets", "route-interactions.js"), "utf8");
+const serverAdapter = await readFile(resolve(root, "assets", "server-llm-adapter.js"), "utf8");
+const serverRuntime = await readFile(resolve(root, "server.mjs"), "utf8");
 const investigationConfig = JSON.parse(await readFile(resolve(root, "assets", "investigation-config.json"), "utf8"));
 const fieldConfig = JSON.parse(await readFile(resolve(root, "assets", "field-config.json"), "utf8"));
 const failures = [];
@@ -71,7 +73,7 @@ for (const required of ["class=\"workspace\"", "chat-shell", "data-problem", "as
 for (const prohibited of ["id=\"field-app\"", "field-shell.css", "field-app.js"]) {
   if (legacyHtml.includes(prohibited)) failures.push(`legacy.html contains Field Workspace surface: ${prohibited}`);
 }
-for (const required of ["field-shell.css?v=real-weather-2", "field-app.js?v=real-weather-2"]) {
+for (const required of ["field-shell.css?v=server-ai-1", "field-app.js?v=server-ai-1"]) {
   if (!html.includes(required)) failures.push(`index.html missing fixed-login cache key: ${required}`);
 }
 if (!fieldApp.includes('prototype-login.js?v=fixed-login-1')) failures.push("field-app.js missing fixed prototype login module");
@@ -99,6 +101,9 @@ for (const required of ["api.open-meteo.com/v1/forecast", "temperature_2m", "wea
   if (!fieldServices.includes(required)) failures.push(`field-services.js missing real weather contract: ${required}`);
 }
 if (!fieldApp.includes('source: "FIELD_CENTROID"') || !fieldApp.includes("บริเวณแปลง · Open-Meteo")) failures.push("field-app.js must request and label field-centroid weather");
+if (!fieldApp.includes("new LLMGateway(new ServerLLMAdapter())")) failures.push("field-app.js missing server-only LLM adapter");
+for (const required of ["/api/assistant/chat", "store:false", "OPENAI_API_KEY", "gpt-5.6-luna", "Candidate", "field_id", "season_id"]) if (!serverRuntime.includes(required)) failures.push(`server.mjs missing AI gateway boundary: ${required}`);
+if (serverAdapter.includes("api.openai.com") || serverAdapter.includes("OPENAI_API_KEY")) failures.push("browser server adapter must not contain provider URL or key");
 for (const required of ["assert_field_context", "assert_case_context", "assert_conversation_context", "get_guidance", "start_case", "submit_observation", "finish_case", "save_case_summary", "list_case_history", "get_management_options", "select_management_option", "PHOTO_RECEIVED", "selection_only", "field_action_performed"]) {
   if (!fieldServices.includes(required)) failures.push(`field-services.js missing Block 2 boundary: ${required}`);
 }
