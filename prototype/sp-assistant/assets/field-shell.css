@@ -34,7 +34,7 @@ body[data-route="legacy"] .field-app { min-height:0; }
 @keyframes float { 50% { transform:translateY(-8px); } }
 
 .login-view { min-height:100dvh; display:grid; place-items:center; padding:36px 20px; overflow:hidden; position:relative; background:radial-gradient(circle at 50% 42%,#fff 0 39%,rgba(255,255,255,.77) 64%),linear-gradient(180deg,#fff 0 49%,#eef4e8 100%); }
-.login-view::before,.login-view::after { content:""; position:absolute; width:560px; height:240px; border-radius:52% 48% 0 0; background:linear-gradient(145deg,rgba(192,216,167,.58),rgba(241,201,67,.18)); bottom:-115px; transform:rotate(4deg); }
+.login-view::before,.login-view::after { content:""; position:absolute; width:560px; height:240px; border-radius:52% 48% 0 0; background:linear-gradient(145deg,rgba(192,216,167,.58),rgba(241,201,67,.18)); bottom:-115px; transform:rotate(4deg); pointer-events:none; }
 .login-view::before { left:-190px; }.login-view::after { right:-190px; transform:rotate(-6deg); }
 .login-shell { width:min(100%,680px); position:relative; z-index:1; text-align:center; }
 .workspace-brand { display:flex; align-items:center; justify-content:center; gap:17px; text-decoration:none; color:var(--field-green); }
@@ -44,7 +44,7 @@ body[data-route="legacy"] .field-app { min-height:0; }
 .login-intro { margin:48px 0 27px; }.login-intro h1 { color:var(--field-green); font-size:clamp(30px,6vw,42px); margin:0 0 5px; }.login-intro p { color:var(--field-muted); font-size:19px; margin:0; }
 .login-card { background:rgba(255,255,255,.95); border:1px solid rgba(7,95,54,.10); border-radius:28px; padding:31px; box-shadow:0 20px 56px rgba(31,53,38,.12); text-align:left; }
 .login-card label,.form-grid label,.override-stage { display:block; color:#164b34; font-weight:700; margin:0 0 8px; }
-.input-with-icon { position:relative; }.input-with-icon > span { position:absolute; left:18px; top:16px; color:var(--field-green); font-size:24px; }.input-with-icon > button { position:absolute; right:10px; top:10px; border:0; background:transparent; font-size:22px; color:#858b87; cursor:pointer; }
+.input-with-icon { position:relative; }.input-with-icon > span { position:absolute; left:18px; top:16px; color:var(--field-green); font-size:24px; pointer-events:none; }.input-with-icon > button { position:absolute; right:10px; top:10px; border:0; background:transparent; font-size:22px; color:#858b87; cursor:pointer; }
 .login-card input,.form-grid input,.form-grid select,.override-stage select { width:100%; min-height:57px; border:1px solid #ccd4ce; border-radius:13px; padding:0 17px; background:#fff; color:var(--field-ink); outline:none; }
 .login-card .input-with-icon input { padding-left:54px; margin-bottom:15px; }.login-card .input-with-icon input[type="password"] { padding-right:48px; }
 .login-card .primary-action { width:100%; margin-top:8px; font-size:19px; }.login-help { display:block; margin:17px auto 0; border:0; background:transparent; color:var(--field-green); cursor:pointer; }.prototype-hint { color:#8a918c; font-size:12px; margin:13px 0 0; text-align:center; }
