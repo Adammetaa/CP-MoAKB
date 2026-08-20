@@ -47,10 +47,10 @@ button { -webkit-tap-highlight-color:transparent; }
 .login-intro { margin:48px 0 27px; }.login-intro h1 { color:var(--field-green); font-size:clamp(30px,6vw,42px); margin:0 0 5px; }.login-intro p { color:var(--field-muted); font-size:19px; margin:0; }
 .login-card { background:rgba(255,255,255,.95); border:1px solid rgba(7,95,54,.10); border-radius:28px; padding:31px; box-shadow:0 20px 56px rgba(31,53,38,.12); text-align:left; }
 .login-card label,.form-grid label,.override-stage { display:block; color:#164b34; font-weight:700; margin:0 0 8px; }
-.input-with-icon { position:relative; }.input-with-icon > span { position:absolute; left:18px; top:16px; color:var(--field-green); font-size:24px; pointer-events:none; }.input-with-icon > button { position:absolute; right:10px; top:10px; border:0; background:transparent; font-size:22px; color:#858b87; cursor:pointer; }
+.input-with-icon { position:relative; }.input-with-icon > span { position:absolute; left:18px; top:16px; color:var(--field-green); font-size:24px; pointer-events:none; }
 .login-card input,.form-grid input,.form-grid select,.override-stage select { width:100%; min-height:57px; border:1px solid #ccd4ce; border-radius:13px; padding:0 17px; background:#fff; color:var(--field-ink); outline:none; }
-.login-card .input-with-icon input { padding-left:54px; margin-bottom:15px; }.login-card .input-with-icon input[type="password"] { padding-right:48px; }
-.login-card .primary-action { width:100%; margin-top:8px; font-size:19px; }.login-help { display:block; margin:17px auto 0; border:0; background:transparent; color:var(--field-green); cursor:pointer; }.prototype-hint { color:#8a918c; font-size:12px; margin:13px 0 0; text-align:center; }
+.login-card .input-with-icon input { padding-left:54px; margin-bottom:15px; }
+.login-card .primary-action { width:100%; margin-top:8px; font-size:19px; }.prototype-hint { color:#8a918c; font-size:12px; margin:13px 0 0; text-align:center; }
 
 .permission-card { width:min(100%,580px); background:#fff; padding:45px; border-radius:28px; box-shadow:var(--field-shadow); border:1px solid var(--field-border); }
 .permission-card h1 { color:var(--field-green); font-size:30px; margin:6px 0 10px; }.permission-card > p:not(.eyebrow) { color:var(--field-muted); line-height:1.7; }

@@ -1,6 +1,6 @@
-import { CONVERSATION_SCOPES, PHOTO_EVIDENCE_BOUNDARY, STAGE_PROVENANCE, resolveMockUser, validateFieldName } from "./field-core.js?v=hotfix-4";
-import { ConversationService, DecisionService, EvidenceService, FieldService, GuidanceService, InvestigationService, LLMGateway, LocationService, MapService, StageService, WeatherService, WorkspaceRepository, loadFieldConfiguration, loadInvestigationConfiguration } from "./field-services.js?v=hotfix-4";
-import { assertLoginIdentity, captureLoginIdentity, handleLoginInteraction, readLoginCredentials } from "./login-interactions.js?v=hotfix-4";
+import { CONVERSATION_SCOPES, PHOTO_EVIDENCE_BOUNDARY, STAGE_PROVENANCE, validateFieldName } from "./field-core.js?v=fixed-login-1";
+import { ConversationService, DecisionService, EvidenceService, FieldService, GuidanceService, InvestigationService, LLMGateway, LocationService, MapService, StageService, WeatherService, WorkspaceRepository, loadFieldConfiguration, loadInvestigationConfiguration } from "./field-services.js?v=fixed-login-1";
+import { loginToPrototypeWorkspace } from "./prototype-login.js?v=fixed-login-1";
 
 const FIELD_RUNTIME_KEY = "__cpmoakbFieldWorkspaceRuntime";
 if (!window[FIELD_RUNTIME_KEY]) {
@@ -79,7 +79,7 @@ function bottomNavigation(active) {
 function renderLoading() { root.innerHTML = `<main class="state-view"><div class="loading-orb">🌾</div><h1>กำลังเตรียมพื้นที่ทำงาน</h1><p>โหลดข้อมูลแปลงและบริการที่จำเป็น…</p></main>`; }
 
 function renderLogin() {
-  root.innerHTML = `<main class="login-view" aria-labelledby="login-title"><section class="login-shell"><div class="login-brand">${brandMarkup()}</div><div class="login-intro"><h1 id="login-title">ผู้ช่วยคู่ใจของชาวนา</h1><p>วางแผนการปลูก ติดตามผลผลิต และรับคำแนะนำที่แม่นยำ</p></div><form class="login-card" data-login-form novalidate><div class="form-message ${formError ? "error" : ""}" ${formError ? "" : "hidden"}>${escapeHtml(formError)}</div><label for="username">ชื่อผู้ใช้</label><div class="input-with-icon"><span aria-hidden="true">♙</span><input id="username" name="username" autocomplete="username" placeholder="SPA1 / CA1 / AG1" required></div><p class="field-help">ตัวอย่างชื่อผู้ใช้: SPA1 / CA1 / AG1</p><label for="password">รหัสผ่าน</label><div class="input-with-icon"><span aria-hidden="true">▣</span><input id="password" name="password" type="password" autocomplete="current-password" placeholder="รหัสผ่าน" required><button type="button" data-action="toggle-password" aria-pressed="false" aria-label="แสดงรหัสผ่าน">◉</button></div><button class="primary-action" type="submit">เข้าสู่ระบบ</button><button class="login-help" type="button" data-action="forgot-password">▣ ลืมรหัสผ่าน</button><p class="prototype-hint">รุ่นต้นแบบสำหรับทดสอบภายใน · รหัสผ่านใดก็ได้ที่ไม่เว้นว่าง</p></form></section></main>`;
+  root.innerHTML = `<main class="login-view" aria-labelledby="login-title"><section class="login-shell"><div class="login-brand"><div class="workspace-brand" aria-label="SP Assistant"><span class="workspace-brand-mark" aria-hidden="true">🌾</span><span><strong>SP <em>Assistant</em></strong><small>ผู้ช่วยชาวนา เพื่ออนาคตของการผลิต</small></span></div></div><div class="login-intro"><h1 id="login-title">ผู้ช่วยคู่ใจของชาวนา</h1><p>พื้นที่ทดสอบภายในสำหรับ Field Intelligence Workspace</p></div><form class="login-card" data-login-form novalidate><div class="form-message ${formError ? "error" : ""}" ${formError ? "" : "hidden"}>${escapeHtml(formError)}</div><label for="password">รหัสผ่าน</label><div class="input-with-icon"><span aria-hidden="true">▣</span><input id="password" name="password" type="password" autocomplete="current-password" placeholder="รหัสผ่าน" required></div><button class="primary-action" type="submit">เข้าสู่ระบบ</button><p class="prototype-hint">สำหรับทดสอบภายใน</p></form></section></main>`;
 }
 
 function renderGps() {
@@ -250,8 +250,6 @@ function render() {
 
 async function refreshWeather() { weatherState = await weatherService.get_weather(locationService.get_current_location()); if (route === "home") renderHome(); else if (route === "field-detail") renderFieldDetail(); }
 async function requestGps() { gpsState = { status: "REQUESTING" }; renderGps(); gpsState = await locationService.request_location(); weatherState = undefined; if (route === "gps") renderGps(); }
-function persistUser(user) { const state = workspace(); state.users = state.users.filter((item) => item.user_id !== user.user_id); state.users.push(user); state.active_user_id = user.user_id; repository.save(state); }
-
 function updateStagePreview() {
   const target = root.querySelector("[data-stage-preview]"); if (!target) return;
   if (!draft.date) { target.innerHTML = `<p class="stage-placeholder">ⓘ เลือกวันที่ ระบบจะแสดงอายุข้าว ระยะ และ CMP โดยอัตโนมัติ</p>`; return; }
@@ -270,8 +268,9 @@ root.addEventListener("input", (event) => {
 
 root.addEventListener("submit", async (event) => {
   if (event.target.matches("[data-login-form]")) {
-    event.preventDefault(); const credentials = readLoginCredentials(event.target);
-    try { const user = resolveMockUser(credentials.username, credentials.password); persistUser(user); formError = null; route = "gps"; render(); requestGps(); } catch (error) { formError = error.message; renderLogin(); }
+    event.preventDefault();
+    const password = event.target.elements.namedItem("password")?.value ?? "";
+    try { const result = loginToPrototypeWorkspace(repository, password); formError = null; route = result.nextRoute; render(); requestGps(); } catch (error) { formError = error.message; renderLogin(); }
   }
   if (event.target.matches("[data-details-form]")) {
     event.preventDefault(); updateDraftFromDetailsForm(event.target);
@@ -307,8 +306,6 @@ root.addEventListener("submit", async (event) => {
 });
 
 root.addEventListener("click", (event) => {
-  const loginIdentity = developmentMode && event.target.closest?.('[data-action="toggle-password"]') ? captureLoginIdentity(root) : null;
-  if (handleLoginInteraction(event, root)) { if (loginIdentity) assertLoginIdentity(root, loginIdentity); return; }
   const routeTarget = event.target.closest("[data-route]");
   if (routeTarget) { event.preventDefault(); const next = routeTarget.dataset.route; if (next === "create" && route === "create" && draft.step > 1) draft.step -= 1; else route = next; formError = null; render(); return; }
   const fieldTarget = event.target.closest("[data-field-open]"); if (fieldTarget) { selectedFieldId = fieldTarget.dataset.fieldOpen; fieldService.select_field(selectedFieldId, currentUser().user_id); route = "field-detail"; render(); return; }
@@ -333,7 +330,6 @@ root.addEventListener("click", (event) => {
   if (mapAction === "add-center") { setMapPoint(0.5, 0.5); return; }
   if (mapAction === "finish") { if (draft.points.length >= 3) { draft.closed = true; formError = null; renderCreateField(); } return; }
   const action = event.target.closest("[data-action]")?.dataset.action;
-  if (action === "forgot-password") { formError = "ระบบกู้รหัสผ่านจะเปิดให้ใช้งานในรุ่นถัดไป"; renderLogin(); return; }
   if (action === "gps-skip") { gpsState = { status: "SKIPPED", message: "ข้ามการใช้ตำแหน่งแล้ว คุณยังใช้งานส่วนอื่นได้" }; route = "home"; render(); return; }
   if (action === "gps-retry") { requestGps(); return; }
   if (action === "weather-refresh") { weatherState = undefined; render(); refreshWeather(); return; }

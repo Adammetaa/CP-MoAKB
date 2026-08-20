@@ -1,14 +1,14 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { resolveMockUser } from "../assets/field-core.js";
 import { FieldService, LocationService, MapService, StageService, WorkspaceRepository } from "../assets/field-services.js";
+import { loginToPrototypeWorkspace } from "../assets/prototype-login.js";
 import { loadConfiguration, MemoryStorage, trianglePoints } from "./support.mjs";
 
-test("golden flow: SPA1 login to GPS fallback to persisted field reopen", async () => {
+test("golden flow: fixed-password login to GPS fallback to persisted field reopen", async () => {
   const storage = new MemoryStorage();
   const repository = new WorkspaceRepository(storage);
-  const user = resolveMockUser("SPA1", "prototype-password", new Date("2026-08-20T08:00:00Z"));
-  const state = repository.load(); state.users.push(user); state.active_user_id = user.user_id; repository.save(state);
+  const { user, nextRoute } = loginToPrototypeWorkspace(repository, "1234", new Date("2026-08-20T08:00:00Z"), { randomUUID: () => "golden-session" });
+  assert.equal(nextRoute, "gps");
 
   const location = await new LocationService(null, repository).request_location();
   assert.equal(location.status, "UNAVAILABLE");

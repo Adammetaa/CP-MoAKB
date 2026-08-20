@@ -14,6 +14,7 @@ const fieldApp = await readFile(resolve(root, "assets", "field-app.js"), "utf8")
 const fieldCore = await readFile(resolve(root, "assets", "field-core.js"), "utf8");
 const fieldServices = await readFile(resolve(root, "assets", "field-services.js"), "utf8");
 const fieldStyles = await readFile(resolve(root, "assets", "field-shell.css"), "utf8");
+const prototypeLogin = await readFile(resolve(root, "assets", "prototype-login.js"), "utf8");
 const investigationConfig = JSON.parse(await readFile(resolve(root, "assets", "investigation-config.json"), "utf8"));
 const fieldConfig = JSON.parse(await readFile(resolve(root, "assets", "field-config.json"), "utf8"));
 const failures = [];
@@ -68,10 +69,20 @@ for (const required of ["class=\"workspace\"", "chat-shell", "data-problem", "as
 for (const prohibited of ["id=\"field-app\"", "field-shell.css", "field-app.js"]) {
   if (legacyHtml.includes(prohibited)) failures.push(`legacy.html contains Field Workspace surface: ${prohibited}`);
 }
-for (const required of ["field-shell.css?v=hotfix-4", "field-app.js?v=hotfix-4"]) {
-  if (!html.includes(required)) failures.push(`index.html missing hotfix-4 cache key: ${required}`);
+for (const required of ["field-shell.css?v=fixed-login-1", "field-app.js?v=fixed-login-1"]) {
+  if (!html.includes(required)) failures.push(`index.html missing fixed-login cache key: ${required}`);
 }
-if (!fieldApp.includes('login-interactions.js?v=hotfix-4')) failures.push("field-app.js missing login interaction cache key");
+if (!fieldApp.includes('prototype-login.js?v=fixed-login-1')) failures.push("field-app.js missing fixed prototype login module");
+const loginView = fieldApp.match(/function renderLogin\(\)[\s\S]*?function renderGps\(\)/)?.[0] ?? "";
+for (const required of ['name="password"', 'type="password"', "เข้าสู่ระบบ", "สำหรับทดสอบภายใน"]) {
+  if (!loginView.includes(required)) failures.push(`Login missing minimal access control: ${required}`);
+}
+for (const prohibited of ["username", "ชื่อผู้ใช้", "toggle-password", "forgot-password", "ลืมรหัสผ่าน", "aria-pressed"]) {
+  if (loginView.includes(prohibited)) failures.push(`Login contains removed control: ${prohibited}`);
+}
+for (const required of ["prototype-spa-001", 'username: "SPA1"', 'display_name: "ผู้ใช้งานทดสอบ"', 'role: "SPA"', 'submittedPassword !== "1234"', "กรุณากรอกรหัสผ่าน", "รหัสผ่านไม่ถูกต้อง", 'nextRoute: "gps"', "state.active_user_id = user.user_id"]) {
+  if (!prototypeLogin.includes(required)) failures.push(`prototype-login.js missing fixed access contract: ${required}`);
+}
 for (const required of ["MODEL_CONTRACTS", "RELATIONSHIP_BACKBONE", "stage_provenance", "field_id", "decision_log_id"]) {
   if (!fieldCore.includes(required)) failures.push(`field-core.js missing contract: ${required}`);
 }
