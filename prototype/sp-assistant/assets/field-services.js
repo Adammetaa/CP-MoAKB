@@ -13,7 +13,7 @@ import {
 } from "./field-core.js?v=fixed-login-1";
 
 export class WorkspaceRepository {
-  constructor(storage, key = "cpmoakb.field-workspace.v1") { this.storage = storage; this.key = key; }
+  constructor(storage, key = "cpmoakb.field-workspace.v1", onSave = null) { this.storage = storage; this.key = key; this.onSave = onSave; }
   load() {
     const raw = this.storage?.getItem?.(this.key);
     if (!raw) return createEmptyWorkspace();
@@ -25,7 +25,8 @@ export class WorkspaceRepository {
       return merged;
     } catch { return createEmptyWorkspace(); }
   }
-  save(state) { this.storage?.setItem?.(this.key, JSON.stringify(state)); return state; }
+  save(state, { sync = true } = {}) { this.storage?.setItem?.(this.key, JSON.stringify(state)); if (sync) this.onSave?.(state); return state; }
+  import(state) { return this.save(state, { sync:false }); }
   clear() { this.storage?.removeItem?.(this.key); }
 }
 
@@ -184,7 +185,7 @@ export class EvidenceService {
     const checked = context.case_id ? this.context.assert_case_context(context) : this.context.assert_conversation_context(context), state = checked.state;
     if (record.observation_id && !state.observations.some((item) => item.observation_id === record.observation_id && item.case_id === context.case_id)) throw new Error("observation evidence context mismatch");
     if (context.conversation_id && !state.conversations.some((item) => item.conversation_id === context.conversation_id && item.user_id === context.user_id && item.field_id === context.field_id && item.season_id === context.season_id && (!context.case_id || item.case_id === context.case_id))) throw new Error("conversation evidence context mismatch");
-    const item = { evidence_id: createStableId("evidence"), user_id: context.user_id, field_id: context.field_id, season_id: context.season_id, case_id: context.case_id ?? null, observation_id: record.observation_id ?? null, conversation_id: context.conversation_id ?? record.conversation_id ?? null, source_type: record.source_type ?? "USER_UPLOAD", file_name: record.file_name ?? null, media_type: record.media_type ?? null, size_bytes: record.size_bytes ?? null, received_at: this.clock().toISOString(), analysis_state: "PHOTO_RECEIVED", user_provenance: record.user_provenance ?? "USER_SUBMITTED", lineage: record.lineage ?? ["USER_SUBMITTED_MEDIA"], boundary: PHOTO_EVIDENCE_BOUNDARY };
+    const item = { evidence_id: createStableId("evidence"), user_id: context.user_id, field_id: context.field_id, season_id: context.season_id, case_id: context.case_id ?? null, observation_id: record.observation_id ?? null, conversation_id: context.conversation_id ?? record.conversation_id ?? null, source_type: record.source_type ?? "USER_UPLOAD", file_name: record.file_name ?? null, storage_key:record.storage_key ?? null, media_type: record.media_type ?? null, size_bytes: record.size_bytes ?? null, received_at: this.clock().toISOString(), analysis_state: "PHOTO_RECEIVED", processing_status:"NOT_ANALYZED", user_provenance: record.user_provenance ?? "USER_SUBMITTED", lineage: record.lineage ?? ["USER_SUBMITTED_MEDIA"], boundary: PHOTO_EVIDENCE_BOUNDARY };
     state.evidence.push(item); this.repository.save(state); return item;
   }
   get_evidence(context) { const { state } = context.case_id ? this.context.assert_case_context(context) : this.context.assert_conversation_context(context); return state.evidence.filter((item) => item.user_id === context.user_id && item.field_id === context.field_id && item.season_id === context.season_id && (context.case_id ? item.case_id === context.case_id : item.conversation_id === context.conversation_id)); }
@@ -195,7 +196,7 @@ export class ConversationService {
   create_conversation(context, scope = CONVERSATION_SCOPES.FIELD_SCOPED) { const { state } = this.context.assert_field_context(context); if (!Object.values(CONVERSATION_SCOPES).includes(scope)) throw new Error("invalid conversation scope"); if (context.case_id) this.context.assert_case_context(context); const item = { conversation_id: createStableId("conversation"), user_id: context.user_id, field_id: context.field_id, season_id: context.season_id, case_id: context.case_id ?? null, scope, created_at: this.clock().toISOString() }; state.conversations.push(item); this.repository.save(state); return item; }
   find_field_conversation(context) { const { state } = this.context.assert_field_context(context); return state.conversations.find((item) => item.user_id === context.user_id && item.field_id === context.field_id && item.season_id === context.season_id && item.scope === CONVERSATION_SCOPES.FIELD_SCOPED && item.case_id === null) ?? null; }
   list_messages(context) { const { state } = this.context.assert_conversation_context(context); return state.messages.filter((item) => item.user_id === context.user_id && item.field_id === context.field_id && item.season_id === context.season_id && item.conversation_id === context.conversation_id); }
-  append_message(context, message) { const { state } = this.context.assert_conversation_context(context); const item = { message_id: createStableId("message"), user_id: context.user_id, field_id: context.field_id, season_id: context.season_id, case_id: context.case_id ?? null, conversation_id: context.conversation_id, role: message.role, content: message.content, message_type: message.message_type ?? "TEXT", evidence_id: message.evidence_id ?? null, created_at: this.clock().toISOString() }; state.messages.push(item); this.repository.save(state); return item; }
+  append_message(context, message) { const { state } = this.context.assert_conversation_context(context); const item = { message_id: createStableId("message"), user_id: context.user_id, field_id: context.field_id, season_id: context.season_id, case_id: context.case_id ?? null, conversation_id: context.conversation_id, role: message.role, content: message.content, message_type: message.message_type ?? "TEXT", evidence_id: message.evidence_id ?? null, provider: message.provider ?? null, model: message.model ?? null, provider_response_id: message.response_id ?? null, status: message.status ?? "SAVED", error_code: message.error_code ?? null, created_at: this.clock().toISOString() }; state.messages.push(item); this.repository.save(state); return item; }
 }
 
 export class KnowledgeService { constructor(adapter = null) { this.adapter = adapter; } resolve_entity(query) { return this.adapter?.resolve_entity?.(query) ?? null; } retrieve_knowledge(query) { return this.adapter?.retrieve_knowledge?.(query) ?? []; } get_relationships(identifier) { return this.adapter?.get_relationships?.(identifier) ?? []; } }

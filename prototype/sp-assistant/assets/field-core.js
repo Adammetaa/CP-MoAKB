@@ -90,5 +90,5 @@ export function differenceInCalendarDays(later, earlier) {
 }
 
 export function createEmptyWorkspace() {
-  return { schema_version: 2, users: [], fields: [], seasons: [], activities: [], cases: [], observations: [], evidence: [], conversations: [], messages: [], guidance: [], recommendations: [], management_options: [], decision_logs: [], case_summaries: [], follow_ups: [], outcomes: [], alerts: [], knowledge_objects: [], active_user_id: null, selected_field_id: null, location_context: null };
+  return { schema_version: 2, users: [], fields: [], seasons: [], activities: [], cases: [], observations: [], evidence: [], conversations: [], messages: [], guidance: [], recommendations: [], management_options: [], decision_logs: [], case_summaries: [], follow_ups: [], outcomes: [], alerts: [], knowledge_objects: [], weather_snapshots: [], active_user_id: null, selected_field_id: null, location_context: null };
 }

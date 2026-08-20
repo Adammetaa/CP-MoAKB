@@ -1,9 +1,10 @@
-import { CONVERSATION_SCOPES, PHOTO_EVIDENCE_BOUNDARY, STAGE_PROVENANCE, validateFieldName } from "./field-core.js?v=fixed-login-1";
+import { CONVERSATION_SCOPES, PHOTO_EVIDENCE_BOUNDARY, STAGE_PROVENANCE, createStableId, validateFieldName } from "./field-core.js?v=fixed-login-1";
 import { ConversationService, DecisionService, EvidenceService, FieldService, GuidanceService, InvestigationService, LLMGateway, LocationService, MapService, StageService, WeatherService, WorkspaceRepository, loadFieldConfiguration, loadInvestigationConfiguration } from "./field-services.js?v=real-weather-2";
 import { loginToPrototypeWorkspace } from "./prototype-login.js?v=fixed-login-1";
 import { findOwnedRouteTarget } from "./route-interactions.js?v=login-route-fix-1";
 import { createPreferredMapAdapter, mountGoogleFieldPreview } from "./browser-map-adapter.js?v=google-satellite-3";
 import { ServerLLMAdapter } from "./server-llm-adapter.js?v=server-ai-1";
+import { ServerWorkspaceAdapter } from "./server-workspace-adapter.js?v=pilot-data-1";
 
 const FIELD_RUNTIME_KEY = "__cpmoakbFieldWorkspaceRuntime";
 if (!window[FIELD_RUNTIME_KEY]) {
@@ -22,7 +23,8 @@ function assertSingleRuntimeDocument() {
   console.assert(!document.querySelector(".workspace"), "SP Assistant: legacy workspace must not exist on normal routes");
 }
 assertSingleRuntimeDocument();
-const repository = new WorkspaceRepository(window.localStorage);
+const serverWorkspace = new ServerWorkspaceAdapter();
+const repository = new WorkspaceRepository(window.localStorage, "cpmoakb.field-workspace.v1", (state) => serverWorkspace.push(state));
 const fieldService = new FieldService(repository);
 const locationService = new LocationService(navigator.geolocation, repository);
 const mapService = new MapService();
@@ -42,6 +44,8 @@ let draft = createDraft();
 let activeMapAdapter = null;
 let activeFieldPreviewCleanups = [];
 let activeCaseId = null, activeConversationId = null, selectedManagementOptionId = null;
+let chatPending = false, chatRetryText = null;
+let pilotSummary = null;
 
 function createDraft() {
   const location = repository.load().location_context;
@@ -260,7 +264,18 @@ function ensureFieldConversation() {
 function renderFreeChat() {
   const field = selectedField(); if (!field) { route = "fields"; render(); return; }
   const conversation = ensureFieldConversation(), context = conversationContext(conversation.conversation_id, null, field), messages = conversationService.list_messages(context);
-  root.innerHTML = `${appHeader({ back: "field-detail" })}<main class="free-chat-main"><section class="chat-field-context"><span>✓ แปลงที่เลือกอยู่</span><strong>${escapeHtml(field.name)}</strong><small>${escapeHtml(field.current_cmp_stage.label)} · ${escapeHtml(field.field_id)}</small></section><section class="free-chat-thread">${messages.length ? messages.map((message) => `<article class="free-message ${message.role.toLowerCase()}"><span>${message.role === "USER" ? "คุณ" : "SP"}</span><div><p>${escapeHtml(message.content)}</p>${message.evidence_id ? `<small>PHOTO RECEIVED · ยังไม่ได้วิเคราะห์</small>` : ""}<time>${new Intl.DateTimeFormat("th-TH", { hour:"2-digit", minute:"2-digit" }).format(new Date(message.created_at))}</time></div></article>`).join("") : `<article class="free-message assistant"><span>SP</span><div><p>สวัสดีครับ ถามเรื่องแปลงนี้ได้เลย หรือเริ่มการตรวจแบบมีขั้นตอนได้ครับ</p><small>ข้อมูลกำกับยังมาจาก CP-MoAKB · บริการ AI ภายนอกยังไม่เชื่อมต่อ</small></div></article>`}<div class="chat-suggestions"><button type="button" data-action="start-full-inspection">⌕ เริ่มตรวจสุขภาพแปลง</button><button type="button" data-chat-prompt="ช่วยจัดสิ่งที่ควรสังเกตในแปลงนี้">สิ่งที่ควรสังเกต</button><button type="button" data-chat-prompt="ผมมีภาพจากแปลง">ส่งภาพจากแปลง</button></div></section><form class="free-chat-composer" data-free-chat-form><label class="camera-control" aria-label="แนบรูป"><input type="file" accept="image/*" capture="environment" data-chat-photo><span>▣</span></label><input name="message" placeholder="พิมพ์ข้อความ…" required><button type="submit" aria-label="ส่งข้อความ">↑</button></form></main>${bottomNavigation("free-chat")}`;
+  root.innerHTML = `${appHeader({ back: "field-detail" })}<main class="free-chat-main"><section class="chat-field-context"><span>✓ แปลงที่เลือกอยู่</span><strong>${escapeHtml(field.name)}</strong><small>${escapeHtml(field.current_cmp_stage.label)} · ${escapeHtml(field.field_id)}</small></section><p class="chat-boundary">คำตอบเป็นข้อมูลช่วยพิจารณา ไม่ใช่การยืนยันการวินิจฉัย</p><section class="free-chat-thread">${messages.length ? messages.map((message) => `<article class="free-message ${message.role.toLowerCase()}"><span>${message.role === "USER" ? "คุณ" : "SP"}</span><div><p>${escapeHtml(message.content)}</p>${message.evidence_id ? `<small>PHOTO RECEIVED · ยังไม่ได้วิเคราะห์</small>` : ""}<time>${new Intl.DateTimeFormat("th-TH", { hour:"2-digit", minute:"2-digit" }).format(new Date(message.created_at))}</time></div></article>`).join("") : `<article class="free-message assistant"><span>SP</span><div><p>สวัสดีครับ ถามเรื่องแปลงนี้ได้เลย หรือเริ่มการตรวจแบบมีขั้นตอนได้ครับ</p><small>คำตอบ AI จะถูกเก็บในบทสนทนาของแปลงและฤดูนี้</small></div></article>`}${chatPending ? `<article class="free-message assistant pending"><span>SP</span><div><p>กำลังประมวลผล…</p></div></article>` : ""}${chatRetryText ? `<button class="chat-retry" type="button" data-action="retry-chat">ลองใหม่โดยไม่ส่งข้อความซ้ำ</button>` : ""}<div class="chat-suggestions"><button type="button" data-action="start-full-inspection">⌕ เริ่มตรวจสุขภาพแปลง</button><button type="button" data-chat-prompt="ช่วยจัดสิ่งที่ควรสังเกตในแปลงนี้">สิ่งที่ควรสังเกต</button><button type="button" data-chat-prompt="ผมมีภาพจากแปลง">ส่งภาพจากแปลง</button></div></section><form class="free-chat-composer" data-free-chat-form><label class="camera-control" aria-label="แนบรูป"><input type="file" accept="image/*" capture="environment" data-chat-photo ${chatPending ? "disabled" : ""}><span>▣</span></label><input name="message" placeholder="พิมพ์ข้อความ…" required ${chatPending ? "disabled" : ""}><button type="submit" aria-label="ส่งข้อความ" ${chatPending ? "disabled" : ""}>↑</button></form></main>${bottomNavigation("free-chat")}`;
+}
+
+async function sendFieldChat(text, { appendUser = true } = {}) {
+  if (chatPending || !text) return;
+  const context = conversationContext(activeConversationId, null);
+  if (appendUser) conversationService.append_message(context, { role:"USER", content:text, status:"SAVED" });
+  chatPending = true; chatRetryText = null; renderFreeChat();
+  const response = await llmGateway.chat({ scope:"FIELD_SCOPED", field_id:context.field_id, season_id:context.season_id, message:text });
+  chatPending = false;
+  conversationService.append_message(context, { role:"ASSISTANT", content:response.message, message_type:response.status, status:response.status === "AVAILABLE" ? "SAVED" : "FAILED", provider:response.provider, model:response.model, response_id:response.response_id, error_code:response.status === "AVAILABLE" ? null : "PROVIDER_UNAVAILABLE" });
+  chatRetryText = response.status === "AVAILABLE" ? null : text; renderFreeChat();
 }
 
 function renderLearn() {
@@ -269,7 +284,12 @@ function renderLearn() {
 
 function renderProfile() {
   const user = currentUser();
-  root.innerHTML = `${appHeader({ back: "home" })}<main class="app-main simple-page"><div class="profile-card"><div class="large-avatar">👨🏽‍🌾</div><p class="eyebrow">บัญชีต้นแบบ</p><h1>${escapeHtml(user.display_name)}</h1><p>${escapeHtml(user.username)} · ${escapeHtml(user.role)}</p><dl><div><dt>รหัสผู้ใช้</dt><dd>${escapeHtml(user.user_id)}</dd></div><div><dt>โหมดเข้าสู่ระบบ</dt><dd>${escapeHtml(user.session.authentication_mode)}</dd></div></dl><button class="secondary-action" type="button" data-action="logout">ออกจากระบบ</button></div></main>${bottomNavigation("profile")}`;
+  root.innerHTML = `${appHeader({ back: "home" })}<main class="app-main simple-page"><div class="profile-card"><div class="large-avatar">👨🏽‍🌾</div><p class="eyebrow">บัญชีต้นแบบ</p><h1>${escapeHtml(user.display_name)}</h1><p>${escapeHtml(user.username)} · ${escapeHtml(user.role)}</p><dl><div><dt>รหัสผู้ใช้</dt><dd>${escapeHtml(user.user_id)}</dd></div><div><dt>โหมดเข้าสู่ระบบ</dt><dd>${escapeHtml(user.session.authentication_mode)}</dd></div></dl><button class="primary-action" type="button" data-action="open-pilot-diagnostics">สถานะ Internal Pilot</button><button class="secondary-action" type="button" data-action="logout">ออกจากระบบ</button></div></main>${bottomNavigation("profile")}`;
+}
+
+async function renderPilotDiagnostics() {
+  root.innerHTML = `${appHeader({ back:"profile" })}<main class="app-main simple-page"><p class="eyebrow">INTERNAL PILOT</p><h1>สถานะระบบและถังข้อมูล</h1><div class="profile-card"><p>กำลังตรวจสอบ…</p></div></main>${bottomNavigation("profile")}`;
+  try { pilotSummary = await serverWorkspace.summary(); root.innerHTML = `${appHeader({ back:"profile" })}<main class="app-main simple-page"><p class="eyebrow">INTERNAL PILOT</p><h1>สถานะระบบและถังข้อมูล</h1><div class="profile-card pilot-diagnostics"><dl><div><dt>ฐานข้อมูล</dt><dd>พร้อมใช้งาน</dd></div><div><dt>OpenAI</dt><dd>${pilotSummary.ai_configured ? "พร้อม" : "ยังไม่ตั้งค่า"} · ${escapeHtml(pilotSummary.model)}</dd></div><div><dt>แปลง / ฤดูปลูก</dt><dd>${pilotSummary.fields} / ${pilotSummary.seasons}</dd></div><div><dt>บทสนทนา / ข้อความ</dt><dd>${pilotSummary.conversations} / ${pilotSummary.messages}</dd></div><div><dt>เคส / หลักฐาน</dt><dd>${pilotSummary.cases} / ${pilotSummary.evidence}</dd></div><div><dt>Export ล่าสุด</dt><dd>${escapeHtml(pilotSummary.last_export_at ?? "ยังไม่มี")}</dd></div><div><dt>Backup ล่าสุด</dt><dd>${escapeHtml(pilotSummary.last_backup_at ?? "ยังไม่มี")}</dd></div></dl><button class="primary-action" type="button" data-action="pilot-export">Export JSON/CSV</button><button class="secondary-action" type="button" data-action="pilot-backup">สร้าง Backup</button>${notice ? `<p class="success-note">${escapeHtml(notice)}</p>` : ""}</div></main>${bottomNavigation("profile")}`; } catch (error) { formError = error.message; renderError(); }
 }
 
 function renderError() { root.innerHTML = `<main class="state-view"><div class="error-state-icon">!</div><h1>เตรียมพื้นที่ทำงานไม่สำเร็จ</h1><p>${escapeHtml(formError ?? "เกิดข้อผิดพลาดที่ไม่คาดคิด")}</p><button class="primary-action compact-action" type="button" data-action="reload">ลองใหม่</button></main>`; }
@@ -279,12 +299,12 @@ function render() {
   if (!['home', 'fields', 'field-detail'].includes(route)) clearFieldSatellitePreviews();
   document.body.removeAttribute("data-route");
   document.body.dataset.currentRoute = route;
-  if (route === "loading") renderLoading(); else if (route === "login") renderLogin(); else if (route === "gps") renderGps(); else if (route === "home") renderHome(); else if (route === "fields") renderFields(); else if (route === "create") renderCreateField(); else if (route === "field-detail") renderFieldDetail(); else if (route === "inspection") renderInspection(); else if (route === "summary") renderSummary(); else if (route === "free-chat") renderFreeChat(); else if (route === "learn") renderLearn(); else if (route === "profile") renderProfile(); else renderError();
+  if (route === "loading") renderLoading(); else if (route === "login") renderLogin(); else if (route === "gps") renderGps(); else if (route === "home") renderHome(); else if (route === "fields") renderFields(); else if (route === "create") renderCreateField(); else if (route === "field-detail") renderFieldDetail(); else if (route === "inspection") renderInspection(); else if (route === "summary") renderSummary(); else if (route === "free-chat") renderFreeChat(); else if (route === "learn") renderLearn(); else if (route === "profile") renderProfile(); else if (route === "pilot-diagnostics") renderPilotDiagnostics(); else renderError();
   window.scrollTo({ top: 0, behavior: "instant" });
 }
 
 function weatherTarget() { const field = selectedField(); return field?.centroid ? { status: "AVAILABLE", latitude: field.centroid.latitude, longitude: field.centroid.longitude, source: "FIELD_CENTROID", field_id: field.field_id } : locationService.get_current_location(); }
-async function refreshWeather() { weatherState = await weatherService.get_weather(weatherTarget()); if (route === "home") renderHome(); else if (route === "field-detail") renderFieldDetail(); }
+async function refreshWeather() { weatherState = await weatherService.get_weather(weatherTarget()); const field = selectedField(); if (field && weatherState?.status === "AVAILABLE") { const state = workspace(); state.weather_snapshots.push({ weather_snapshot_id:createStableId("weather"), field_id:field.field_id, season_id:field.season_id, provider:weatherState.provider ?? "OPEN_METEO", observed_at:weatherState.observation_at ?? null, fetched_at:weatherState.updated_at ?? new Date().toISOString(), temperature:weatherState.temperature, wind:weatherState.wind_speed, description:weatherState.condition, status:"AVAILABLE" }); repository.save(state); } if (route === "home") renderHome(); else if (route === "field-detail") renderFieldDetail(); }
 async function requestGps() { gpsState = { status: "REQUESTING" }; renderGps(); gpsState = await locationService.request_location(); weatherState = undefined; if (route === "gps") renderGps(); }
 function updateStagePreview() {
   const target = root.querySelector("[data-stage-preview]"); if (!target) return;
@@ -306,7 +326,7 @@ root.addEventListener("submit", async (event) => {
   if (event.target.matches("[data-login-form]")) {
     event.preventDefault();
     const password = event.target.elements.namedItem("password")?.value ?? "";
-    try { const result = loginToPrototypeWorkspace(repository, password); formError = null; route = result.nextRoute; render(); requestGps(); } catch (error) { formError = error.message; renderLogin(); }
+    try { const result = loginToPrototypeWorkspace(repository, password); await serverWorkspace.authenticate(password, result.user.user_id); const serverState = await serverWorkspace.pull(); if (serverState) { serverState.active_user_id = result.user.user_id; repository.import(serverState); } else { const localState = repository.load(), counts = `${localState.fields.length} แปลง, ${localState.conversations.length} บทสนทนา และ ${localState.cases.length} เคส`; if (window.confirm(`พบข้อมูล Prototype ในเครื่อง (${counts})\n\nย้ายสำเนาไปเก็บในถังข้อมูล Internal Pilot หรือไม่?\nข้อมูลเดิมใน browser จะไม่ถูกลบ`)) { localState.pilot_migration = { status:"IMPORTED", imported_at:new Date().toISOString() }; repository.save(localState); } } formError = null; route = result.nextRoute; render(); requestGps(); } catch (error) { formError = error.message; renderLogin(); }
   }
   if (event.target.matches("[data-details-form]")) {
     event.preventDefault(); updateDraftFromDetailsForm(event.target);
@@ -334,14 +354,11 @@ root.addEventListener("submit", async (event) => {
   if (event.target.matches("[data-free-chat-form]")) {
     event.preventDefault();
     const text = String(new FormData(event.target).get("message") ?? "").trim(); if (!text) return;
-    const context = conversationContext(activeConversationId, null); conversationService.append_message(context, { role: "USER", content: text });
-    const response = await llmGateway.chat({ scope: "FIELD_SCOPED", field_id: context.field_id, season_id: context.season_id, message: text });
-    conversationService.append_message(context, { role: "ASSISTANT", content: response.message, message_type: response.status });
-    event.target.reset(); renderFreeChat();
+    event.target.reset(); await sendFieldChat(text);
   }
 });
 
-root.addEventListener("click", (event) => {
+root.addEventListener("click", async (event) => {
   const routeTarget = findOwnedRouteTarget(event.target, root);
   if (routeTarget) { event.preventDefault(); const next = routeTarget.dataset.route; if (next === "create" && route === "create" && draft.step > 1) draft.step -= 1; else route = next; formError = null; render(); return; }
   const fieldTarget = event.target.closest("[data-field-open]"); if (fieldTarget) { const nextFieldId = fieldTarget.dataset.fieldOpen; if (selectedFieldId !== nextFieldId) weatherState = undefined; selectedFieldId = nextFieldId; fieldService.select_field(selectedFieldId, currentUser().user_id); route = "field-detail"; render(); return; }
@@ -368,6 +385,10 @@ root.addEventListener("click", (event) => {
   if (mapAction === "finish") { if (draft.points.length >= 3) { draft.closed = true; formError = null; renderCreateField(); } return; }
   if (mapAction === "reopen") { draft.closed = false; formError = null; renderCreateField(); return; }
   const action = event.target.closest("[data-action]")?.dataset.action;
+  if (action === "open-pilot-diagnostics") { route = "pilot-diagnostics"; notice = null; render(); return; }
+  if (action === "pilot-export") { const result = await serverWorkspace.exportData(); notice = `Export สำเร็จ: ${result.json_file}`; await renderPilotDiagnostics(); return; }
+  if (action === "pilot-backup") { const result = await serverWorkspace.backup(); notice = `Backup สำเร็จ: ${result.backup_file}`; await renderPilotDiagnostics(); return; }
+  if (action === "retry-chat" && chatRetryText) { await sendFieldChat(chatRetryText, { appendUser:false }); return; }
   if (action === "gps-skip") { gpsState = { status: "SKIPPED", message: "ข้ามการใช้ตำแหน่งแล้ว คุณยังใช้งานส่วนอื่นได้" }; route = "home"; render(); return; }
   if (action === "gps-retry") { requestGps(); return; }
   if (action === "weather-refresh") { weatherState = undefined; render(); refreshWeather(); return; }
@@ -388,14 +409,15 @@ root.addEventListener("change", async (event) => {
   if (event.target.matches("[data-inspection-photo]")) {
     const file = event.target.files?.[0]; if (!file) return;
     const context = { ...caseContext(), conversation_id: activeConversationId }, lastObservation = workspace().observations.filter((item) => item.case_id === activeCaseId).at(-1);
-    const evidence = evidenceService.add_evidence(context, { observation_id: lastObservation?.observation_id ?? null, conversation_id: activeConversationId, source_type: "PHOTO_UPLOAD", file_name: file.name, media_type: file.type, size_bytes: file.size, user_provenance: "USER_SUBMITTED_DURING_INSPECTION" });
+    const upload = await serverWorkspace.uploadEvidence(file, context);
+    const evidence = evidenceService.add_evidence(context, { observation_id: lastObservation?.observation_id ?? null, conversation_id: activeConversationId, source_type: "PHOTO_UPLOAD", file_name: file.name, storage_key:upload.storage_key, media_type: file.type, size_bytes: file.size, user_provenance: "USER_SUBMITTED_DURING_INSPECTION" });
     conversationService.append_message(conversationContext(activeConversationId, activeCaseId), { role: "USER", content: `ส่งภาพ ${file.name}`, message_type: "PHOTO", evidence_id: evidence.evidence_id });
     await llmGateway.analyze_image({ evidence_id: evidence.evidence_id });
     event.target.value = ""; renderInspection(); return;
   }
   if (event.target.matches("[data-chat-photo]")) {
     const file = event.target.files?.[0]; if (!file) return;
-    const context = conversationContext(activeConversationId, null), evidence = evidenceService.add_evidence(context, { conversation_id: activeConversationId, source_type: "PHOTO_UPLOAD", file_name: file.name, media_type: file.type, size_bytes: file.size, user_provenance: "USER_SUBMITTED_IN_FIELD_CHAT" });
+    const context = conversationContext(activeConversationId, null), upload = await serverWorkspace.uploadEvidence(file, context), evidence = evidenceService.add_evidence(context, { conversation_id: activeConversationId, source_type: "PHOTO_UPLOAD", file_name: file.name, storage_key:upload.storage_key, media_type: file.type, size_bytes: file.size, user_provenance: "USER_SUBMITTED_IN_FIELD_CHAT" });
     conversationService.append_message(context, { role: "USER", content: `ส่งภาพ ${file.name}`, message_type: "PHOTO", evidence_id: evidence.evidence_id });
     const result = await llmGateway.analyze_image({ evidence_id: evidence.evidence_id });
     conversationService.append_message(context, { role: "ASSISTANT", content: result.message, message_type: result.status });
@@ -403,6 +425,6 @@ root.addEventListener("change", async (event) => {
   }
 });
 
-async function boot() { renderLoading(); try { [configuration, workflowConfiguration] = await Promise.all([loadFieldConfiguration(), loadInvestigationConfiguration()]); stageService = new StageService(configuration); guidanceService = new GuidanceService(repository, workflowConfiguration); investigationService = new InvestigationService(repository, workflowConfiguration); evidenceService = new EvidenceService(repository); conversationService = new ConversationService(repository); decisionService = new DecisionService(repository, workflowConfiguration); route = currentUser() ? "home" : "login"; render(); } catch (error) { formError = error.message; route = "error"; render(); } }
+async function boot() { renderLoading(); try { [configuration, workflowConfiguration] = await Promise.all([loadFieldConfiguration(), loadInvestigationConfiguration()]); stageService = new StageService(configuration); guidanceService = new GuidanceService(repository, workflowConfiguration); investigationService = new InvestigationService(repository, workflowConfiguration); evidenceService = new EvidenceService(repository); conversationService = new ConversationService(repository); decisionService = new DecisionService(repository, workflowConfiguration); const sessionReady = await serverWorkspace.hasSession(); if (sessionReady && currentUser()) { const serverState = await serverWorkspace.pull(); if (serverState) { serverState.active_user_id = currentUser().user_id; repository.import(serverState); } } else if (currentUser()) { const state = workspace(); state.active_user_id = null; repository.import(state); } route = currentUser() ? "home" : "login"; render(); } catch (error) { formError = error.message; route = "error"; render(); } }
 boot();
 }

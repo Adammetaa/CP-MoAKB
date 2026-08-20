@@ -60,3 +60,4 @@ Thumbs.db
 # Local browser API configuration (never commit keys)
 prototype/sp-assistant/assets/google-maps-key.local.txt
 prototype/sp-assistant/.env.local
+prototype/sp-assistant/data/

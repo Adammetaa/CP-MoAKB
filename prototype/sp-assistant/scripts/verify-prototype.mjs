@@ -73,7 +73,7 @@ for (const required of ["class=\"workspace\"", "chat-shell", "data-problem", "as
 for (const prohibited of ["id=\"field-app\"", "field-shell.css", "field-app.js"]) {
   if (legacyHtml.includes(prohibited)) failures.push(`legacy.html contains Field Workspace surface: ${prohibited}`);
 }
-for (const required of ["field-shell.css?v=server-ai-1", "field-app.js?v=server-ai-1"]) {
+for (const required of ["field-shell.css?v=pilot-data-1", "field-app.js?v=pilot-data-1"]) {
   if (!html.includes(required)) failures.push(`index.html missing fixed-login cache key: ${required}`);
 }
 if (!fieldApp.includes('prototype-login.js?v=fixed-login-1')) failures.push("field-app.js missing fixed prototype login module");
@@ -146,4 +146,4 @@ for (const required of ["action-crop-target-use-authority/v1", "Economic Thresho
   if (!decisionAuthority.includes(required)) failures.push(`decision-authority.js missing authority boundary: ${required}`);
 }
 if (failures.length) throw new Error(`SP Assistant verification failed:\n${failures.join("\n")}`);
-console.log("SP Assistant verified: isolated Field Workspace and legacy documents, governed details, no backend, Thai-first and mobile-safe");
+console.log("SP Assistant verified: isolated Field Workspace and legacy documents, governed details, authenticated pilot storage, Thai-first and mobile-safe");

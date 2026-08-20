@@ -1,7 +1,9 @@
 import { createServer } from "node:http";
-import { readFile } from "node:fs/promises";
+import { randomUUID } from "node:crypto";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { extname, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
+import { PilotStore } from "./pilot-store.mjs";
 
 const ROOT = fileURLToPath(new URL(".", import.meta.url));
 const MIME = { ".html":"text/html; charset=utf-8", ".js":"text/javascript; charset=utf-8", ".mjs":"text/javascript; charset=utf-8", ".css":"text/css; charset=utf-8", ".json":"application/json; charset=utf-8", ".svg":"image/svg+xml", ".png":"image/png", ".ico":"image/x-icon", ".txt":"text/plain; charset=utf-8" };
@@ -20,6 +22,7 @@ export function extractOutputText(response) { return (response?.output ?? []).fl
 async function loadLocalEnvironment() { try { const text = await readFile(resolve(ROOT, ".env.local"), "utf8"); for (const line of text.split(/\r?\n/)) { const match = line.match(/^([A-Z][A-Z0-9_]*)=(.*)$/); if (match && process.env[match[1]] === undefined) process.env[match[1]] = match[2].trim(); } } catch { /* Host environment may provide configuration. */ } }
 async function readJson(request, limit = 32_768) { const chunks = []; let size = 0; for await (const chunk of request) { size += chunk.length; if (size > limit) throw new Error("request too large"); chunks.push(chunk); } return JSON.parse(Buffer.concat(chunks).toString("utf8")); }
 function json(response, status, payload) { response.writeHead(status, { "content-type":"application/json; charset=utf-8", "cache-control":"no-store", "x-content-type-options":"nosniff" }); response.end(JSON.stringify(payload)); }
+function sessionToken(request) { return request.headers.cookie?.split(";").map((item) => item.trim()).find((item) => item.startsWith("pilot_session="))?.slice("pilot_session=".length) ?? null; }
 
 async function handleChat(request, response) {
   if (!process.env.OPENAI_API_KEY || process.env.OPENAI_API_KEY.startsWith("YOUR_")) return json(response, 503, { status:"UNAVAILABLE", message:"ยังไม่ได้ตั้งค่า OpenAI API key ฝั่ง server" });
@@ -41,5 +44,32 @@ async function serveStatic(request, response) {
   catch { json(response, 404, { status:"NOT_FOUND" }); }
 }
 
-export async function startServer({ port } = {}) { await loadLocalEnvironment(); const selectedPort = Number(port ?? process.env.PORT ?? 4173); const server = createServer(async (request, response) => { if (request.method === "GET" && request.url === "/health") return json(response, 200, { status:"ok", ai_configured:Boolean(process.env.OPENAI_API_KEY && !process.env.OPENAI_API_KEY.startsWith("YOUR_")), model:process.env.OPENAI_MODEL || "gpt-5.6-luna" }); if (request.method === "POST" && request.url === "/api/assistant/chat") return handleChat(request, response); if (request.method === "GET" || request.method === "HEAD") return serveStatic(request, response); return json(response, 405, { status:"METHOD_NOT_ALLOWED" }); }); return new Promise((done, reject) => { server.once("error", reject); server.listen(selectedPort, "127.0.0.1", () => done(server)); }); }
-if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) startServer().then(() => console.log(`SP Assistant server ready at http://localhost:${process.env.PORT ?? 4173}`)).catch((error) => { console.error(error.message); process.exitCode = 1; });
+export async function startServer({ port, host, dbPath, exportDir, uploadDir: configuredUploadDir } = {}) {
+  await loadLocalEnvironment();
+  const selectedPort = Number(port ?? process.env.PORT ?? 4173), selectedHost = host ?? process.env.PILOT_HOST ?? "127.0.0.1";
+  if (!["127.0.0.1", "localhost", "::1"].includes(selectedHost) && process.env.PILOT_ALLOW_LAN !== "true") throw new Error("LAN binding requires PILOT_ALLOW_LAN=true");
+  const uploadDir = resolve(configuredUploadDir ?? process.env.PILOT_UPLOAD_DIR ?? resolve(ROOT, "data/uploads")); await mkdir(uploadDir, { recursive:true });
+  const store = await new PilotStore({ dbPath: dbPath ?? process.env.PILOT_DB_PATH ?? resolve(ROOT, "data/pilot.sqlite"), exportDir: exportDir ?? process.env.PILOT_EXPORT_DIR ?? resolve(ROOT, "data/exports") }).open(), sessions = new Map();
+  const server = createServer(async (request, response) => {
+    const url = new URL(request.url, "http://localhost");
+    try {
+      if (request.method === "GET" && url.pathname === "/health") return json(response, 200, { status:"ok", storage_ready:true, ai_configured:Boolean(process.env.OPENAI_API_KEY && !process.env.OPENAI_API_KEY.startsWith("YOUR_")), model:process.env.OPENAI_MODEL || "gpt-5.6-luna" });
+      if (request.method === "POST" && url.pathname === "/api/pilot/session") { const payload = await readJson(request); if (Object.keys(payload).some((key) => !["password", "user_id"].includes(key)) || payload.password !== "1234" || typeof payload.user_id !== "string") return json(response, 401, { status:"DENIED" }); const token = randomUUID(); sessions.set(token, { user_id:payload.user_id, expires_at:Date.now() + 43_200_000 }); response.writeHead(200, { "content-type":"application/json; charset=utf-8", "cache-control":"no-store", "set-cookie":`pilot_session=${token}; HttpOnly; SameSite=Strict; Path=/; Max-Age=43200` }); return response.end(JSON.stringify({ status:"AUTHENTICATED" })); }
+      const session = sessions.get(sessionToken(request));
+      if (request.method === "GET" && url.pathname === "/api/pilot/session") return session && session.expires_at >= Date.now() ? json(response, 200, { status:"AUTHENTICATED" }) : json(response, 401, { status:"AUTHENTICATION_REQUIRED" });
+      if (url.pathname.startsWith("/api/") && (!session || session.expires_at < Date.now())) return json(response, 401, { status:"AUTHENTICATION_REQUIRED" });
+      if (request.method === "GET" && url.pathname === "/api/pilot/workspace") { const record = store.getWorkspace(session.user_id); return record ? json(response, 200, record) : json(response, 404, { status:"NOT_FOUND" }); }
+      if (request.method === "PUT" && url.pathname === "/api/pilot/workspace") { const payload = await readJson(request, 2_000_000); if (!payload || Object.keys(payload).some((key) => key !== "state")) throw new Error("invalid workspace request"); return json(response, 200, { status:"SAVED", ...store.putWorkspace(session.user_id, payload.state) }); }
+      if (request.method === "GET" && url.pathname === "/api/pilot/summary") return json(response, 200, { status:"ok", ...store.summary(), ai_configured:Boolean(process.env.OPENAI_API_KEY && !process.env.OPENAI_API_KEY.startsWith("YOUR_")), model:process.env.OPENAI_MODEL || "gpt-5.6-luna" });
+      if (request.method === "POST" && url.pathname === "/api/pilot/export") return json(response, 200, { status:"EXPORTED", ...(await store.exportAll()) });
+      if (request.method === "POST" && url.pathname === "/api/pilot/backup") return json(response, 200, { status:"BACKED_UP", ...store.backup() });
+      if (request.method === "POST" && url.pathname === "/api/pilot/evidence") { const payload = await readJson(request, 9_000_000), allowed = { "image/jpeg":"jpg", "image/png":"png", "image/webp":"webp" }; if (!payload || Object.keys(payload).some((key) => !["field_id","season_id","original_filename","media_type","size_bytes","content_base64"].includes(key)) || !allowed[payload.media_type] || !Number.isInteger(payload.size_bytes) || payload.size_bytes > 6_000_000) throw new Error("invalid evidence"); const workspace = store.getWorkspace(session.user_id)?.state; if (!workspace?.fields?.some((item) => item.field_id === payload.field_id && item.owner_user_id === session.user_id) || !workspace?.seasons?.some((item) => item.season_id === payload.season_id && item.field_id === payload.field_id)) throw new Error("evidence context mismatch"); const bytes = Buffer.from(payload.content_base64, "base64"); if (bytes.length !== payload.size_bytes) throw new Error("invalid evidence size"); const storageKey = `${randomUUID()}.${allowed[payload.media_type]}`; await writeFile(resolve(uploadDir, storageKey), bytes, { flag:"wx" }); return json(response, 201, { status:"STORED", storage_key:storageKey, analysis_state:"NOT_ANALYZED" }); }
+      if (request.method === "POST" && url.pathname === "/api/assistant/chat") return handleChat(request, response);
+      if (request.method === "GET" || request.method === "HEAD") return serveStatic(request, response);
+      return json(response, 405, { status:"METHOD_NOT_ALLOWED" });
+    } catch { return json(response, 400, { status:"INVALID_REQUEST", message:"คำขอไม่ถูกต้อง" }); }
+  });
+  server.once("close", () => store.close());
+  return new Promise((done, reject) => { server.once("error", reject); server.listen(selectedPort, selectedHost, () => done(server)); });
+}
+if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) startServer().then(() => console.log(`SP Assistant pilot server ready at http://${process.env.PILOT_HOST ?? "127.0.0.1"}:${process.env.PORT ?? 4173}`)).catch((error) => { console.error(error.message); process.exitCode = 1; });
