@@ -1,5 +1,5 @@
 export class ServerWorkspaceAdapter {
-  constructor(fetcher = (...args) => globalThis.fetch(...args), endpoint = "/api/pilot/workspace") { this.fetcher = fetcher; this.endpoint = endpoint; this.lastError = null; }
+  constructor(fetcher = (...args) => globalThis.fetch(...args), endpoint = "/api/pilot/workspace") { this.fetcher = fetcher; this.endpoint = endpoint; this.lastError = null; this.status = "UNKNOWN"; this.queue = Promise.resolve(); }
   async authenticate(password, userId) {
     const response = await this.fetcher("/api/pilot/session", { method:"POST", headers:{ "content-type":"application/json" }, body:JSON.stringify({ password, user_id:userId }) });
     if (!response.ok) throw new Error("รหัสผ่านไม่ถูกต้อง");
@@ -10,14 +10,19 @@ export class ServerWorkspaceAdapter {
     const response = await this.fetcher(this.endpoint, { headers: { accept: "application/json" } });
     if (response.status === 404) return null;
     if (!response.ok) throw new Error("ไม่สามารถโหลดข้อมูล Pilot จาก server");
-    return (await response.json()).state;
+    const payload = await response.json(); this.status = "SERVER_AUTHORITATIVE"; this.lastError = null; return payload.state;
   }
-  async push(state) {
-    try {
-      const response = await this.fetcher(this.endpoint, { method: "PUT", headers: { "content-type": "application/json" }, body: JSON.stringify({ state }) });
-      if (!response.ok) throw new Error("pilot sync failed");
-      this.lastError = null; return await response.json();
-    } catch (error) { this.lastError = error; return { status: "PENDING_LOCAL", message: "ข้อมูลอยู่ในเครื่องและรอ sync" }; }
+  push(state) {
+    const snapshot = structuredClone(state);
+    this.status = "SYNCING";
+    this.queue = this.queue.catch(() => null).then(async () => {
+      try {
+        const response = await this.fetcher(this.endpoint, { method: "PUT", headers: { "content-type": "application/json" }, body: JSON.stringify({ state:snapshot }) });
+        if (!response.ok) throw new Error("pilot sync failed");
+        this.lastError = null; this.status = "SERVER_AUTHORITATIVE"; return await response.json();
+      } catch (error) { this.lastError = error; this.status = "DEGRADED_CACHE"; return { status: "PENDING_LOCAL", message: "ข้อมูลนี้ยังอยู่ใน cache และยังไม่ยืนยันบน server" }; }
+    });
+    return this.queue;
   }
   async uploadEvidence(file, context) {
     const allowed = new Set(["image/jpeg", "image/png", "image/webp"]);

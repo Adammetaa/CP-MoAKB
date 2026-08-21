@@ -4,11 +4,12 @@ import { readFile } from "node:fs/promises";
 import { MODEL_CONTRACTS, RELATIONSHIP_BACKBONE } from "../assets/field-core.js";
 
 test("core model and relationship contracts are complete", () => {
-  for (const name of ["User", "Field", "Season", "Activity", "Case", "Observation", "Evidence", "Conversation", "Message", "GuidanceItem", "Recommendation", "ManagementOption", "DecisionLog", "FollowUp", "Outcome", "Alert", "KnowledgeObject"]) assert.ok(MODEL_CONTRACTS[name], `missing ${name}`);
+  for (const name of ["User", "Field", "Season", "StageAssessment", "GuidanceState", "Activity", "Case", "Observation", "Evidence", "Conversation", "Message", "GuidanceItem", "Recommendation", "ManagementOption", "DecisionLog", "FollowUp", "Outcome", "Alert", "KnowledgeObject"]) assert.ok(MODEL_CONTRACTS[name], `missing ${name}`);
   assert.deepEqual(RELATIONSHIP_BACKBONE.User, ["Field"]);
   assert.ok(RELATIONSHIP_BACKBONE.Case.includes("DecisionLog"));
   assert.ok(MODEL_CONTRACTS.Field.includes("field_id"));
   assert.ok(MODEL_CONTRACTS.Field.includes("stage_provenance"));
+  assert.deepEqual(RELATIONSHIP_BACKBONE.Season, ["StageAssessment", "GuidanceState"]);
 });
 
 test("new UI has no direct storage writes, OpenAI calls, or entity-specific decision paths", async () => {

@@ -14,6 +14,8 @@ export const MODEL_CONTRACTS = Object.freeze({
   User: ["user_id", "username", "display_name", "role", "session"],
   Field: ["field_id", "owner_user_id", "name", "polygon", "centroid", "area", "crop", "variety", "planting_method", "planting_date", "expected_planting_date", "current_crop_stage", "current_cmp_stage", "season_id", "stage_provenance", "created_at", "updated_at"],
   Season: ["season_id", "field_id", "crop", "started_at", "status"],
+  StageAssessment: ["stage_assessment_id", "user_id", "field_id", "season_id", "crop_age", "crop_stage", "cmp_stage", "provenance", "model_version", "configuration_version", "assessed_at"],
+  GuidanceState: ["guidance_item_id", "user_id", "field_id", "season_id", "status", "updated_at"],
   Activity: ["activity_id", "field_id", "season_id", "activity_type", "occurred_at"],
   Case: ["case_id", "user_id", "field_id", "season_id", "guidance_item_id", "domain", "inspection_flow", "status", "created_at", "completed_at"],
   Observation: ["observation_id", "user_id", "field_id", "season_id", "case_id", "conversation_id", "question_id", "observation_type", "value", "response_mode", "uncertain", "provenance", "created_at"],
@@ -34,6 +36,7 @@ export const MODEL_CONTRACTS = Object.freeze({
 export const RELATIONSHIP_BACKBONE = Object.freeze({
   User: ["Field"],
   Field: ["Season", "Activity", "Alert", "Case"],
+  Season: ["StageAssessment", "GuidanceState"],
   Case: ["Observation", "Evidence", "Conversation", "Recommendation", "ManagementOption", "DecisionLog", "FollowUp", "Outcome"],
 });
 

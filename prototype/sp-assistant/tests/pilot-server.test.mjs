@@ -5,8 +5,8 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { startServer } from "../server.mjs";
 
-async function session(base) {
-  const response = await fetch(`${base}/api/pilot/session`, { method:"POST", headers:{ "content-type":"application/json" }, body:JSON.stringify({ password:"1234", user_id:"prototype-spa-001" }) });
+async function session(base, userId = "prototype-spa-001") {
+  const response = await fetch(`${base}/api/pilot/session`, { method:"POST", headers:{ "content-type":"application/json" }, body:JSON.stringify({ password:"1234", user_id:userId }) });
   assert.equal(response.status, 200); return response.headers.get("set-cookie").split(";")[0];
 }
 
@@ -29,6 +29,14 @@ test("pilot API requires a session and restores workspace after restart", async 
   assert.equal(feedback.status, 201); assert.equal((await feedback.json()).category, "INSPECTION");
   const pilotSummary = await (await fetch(`${base}/api/pilot/summary`, { headers:{ cookie } })).json(); assert.equal(pilotSummary.feedback, 1); assert.equal(pilotSummary.feedback_by_category.INSPECTION, 1); assert.equal(pilotSummary.storage_mode, "LOCAL_SQLITE");
   assert.equal((await fetch(`${base}/api/pilot/workspace`, { method:"PUT", headers:{ cookie, "content-type":"application/json" }, body:JSON.stringify({ state }) })).status, 200);
+  const freshCookie = await session(base);
+  const lifecycle = await (await fetch(`${base}/api/pilot/lifecycle`, { headers:{ cookie:freshCookie } })).json();
+  assert.equal(lifecycle.authority,"SERVER"); assert.equal(lifecycle.fields[0].name,"นาไทย");
+  const otherCookie = await session(base,"prototype-spa-002");
+  assert.equal((await fetch(`${base}/api/pilot/lifecycle`, { headers:{ cookie:otherCookie } })).status,404);
+  const scopedGuidance = await fetch(`${base}/api/pilot/guidance?field_id=field-1&season_id=season-1`, { headers:{ cookie:freshCookie } });
+  assert.equal(scopedGuidance.status,200);
+  assert.equal((await fetch(`${base}/api/pilot/guidance?field_id=field-1&season_id=season-1`, { headers:{ cookie:otherCookie } })).status,404);
   const evidence = { field_id:"field-1", season_id:"season-1", original_filename:"ใบข้าว.png", media_type:"image/png", size_bytes:1, content_base64:"AA==" };
   const evidenceResponse = await fetch(`${base}/api/pilot/evidence`, { method:"POST", headers:{ cookie, "content-type":"application/json" }, body:JSON.stringify(evidence) });
   assert.equal(evidenceResponse.status, 201); assert.equal((await evidenceResponse.json()).analysis_state, "NOT_ANALYZED");

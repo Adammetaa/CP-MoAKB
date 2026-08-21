@@ -90,7 +90,8 @@ function brandMarkup(compact = false) {
 
 function appHeader({ back = null, bell = false } = {}) {
   const user = currentUser();
-  return `<header class="app-header"><div class="app-header-inner">${back ? `<button class="icon-button back-button" type="button" data-route="${back}" aria-label="ย้อนกลับ">←</button>` : ""}${brandMarkup(true)}<div class="header-actions"><button class="icon-button feedback-header-button" type="button" data-action="open-feedback" aria-label="ส่ง Feedback">✎</button>${bell ? `<button class="icon-button notification-button" type="button" data-action="notifications" aria-label="การแจ้งเตือน">♢<span>3</span></button>` : ""}<button class="profile-avatar" type="button" data-route="profile" aria-label="โปรไฟล์ของ ${escapeHtml(user?.display_name)}">👨🏽‍🌾</button></div></div></header>`;
+  const degraded = serverWorkspace.status === "DEGRADED_CACHE" ? `<div class="server-state-warning" role="status">กำลังใช้ข้อมูล cache · การเปลี่ยนแปลงยังไม่ยืนยันบน server</div>` : "";
+  return `<header class="app-header"><div class="app-header-inner">${back ? `<button class="icon-button back-button" type="button" data-route="${back}" aria-label="ย้อนกลับ">←</button>` : ""}${brandMarkup(true)}<div class="header-actions"><button class="icon-button feedback-header-button" type="button" data-action="open-feedback" aria-label="ส่ง Feedback">✎</button>${bell ? `<button class="icon-button notification-button" type="button" data-action="notifications" aria-label="การแจ้งเตือน">♢<span>3</span></button>` : ""}<button class="profile-avatar" type="button" data-route="profile" aria-label="โปรไฟล์ของ ${escapeHtml(user?.display_name)}">👨🏽‍🌾</button></div></div>${degraded}</header>`;
 }
 
 function bottomNavigation(active) {
@@ -382,7 +383,8 @@ root.addEventListener("submit", async (event) => {
       if (draft.stageChoice === STAGE_PROVENANCE.USER_OVERRIDDEN) { const override = configuration.stage_rules.find((item) => item.stage_id === draft.overrideCmpStage); if (!override) throw new Error("กรุณาเลือกระยะข้าวที่ต้องการแก้ไข"); stage = stageService.override_crop_stage(stage, override.crop_stage, override.stage_id, override.label_th); }
       const age = stageService.calculate_crop_age(draft.date);
       const field = fieldService.create_field({ owner_user_id: currentUser().user_id, name: checkedName.value, ...geometry, crop: "rice", variety: draft.variety, planting_method: draft.plantingMethod, planting_date: age.state === "PLANTED" ? draft.date : null, expected_planting_date: age.state === "PLANNED" ? draft.date : null, current_crop_stage: { code: stage.crop_stage, label: stage.crop_stage_label, model_version: stage.model_version, basis: stage.basis }, current_cmp_stage: { stage_id: stage.cmp_stage, label: configuration.stage_rules.find((item) => item.stage_id === stage.cmp_stage)?.label_th ?? stage.crop_stage_label, model_version: stage.model_version }, stage_provenance: stage.provenance });
-      selectedFieldId = field.field_id; draft.step = 3; formError = null; notice = "บันทึกแปลงเรียบร้อยแล้ว"; renderCreateField();
+      await repository.flush();
+      selectedFieldId = field.field_id; draft.step = 3; formError = null; notice = serverWorkspace.status === "SERVER_AUTHORITATIVE" ? "บันทึกแปลงบน server เรียบร้อยแล้ว" : "บันทึกเป็น cache แล้ว แต่ยังไม่ยืนยันบน server"; renderCreateField();
     } catch (error) { formError = error.message; renderCreateField(); }
   }
   if (event.target.matches("[data-inspection-form]")) {

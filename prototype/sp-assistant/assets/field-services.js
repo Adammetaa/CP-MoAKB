@@ -13,7 +13,7 @@ import {
 } from "./field-core.js?v=fixed-login-1";
 
 export class WorkspaceRepository {
-  constructor(storage, key = "cpmoakb.field-workspace.v1", onSave = null) { this.storage = storage; this.key = key; this.onSave = onSave; }
+  constructor(storage, key = "cpmoakb.field-workspace.v1", onSave = null) { this.storage = storage; this.key = key; this.onSave = onSave; this.pendingSave = Promise.resolve(); }
   load() {
     const raw = this.storage?.getItem?.(this.key);
     if (!raw) return createEmptyWorkspace();
@@ -25,7 +25,8 @@ export class WorkspaceRepository {
       return merged;
     } catch { return createEmptyWorkspace(); }
   }
-  save(state, { sync = true } = {}) { this.storage?.setItem?.(this.key, JSON.stringify(state)); if (sync) this.onSave?.(state); return state; }
+  save(state, { sync = true } = {}) { this.storage?.setItem?.(this.key, JSON.stringify(state)); if (sync && this.onSave) this.pendingSave = Promise.resolve(this.onSave(state)); return state; }
+  flush() { return this.pendingSave; }
   import(state) { return this.save(state, { sync:false }); }
   clear() { this.storage?.removeItem?.(this.key); }
 }

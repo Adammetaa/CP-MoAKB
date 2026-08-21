@@ -13,12 +13,16 @@ is prototype access, not production authentication.
 
 Live files are stored below `data/` by default and are ignored by Git:
 
-- `data/pilot.sqlite` — governed pilot workspace snapshots
+- `data/pilot.sqlite` — authoritative Field/Season/Stage/Guidance lifecycle
+  records plus compatibility snapshots for the remaining pilot domains
 - `data/uploads/` — user-submitted evidence; never sent to OpenAI in this block
 - `data/exports/` — timestamped JSON, CSV, and SQLite backups
 
 Use Profile → Internal Pilot to inspect counts, export data, and create a
 backup. Exported data is UTF-8 and preserves stable identifiers and Thai text.
+
+See `LIFECYCLE_ARCHITECTURE.md` for the server-authority, browser-cache,
+identity, migration, and StageAssessment boundaries.
 
 ## Trusted LAN pilot
 
