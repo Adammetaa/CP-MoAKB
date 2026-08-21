@@ -50,6 +50,7 @@ let chatPending = false, chatRetryText = null;
 let pilotSummary = null, dataCatalog = null;
 let knowledgeResults = [], knowledgeQuery = "", knowledgeDomain = "", knowledgeLoading = false, knowledgeError = null, knowledgeSummary = null, knowledgeSummaryPending = false, feedbackNotice = null;
 let companyProgram = null, companyProgramPending = false, companyProgramError = null;
+let feedbackReturnRoute = "home";
 
 function createDraft() {
   const location = repository.load().location_context;
@@ -89,7 +90,7 @@ function brandMarkup(compact = false) {
 
 function appHeader({ back = null, bell = false } = {}) {
   const user = currentUser();
-  return `<header class="app-header"><div class="app-header-inner">${back ? `<button class="icon-button back-button" type="button" data-route="${back}" aria-label="ย้อนกลับ">←</button>` : ""}${brandMarkup(true)}<div class="header-actions">${bell ? `<button class="icon-button notification-button" type="button" data-action="notifications" aria-label="การแจ้งเตือน">♢<span>3</span></button>` : ""}<button class="profile-avatar" type="button" data-route="profile" aria-label="โปรไฟล์ของ ${escapeHtml(user?.display_name)}">👨🏽‍🌾</button></div></div></header>`;
+  return `<header class="app-header"><div class="app-header-inner">${back ? `<button class="icon-button back-button" type="button" data-route="${back}" aria-label="ย้อนกลับ">←</button>` : ""}${brandMarkup(true)}<div class="header-actions"><button class="icon-button feedback-header-button" type="button" data-action="open-feedback" aria-label="ส่ง Feedback">✎</button>${bell ? `<button class="icon-button notification-button" type="button" data-action="notifications" aria-label="การแจ้งเตือน">♢<span>3</span></button>` : ""}<button class="profile-avatar" type="button" data-route="profile" aria-label="โปรไฟล์ของ ${escapeHtml(user?.display_name)}">👨🏽‍🌾</button></div></div></header>`;
 }
 
 function bottomNavigation(active) {
@@ -253,6 +254,7 @@ function renderInspection() {
   const observations = state.observations.filter((item) => item.case_id === activeCaseId), evidence = evidenceService.get_evidence({ ...context, conversation_id: activeConversationId }), flow = workflowConfiguration.flows.find((item) => item.flow_id === caseRecord.inspection_flow);
   const progress = flow?.questions.length ? Math.round((observations.length / flow.questions.length) * 100) : 0;
   root.innerHTML = `${appHeader({ back: "field-detail" })}<main class="inspection-main"><section class="inspection-context"><div><p class="eyebrow">กำลังตรวจ · ${domainLabel(caseRecord.domain)}</p><h1>${escapeHtml(field.name)}</h1><span>${escapeHtml(field.current_cmp_stage.label)} · ${escapeHtml(field.field_id)}</span></div><button class="finish-inspection" type="button" data-action="finish-inspection">จบการตรวจ</button></section><div class="inspection-progress"><span style="width:${progress}%"></span></div><section class="inspection-thread">${observations.map((item) => `<article class="inspection-answer"><small>${escapeHtml(flow?.questions.find((q) => q.question_id === item.question_id)?.prompt_th ?? item.question_id)}</small><p>${item.uncertain ? "? " : ""}${escapeHtml(item.original_text || item.value || "ข้ามคำถาม")}</p></article>`).join("")}${evidence.map((item) => `<article class="photo-evidence-message"><span>▧</span><div><strong>PHOTO RECEIVED</strong><p>${escapeHtml(item.file_name || "ภาพจากผู้ใช้")} · ยังไม่ได้วิเคราะห์ และยังไม่ใช่การยืนยันสาเหตุ</p></div></article>`).join("")}${question ? `<article class="current-question"><div class="assistant-badge">SP</div><div><p class="eyebrow">คำถามที่ ${observations.length + 1} จาก ${flow.questions.length}</p><h2>${escapeHtml(question.prompt_th)}</h2><div class="suggestion-chips">${question.suggestions.map((option) => `<button type="button" data-inspection-response="${option.value}">${escapeHtml(option.label)}</button>`).join("")}${question.allow_skip ? `<button type="button" class="skip-chip" data-inspection-response="SKIP">ข้ามตอนนี้</button>` : ""}</div><p class="question-help">เลือกคำตอบ หรือพิมพ์สิ่งที่เห็นจริงได้เสมอ · รูปที่ส่งจะถูกบันทึกเป็นหลักฐานจากผู้ใช้เท่านั้น</p></div></article>` : `<article class="inspection-complete-card"><span>✓</span><h2>ตอบคำถามในชุดตรวจครบแล้ว</h2><p>กด “จบการตรวจ” เพื่อบันทึกเคสและดูสรุป</p></article>`}</section><form class="inspection-composer" data-inspection-form><label class="camera-control" aria-label="แนบรูป"><input type="file" accept="image/*" capture="environment" data-inspection-photo><span>▣</span></label><input name="observation" placeholder="พิมพ์สิ่งที่สังเกตเห็น…" ${question ? "" : "disabled"}><button type="submit" aria-label="ส่งคำตอบ" ${question ? "" : "disabled"}>↑</button></form></main>${bottomNavigation("fields")}`;
+  if (observations.length) root.querySelector(".inspection-progress")?.insertAdjacentHTML("afterend", `<button class="undo-observation" type="button" data-action="undo-observation">↶ ย้อนแก้คำตอบล่าสุด</button>`);
 }
 
 function ensureSummary(context = caseContext()) {
@@ -314,6 +316,11 @@ async function renderPilotDiagnostics() {
   try { [pilotSummary, dataCatalog] = await Promise.all([serverWorkspace.summary(), serverWorkspace.dataCatalog()]); root.innerHTML = `${appHeader({ back:"profile" })}<main class="app-main simple-page"><p class="eyebrow">INTERNAL PILOT</p><h1>สถานะระบบและถังข้อมูล</h1><div class="profile-card pilot-diagnostics"><dl><div><dt>ฐานข้อมูล</dt><dd>พร้อมใช้งาน</dd></div><div><dt>OpenAI</dt><dd>${pilotSummary.ai_configured ? "พร้อม" : "ยังไม่ตั้งค่า"} · ${escapeHtml(pilotSummary.model)}</dd></div><div><dt>แปลง / ฤดูปลูก</dt><dd>${pilotSummary.fields} / ${pilotSummary.seasons}</dd></div><div><dt>บทสนทนา / ข้อความ</dt><dd>${pilotSummary.conversations} / ${pilotSummary.messages}</dd></div><div><dt>เคส / หลักฐาน</dt><dd>${pilotSummary.cases} / ${pilotSummary.evidence}</dd></div><div><dt>Export ล่าสุด</dt><dd>${escapeHtml(pilotSummary.last_export_at ?? "ยังไม่มี")}</dd></div><div><dt>Backup ล่าสุด</dt><dd>${escapeHtml(pilotSummary.last_backup_at ?? "ยังไม่มี")}</dd></div></dl><section class="data-readiness"><h2>ความพร้อมของข้อมูลบนเว็บ</h2><p>Catalog ${escapeHtml(dataCatalog.catalog_version)} · อัปเดต ${escapeHtml(dataCatalog.updated_at)}</p>${dataCatalog.datasets.map((item) => `<article><strong>${escapeHtml(item.dataset_id)}</strong><span>${escapeHtml(item.status)}</span><small>${escapeHtml(item.limitations[0])}</small></article>`).join("")}</section><button class="primary-action" type="button" data-action="pilot-export">Export JSON/CSV</button><button class="secondary-action" type="button" data-action="pilot-backup">สร้าง Backup</button>${notice ? `<p class="success-note">${escapeHtml(notice)}</p>` : ""}</div></main>${bottomNavigation("profile")}`; } catch (error) { formError = error.message; renderError(); }
 }
 
+function renderFeedback() {
+  const field = selectedField();
+  root.innerHTML = `${appHeader({ back:feedbackReturnRoute })}<main class="app-main feedback-page page-enter"><p class="eyebrow">INTERNAL PILOT FEEDBACK</p><h1>บอกสิ่งที่ติดขัดจากการใช้งานจริง</h1><p>แนบภาพหน้าจอและอธิบายสิ่งที่เกิดขึ้น ระบบจะจัดหมวดเพื่อรวมประเด็นสำหรับพัฒนารอบถัดไป</p><form class="feedback-form" data-pilot-feedback-form><label>เกี่ยวกับเรื่องใด<select name="category" required><option value="">เลือกหมวด</option><option value="MAP">แผนที่ / GPS</option><option value="CHAT">แชท</option><option value="INSPECTION">ขั้นตอนตรวจแปลง</option><option value="SOLUTION">คำแนะนำโซลูชัน</option><option value="MOBILE_UI">การใช้งานบนมือถือ</option><option value="PERFORMANCE">ความเร็ว / การเชื่อมต่อ</option><option value="OTHER">เรื่องอื่น</option></select></label><label>ผลกระทบ<select name="rating" required><option value="MISMATCH">ใช้งานติดขัด / ไม่ตรง</option><option value="NEEDS_DATA">ต้องเพิ่มข้อมูลหรือขั้นตอน</option><option value="WORKS">ใช้ได้ แต่อยากเสนอเพิ่ม</option></select></label><label class="feedback-note">รายละเอียด<textarea name="note" maxlength="500" required placeholder="ทำอะไรอยู่ → เกิดอะไรขึ้น → คาดหวังให้เป็นอย่างไร"></textarea><small>สูงสุด 500 ตัวอักษร</small></label><label class="feedback-photo">แนบภาพ (ไม่บังคับ)<input name="photo" type="file" accept="image/jpeg,image/png,image/webp" capture="environment"><small>JPG, PNG หรือ WebP ไม่เกิน 6 MB</small></label><div class="feedback-context"><span>หน้าที่พบ: ${escapeHtml(feedbackReturnRoute)}</span><span>แปลง: ${escapeHtml(field?.name ?? "ไม่ได้เลือกแปลง")}</span></div>${formError ? `<p class="form-message error">${escapeHtml(formError)}</p>` : ""}<button class="primary-action" type="submit">ส่ง Feedback เข้าถังข้อมูล</button><button class="secondary-action" type="button" data-route="${feedbackReturnRoute}">ยกเลิก</button></form></main>${bottomNavigation("")}`;
+}
+
 function renderError() { root.innerHTML = `<main class="state-view"><div class="error-state-icon">!</div><h1>เตรียมพื้นที่ทำงานไม่สำเร็จ</h1><p>${escapeHtml(formError ?? "เกิดข้อผิดพลาดที่ไม่คาดคิด")}</p><button class="primary-action compact-action" type="button" data-action="reload">ลองใหม่</button></main>`; }
 
 function render() {
@@ -321,6 +328,7 @@ function render() {
   if (!['home', 'fields', 'field-detail'].includes(route)) clearFieldSatellitePreviews();
   document.body.removeAttribute("data-route");
   document.body.dataset.currentRoute = route;
+  if (route === "feedback") { renderFeedback(); window.scrollTo({ top:0, behavior:"instant" }); return; }
   if (route === "loading") renderLoading(); else if (route === "login") renderLogin(); else if (route === "gps") renderGps(); else if (route === "home") renderHome(); else if (route === "fields") renderFields(); else if (route === "create") renderCreateField(); else if (route === "field-detail") renderFieldDetail(); else if (route === "inspection") renderInspection(); else if (route === "summary") renderSummary(); else if (route === "free-chat") renderFreeChat(); else if (route === "learn") renderLearn(); else if (route === "profile") renderProfile(); else if (route === "pilot-diagnostics") renderPilotDiagnostics(); else renderError();
   window.scrollTo({ top: 0, behavior: "instant" });
 }
@@ -345,6 +353,15 @@ root.addEventListener("input", (event) => {
 });
 
 root.addEventListener("submit", async (event) => {
+  if (event.target.matches("[data-pilot-feedback-form]")) {
+    event.preventDefault(); const data = new FormData(event.target), file = data.get("photo"); formError = null;
+    try {
+      const upload = file?.size ? await serverWorkspace.uploadFeedbackImage(file) : null;
+      await serverWorkspace.feedback({ route:feedbackReturnRoute, subject_id:activeCaseId ?? selectedField()?.field_id ?? null, rating:String(data.get("rating")), category:String(data.get("category")), note:String(data.get("note") ?? "").trim(), storage_key:upload?.storage_key ?? null });
+      notice = "บันทึก Feedback แล้ว ข้อมูลจะรวมอยู่ใน Export และ Backup"; route = feedbackReturnRoute; render();
+    } catch (error) { formError = error.message; renderFeedback(); }
+    return;
+  }
   if (event.target.matches("[data-knowledge-search-form]")) {
     event.preventDefault(); const data = new FormData(event.target); knowledgeQuery = String(data.get("query") ?? "").trim(); knowledgeDomain = String(data.get("domain") ?? ""); if (!knowledgeQuery) return;
     knowledgeLoading = true; knowledgeError = null; renderLearn();
@@ -417,6 +434,7 @@ root.addEventListener("click", async (event) => {
   if (mapAction === "finish") { if (draft.points.length >= 3) { draft.closed = true; formError = null; renderCreateField(); } return; }
   if (mapAction === "reopen") { draft.closed = false; formError = null; renderCreateField(); return; }
   const action = event.target.closest("[data-action]")?.dataset.action;
+  if (action === "open-feedback") { feedbackReturnRoute = route === "feedback" ? "home" : route; formError = null; route = "feedback"; render(); return; }
   if (action === "open-pilot-diagnostics") { route = "pilot-diagnostics"; notice = null; render(); return; }
   if (action === "pilot-export") { const result = await serverWorkspace.exportData(); notice = `Export สำเร็จ: ${result.json_file}`; await renderPilotDiagnostics(); return; }
   if (action === "pilot-backup") { const result = await serverWorkspace.backup(); notice = `Backup สำเร็จ: ${result.backup_file}`; await renderPilotDiagnostics(); return; }
@@ -429,6 +447,7 @@ root.addEventListener("click", async (event) => {
   if (action === "start-full-inspection") { const field = selectedField(); if (!field) { route = "fields"; render(); return; } const pending = guidanceService.get_guidance(fieldContext(field)).find((item) => item.status === "PENDING" || item.status === "IN_PROGRESS"); if (pending) startInspection(pending.guidance_item_id); else { notice = "ตรวจรายการที่แนะนำครบแล้ว"; route = "field-detail"; render(); } return; }
   if (action === "open-free-chat") { if (!selectedField()) { route = "fields"; render(); return; } activeCaseId = null; ensureFieldConversation(); route = "free-chat"; render(); return; }
   if (action === "finish-inspection") { const context = caseContext(), caseRecord = investigationService.finish_case(context); if (caseRecord.guidance_item_id) guidanceService.update_status(fieldContext(), caseRecord.guidance_item_id, "COMPLETED"); ensureSummary(context); selectedManagementOptionId = null; route = "summary"; render(); return; }
+  if (action === "undo-observation") { const removed = investigationService.undo_last_observation(caseContext()); notice = removed ? "ย้อนคำตอบล่าสุดแล้ว กรุณาตอบใหม่" : null; renderInspection(); return; }
   if (action === "save-decision") { const existing = decisionService.get_decision_log(caseContext()), optionId = selectedManagementOptionId ?? existing?.management_option_id, notes = root.querySelector("[data-decision-notes]")?.value ?? ""; if (!optionId) return; try { decisionService.select_management_option(caseContext(), optionId, notes); selectedManagementOptionId = optionId; notice = "บันทึก DecisionLog แล้ว โดยยังไม่ถือว่าได้ลงมือในแปลง"; renderSummary(); } catch (error) { formError = error.message; renderSummary(); } return; }
   if (action === "map-next") { const checked = validateFieldName(draft.name); if (!checked.valid) { formError = checked.error; renderCreateField(); return; } if (!draft.closed) { formError = "กรุณาปิดรูปแปลงก่อนดำเนินการต่อ"; renderCreateField(); return; } draft.name = checked.value; draft.step = 2; formError = null; renderCreateField(); return; }
   if (action === "details-back") { draft.step = 1; renderCreateField(); return; }

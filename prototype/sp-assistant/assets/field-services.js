@@ -173,6 +173,14 @@ export class InvestigationService {
     const record = { observation_id: createStableId("observation"), user_id: context.user_id, field_id: context.field_id, season_id: context.season_id, case_id: context.case_id, conversation_id: value.conversation_id ?? null, question_id: value.question_id, observation_type: value.observation_type ?? question?.observation_type ?? "USER_REPORTED", value: value.value, original_text: value.original_text ?? null, response_mode: value.response_mode ?? "SUGGESTION", uncertain: value.uncertain === true || value.value === "UNSURE", skipped: value.skipped === true, provenance: value.provenance ?? "USER_REPORTED", created_at: this.clock().toISOString() };
     state.observations.push(record); this.repository.save(state); return record;
   }
+  undo_last_observation(context) {
+    const { state, caseRecord } = this.context.assert_case_context(context); if (caseRecord.status !== CASE_STATUSES.OPEN) throw new Error("case is not open");
+    const index = state.observations.findLastIndex((item) => item.case_id === context.case_id); if (index < 0) return null;
+    const [removed] = state.observations.splice(index, 1);
+    state.messages = state.messages.filter((item) => item.observation_id !== removed.observation_id);
+    state.evidence.forEach((item) => { if (item.observation_id === removed.observation_id) item.observation_id = null; });
+    this.repository.save(state); return removed;
+  }
   finish_case(context) { const { state, caseRecord } = this.context.assert_case_context(context); caseRecord.status = CASE_STATUSES.COMPLETED; caseRecord.completed_at = this.clock().toISOString(); this.repository.save(state); return caseRecord; }
   get_case_summary(context) { const { state } = this.context.assert_case_context(context); return state.case_summaries.find((item) => item.case_id === context.case_id && item.user_id === context.user_id && item.field_id === context.field_id && item.season_id === context.season_id) ?? null; }
   save_case_summary(context, summary) { const { state } = this.context.assert_case_context(context); const existing = state.case_summaries.findIndex((item) => item.case_id === context.case_id); const record = { case_summary_id: existing >= 0 ? state.case_summaries[existing].case_summary_id : createStableId("summary"), user_id: context.user_id, field_id: context.field_id, season_id: context.season_id, case_id: context.case_id, ...summary, created_at: existing >= 0 ? state.case_summaries[existing].created_at : this.clock().toISOString(), updated_at: this.clock().toISOString() }; if (existing >= 0) state.case_summaries[existing] = record; else state.case_summaries.push(record); this.repository.save(state); return record; }

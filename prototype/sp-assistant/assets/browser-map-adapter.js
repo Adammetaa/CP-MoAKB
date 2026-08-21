@@ -99,7 +99,16 @@ export async function createPreferredMapAdapter(container) {
 }
 
 export async function mountGoogleFieldPreview(container, coordinates) {
-  const maps = await loadGoogleMaps();
+  let maps;
+  try { maps = await loadGoogleMaps(); }
+  catch {
+    if (!container?.isConnected || !coordinates?.length) return null;
+    const points = coordinates.map(([longitude, latitude]) => ({ latitude:Number(latitude), longitude:Number(longitude) }));
+    const center = { latitude:points.reduce((sum, point) => sum + point.latitude, 0) / points.length, longitude:points.reduce((sum, point) => sum + point.longitude, 0) / points.length };
+    const fallback = new BrowserMapAdapter(container);
+    fallback.mount({ center, zoom:16, points, closed:true, mode:"preview" });
+    return () => fallback.destroy();
+  }
   if (!container?.isConnected) return null;
   const path = coordinates.map(([longitude, latitude]) => ({ lat: Number(latitude), lng: Number(longitude) }));
   const mapSurface = document.createElement("div");

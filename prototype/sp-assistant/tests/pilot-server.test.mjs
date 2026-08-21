@@ -23,9 +23,11 @@ test("pilot API requires a session and restores workspace after restart", async 
   assert.equal(knowledge.status, "ok"); assert.equal(knowledge.results[0].name, "โรคไหม้"); assert.match(knowledge.results[0].limitations[0], /ไม่ใช่การยืนยันการวินิจฉัย/);
   const companyProgram = await (await fetch(`${base}/api/knowledge/company-program?stage_id=CMP-01`, { headers:{ cookie } })).json();
   assert.equal(companyProgram.stages[0].stage_id, "CMP-01"); assert.equal(companyProgram.governance.sent_to_openai, false); assert.equal(companyProgram.governance.wind_adjusted, false);
-  const feedback = await fetch(`${base}/api/pilot/feedback`, { method:"POST", headers:{ cookie, "content-type":"application/json" }, body:JSON.stringify({ route:"learn", subject_id:knowledge.results[0].record_id, rating:"NEEDS_DATA", note:"ต้องการมิติงานแปลงเพิ่ม" }) });
-  assert.equal(feedback.status, 201); assert.equal((await feedback.json()).rating, "NEEDS_DATA");
-  const pilotSummary = await (await fetch(`${base}/api/pilot/summary`, { headers:{ cookie } })).json(); assert.equal(pilotSummary.feedback, 1); assert.equal(pilotSummary.storage_mode, "LOCAL_SQLITE");
+  const feedbackImage = await fetch(`${base}/api/pilot/feedback-evidence`, { method:"POST", headers:{ cookie, "content-type":"application/json" }, body:JSON.stringify({ original_filename:"หน้าจอ.png", media_type:"image/png", size_bytes:1, content_base64:"AA==" }) });
+  assert.equal(feedbackImage.status, 201); const feedbackStorage = (await feedbackImage.json()).storage_key;
+  const feedback = await fetch(`${base}/api/pilot/feedback`, { method:"POST", headers:{ cookie, "content-type":"application/json" }, body:JSON.stringify({ route:"inspection", subject_id:knowledge.results[0].record_id, rating:"NEEDS_DATA", category:"INSPECTION", note:"ต้องการมิติงานแปลงเพิ่ม", storage_key:feedbackStorage }) });
+  assert.equal(feedback.status, 201); assert.equal((await feedback.json()).category, "INSPECTION");
+  const pilotSummary = await (await fetch(`${base}/api/pilot/summary`, { headers:{ cookie } })).json(); assert.equal(pilotSummary.feedback, 1); assert.equal(pilotSummary.feedback_by_category.INSPECTION, 1); assert.equal(pilotSummary.storage_mode, "LOCAL_SQLITE");
   assert.equal((await fetch(`${base}/api/pilot/workspace`, { method:"PUT", headers:{ cookie, "content-type":"application/json" }, body:JSON.stringify({ state }) })).status, 200);
   const evidence = { field_id:"field-1", season_id:"season-1", original_filename:"ใบข้าว.png", media_type:"image/png", size_bytes:1, content_base64:"AA==" };
   const evidenceResponse = await fetch(`${base}/api/pilot/evidence`, { method:"POST", headers:{ cookie, "content-type":"application/json" }, body:JSON.stringify(evidence) });

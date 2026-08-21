@@ -29,6 +29,12 @@ export class ServerWorkspaceAdapter {
   async summary() { const response = await this.fetcher("/api/pilot/summary"); if (!response.ok) throw new Error("โหลดสถานะ Pilot ไม่สำเร็จ"); return response.json(); }
   async dataCatalog() { const response = await this.fetcher("/api/pilot/data-catalog"); if (!response.ok) throw new Error("โหลดสถานะข้อมูลไม่สำเร็จ"); return response.json(); }
   async feedback(payload) { const response = await this.fetcher("/api/pilot/feedback", { method:"POST", headers:{ "content-type":"application/json" }, body:JSON.stringify(payload) }); if (!response.ok) throw new Error("บันทึก Feedback ไม่สำเร็จ"); return response.json(); }
+  async uploadFeedbackImage(file) {
+    const allowed = new Set(["image/jpeg", "image/png", "image/webp"]); if (!allowed.has(file.type) || file.size > 6_000_000) throw new Error("รองรับ JPG, PNG หรือ WebP ขนาดไม่เกิน 6 MB");
+    const bytes = new Uint8Array(await file.arrayBuffer()); let binary = ""; for (let index = 0; index < bytes.length; index += 0x8000) binary += String.fromCharCode(...bytes.subarray(index, index + 0x8000));
+    const response = await this.fetcher("/api/pilot/feedback-evidence", { method:"POST", headers:{ "content-type":"application/json" }, body:JSON.stringify({ original_filename:file.name, media_type:file.type, size_bytes:file.size, content_base64:btoa(binary) }) });
+    const payload = await response.json().catch(() => ({})); if (!response.ok) throw new Error(payload.message ?? "บันทึกภาพ Feedback ไม่สำเร็จ"); return payload;
+  }
   async exportData() { const response = await this.fetcher("/api/pilot/export", { method:"POST" }); if (!response.ok) throw new Error("Export ไม่สำเร็จ"); return response.json(); }
   async backup() { const response = await this.fetcher("/api/pilot/backup", { method:"POST" }); if (!response.ok) throw new Error("Backup ไม่สำเร็จ"); return response.json(); }
 }
