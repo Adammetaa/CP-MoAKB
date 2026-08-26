@@ -44,6 +44,11 @@ user. Primary keys and upserts make the process idempotent. This sprint does
 not infer deletion from an absent client record, because a stale cache must
 not delete authoritative server data.
 
+The additive [Investigation Evidence Backbone](INVESTIGATION_EVIDENCE_BACKBONE.md)
+now migrates Step A observation, evidence, management, candidate-link,
+temporal, follow-up, and outcome persistence behind the same ownership chain.
+It references rather than duplicates `StageAssessment`.
+
 Deferred: explicit server-side delete commands, full offline conflict
-resolution, field actions/outcomes, reminders, spatial intelligence, the full
-Guidance Intelligence Engine, Knowledge Graph work, deployment, and release.
+resolution, field-action execution persistence, reminders, the full Guidance
+Intelligence Engine, Knowledge Graph work, deployment, and release.
