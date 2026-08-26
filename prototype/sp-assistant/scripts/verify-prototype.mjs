@@ -19,6 +19,8 @@ const prototypeLogin = await readFile(resolve(root, "assets", "prototype-login.j
 const routeInteractions = await readFile(resolve(root, "assets", "route-interactions.js"), "utf8");
 const serverAdapter = await readFile(resolve(root, "assets", "server-llm-adapter.js"), "utf8");
 const captureAdapter = await readFile(resolve(root, "assets", "investigation-capture-adapter.js"), "utf8");
+const intelligenceRuntime = await readFile(resolve(root, "investigation-intelligence.mjs"), "utf8");
+const pilotStore = await readFile(resolve(root, "pilot-store.mjs"), "utf8");
 const serverRuntime = await readFile(resolve(root, "server.mjs"), "utf8");
 const investigationConfig = JSON.parse(await readFile(resolve(root, "assets", "investigation-config.json"), "utf8"));
 const fieldConfig = JSON.parse(await readFile(resolve(root, "assets", "field-config.json"), "utf8"));
@@ -112,6 +114,10 @@ for (const required of ["DRAFT_LOCAL","PENDING_SYNC","SYNCING","SYNCED","SYNC_FA
 for (const prohibited of ["diagnosis","probability","recommendation","api.openai.com","OPENAI_API_KEY"]) if (captureAdapter.toLowerCase().includes(prohibited.toLowerCase())) failures.push(`investigation-capture-adapter.js contains prohibited inference/provider coupling: ${prohibited}`);
 for (const required of ["data-investigation-capture-form","open-investigation-capture","retry-investigation-sync","refresh-investigation-conflict","reapply-investigation-draft","SERVER-AUTHORITATIVE BUNDLE","Observation ≠ Interpretation"]) if (!fieldApp.includes(required)) failures.push(`field-app.js missing thin investigation capture UX: ${required}`);
 for (const required of ["request_id","expected_revision","IDEMPOTENT_REPLAY","error_code:code","PATCH","/api/pilot/investigation-records"]) if (!serverRuntime.includes(required)) failures.push(`server.mjs missing safe investigation write contract: ${required}`);
+for (const required of ["AUTHORITATIVE_INVESTIGATION_BUNDLE_ONLY","candidate_ordering","STABLE_IDENTIFIER_ONLY_NO_RANK","compatibilityDimensions","REQUIRED_BUT_MISSING","SUFFICIENT_FOR_NARROWING","next_best_evidence","FIELD_EVIDENCE_EXHAUSTED","original_system_assessment_preserved","source_bundle_hash","rule_version","rule_authority","rule_review_state","rule_hash"]) if (!intelligenceRuntime.includes(required)) failures.push(`investigation-intelligence.mjs missing Step C contract: ${required}`);
+for (const prohibited of [/api\.openai\.com/i,/OPENAI_API_KEY/i,/\bprobability\s*:/i,/\bdiagnosis\s*:/i,/\brecommendation\s*:/i,/\bproduct\s*:/i,/\bactive_ingredient\s*:/i,/\brate\s*:/i]) if (prohibited.test(intelligenceRuntime)) failures.push(`investigation-intelligence.mjs contains prohibited provider, inference, or management field: ${prohibited}`);
+for (const required of ["assessInvestigation","getInvestigationAssessmentHistory","reviewInvestigationAssessment"]) if (!pilotStore.includes(required)) failures.push(`pilot-store.mjs missing Investigation Intelligence service: ${required}`);
+for (const required of ["/api/pilot/investigation-assessment","/api/pilot/investigation-assessment-history","/api/pilot/investigation-assessment-reviews"]) if (!serverRuntime.includes(required)) failures.push(`server.mjs missing Investigation Intelligence API: ${required}`);
 for (const required of ["data-login-form", "data-map-mode=\"tap\"", "data-map-mode=\"center\"", "SYSTEM_ESTIMATED", "USER_CONFIRMED", "USER_OVERRIDDEN", "expected_planting_date"]) {
   if (!fieldApp.includes(required)) failures.push(`field-app.js missing workflow: ${required}`);
 }

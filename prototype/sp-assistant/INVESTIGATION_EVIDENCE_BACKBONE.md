@@ -78,6 +78,11 @@ The [Governed Investigation Capture Adapter](INVESTIGATION_CAPTURE_ADAPTER.md)
 adds stable request-ID replay protection, explicit draft/error states, and
 server-authoritative refresh without changing these domain structures.
 
+The [Governed Investigation Intelligence Runtime](INVESTIGATION_INTELLIGENCE.md)
+now consumes these authoritative bundles through persisted, explicitly authored
+Candidates and traceable rule/link relationships. It derives versioned
+categorical assessments without changing Step A evidence or Candidate records.
+
 The bundle contains enough structured data to explain what, where, stage, raw
 magnitude, sampling, environmental context, prior events, candidate evidence,
 gaps, follow-up, and outcomes. It emits explicit non-inference boundary flags

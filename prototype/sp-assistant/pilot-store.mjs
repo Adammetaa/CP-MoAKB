@@ -2,6 +2,7 @@ import { DatabaseSync } from "node:sqlite";
 import { mkdir, writeFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import { InvestigationBackbone, initializeInvestigationSchema } from "./investigation-backbone.mjs";
+import { InvestigationIntelligenceService, initializeInvestigationIntelligenceSchema } from "./investigation-intelligence.mjs";
 
 const COLLECTIONS = ["users", "fields", "seasons", "activities", "cases", "observations", "evidence", "conversations", "messages", "guidance", "decision_logs", "case_summaries", "weather_snapshots"];
 const STAGE_PROVENANCE = new Set(["SYSTEM_ESTIMATED", "USER_CONFIRMED", "USER_OVERRIDDEN"]);
@@ -28,11 +29,15 @@ function safeWorkspace(state) {
 }
 
 export class PilotStore {
-  constructor({ dbPath, exportDir }) {
+  constructor({ dbPath, exportDir, investigationRuleProvider = null, intelligenceClock = null, intelligenceIdProvider = null }) {
     this.dbPath = resolve(dbPath);
     this.exportDir = resolve(exportDir);
     this.db = null;
     this.investigation = null;
+    this.investigationIntelligence = null;
+    this.investigationRuleProvider = investigationRuleProvider;
+    this.intelligenceClock = intelligenceClock;
+    this.intelligenceIdProvider = intelligenceIdProvider;
   }
   async open() {
     await mkdir(dirname(this.dbPath), { recursive: true });
@@ -54,7 +59,9 @@ export class PilotStore {
     if (!feedbackColumns.has("category")) this.db.exec("ALTER TABLE pilot_feedback ADD COLUMN category TEXT");
     if (!feedbackColumns.has("storage_key")) this.db.exec("ALTER TABLE pilot_feedback ADD COLUMN storage_key TEXT");
     initializeInvestigationSchema(this.db);
+    initializeInvestigationIntelligenceSchema(this.db);
     this.investigation = new InvestigationBackbone(this.db);
+    this.investigationIntelligence = new InvestigationIntelligenceService(this.db,this.investigation,{...(this.investigationRuleProvider?{ruleProvider:this.investigationRuleProvider}:{}),...(this.intelligenceClock?{clock:this.intelligenceClock}:{}),...(this.intelligenceIdProvider?{idProvider:this.intelligenceIdProvider}:{})});
     for (const row of this.db.prepare("SELECT user_id,state_json,updated_at FROM pilot_workspaces").all()) {
       const migrated = this.db.prepare("SELECT status FROM lifecycle_migrations WHERE owner_user_id = ?").get(row.user_id);
       if (!migrated) this.persistLifecycle(row.user_id, JSON.parse(row.state_json), row.updated_at);
@@ -150,6 +157,9 @@ export class PilotStore {
   updateInvestigationRecord(userId, recordType, recordId, expectedRevision, record, requestId = null) { return requestId ? this.investigation.updateIdempotent(userId,requestId,recordType,recordId,expectedRevision,record) : this.investigation.update(userId,recordType,recordId,expectedRevision,record); }
   getInvestigationBundle(userId, scope) { return this.investigation.getBundle(userId,scope); }
   getInvestigationTimeline(userId, scope) { return this.investigation.getTimeline(userId,scope); }
+  assessInvestigation(userId, scope) { return this.investigationIntelligence.assess(userId,scope); }
+  getInvestigationAssessmentHistory(userId, scope) { return this.investigationIntelligence.history(userId,scope); }
+  reviewInvestigationAssessment(userId, review) { return this.investigationIntelligence.review(userId,review); }
   summary() {
     const rows = this.db.prepare("SELECT state_json FROM pilot_workspaces").all(), totals = Object.fromEntries(COLLECTIONS.map((key) => [key, 0]));
     for (const row of rows) { const state = JSON.parse(row.state_json); for (const key of COLLECTIONS) totals[key] += Array.isArray(state[key]) ? state[key].length : 0; }
@@ -192,7 +202,7 @@ export class PilotStore {
     this.db.prepare("INSERT INTO pilot_meta(key,value) VALUES('last_backup_at',?) ON CONFLICT(key) DO UPDATE SET value=excluded.value").run(createdAt);
     return { created_at: createdAt, backup_file: name };
   }
-  close() { this.db?.close(); this.db = null; this.investigation = null; }
+  close() { this.db?.close(); this.db = null; this.investigation = null; this.investigationIntelligence = null; }
 }
 
 export { safeWorkspace };

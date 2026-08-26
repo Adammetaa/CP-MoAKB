@@ -54,6 +54,11 @@ the browser create and revision-update that server evidence through explicit
 non-authoritative drafts. Stable request IDs make retries duplicate-safe, and
 server bundle refresh always wins over cached investigation state.
 
+The [Investigation Intelligence Runtime](INVESTIGATION_INTELLIGENCE.md) assesses
+only server bundles for a Field + Season + Case. Evidence, Candidate-link,
+StageAssessment, or governed-rule changes invalidate its prior snapshot; browser
+drafts and legacy workspace collections never enter scientific adjudication.
+
 Deferred: explicit server-side delete commands, full offline conflict
 resolution, field-action execution persistence, reminders, the full Guidance
 Intelligence Engine, Knowledge Graph work, deployment, and release.

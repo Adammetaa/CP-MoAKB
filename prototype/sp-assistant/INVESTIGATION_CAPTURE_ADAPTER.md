@@ -92,9 +92,10 @@ repository and capture API operate alongside that compatibility envelope.
 Existing image uploads remain `PHOTO_RECEIVED != PHOTO_ANALYZED !=
 DIAGNOSIS_CONFIRMED`. A future Step B adapter can attach visual records by
 Field, Season, Observation, Case, and Sampling Site identifiers without changing
-draft authority. Future Investigation Intelligence may consume authoritative
-bundles, but it must be separately governed and cannot be inferred from this
-capture adapter.
+draft authority. The server-side
+[Investigation Intelligence Runtime](INVESTIGATION_INTELLIGENCE.md) now consumes
+authoritative synchronized bundles only; local capture drafts remain outside
+adjudication.
 
 ## Explicit non-goals
 

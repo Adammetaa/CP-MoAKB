@@ -46,12 +46,12 @@ async function serveStatic(request, response) {
   catch { json(response, 404, { status:"NOT_FOUND" }); }
 }
 
-export async function startServer({ port, host, dbPath, exportDir, uploadDir: configuredUploadDir } = {}) {
+export async function startServer({ port, host, dbPath, exportDir, uploadDir: configuredUploadDir, investigationRuleProvider = null, intelligenceClock = null, intelligenceIdProvider = null } = {}) {
   await loadLocalEnvironment();
   const selectedPort = Number(port ?? process.env.PORT ?? 4173), selectedHost = host ?? process.env.PILOT_HOST ?? "127.0.0.1";
   if (!["127.0.0.1", "localhost", "::1"].includes(selectedHost) && process.env.PILOT_ALLOW_LAN !== "true") throw new Error("LAN binding requires PILOT_ALLOW_LAN=true");
   const uploadDir = resolve(configuredUploadDir ?? process.env.PILOT_UPLOAD_DIR ?? resolve(ROOT, "data/uploads")); await mkdir(uploadDir, { recursive:true });
-  const store = await new PilotStore({ dbPath: dbPath ?? process.env.PILOT_DB_PATH ?? resolve(ROOT, "data/pilot.sqlite"), exportDir: exportDir ?? process.env.PILOT_EXPORT_DIR ?? resolve(ROOT, "data/exports") }).open();
+  const store = await new PilotStore({ dbPath: dbPath ?? process.env.PILOT_DB_PATH ?? resolve(ROOT, "data/pilot.sqlite"), exportDir: exportDir ?? process.env.PILOT_EXPORT_DIR ?? resolve(ROOT, "data/exports"), investigationRuleProvider, intelligenceClock, intelligenceIdProvider }).open();
   const knowledge = await new PilotKnowledgeStore().open(), sessions = new Map();
   const server = createServer(async (request, response) => {
     const url = new URL(request.url, "http://localhost");
@@ -69,6 +69,9 @@ export async function startServer({ port, host, dbPath, exportDir, uploadDir: co
       if (request.method === "PATCH" && url.pathname === "/api/pilot/investigation-records") { const payload = await readJson(request,256_000); if (!payload || Object.keys(payload).some((key)=>!["record_type","record_id","expected_revision","record","request_id"].includes(key)) || !payload.record_type || !payload.record_id || !Number.isInteger(payload.expected_revision) || !payload.record || !payload.request_id) throw contractError("invalid investigation update request"); const result=store.updateInvestigationRecord(session.user_id,payload.record_type,payload.record_id,payload.expected_revision,payload.record,payload.request_id); return json(response,200,{status:result.replayed?"IDEMPOTENT_REPLAY":"UPDATED",authority:"SERVER",record_type:payload.record_type,...result}); }
       if (request.method === "GET" && url.pathname === "/api/pilot/investigation-bundle") { const bundle = store.getInvestigationBundle(session.user_id,{ field_id:url.searchParams.get("field_id"), season_id:url.searchParams.get("season_id"), case_id:url.searchParams.get("case_id"), observation_id:url.searchParams.get("observation_id") }); return json(response,200,bundle); }
       if (request.method === "GET" && url.pathname === "/api/pilot/investigation-timeline") { const timeline = store.getInvestigationTimeline(session.user_id,{ field_id:url.searchParams.get("field_id"), season_id:url.searchParams.get("season_id"), case_id:url.searchParams.get("case_id") }); return json(response,200,timeline); }
+      if (request.method === "GET" && url.pathname === "/api/pilot/investigation-assessment") { const assessment=store.assessInvestigation(session.user_id,{field_id:url.searchParams.get("field_id"),season_id:url.searchParams.get("season_id"),case_id:url.searchParams.get("case_id")}); return json(response,200,assessment); }
+      if (request.method === "GET" && url.pathname === "/api/pilot/investigation-assessment-history") { const history=store.getInvestigationAssessmentHistory(session.user_id,{field_id:url.searchParams.get("field_id"),season_id:url.searchParams.get("season_id"),case_id:url.searchParams.get("case_id")}); return json(response,200,{authority:"SERVER",history}); }
+      if (request.method === "POST" && url.pathname === "/api/pilot/investigation-assessment-reviews") { const review=store.reviewInvestigationAssessment(session.user_id,await readJson(request,128_000)); return json(response,201,{status:"REVIEW_RECORDED",authority:"HUMAN_REVIEW",...review}); }
       if (request.method === "GET" && url.pathname === "/api/pilot/summary") return json(response, 200, { status:"ok", ...store.summary(), ai_configured:Boolean(process.env.OPENAI_API_KEY && !process.env.OPENAI_API_KEY.startsWith("YOUR_")), model:process.env.OPENAI_MODEL || "gpt-5.6-luna" });
       if (request.method === "GET" && url.pathname === "/api/pilot/data-catalog") return json(response, 200, JSON.parse(await readFile(resolve(ROOT, "data-catalog.json"), "utf8")));
       if (request.method === "GET" && url.pathname === "/api/knowledge/summary") return json(response, 200, { status:"ok", ...knowledge.summary() });

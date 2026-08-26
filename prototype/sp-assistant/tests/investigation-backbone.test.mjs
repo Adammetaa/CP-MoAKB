@@ -119,6 +119,7 @@ test("ownership, product identity, outcome learning, action separation, and migr
   let reopened=await new PilotStore({dbPath,exportDir:join(root,"exports")}).open();
   assert.equal(reopened.db.prepare("SELECT COUNT(*) AS count FROM investigation_schema_migrations WHERE version=1").get().count,1);
   assert.equal(reopened.db.prepare("SELECT COUNT(*) AS count FROM investigation_schema_migrations WHERE version=2").get().count,1);
+  assert.equal(reopened.db.prepare("SELECT COUNT(*) AS count FROM investigation_schema_migrations WHERE version=3").get().count,1);
   assert.ok(reopened.db.prepare("PRAGMA table_info(investigation_observations)").all().some((column)=>column.name==="revision"));
   assert.ok(reopened.db.prepare("PRAGMA table_info(investigation_evidence)").all().some((column)=>column.name==="revision"));
   assert.equal(reopened.db.prepare("SELECT COUNT(*) AS count FROM stage_assessments").get().count,1);
