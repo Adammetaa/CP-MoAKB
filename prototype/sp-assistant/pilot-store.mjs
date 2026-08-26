@@ -146,7 +146,8 @@ export class PilotStore {
     if (!field || !season) return null;
     return this.db.prepare("SELECT state_json FROM guidance_states WHERE owner_user_id = ? AND field_id = ? AND season_id = ? ORDER BY updated_at").all(userId,fieldId,seasonId).map((row) => JSON.parse(row.state_json));
   }
-  createInvestigationRecord(userId, recordType, record) { return this.investigation.create(userId,recordType,record); }
+  createInvestigationRecord(userId, recordType, record, requestId = null) { return requestId ? this.investigation.createIdempotent(userId,requestId,recordType,record) : this.investigation.create(userId,recordType,record); }
+  updateInvestigationRecord(userId, recordType, recordId, expectedRevision, record, requestId = null) { return requestId ? this.investigation.updateIdempotent(userId,requestId,recordType,recordId,expectedRevision,record) : this.investigation.update(userId,recordType,recordId,expectedRevision,record); }
   getInvestigationBundle(userId, scope) { return this.investigation.getBundle(userId,scope); }
   getInvestigationTimeline(userId, scope) { return this.investigation.getTimeline(userId,scope); }
   summary() {

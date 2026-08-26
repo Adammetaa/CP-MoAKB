@@ -18,6 +18,7 @@ const browserMapAdapter = await readFile(resolve(root, "assets", "browser-map-ad
 const prototypeLogin = await readFile(resolve(root, "assets", "prototype-login.js"), "utf8");
 const routeInteractions = await readFile(resolve(root, "assets", "route-interactions.js"), "utf8");
 const serverAdapter = await readFile(resolve(root, "assets", "server-llm-adapter.js"), "utf8");
+const captureAdapter = await readFile(resolve(root, "assets", "investigation-capture-adapter.js"), "utf8");
 const serverRuntime = await readFile(resolve(root, "server.mjs"), "utf8");
 const investigationConfig = JSON.parse(await readFile(resolve(root, "assets", "investigation-config.json"), "utf8"));
 const fieldConfig = JSON.parse(await readFile(resolve(root, "assets", "field-config.json"), "utf8"));
@@ -73,7 +74,7 @@ for (const required of ["class=\"workspace\"", "chat-shell", "data-problem", "as
 for (const prohibited of ["id=\"field-app\"", "field-shell.css", "field-app.js"]) {
   if (legacyHtml.includes(prohibited)) failures.push(`legacy.html contains Field Workspace surface: ${prohibited}`);
 }
-for (const required of ["field-shell.css?v=knowledge-pilot-1", "field-app.js?v=knowledge-pilot-1"]) {
+for (const required of ["field-shell.css?v=capture-adapter-1", "field-app.js?v=capture-adapter-1"]) {
   if (!html.includes(required)) failures.push(`index.html missing fixed-login cache key: ${required}`);
 }
 if (!fieldApp.includes('prototype-login.js?v=fixed-login-1')) failures.push("field-app.js missing fixed prototype login module");
@@ -107,6 +108,10 @@ if (serverAdapter.includes("api.openai.com") || serverAdapter.includes("OPENAI_A
 for (const required of ["assert_field_context", "assert_case_context", "assert_conversation_context", "get_guidance", "start_case", "submit_observation", "finish_case", "save_case_summary", "list_case_history", "get_management_options", "select_management_option", "PHOTO_RECEIVED", "selection_only", "field_action_performed"]) {
   if (!fieldServices.includes(required)) failures.push(`field-services.js missing Block 2 boundary: ${required}`);
 }
+for (const required of ["DRAFT_LOCAL","PENDING_SYNC","SYNCING","SYNCED","SYNC_FAILED","CONFLICT","ABANDONED","LOCAL_DRAFT_ONLY","NETWORK_ERROR","VERSION_CONFLICT","expected_revision","request_id","authoritative_bundle"]) if (!captureAdapter.includes(required)) failures.push(`investigation-capture-adapter.js missing capture contract: ${required}`);
+for (const prohibited of ["diagnosis","probability","recommendation","api.openai.com","OPENAI_API_KEY"]) if (captureAdapter.toLowerCase().includes(prohibited.toLowerCase())) failures.push(`investigation-capture-adapter.js contains prohibited inference/provider coupling: ${prohibited}`);
+for (const required of ["data-investigation-capture-form","open-investigation-capture","retry-investigation-sync","refresh-investigation-conflict","reapply-investigation-draft","SERVER-AUTHORITATIVE BUNDLE","Observation ≠ Interpretation"]) if (!fieldApp.includes(required)) failures.push(`field-app.js missing thin investigation capture UX: ${required}`);
+for (const required of ["request_id","expected_revision","IDEMPOTENT_REPLAY","error_code:code","PATCH","/api/pilot/investigation-records"]) if (!serverRuntime.includes(required)) failures.push(`server.mjs missing safe investigation write contract: ${required}`);
 for (const required of ["data-login-form", "data-map-mode=\"tap\"", "data-map-mode=\"center\"", "SYSTEM_ESTIMATED", "USER_CONFIRMED", "USER_OVERRIDDEN", "expected_planting_date"]) {
   if (!fieldApp.includes(required)) failures.push(`field-app.js missing workflow: ${required}`);
 }

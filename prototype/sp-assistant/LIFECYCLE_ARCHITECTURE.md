@@ -49,6 +49,11 @@ now migrates Step A observation, evidence, management, candidate-link,
 temporal, follow-up, and outcome persistence behind the same ownership chain.
 It references rather than duplicates `StageAssessment`.
 
+The [Investigation Capture Adapter](INVESTIGATION_CAPTURE_ADAPTER.md) now lets
+the browser create and revision-update that server evidence through explicit
+non-authoritative drafts. Stable request IDs make retries duplicate-safe, and
+server bundle refresh always wins over cached investigation state.
+
 Deferred: explicit server-side delete commands, full offline conflict
 resolution, field-action execution persistence, reminders, the full Guidance
 Intelligence Engine, Knowledge Graph work, deployment, and release.

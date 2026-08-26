@@ -69,8 +69,14 @@ declared inspection; it remains distinct from `NOT_OBSERVED`,
 The authenticated HTTP adapter maps these to:
 
 - `POST /api/pilot/investigation-records`;
+- `PATCH /api/pilot/investigation-records` for revision-checked Observation and
+  typed Evidence updates;
 - `GET /api/pilot/investigation-bundle`; and
 - `GET /api/pilot/investigation-timeline`.
+
+The [Governed Investigation Capture Adapter](INVESTIGATION_CAPTURE_ADAPTER.md)
+adds stable request-ID replay protection, explicit draft/error states, and
+server-authoritative refresh without changing these domain structures.
 
 The bundle contains enough structured data to explain what, where, stage, raw
 magnitude, sampling, environmental context, prior events, candidate evidence,

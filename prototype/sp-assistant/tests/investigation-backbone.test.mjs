@@ -100,8 +100,11 @@ test("ownership, product identity, outcome learning, action separation, and migr
   const {root,store}=await setup();
   const caseRecord=create(store,"CASE",{case_id:"case-guardrails",purpose:"guardrail test"});
   const observation=create(store,"OBSERVATION",{observation_id:"obs-guardrails",case_id:caseRecord.case_id,source:"USER_REPORTED"});
+  const spatialInput={evidence_id:"evidence-owner-guard",observation_id:observation.observation_id,case_id:caseRecord.case_id,observed_at:"2026-08-20T08:30:00Z",source:"FIELD_OBSERVED",confidence:"NOT_ASSESSED",evidence_level:"SP1_SITE_SUPPORTED",review_state:"UNREVIEWED",payload:{observation_scope:"PATCH",geometry:"PATCH",field_positions:[],patterns:["PATCH"],field_extent:"LOCAL",direction:"UNKNOWN",affected_status:"AFFECTED",location_provenance:"USER_REPORTED"}};
+  create(store,"SPATIAL_EVIDENCE",spatialInput);
   assert.throws(()=>store.getInvestigationBundle("user-b",scope),/scope not found/);
   assert.throws(()=>store.createInvestigationRecord("user-b","OBSERVATION",{...scope,source:"USER_REPORTED"}),/scope not found/);
+  assert.throws(()=>store.updateInvestigationRecord("user-b","SPATIAL_EVIDENCE",spatialInput.evidence_id,1,{...scope,...spatialInput},"request-cross-owner-update"),/scope not found/);
   assert.throws(()=>create(store,"MANAGEMENT_EVENT",{case_id:caseRecord.case_id,event_type:"PESTICIDE_APPLICATION",time_precision:"UNKNOWN",source:"USER_REPORTED",reported_product_name:"unclear product",product_identity_confidence:"UNKNOWN",active_ingredient:"fabricated"}),/resolved product identity/);
   const management=create(store,"MANAGEMENT_EVENT",{case_id:caseRecord.case_id,event_type:"PESTICIDE_APPLICATION",time_precision:"UNKNOWN",source:"USER_REPORTED",reported_product_name:"unclear product",product_identity_confidence:"UNKNOWN"});
   assert.equal(management.active_ingredient,null);
@@ -115,6 +118,9 @@ test("ownership, product identity, outcome learning, action separation, and migr
   const dbPath=store.dbPath; store.close();
   let reopened=await new PilotStore({dbPath,exportDir:join(root,"exports")}).open();
   assert.equal(reopened.db.prepare("SELECT COUNT(*) AS count FROM investigation_schema_migrations WHERE version=1").get().count,1);
+  assert.equal(reopened.db.prepare("SELECT COUNT(*) AS count FROM investigation_schema_migrations WHERE version=2").get().count,1);
+  assert.ok(reopened.db.prepare("PRAGMA table_info(investigation_observations)").all().some((column)=>column.name==="revision"));
+  assert.ok(reopened.db.prepare("PRAGMA table_info(investigation_evidence)").all().some((column)=>column.name==="revision"));
   assert.equal(reopened.db.prepare("SELECT COUNT(*) AS count FROM stage_assessments").get().count,1);
   assert.equal(reopened.getInvestigationBundle("user-a",{...scope,case_id:caseRecord.case_id}).outcomes[0].learning_state,"CASE_ONLY");
   reopened.close(); await rm(root,{recursive:true,force:true});
@@ -130,6 +136,6 @@ test("investigation HTTP contract creates records and returns scoped bundles", a
   const bundle=await (await fetch(`${base}/api/pilot/investigation-bundle?field_id=${scope.field_id}&season_id=${scope.season_id}&observation_id=obs-api`,{headers:{cookie}})).json();
   assert.equal(bundle.authority,"SERVER"); assert.equal(bundle.observations.length,1);
   const otherAuth=await fetch(`${base}/api/pilot/session`,{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({password:"1234",user_id:"user-b"})}),otherCookie=otherAuth.headers.get("set-cookie").split(";")[0];
-  assert.equal((await fetch(`${base}/api/pilot/investigation-bundle?field_id=${scope.field_id}&season_id=${scope.season_id}`,{headers:{cookie:otherCookie}})).status,400);
+  assert.equal((await fetch(`${base}/api/pilot/investigation-bundle?field_id=${scope.field_id}&season_id=${scope.season_id}`,{headers:{cookie:otherCookie}})).status,403);
   await new Promise((done)=>server.close(done)); await rm(root,{recursive:true,force:true});
 });
