@@ -20,6 +20,8 @@ const routeInteractions = await readFile(resolve(root, "assets", "route-interact
 const serverAdapter = await readFile(resolve(root, "assets", "server-llm-adapter.js"), "utf8");
 const captureAdapter = await readFile(resolve(root, "assets", "investigation-capture-adapter.js"), "utf8");
 const intelligenceRuntime = await readFile(resolve(root, "investigation-intelligence.mjs"), "utf8");
+const guidanceRuntime = await readFile(resolve(root, "guidance-intelligence.mjs"), "utf8");
+const guidanceDocumentation = await readFile(resolve(root, "GUIDANCE_INTELLIGENCE.md"), "utf8");
 const candidateProvider = await readFile(resolve(root, "candidate-provider.mjs"), "utf8");
 const candidateProviderPackage = JSON.parse(await readFile(resolve(root, "candidate-provider-package.json"), "utf8"));
 const candidateProviderDocumentation = await readFile(resolve(root, "CANDIDATE_PROVIDER.md"), "utf8");
@@ -127,6 +129,11 @@ if (JSON.stringify(candidateProviderPackage).includes("TEST_ONLY_FIXTURE")) fail
 for (const prohibited of ["api.openai.com","OPENAI_API_KEY","pesticide_selection","product_ranking","rank_score","probability"] ) if (JSON.stringify(candidateProviderPackage).toLowerCase().includes(prohibited.toLowerCase())) failures.push(`candidate provider package contains prohibited capability: ${prohibited}`);
 for (const required of ["assessInvestigation","getInvestigationAssessmentHistory","reviewInvestigationAssessment"]) if (!pilotStore.includes(required)) failures.push(`pilot-store.mjs missing Investigation Intelligence service: ${required}`);
 for (const required of ["/api/pilot/investigation-assessment","/api/pilot/investigation-assessment-history","/api/pilot/investigation-assessment-reviews"]) if (!serverRuntime.includes(required)) failures.push(`server.mjs missing Investigation Intelligence API: ${required}`);
+for (const required of ["GUIDANCE_ENGINE_VERSION","EVIDENCE_COMPLETION","NO_ADDITIONAL_INSPECTION","ROOT_INSPECTION","INVESTIGATION_NEXT_BEST_EVIDENCE","ACTIVE_CASE_FOLLOW_UP","FIELD_EVIDENCE_EXHAUSTED","TEST_ONLY_FIXTURE cannot load in normal runtime","governed_guidance_items","governed_guidance_transitions","context_hash","semantic_key","completion_creates_evidence:false","openai_generation:false"]) if (!guidanceRuntime.includes(required)) failures.push(`guidance-intelligence.mjs missing Step D contract: ${required}`);
+for (const prohibited of [/api\.openai\.com/i,/OPENAI_API_KEY/i,/fetch\s*\(/i,/\bscore\s*:/i,/\brank\s*:/i,/\bproduct\s*:/i,/\brate\s*:/i]) if (prohibited.test(guidanceRuntime)) failures.push(`guidance-intelligence.mjs contains prohibited provider, scoring, or management coupling: ${prohibited}`);
+for (const required of ["getCurrentGovernedGuidance","getGovernedGuidanceHistory","transitionGovernedGuidance","getGovernedGuidanceDiagnostics"]) if (!pilotStore.includes(required)) failures.push(`pilot-store.mjs missing Guidance Intelligence service: ${required}`);
+for (const required of ["/api/pilot/guidance","/api/pilot/guidance-history","/api/pilot/guidance-actions","/api/pilot/guidance-diagnostics"]) if (!serverRuntime.includes(required)) failures.push(`server.mjs missing Guidance Intelligence API: ${required}`);
+for (const required of ["Guidance is not Investigation","Guidance is not Evidence","Guidance is not Management","Guidance is not a Reminder","Guidance is not Diagnosis","Selection order","Stop conditions","Authenticated APIs","Explicit non-goals"]) if (!guidanceDocumentation.includes(required)) failures.push(`GUIDANCE_INTELLIGENCE.md missing governed boundary: ${required}`);
 for (const required of ["data-login-form", "data-map-mode=\"tap\"", "data-map-mode=\"center\"", "SYSTEM_ESTIMATED", "USER_CONFIRMED", "USER_OVERRIDDEN", "expected_planting_date"]) {
   if (!fieldApp.includes(required)) failures.push(`field-app.js missing workflow: ${required}`);
 }

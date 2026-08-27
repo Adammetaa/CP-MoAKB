@@ -3,6 +3,7 @@ import { mkdir, writeFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import { InvestigationBackbone, initializeInvestigationSchema } from "./investigation-backbone.mjs";
 import { InvestigationIntelligenceService, initializeInvestigationIntelligenceSchema } from "./investigation-intelligence.mjs";
+import { GuidanceIntelligenceService, initializeGuidanceIntelligenceSchema } from "./guidance-intelligence.mjs";
 
 const COLLECTIONS = ["users", "fields", "seasons", "activities", "cases", "observations", "evidence", "conversations", "messages", "guidance", "decision_logs", "case_summaries", "weather_snapshots"];
 const STAGE_PROVENANCE = new Set(["SYSTEM_ESTIMATED", "USER_CONFIRMED", "USER_OVERRIDDEN"]);
@@ -29,7 +30,7 @@ function safeWorkspace(state) {
 }
 
 export class PilotStore {
-  constructor({ dbPath, exportDir, investigationRuleProvider = null, investigationCandidateProvider = null, intelligenceClock = null, intelligenceIdProvider = null }) {
+  constructor({ dbPath, exportDir, investigationRuleProvider = null, investigationCandidateProvider = null, intelligenceClock = null, intelligenceIdProvider = null, guidanceRuleProvider = null, guidanceClock = null, guidanceIdProvider = null }) {
     this.dbPath = resolve(dbPath);
     this.exportDir = resolve(exportDir);
     this.db = null;
@@ -39,6 +40,10 @@ export class PilotStore {
     this.investigationCandidateProvider = investigationCandidateProvider;
     this.intelligenceClock = intelligenceClock;
     this.intelligenceIdProvider = intelligenceIdProvider;
+    this.guidanceRuleProvider = guidanceRuleProvider;
+    this.guidanceClock = guidanceClock;
+    this.guidanceIdProvider = guidanceIdProvider;
+    this.guidanceIntelligence = null;
   }
   async open() {
     await mkdir(dirname(this.dbPath), { recursive: true });
@@ -61,8 +66,10 @@ export class PilotStore {
     if (!feedbackColumns.has("storage_key")) this.db.exec("ALTER TABLE pilot_feedback ADD COLUMN storage_key TEXT");
     initializeInvestigationSchema(this.db);
     initializeInvestigationIntelligenceSchema(this.db);
+    initializeGuidanceIntelligenceSchema(this.db);
     this.investigation = new InvestigationBackbone(this.db);
     this.investigationIntelligence = new InvestigationIntelligenceService(this.db,this.investigation,{...(this.investigationRuleProvider?{ruleProvider:this.investigationRuleProvider}:{}),...(this.investigationCandidateProvider?{candidateProvider:this.investigationCandidateProvider}:{}),...(this.intelligenceClock?{clock:this.intelligenceClock}:{}),...(this.intelligenceIdProvider?{idProvider:this.intelligenceIdProvider}:{})});
+    this.guidanceIntelligence = new GuidanceIntelligenceService(this.db,this.investigation,this.investigationIntelligence,{...(this.guidanceRuleProvider?{ruleProvider:this.guidanceRuleProvider}:{}),...(this.guidanceClock?{clock:this.guidanceClock}:{}),...(this.guidanceIdProvider?{idProvider:this.guidanceIdProvider}:{})});
     for (const row of this.db.prepare("SELECT user_id,state_json,updated_at FROM pilot_workspaces").all()) {
       const migrated = this.db.prepare("SELECT status FROM lifecycle_migrations WHERE owner_user_id = ?").get(row.user_id);
       if (!migrated) this.persistLifecycle(row.user_id, JSON.parse(row.state_json), row.updated_at);
@@ -161,6 +168,10 @@ export class PilotStore {
   assessInvestigation(userId, scope) { return this.investigationIntelligence.assess(userId,scope); }
   getInvestigationAssessmentHistory(userId, scope) { return this.investigationIntelligence.history(userId,scope); }
   reviewInvestigationAssessment(userId, review) { return this.investigationIntelligence.review(userId,review); }
+  getCurrentGovernedGuidance(userId, scope) { return this.guidanceIntelligence.current(userId,scope); }
+  getGovernedGuidanceHistory(userId, scope) { return this.guidanceIntelligence.history(userId,scope); }
+  transitionGovernedGuidance(userId, action) { return this.guidanceIntelligence.transition(userId,action); }
+  getGovernedGuidanceDiagnostics(userId, scope) { return this.guidanceIntelligence.diagnostics(userId,scope); }
   summary() {
     const rows = this.db.prepare("SELECT state_json FROM pilot_workspaces").all(), totals = Object.fromEntries(COLLECTIONS.map((key) => [key, 0]));
     for (const row of rows) { const state = JSON.parse(row.state_json); for (const key of COLLECTIONS) totals[key] += Array.isArray(state[key]) ? state[key].length : 0; }
@@ -203,7 +214,7 @@ export class PilotStore {
     this.db.prepare("INSERT INTO pilot_meta(key,value) VALUES('last_backup_at',?) ON CONFLICT(key) DO UPDATE SET value=excluded.value").run(createdAt);
     return { created_at: createdAt, backup_file: name };
   }
-  close() { this.db?.close(); this.db = null; this.investigation = null; this.investigationIntelligence = null; }
+  close() { this.db?.close(); this.db = null; this.investigation = null; this.investigationIntelligence = null; this.guidanceIntelligence = null; }
 }
 
 export { safeWorkspace };
