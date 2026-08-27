@@ -1,5 +1,10 @@
 # Governed Investigation Capture Adapter
 
+Candidate-provider nomination remains server-side and is never derived from a
+local capture draft. Capture sync continues to establish the authoritative
+Evidence Bundle first; only that bundle may enter governed nomination and Step C
+adjudication.
+
 ## Purpose
 
 The capture adapter is the thin application/browser bridge between the existing

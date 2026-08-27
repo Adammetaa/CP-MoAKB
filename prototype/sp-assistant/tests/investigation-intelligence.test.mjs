@@ -5,6 +5,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { InvestigationCaptureAdapter, InvestigationDraftRepository } from "../assets/investigation-capture-adapter.js";
 import { InvestigationIntelligenceEngine, StaticInvestigationRuleProvider } from "../investigation-intelligence.mjs";
+import { createEmptyCandidateProvider } from "../candidate-provider.mjs";
 import { PilotStore } from "../pilot-store.mjs";
 import { startServer } from "../server.mjs";
 import { MemoryStorage } from "./support.mjs";
@@ -16,7 +17,7 @@ function lifecycle(userId="user-a",stage="TILLERING",provenance="USER_CONFIRMED"
 }
 
 function deterministicIds(){let value=0;return ()=>`00000000-0000-4000-8000-${String(++value).padStart(12,"0")}`;}
-async function setup(ruleProvider=null){const root=await mkdtemp(join(tmpdir(),"cpmoakb-intelligence-")),store=await new PilotStore({dbPath:join(root,"pilot.sqlite"),exportDir:join(root,"exports"),investigationRuleProvider:ruleProvider,intelligenceClock:()=>new Date("2026-08-27T01:00:00Z"),intelligenceIdProvider:deterministicIds()}).open();store.putWorkspace("user-a",lifecycle());return {root,store,close:async()=>{store.close();await rm(root,{recursive:true,force:true});}};}
+async function setup(ruleProvider=null){const root=await mkdtemp(join(tmpdir(),"cpmoakb-intelligence-")),store=await new PilotStore({dbPath:join(root,"pilot.sqlite"),exportDir:join(root,"exports"),investigationRuleProvider:ruleProvider,investigationCandidateProvider:createEmptyCandidateProvider(),intelligenceClock:()=>new Date("2026-08-27T01:00:00Z"),intelligenceIdProvider:deterministicIds()}).open();store.putWorkspace("user-a",lifecycle());return {root,store,close:async()=>{store.close();await rm(root,{recursive:true,force:true});}};}
 function create(store,type,record){return store.createInvestigationRecord("user-a",type,{...scope,...record});}
 
 function goldenProvider(){return new StaticInvestigationRuleProvider({

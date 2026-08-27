@@ -29,13 +29,14 @@ function safeWorkspace(state) {
 }
 
 export class PilotStore {
-  constructor({ dbPath, exportDir, investigationRuleProvider = null, intelligenceClock = null, intelligenceIdProvider = null }) {
+  constructor({ dbPath, exportDir, investigationRuleProvider = null, investigationCandidateProvider = null, intelligenceClock = null, intelligenceIdProvider = null }) {
     this.dbPath = resolve(dbPath);
     this.exportDir = resolve(exportDir);
     this.db = null;
     this.investigation = null;
     this.investigationIntelligence = null;
     this.investigationRuleProvider = investigationRuleProvider;
+    this.investigationCandidateProvider = investigationCandidateProvider;
     this.intelligenceClock = intelligenceClock;
     this.intelligenceIdProvider = intelligenceIdProvider;
   }
@@ -61,7 +62,7 @@ export class PilotStore {
     initializeInvestigationSchema(this.db);
     initializeInvestigationIntelligenceSchema(this.db);
     this.investigation = new InvestigationBackbone(this.db);
-    this.investigationIntelligence = new InvestigationIntelligenceService(this.db,this.investigation,{...(this.investigationRuleProvider?{ruleProvider:this.investigationRuleProvider}:{}),...(this.intelligenceClock?{clock:this.intelligenceClock}:{}),...(this.intelligenceIdProvider?{idProvider:this.intelligenceIdProvider}:{})});
+    this.investigationIntelligence = new InvestigationIntelligenceService(this.db,this.investigation,{...(this.investigationRuleProvider?{ruleProvider:this.investigationRuleProvider}:{}),...(this.investigationCandidateProvider?{candidateProvider:this.investigationCandidateProvider}:{}),...(this.intelligenceClock?{clock:this.intelligenceClock}:{}),...(this.intelligenceIdProvider?{idProvider:this.intelligenceIdProvider}:{})});
     for (const row of this.db.prepare("SELECT user_id,state_json,updated_at FROM pilot_workspaces").all()) {
       const migrated = this.db.prepare("SELECT status FROM lifecycle_migrations WHERE owner_user_id = ?").get(row.user_id);
       if (!migrated) this.persistLifecycle(row.user_id, JSON.parse(row.state_json), row.updated_at);

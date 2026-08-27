@@ -1,0 +1,147 @@
+{
+  "schema_version": "candidate-provider-package/v1",
+  "manifest": {
+    "provider_id": "cp-moakb-governed-candidate-provider",
+    "provider_version": "1.0.0",
+    "content_hash": null,
+    "knowledge_snapshot": "rice-corpora-accepted-internal-2026-08-27",
+    "crop_scope": ["RICE"],
+    "authority": "GOVERNED_KNOWLEDGE_RELATIONSHIP",
+    "review_state": "DOMAIN_APPROVED",
+    "source_refs": [
+      "SRC-RIC-BPH-RELATIONSHIPS/v1",
+      "SRC-RDC-DISEASE-RELATIONSHIPS/v1"
+    ],
+    "valid_from": "2026-08-27T00:00:00.000Z",
+    "supersedes": null,
+    "materialized_at": "2026-08-27T00:00:00.000Z"
+  },
+  "sources": [
+    {
+      "source_ref": "SRC-RIC-BPH-RELATIONSHIPS/v1",
+      "repository_path": "docs/knowledge/rice-insect-corpus-001/evidence-and-claims.md",
+      "knowledge_record_ids": ["CO-RIC-002/v1", "EV-RIC-002/v1", "CL-RIC-002-I/v1", "CL-RIC-002-B/v1", "CL-RIC-002-O/v1"],
+      "authority": "GOVERNED_KNOWLEDGE_RELATIONSHIP",
+      "review_state": "DOMAIN_APPROVED"
+    },
+    {
+      "source_ref": "SRC-RDC-DISEASE-RELATIONSHIPS/v1",
+      "repository_path": "docs/knowledge/rice-disease-corpus-001/evidence-and-claims.md",
+      "knowledge_record_ids": [
+        "CO-RDC-001/v1", "EV-RDC-001A/v1", "EV-RDC-001B/v1", "CL-RDC-001-I/v1", "CL-RDC-001-C/v1", "CL-RDC-001-O/v1",
+        "CO-RDC-002/v1", "EV-RDC-002A/v1", "EV-RDC-002B/v1", "CL-RDC-002-I/v1", "CL-RDC-002-C/v1", "CL-RDC-002-O/v1",
+        "CO-RDC-012/v1", "EV-RDC-012A/v1", "EV-RDC-012B/v1", "CL-RDC-012-I/v1", "CL-RDC-012-C/v1", "CL-RDC-012-O/v1"
+      ],
+      "authority": "GOVERNED_KNOWLEDGE_RELATIONSHIP",
+      "review_state": "DOMAIN_APPROVED"
+    }
+  ],
+  "candidate_concepts": [
+    {"concept_id": "CO-RIC-002/v1", "candidate_class": "INSECT", "label": "Brown planthopper", "source_refs": ["SRC-RIC-BPH-RELATIONSHIPS/v1"]},
+    {"concept_id": "CO-RDC-001/v1", "candidate_class": "DISEASE", "label": "Rice blast", "source_refs": ["SRC-RDC-DISEASE-RELATIONSHIPS/v1"]},
+    {"concept_id": "CO-RDC-002/v1", "candidate_class": "DISEASE", "label": "Rice sheath blight", "source_refs": ["SRC-RDC-DISEASE-RELATIONSHIPS/v1"]},
+    {"concept_id": "CO-RDC-012/v1", "candidate_class": "ROOT_ZONE_STRESS", "label": "Akiochi source-described root-zone disorder", "source_refs": ["SRC-RDC-DISEASE-RELATIONSHIPS/v1"]}
+  ],
+  "nomination_rules": [
+    {
+      "rule_id": "CPN-RIC-BPH-YELLOW-PATCH/v1",
+      "candidate_concept_id": "CO-RIC-002/v1",
+      "crop": "RICE",
+      "match": {"all": [{"fact": "MORPHOLOGY_PHENOTYPE", "value": "YELLOWING"}, {"fact": "SPATIAL_PATTERN", "value": "PATCH"}]},
+      "nomination_reason": "Governed BPH knowledge describes basal feeding with yellow or brown patch damage; the observed pattern makes this concept reasonable to consider, not supported or diagnosed.",
+      "trigger_relations": ["TYPICAL", "POSSIBLE"],
+      "source_concept_claim_ids": ["CO-RIC-002/v1", "CL-RIC-002-B/v1", "CL-RIC-002-O/v1"],
+      "source_refs": ["SRC-RIC-BPH-RELATIONSHIPS/v1"],
+      "authority": "GOVERNED_KNOWLEDGE_RELATIONSHIP",
+      "review_state": "DOMAIN_APPROVED",
+      "scope": "RICE_FIELD_INVESTIGATION",
+      "materialized_at": "2026-08-27T00:00:00.000Z"
+    },
+    {
+      "rule_id": "CPN-RDC-BLAST-LEAF-LESION/v1",
+      "candidate_concept_id": "CO-RDC-001/v1",
+      "crop": "RICE",
+      "match": {"all": [{"fact": "MORPHOLOGY_PLANT_PART", "value": "LEAF_BLADE"}, {"fact": "MORPHOLOGY_PHENOTYPE", "value": "LESION"}]},
+      "nomination_reason": "Governed blast knowledge contains a specific leaf-lesion relationship; a leaf lesion permits consideration while morphology detail remains required for comparison.",
+      "trigger_relations": ["POSSIBLE", "REQUIRED"],
+      "source_concept_claim_ids": ["CO-RDC-001/v1", "CL-RDC-001-O/v1"],
+      "source_refs": ["SRC-RDC-DISEASE-RELATIONSHIPS/v1"],
+      "authority": "GOVERNED_KNOWLEDGE_RELATIONSHIP",
+      "review_state": "DOMAIN_APPROVED",
+      "scope": "RICE_FIELD_INVESTIGATION",
+      "materialized_at": "2026-08-27T00:00:00.000Z"
+    },
+    {
+      "rule_id": "CPN-RDC-SHEATH-BLIGHT/v1",
+      "candidate_concept_id": "CO-RDC-002/v1",
+      "crop": "RICE",
+      "match": {"all": [{"fact": "MORPHOLOGY_PLANT_PART", "value": "LEAF_SHEATH"}, {"fact": "MORPHOLOGY_PHENOTYPE", "value": "LESION"}], "any": [{"fact": "STAGE", "value": "TILLERING"}, {"fact": "MORPHOLOGY_NEAR_WATERLINE", "value": true}]},
+      "nomination_reason": "Governed sheath-blight knowledge relates lesions on the sheath near water level and tillering-to-harvest context; this is nomination only.",
+      "trigger_relations": ["TYPICAL", "COMMON"],
+      "source_concept_claim_ids": ["CO-RDC-002/v1", "CL-RDC-002-O/v1"],
+      "source_refs": ["SRC-RDC-DISEASE-RELATIONSHIPS/v1"],
+      "authority": "GOVERNED_KNOWLEDGE_RELATIONSHIP",
+      "review_state": "DOMAIN_APPROVED",
+      "scope": "RICE_FIELD_INVESTIGATION",
+      "materialized_at": "2026-08-27T00:00:00.000Z"
+    },
+    {
+      "rule_id": "CPN-RDC-AKIOCHI-ROOT/v1",
+      "candidate_concept_id": "CO-RDC-012/v1",
+      "crop": "RICE",
+      "match": {"all": [{"fact": "STAGE", "value": "TILLERING"}, {"fact": "MORPHOLOGY_PLANT_PART", "value": "ROOT_SYSTEM"}, {"fact": "MORPHOLOGY_PHENOTYPE", "value": "BROWNING"}]},
+      "nomination_reason": "Governed Akiochi knowledge describes tillering-stage lower-leaf yellowing with black root rot and root-zone context; observed root browning permits consideration only.",
+      "trigger_relations": ["TYPICAL", "REQUIRED"],
+      "source_concept_claim_ids": ["CO-RDC-012/v1", "CL-RDC-012-C/v1", "CL-RDC-012-O/v1"],
+      "source_refs": ["SRC-RDC-DISEASE-RELATIONSHIPS/v1"],
+      "authority": "GOVERNED_KNOWLEDGE_RELATIONSHIP",
+      "review_state": "DOMAIN_APPROVED",
+      "scope": "RICE_FIELD_INVESTIGATION",
+      "materialized_at": "2026-08-27T00:00:00.000Z"
+    }
+  ],
+  "comparison_rules": [
+    {
+      "rule_id": "CPC-RIC-BPH-PLANT-BASE/v1",
+      "candidate_concept_ids": ["CO-RIC-002/v1"],
+      "evidence_concept": "PLANT_BASE_INSPECTION",
+      "relation": "REQUIRED",
+      "dimension": "MORPHOLOGY",
+      "next_best_evidence": {"type": "FIELD_CHECK", "target": "PLANT_BASE_INSPECTION", "comparison": "AFFECTED_VS_NORMAL", "purpose": "DISTINGUISH_CANDIDATE", "discrimination_goal": "Inspect the governed basal-feeding location without treating absence from an unsuitable inspection as contradiction.", "value": "HIGH", "reason": "The governed source locates BPH feeding at the plant base."},
+      "source_concept_claim_ids": ["CO-RIC-002/v1", "CL-RIC-002-B/v1"],
+      "source_refs": ["SRC-RIC-BPH-RELATIONSHIPS/v1"],
+      "authority": "GOVERNED_KNOWLEDGE_RELATIONSHIP",
+      "review_state": "DOMAIN_APPROVED",
+      "scope": "RICE_FIELD_INVESTIGATION",
+      "materialized_at": "2026-08-27T00:00:00.000Z"
+    },
+    {
+      "rule_id": "CPC-RDC-LESION-MORPHOLOGY/v1",
+      "candidate_concept_ids": ["CO-RDC-001/v1", "CO-RDC-002/v1"],
+      "evidence_concept": "LESION_MORPHOLOGY_DETAIL",
+      "relation": "REQUIRED",
+      "dimension": "MORPHOLOGY",
+      "next_best_evidence": {"type": "FIELD_CHECK", "target": "LESION_MORPHOLOGY_DETAIL", "comparison": "AFFECTED_VS_NORMAL", "purpose": "DISTINGUISH_CANDIDATES", "discrimination_goal": "Record plant part, shape, center, margin, color, and waterline position to compare governed lesion relationships.", "value": "HIGH", "reason": "The governed disease relationships differ by plant part and lesion morphology."},
+      "source_concept_claim_ids": ["CO-RDC-001/v1", "CL-RDC-001-O/v1", "CO-RDC-002/v1", "CL-RDC-002-O/v1"],
+      "source_refs": ["SRC-RDC-DISEASE-RELATIONSHIPS/v1"],
+      "authority": "GOVERNED_KNOWLEDGE_RELATIONSHIP",
+      "review_state": "DOMAIN_APPROVED",
+      "scope": "RICE_FIELD_INVESTIGATION",
+      "materialized_at": "2026-08-27T00:00:00.000Z"
+    },
+    {
+      "rule_id": "CPC-RDC-ROOT-COMPARISON/v1",
+      "candidate_concept_ids": ["CO-RDC-012/v1", "CO-RDC-002/v1"],
+      "evidence_concept": "ROOT_COMPARISON",
+      "relation": "REQUIRED",
+      "dimension": "ABIOTIC",
+      "next_best_evidence": {"type": "FIELD_CHECK", "target": "ROOT_COMPARISON", "comparison": "AFFECTED_VS_NORMAL", "purpose": "DISTINGUISH_CANDIDATES", "discrimination_goal": "Compare root condition between affected and normal sites without inferring a cause from color alone.", "value": "HIGH", "reason": "The governed Akiochi relationship includes root condition while the sheath relationship is located on the sheath."},
+      "source_concept_claim_ids": ["CO-RDC-012/v1", "CL-RDC-012-O/v1", "CO-RDC-002/v1", "CL-RDC-002-O/v1"],
+      "source_refs": ["SRC-RDC-DISEASE-RELATIONSHIPS/v1"],
+      "authority": "GOVERNED_KNOWLEDGE_RELATIONSHIP",
+      "review_state": "DOMAIN_APPROVED",
+      "scope": "RICE_FIELD_INVESTIGATION",
+      "materialized_at": "2026-08-27T00:00:00.000Z"
+    }
+  ]
+}

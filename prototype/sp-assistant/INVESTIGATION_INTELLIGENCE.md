@@ -1,10 +1,15 @@
 # Governed Investigation Intelligence Runtime
 
+Candidate nomination and governed comparison-rule integration are specified in
+[`CANDIDATE_PROVIDER.md`](CANDIDATE_PROVIDER.md). The versioned provider operates
+before this Step C adjudication layer, merges by stable governed concept identity,
+and preserves User/provider provenance without turning nomination into support.
+
 ## Purpose and authority
 
 The Step C runtime derives a structured, explainable investigation assessment
-from one server-authoritative Investigation Bundle. It answers which explicitly
-authored Candidates remain supportable, what bears for or against them, what is
+from one server-authoritative Investigation Bundle. It answers which governed
+or explicitly authored Candidates remain supportable, what bears for or against them, what is
 missing, whether the evidence is sufficient for a declared purpose, and which
 single evidence request is most useful next.
 
@@ -14,7 +19,7 @@ rate, recommendation, or conversational wording is produced.
 
 The flow is:
 
-`Authoritative Bundle -> Persisted Candidates -> Explicit Relations/Rules -> Compatibility -> Gaps -> Sufficiency -> One Next Best Evidence -> Stop/Escalation`
+`Authoritative Bundle -> Governed nominations + persisted Candidates -> Explicit Relations/Rules -> Compatibility -> Gaps -> Sufficiency -> One Next Best Evidence -> Stop/Escalation`
 
 Browser drafts do not enter this flow. `DRAFT_LOCAL`, `PENDING_SYNC`,
 `SYNC_FAILED`, and `CONFLICT` remain non-authoritative until synchronized and
@@ -22,8 +27,10 @@ returned by the server backbone.
 
 ## Candidate and relation model
 
-Only Candidates already persisted as explicitly authored hypotheses are
-assessed. The default provider creates no Candidates. A narrow server-side rule
+Candidates may arrive from persisted explicit/User authorship or the governed
+Candidate Provider. Stable `concept_id` identity merges the two paths while
+retaining both provenance sources. Provider nomination adds a concept to
+consideration but does not itself create support. A narrow server-side rule
 provider can add bounded adjudication relationships when each provider declares
 `PERSISTED_EXPLICIT_RELATIONS`, `GOVERNED_KNOWLEDGE_RELATIONSHIP`, or
 `BOUNDED_RUNTIME_RULE` authority plus an honest `EXPLICITLY_AUTHORED`,
@@ -162,8 +169,9 @@ client-supplied assessment bundle.
 The existing browser `decision-gates.js` remains a legacy governed vertical
 slice and is not treated as the server Step C authority. Its browser cues and
 entity-specific profiles are not copied into the new engine. The default Step C
-provider adjudicates persisted links only. Broad scientific Candidate/rule
-population awaits a separately reviewed knowledge-package integration.
+runtime loads the small reviewed package described in `CANDIDATE_PROVIDER.md`;
+unsupported scientific relationships remain structured knowledge gaps rather
+than model-authored or code-authored rules.
 
 The Capture Adapter, legacy workspace collections, current chat gateway, and
 Field Lifecycle remain unchanged. Future Chat/OpenAI orchestration may translate

@@ -1,5 +1,12 @@
 # Investigation Evidence Backbone
 
+The authoritative bundle includes server lifecycle crop context alongside the
+authoritative `StageAssessment`. This lets the governed Candidate Provider reuse
+facts already held by the backend; it does not make crop or stage evidence a
+Diagnosis. Persisted Candidates may optionally retain a governed `concept_id`
+and explicit `EXPLICITLY_AUTHORED` or `USER_HYPOTHESIS` authorship so Step C can
+deduplicate a later governed nomination without losing either provenance source.
+
 ## Purpose and authority
 
 The Investigation Evidence Backbone is the server-authoritative persistence,
