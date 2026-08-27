@@ -76,7 +76,7 @@ Ground-truth states remain separate: `RAW_IMAGE -> VISUAL_OBSERVATION -> HUMAN_R
 
 ## Perception provider boundary and APIs
 
-`VisualPerceptionProvider` is a future adapter boundary. Production B1 uses no automated perception and performs no network call. `TEST_ONLY_VISUAL_PERCEPTION_PROVIDER` is available only through an explicit test factory and cannot load normally.
+`VisualPerceptionProvider` is the B1 adapter seam. B1 itself uses no automated perception and performs no network call. `TEST_ONLY_VISUAL_PERCEPTION_PROVIDER` is available only through an explicit test factory and cannot load normally. Step B2 implements explicit, non-automatic provider invocation in [Governed Visual Perception Adapter](VISUAL_PERCEPTION_ADAPTER.md); every accepted provider output still enters B1 only as a VE2 proposal requiring Human Review.
 
 Authenticated routes are:
 
