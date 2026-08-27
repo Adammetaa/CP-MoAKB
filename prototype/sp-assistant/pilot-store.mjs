@@ -6,6 +6,7 @@ import { InvestigationIntelligenceService, initializeInvestigationIntelligenceSc
 import { GuidanceIntelligenceService, initializeGuidanceIntelligenceSchema } from "./guidance-intelligence.mjs";
 import { VisualEvidenceService, initializeVisualEvidenceSchema } from "./visual-evidence.mjs";
 import { VisualPerceptionService, initializeVisualPerceptionSchema } from "./visual-perception.mjs";
+import { GovernedConversationOrchestrator, createConfiguredConversationProvider, initializeConversationSchema } from "./conversation-orchestrator.mjs";
 
 const COLLECTIONS = ["users", "fields", "seasons", "activities", "cases", "observations", "evidence", "conversations", "messages", "guidance", "decision_logs", "case_summaries", "weather_snapshots"];
 const STAGE_PROVENANCE = new Set(["SYSTEM_ESTIMATED", "USER_CONFIRMED", "USER_OVERRIDDEN"]);
@@ -32,7 +33,7 @@ function safeWorkspace(state) {
 }
 
 export class PilotStore {
-  constructor({ dbPath, exportDir, investigationRuleProvider = null, investigationCandidateProvider = null, intelligenceClock = null, intelligenceIdProvider = null, guidanceRuleProvider = null, guidanceClock = null, guidanceIdProvider = null, visualPerceptionProvider = null, visualClock = null, visualIdProvider = null, visualPerceptionAdapter = null, visualPerceptionClock = null, visualPerceptionIdProvider = null, visualPerceptionImageLoader = null, visualPerceptionContextResolver = null }) {
+  constructor({ dbPath, exportDir, investigationRuleProvider = null, investigationCandidateProvider = null, intelligenceClock = null, intelligenceIdProvider = null, guidanceRuleProvider = null, guidanceClock = null, guidanceIdProvider = null, visualPerceptionProvider = null, visualClock = null, visualIdProvider = null, visualPerceptionAdapter = null, visualPerceptionClock = null, visualPerceptionIdProvider = null, visualPerceptionImageLoader = null, visualPerceptionContextResolver = null, conversationProvider = null, conversationClock = null, conversationIdProvider = null }) {
     this.dbPath = resolve(dbPath);
     this.exportDir = resolve(exportDir);
     this.db = null;
@@ -56,6 +57,10 @@ export class PilotStore {
     this.visualPerceptionImageLoader = visualPerceptionImageLoader;
     this.visualPerceptionContextResolver = visualPerceptionContextResolver;
     this.visualPerception = null;
+    this.conversationProvider = conversationProvider;
+    this.conversationClock = conversationClock;
+    this.conversationIdProvider = conversationIdProvider;
+    this.conversationOrchestrator = null;
   }
   async open() {
     await mkdir(dirname(this.dbPath), { recursive: true });
@@ -81,11 +86,13 @@ export class PilotStore {
     initializeGuidanceIntelligenceSchema(this.db);
     initializeVisualEvidenceSchema(this.db);
     initializeVisualPerceptionSchema(this.db);
+    initializeConversationSchema(this.db);
     this.investigation = new InvestigationBackbone(this.db);
     this.investigationIntelligence = new InvestigationIntelligenceService(this.db,this.investigation,{...(this.investigationRuleProvider?{ruleProvider:this.investigationRuleProvider}:{}),...(this.investigationCandidateProvider?{candidateProvider:this.investigationCandidateProvider}:{}),...(this.intelligenceClock?{clock:this.intelligenceClock}:{}),...(this.intelligenceIdProvider?{idProvider:this.intelligenceIdProvider}:{})});
     this.guidanceIntelligence = new GuidanceIntelligenceService(this.db,this.investigation,this.investigationIntelligence,{...(this.guidanceRuleProvider?{ruleProvider:this.guidanceRuleProvider}:{}),...(this.guidanceClock?{clock:this.guidanceClock}:{}),...(this.guidanceIdProvider?{idProvider:this.guidanceIdProvider}:{})});
     this.visualEvidence = new VisualEvidenceService(this.db,this.investigation,this.guidanceIntelligence,{...(this.visualPerceptionProvider?{perceptionProvider:this.visualPerceptionProvider}:{}),...(this.visualClock?{clock:this.visualClock}:{}),...(this.visualIdProvider?{idProvider:this.visualIdProvider}:{})});
     this.visualPerception = new VisualPerceptionService(this.db,this.visualEvidence,{...(this.visualPerceptionAdapter?{provider:this.visualPerceptionAdapter}:{}),...(this.visualPerceptionClock?{clock:this.visualPerceptionClock}:{}),...(this.visualPerceptionIdProvider?{idProvider:this.visualPerceptionIdProvider}:{}),...(this.visualPerceptionImageLoader?{imageLoader:this.visualPerceptionImageLoader}:{}),...(this.visualPerceptionContextResolver?{contextResolver:this.visualPerceptionContextResolver}:{})});
+    this.conversationOrchestrator = new GovernedConversationOrchestrator(this.db,{backbone:this.investigation,assessmentService:this.investigationIntelligence,guidanceService:this.guidanceIntelligence,visualEvidenceService:this.visualEvidence,visualPerceptionService:this.visualPerception,provider:this.conversationProvider??createConfiguredConversationProvider(),...(this.conversationClock?{clock:this.conversationClock}:{}),...(this.conversationIdProvider?{idProvider:this.conversationIdProvider}:{})});
     for (const row of this.db.prepare("SELECT user_id,state_json,updated_at FROM pilot_workspaces").all()) {
       const migrated = this.db.prepare("SELECT status FROM lifecycle_migrations WHERE owner_user_id = ?").get(row.user_id);
       if (!migrated) this.persistLifecycle(row.user_id, JSON.parse(row.state_json), row.updated_at);
@@ -199,13 +206,18 @@ export class PilotStore {
   getVisualPerceptionResult(userId, requestId) { return this.visualPerception.get(userId,requestId); }
   getVisualPerceptionHistory(userId, imageId) { return this.visualPerception.history(userId,imageId); }
   getVisualPerceptionHealth(userId) { return this.visualPerception.health(userId); }
+  orchestrateConversationTurn(userId, input) { return this.conversationOrchestrator.turn(userId,input); }
+  listGovernedConversations(userId) { return this.conversationOrchestrator.list(userId); }
+  getGovernedConversationHistory(userId, conversationId) { return this.conversationOrchestrator.history(userId,conversationId); }
+  rebuildGovernedConversationContext(userId, conversationId) { return this.conversationOrchestrator.rebuildContext(userId,conversationId); }
   summary() {
     const rows = this.db.prepare("SELECT state_json FROM pilot_workspaces").all(), totals = Object.fromEntries(COLLECTIONS.map((key) => [key, 0]));
     for (const row of rows) { const state = JSON.parse(row.state_json); for (const key of COLLECTIONS) totals[key] += Array.isArray(state[key]) ? state[key].length : 0; }
     const meta = Object.fromEntries(this.db.prepare("SELECT key,value FROM pilot_meta").all().map((row) => [row.key, row.value]));
     const feedback = this.db.prepare("SELECT COUNT(*) AS count FROM pilot_feedback").get().count;
     const feedback_by_category = Object.fromEntries(this.db.prepare("SELECT COALESCE(category,'OTHER') AS category, COUNT(*) AS count FROM pilot_feedback GROUP BY COALESCE(category,'OTHER')").all().map((item) => [item.category,item.count]));
-    return { workspaces: rows.length, ...totals, feedback, feedback_by_category, storage_mode:"LOCAL_SQLITE", storage_path:this.dbPath, last_export_at: meta.last_export_at ?? null, last_backup_at: meta.last_backup_at ?? null };
+    const governedConversations=this.db.prepare("SELECT COUNT(*) count FROM governed_conversations").get().count,governedConversationTurns=this.db.prepare("SELECT COUNT(*) count FROM governed_conversation_turns").get().count;
+    return { workspaces: rows.length, ...totals, governed_conversations:governedConversations, governed_conversation_turns:governedConversationTurns, feedback, feedback_by_category, storage_mode:"LOCAL_SQLITE", storage_path:this.dbPath, last_export_at: meta.last_export_at ?? null, last_backup_at: meta.last_backup_at ?? null };
   }
   addFeedback(userId, { route, subject_id = null, rating, category = "OTHER", note = null, storage_key = null }) {
     safeId(userId, "user_id");
@@ -241,7 +253,7 @@ export class PilotStore {
     this.db.prepare("INSERT INTO pilot_meta(key,value) VALUES('last_backup_at',?) ON CONFLICT(key) DO UPDATE SET value=excluded.value").run(createdAt);
     return { created_at: createdAt, backup_file: name };
   }
-  close() { this.db?.close(); this.db = null; this.investigation = null; this.investigationIntelligence = null; this.guidanceIntelligence = null; this.visualEvidence = null; this.visualPerception = null; }
+  close() { this.db?.close(); this.db = null; this.investigation = null; this.investigationIntelligence = null; this.guidanceIntelligence = null; this.visualEvidence = null; this.visualPerception = null; this.conversationOrchestrator = null; }
 }
 
 export { safeWorkspace };

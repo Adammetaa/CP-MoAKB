@@ -1,0 +1,291 @@
+import { createHash, randomUUID } from "node:crypto";
+import { InvestigationContractError, INVESTIGATION_ENUMS } from "./investigation-backbone.mjs";
+
+export const CONVERSATION_ORCHESTRATOR_VERSION = "governed-conversation-orchestrator/v1";
+export const CONVERSATION_CONTEXT_VERSION = "authoritative-conversation-context/v1";
+export const CONVERSATION_OUTPUT_VERSION = "governed-conversation-turn/v1";
+
+export const CONVERSATION_ENUMS = Object.freeze({
+  entryPoints: ["HOME", "FIELD", "FIELD_INSPECTION", "CASE", "GUIDANCE", "VISUAL_REQUEST", "IMAGE", "GENERAL_CHAT"],
+  intents: ["FIELD_OBSERVATION", "FIELD_STATUS_UPDATE", "QUESTION", "VISUAL_CHECK", "GUIDANCE_RESPONSE", "CASE_FOLLOW_UP", "CONTEXT_SELECTION", "USER_HYPOTHESIS", "MANAGEMENT_QUERY", "KNOWLEDGE_QUERY", "NAVIGATION_REQUEST", "SOCIAL_OR_OTHER"],
+  extractionStatuses: ["EXPLICIT", "AMBIGUOUS", "UNSUPPORTED_INFERENCE"],
+  responseTypes: ["ACKNOWLEDGEMENT", "CLARIFICATION", "FIELD_GUIDANCE", "VISUAL_GUIDANCE", "INVESTIGATION_SUMMARY", "UNCERTAINTY_SUMMARY", "EXPERT_HANDOFF", "LAB_HANDOFF", "NO_ADDITIONAL_ACTION", "MANAGEMENT_HANDOFF_NOT_IMPLEMENTED", "GENERAL_KNOWLEDGE", "SYSTEM_LIMITATION", "ERROR_SAFE"],
+  uiActions: ["NONE", "OPEN_FIELD", "OPEN_CASE", "OPEN_CAMERA", "OPEN_GUIDANCE", "OPEN_VISUAL_REVIEW", "OPEN_KNOWLEDGE"],
+  governedActions: ["ACK", "RECORD_EXPLICIT_FACTS", "ASK_ONE_CLARIFICATION", "PRESENT_CURRENT_GUIDANCE", "REQUEST_FIELD_CHECK", "REQUEST_VISUAL_EVIDENCE", "CHECK_VISUAL_EVIDENCE", "PRESENT_INVESTIGATION_SUMMARY", "PRESENT_UNCERTAINTY_SUMMARY", "REQUEST_HUMAN_REVIEW", "REQUEST_EXPERT_REVIEW", "REQUEST_LAB_EVIDENCE", "NO_ADDITIONAL_ACTION", "NAVIGATE", "KNOWLEDGE_LOOKUP", "MANAGEMENT_HANDOFF"],
+  providerTypes: ["NO_PROVIDER", "OPENAI_RESPONSES", "TEST_ONLY_CONVERSATION_PROVIDER"],
+});
+
+const E = Object.fromEntries(Object.entries(CONVERSATION_ENUMS).map(([key, values]) => [key, new Set(values)]));
+const ALLOWED_PHENOTYPES = new Set(INVESTIGATION_ENUMS.phenotypes);
+const FORBIDDEN_PROVIDER_KEYS = /(?:^|_)(candidate|diagnosis|probability|confidence|management|treatment|pesticide|fungicide|insecticide|herbicide|fertilizer|dose|rate|action|guidance|assessment|support_state)(?:_|$)/i;
+const canonical = (value) => Array.isArray(value) ? `[${value.map(canonical).join(",")}]` : value && typeof value === "object" ? `{${Object.keys(value).sort().map((key) => `${JSON.stringify(key)}:${canonical(value[key])}`).join(",")}}` : JSON.stringify(value);
+const hash = (value) => createHash("sha256").update(canonical(value)).digest("hex");
+const fail = (message, code = "VALIDATION_ERROR", status = code === "AUTHORIZATION_ERROR" ? 403 : code === "VERSION_CONFLICT" ? 409 : 400) => { throw new InvestigationContractError(message, code, status); };
+const object = (value, name) => { if (!value || typeof value !== "object" || Array.isArray(value)) fail(`${name} must be an object`); return value; };
+const allowed = (value, keys, name) => { const extra = Object.keys(value).filter((key) => !keys.includes(key)); if (extra.length) fail(`${name} contains unsupported field: ${extra[0]}`); };
+const identifier = (value, name, { optional = false } = {}) => { if (optional && value == null) return null; if (typeof value !== "string" || !/^[A-Za-z0-9._:/-]{1,180}$/.test(value)) fail(`invalid ${name}`); return value; };
+const boundedText = (value, name, { optional = false, max = 4_000 } = {}) => { if (optional && value == null) return null; if (typeof value !== "string" || !value.trim() || value.length > max) fail(`invalid ${name}`); return value.trim(); };
+const member = (value, set, name, fallback = null) => { const selected = value ?? fallback; if (!set.has(selected)) fail(`invalid ${name}`); return selected; };
+const compact = (values) => [...new Set(values.filter(Boolean))];
+const span = (message, match) => ({ start: match.index, end: match.index + match[0].length, text: message.slice(match.index, match.index + match[0].length) });
+
+export class ConversationProviderError extends Error {
+  constructor(category, message) { super(message); this.name = "ConversationProviderError"; this.category = category; }
+}
+
+export class ConversationProvider {
+  constructor({ providerId = "conversation-provider-disabled", providerVersion = "none", providerType = "NO_PROVIDER", available = false, required = false, networkCalls = false, allowTestOnly = false } = {}) {
+    this.providerId = identifier(providerId, "provider_id");
+    this.providerVersion = identifier(providerVersion, "provider_version");
+    this.providerType = member(providerType, E.providerTypes, "provider_type");
+    this.available = available === true;
+    this.required = required === true;
+    this.networkCalls = networkCalls === true;
+    if (this.providerType === "TEST_ONLY_CONVERSATION_PROVIDER" && !allowTestOnly) fail("test-only conversation provider cannot load in normal runtime");
+  }
+  getManifest() { return { provider_id:this.providerId, provider_version:this.providerVersion, provider_type:this.providerType, available:this.available, required:this.required, network_calls:this.networkCalls, server_side_only:true, scientific_authority:false, memory_authority:false }; }
+  async interpret() { throw new ConversationProviderError("CONVERSATION_UNAVAILABLE", "conversation provider is not configured"); }
+}
+
+export function createTestOnlyConversationProvider(proposal) {
+  return new class extends ConversationProvider {
+    constructor() { super({ providerId:"deterministic-conversation-fixture", providerVersion:"test-only/v1", providerType:"TEST_ONLY_CONVERSATION_PROVIDER", available:true, required:true, allowTestOnly:true }); }
+    async interpret(input) { return structuredClone(typeof proposal === "function" ? await proposal(structuredClone(input)) : proposal); }
+  }();
+}
+
+function outputText(response) { return (response?.output ?? []).flatMap((item) => item?.content ?? []).filter((item) => item?.type === "output_text").map((item) => item.text).join("\n").trim(); }
+
+export class OpenAIConversationProvider extends ConversationProvider {
+  constructor({ apiKey, model = "gpt-5.6-luna", fetcher = globalThis.fetch, timeoutMs = 15_000 } = {}) {
+    super({ providerId:"openai-responses-conversation", providerVersion:model, providerType:"OPENAI_RESPONSES", available:Boolean(apiKey && !apiKey.startsWith("YOUR_")), required:true, networkCalls:true });
+    this.apiKey = apiKey; this.model = model; this.fetcher = fetcher; this.timeoutMs = timeoutMs;
+  }
+  async interpret({ message, minimumContext }) {
+    if (!this.available) throw new ConversationProviderError("CONVERSATION_UNAVAILABLE", "OpenAI conversation provider is not configured");
+    const controller = new AbortController(), timeout = setTimeout(() => controller.abort(), this.timeoutMs);
+    const schema = { type:"object", additionalProperties:false, required:["intent","explicit_facts","user_hypothesis"], properties:{ intent:{type:"string",enum:[...E.intents]}, explicit_facts:{type:"array",maxItems:12,items:{type:"object",additionalProperties:false,required:["dimension","governed_code","quoted_text","status"],properties:{dimension:{type:"string",enum:["MORPHOLOGY","SPATIAL_PATTERN","FIELD_POSITION","WATER_CONTEXT"]},governed_code:{type:"string",maxLength:100},quoted_text:{type:"string",maxLength:300},status:{type:"string",enum:[...E.extractionStatuses]}}}}, user_hypothesis:{type:["object","null"],additionalProperties:false,required:["label","candidate_class"],properties:{label:{type:"string",maxLength:300},candidate_class:{type:"string",enum:[...INVESTIGATION_ENUMS.candidateClasses]}}} } };
+    const body = { model:this.model, store:false, temperature:0, instructions:"Interpret the Thai field conversation. Extract only facts explicitly stated in the current message. A vague statement is not a symptom. A user-suggested cause is USER_HYPOTHESIS, never evidence or diagnosis. Use only the supplied governed vocabulary. Do not select scientific candidates, guidance, management, actions, probability, or diagnosis.", input:[{role:"user",content:[{type:"input_text",text:JSON.stringify({message,minimum_necessary_context:minimumContext})}]}], text:{format:{type:"json_schema",name:"governed_conversation_interpretation",strict:true,schema}} };
+    try {
+      const response = await this.fetcher("https://api.openai.com/v1/responses", { method:"POST", headers:{authorization:`Bearer ${this.apiKey}`,"content-type":"application/json"}, body:JSON.stringify(body), signal:controller.signal });
+      if (!response.ok) throw new ConversationProviderError("CONVERSATION_UNAVAILABLE", "conversation provider is unavailable");
+      const payload = await response.json(), text = outputText(payload); if (!text) throw new ConversationProviderError("MALFORMED_PROVIDER_OUTPUT", "conversation provider returned no structured output");
+      let parsed; try { parsed = JSON.parse(text); } catch { throw new ConversationProviderError("MALFORMED_PROVIDER_OUTPUT", "conversation provider returned invalid JSON"); }
+      return { ...parsed, raw_provider_reference:payload.id ?? null };
+    } catch (error) {
+      if (error instanceof ConversationProviderError) throw error;
+      throw new ConversationProviderError(controller.signal.aborted ? "CONVERSATION_TIMEOUT" : "CONVERSATION_UNAVAILABLE", "conversation provider request failed");
+    } finally { clearTimeout(timeout); }
+  }
+}
+
+export function createConfiguredConversationProvider({ env = process.env, fetcher = globalThis.fetch } = {}) {
+  if ((env.CONVERSATION_PROVIDER ?? "DISABLED") === "OPENAI") return new OpenAIConversationProvider({ apiKey:env.OPENAI_API_KEY, model:env.OPENAI_CONVERSATION_MODEL ?? env.OPENAI_MODEL ?? "gpt-5.6-luna", fetcher, timeoutMs:Number(env.CONVERSATION_TIMEOUT_MS ?? 15_000) });
+  return new ConversationProvider();
+}
+
+export function initializeConversationSchema(db) {
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS governed_conversations (
+      conversation_id TEXT PRIMARY KEY,
+      owner_user_id TEXT NOT NULL,
+      field_id TEXT,
+      season_id TEXT,
+      case_id TEXT,
+      entry_point TEXT NOT NULL,
+      status TEXT NOT NULL,
+      context_hash TEXT,
+      revision INTEGER NOT NULL DEFAULT 1,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL,
+      FOREIGN KEY(field_id) REFERENCES lifecycle_fields(field_id),
+      FOREIGN KEY(season_id) REFERENCES crop_seasons(season_id),
+      FOREIGN KEY(case_id) REFERENCES investigation_cases(case_id)
+    );
+    CREATE INDEX IF NOT EXISTS governed_conversations_owner ON governed_conversations(owner_user_id,updated_at);
+    CREATE INDEX IF NOT EXISTS governed_conversations_scope ON governed_conversations(owner_user_id,field_id,season_id,case_id);
+    CREATE TABLE IF NOT EXISTS governed_conversation_turns (
+      turn_id TEXT PRIMARY KEY,
+      conversation_id TEXT NOT NULL,
+      owner_user_id TEXT NOT NULL,
+      request_id TEXT NOT NULL,
+      corrects_turn_id TEXT,
+      raw_message TEXT NOT NULL,
+      input_json TEXT NOT NULL,
+      interpretation_json TEXT NOT NULL,
+      context_json TEXT NOT NULL,
+      response_json TEXT NOT NULL,
+      provider_json TEXT NOT NULL,
+      created_at TEXT NOT NULL,
+      UNIQUE(owner_user_id,request_id),
+      FOREIGN KEY(conversation_id) REFERENCES governed_conversations(conversation_id),
+      FOREIGN KEY(corrects_turn_id) REFERENCES governed_conversation_turns(turn_id)
+    );
+    CREATE INDEX IF NOT EXISTS governed_conversation_turn_history ON governed_conversation_turns(owner_user_id,conversation_id,created_at,turn_id);
+  `);
+  db.prepare("INSERT OR IGNORE INTO investigation_schema_migrations(version,applied_at) VALUES(8,?)").run(new Date().toISOString());
+}
+
+export class GovernedConversationCaptureAdapter {
+  constructor(backbone) { this.backbone=backbone; }
+  create(userId,requestId,recordType,record) { return this.backbone.createIdempotent(userId,requestId,recordType,record); }
+}
+
+function validateInput(raw) {
+  object(raw, "conversation request");
+  allowed(raw, ["request_id","conversation_id","turn_id","message","entry_point","field_id","season_id","case_id","observation_id","guidance_id","image_evidence_id","requested_visual_target","route_context","explicit_reference","audience","expected_conversation_revision","corrects_turn_id"], "conversation request");
+  const routeContext = raw.route_context == null ? null : object(raw.route_context, "route_context");
+  const explicitReference = raw.explicit_reference == null ? null : object(raw.explicit_reference, "explicit_reference");
+  if (routeContext) allowed(routeContext, ["field_id","season_id","case_id"], "route_context");
+  if (explicitReference) allowed(explicitReference, ["field_id","season_id","case_id"], "explicit_reference");
+  const safeContext = (value) => value == null ? null : { field_id:identifier(value.field_id,"field_id",{optional:true}), season_id:identifier(value.season_id,"season_id",{optional:true}), case_id:identifier(value.case_id,"case_id",{optional:true}) };
+  return { request_id:identifier(raw.request_id,"request_id"), conversation_id:identifier(raw.conversation_id,"conversation_id",{optional:true}), turn_id:identifier(raw.turn_id,"turn_id",{optional:true}), message:boundedText(raw.message,"message"), entry_point:member(raw.entry_point,E.entryPoints,"entry_point","GENERAL_CHAT"), field_id:identifier(raw.field_id,"field_id",{optional:true}), season_id:identifier(raw.season_id,"season_id",{optional:true}), case_id:identifier(raw.case_id,"case_id",{optional:true}), observation_id:identifier(raw.observation_id,"observation_id",{optional:true}), guidance_id:identifier(raw.guidance_id,"guidance_id",{optional:true}), image_evidence_id:identifier(raw.image_evidence_id,"image_evidence_id",{optional:true}), requested_visual_target:raw.requested_visual_target == null ? null : boundedText(raw.requested_visual_target,"requested_visual_target",{max:100}), route_context:safeContext(routeContext), explicit_reference:safeContext(explicitReference), audience:raw.audience == null ? "SP" : member(raw.audience,new Set(["SP","SPA"]),"audience"), expected_conversation_revision:raw.expected_conversation_revision == null ? null : Number(raw.expected_conversation_revision), corrects_turn_id:identifier(raw.corrects_turn_id,"corrects_turn_id",{optional:true}) };
+}
+
+function phraseFacts(message) {
+  const definitions = [
+    { dimension:"MORPHOLOGY", governed_code:"YELLOWING", pattern:/(?:ใบ|ต้น|ข้าว)?เหลือง|yellow(?:ing)?/iu },
+    { dimension:"SPATIAL_PATTERN", governed_code:"PATCH", pattern:/(?:เป็น)?หย่อม|patch/iu },
+    { dimension:"FIELD_POSITION", governed_code:"LOW_SPOT", pattern:/(?:ตรง|ที่|บริเวณ)?จุดต่ำ|ที่ลุ่ม|low[ -]?spot/iu },
+    { dimension:"WATER_CONTEXT", governed_code:"DEEPER_WATER_CONTEXT", pattern:/น้ำ(?:ขัง)?ลึกกว่า(?:ข้าง\s?ๆ|บริเวณอื่น|จุดอื่น)?|deeper water/iu },
+  ];
+  return definitions.flatMap((definition) => { const match = definition.pattern.exec(message);if(!match)return [];const nearby=message.slice(Math.max(0,match.index-8),match.index+match[0].length);if(definition.governed_code==="YELLOWING"&&/(?:ไม่|ไม่ได้)\s*(?:ได้)?[^\s]{0,4}เหลือง/iu.test(nearby))return [];return [{ fact_id:`fact-${hash({message,definition:definition.governed_code,span:match.index}).slice(0,20)}`, ...definition, pattern:undefined, status:"EXPLICIT", source_span:span(message,match), provider_origin:"SERVER_GOVERNED_PHRASE_MAP", vocabulary_mapping:definition.governed_code === "DEEPER_WATER_CONTEXT" ? "WATER_CONTEXT.water_state=UNEVEN_WATER" : definition.governed_code }]; });
+}
+
+function hypothesis(message) {
+  const match = /(?:น่าจะ|สงสัย|คิดว่า)(?:เป็น|ว่า)?\s*([^?？.!]{1,80})/iu.exec(message);
+  if (!match) return null;
+  const label = match[1].replace(/ไหม$/u, "").trim(); if (!label) return null;
+  return { label, candidate_class:/โรค|ไหม้|blast/iu.test(label) ? "DISEASE" : /แมลง|หนอน|เพลี้ย/iu.test(label) ? "INSECT" : "UNKNOWN", status:"EXPLICIT", authorship:"USER_HYPOTHESIS", source_span:span(message,match) };
+}
+
+function localInterpretation(message, input) {
+  const facts = phraseFacts(message), userHypothesis = hypothesis(message);
+  let intent = /ยา|สารเคมี|พ่น|กำจัด|ใช้สาร|โดส|อัตรา/iu.test(message) ? "MANAGEMENT_QUERY" : input.image_evidence_id || /ถ่ายแบบนี้|ดูรูป|ดูภาพ|รูปนี้|ภาพนี้/iu.test(message) ? "VISUAL_CHECK" : facts.length ? "FIELD_OBSERVATION" : userHypothesis ? "USER_HYPOTHESIS" : /ความรู้|คืออะไร|ทั่วไป/iu.test(message) ? "KNOWLEDGE_QUERY" : /เปิด|ไปหน้า/iu.test(message) ? "NAVIGATION_REQUEST" : /ขอบคุณ|สวัสดี/iu.test(message) ? "SOCIAL_OR_OTHER" : "QUESTION";
+  return { interpretation_version:"server-governed-thai-interpretation/v1", intent, explicit_facts:facts, user_hypothesis:userHypothesis, unsupported_inferences:[], raw_message_is_evidence:false };
+}
+
+function validateProviderProposal(raw, message) {
+  object(raw,"provider interpretation"); allowed(raw,["intent","explicit_facts","user_hypothesis","raw_provider_reference"],"provider interpretation");
+  for (const key of Object.keys(raw)) if (FORBIDDEN_PROVIDER_KEYS.test(key)) throw new ConversationProviderError("PROVIDER_POLICY_REJECTION",`provider attempted prohibited field: ${key}`);
+  const intent = member(raw.intent,E.intents,"provider intent"), facts = Array.isArray(raw.explicit_facts) ? raw.explicit_facts : fail("provider explicit_facts must be an array");
+  const explicitFacts = facts.map((fact,index) => {
+    object(fact,`provider fact ${index}`); allowed(fact,["dimension","governed_code","quoted_text","status"],`provider fact ${index}`);
+    const quoted = boundedText(fact.quoted_text,"quoted_text",{max:300}), start = message.indexOf(quoted); if (start < 0) fail("provider fact source span is not in the current message");
+    const dimension = member(fact.dimension,new Set(["MORPHOLOGY","SPATIAL_PATTERN","FIELD_POSITION","WATER_CONTEXT"]),"fact dimension"), code = boundedText(fact.governed_code,"governed_code",{max:100}), status = member(fact.status,E.extractionStatuses,"extraction status");
+    const valid = dimension === "MORPHOLOGY" ? ALLOWED_PHENOTYPES.has(code) : dimension === "SPATIAL_PATTERN" ? INVESTIGATION_ENUMS.spatialPatterns.includes(code) : dimension === "FIELD_POSITION" ? INVESTIGATION_ENUMS.fieldPositions.includes(code) : code === "DEEPER_WATER_CONTEXT";
+    return { fact_id:`fact-${hash({message,index,code}).slice(0,20)}`, dimension, governed_code:code, status:valid ? status : "UNSUPPORTED_INFERENCE", source_span:{start,end:start+quoted.length,text:quoted}, provider_origin:"CONVERSATION_PROVIDER", vocabulary_mapping:valid ? code : null };
+  });
+  let userHypothesis = null;
+  if (raw.user_hypothesis != null) { object(raw.user_hypothesis,"provider user_hypothesis"); allowed(raw.user_hypothesis,["label","candidate_class"],"provider user_hypothesis"); const label=boundedText(raw.user_hypothesis.label,"hypothesis label",{max:300}),start=message.indexOf(label); if(start<0)fail("provider hypothesis source span is not in current message"); userHypothesis={label,candidate_class:member(raw.user_hypothesis.candidate_class,new Set(INVESTIGATION_ENUMS.candidateClasses),"candidate_class"),status:"EXPLICIT",authorship:"USER_HYPOTHESIS",source_span:{start,end:start+label.length,text:label}}; }
+  return { intent, explicit_facts:explicitFacts, user_hypothesis:userHypothesis, raw_provider_reference:raw.raw_provider_reference ?? null };
+}
+
+function safeConversation(row) { return row ? { conversation_id:row.conversation_id, field_id:row.field_id, season_id:row.season_id, case_id:row.case_id, entry_point:row.entry_point, status:row.status, revision:row.revision, context_hash:row.context_hash, created_at:row.created_at, updated_at:row.updated_at, authority:"SERVER_CONVERSATION_MEMORY" } : null; }
+
+export class GovernedConversationOrchestrator {
+  constructor(db, { backbone, captureAdapter = null, assessmentService, guidanceService, visualEvidenceService, visualPerceptionService, provider = new ConversationProvider(), clock = () => new Date(), idProvider = () => randomUUID() } = {}) {
+    this.db=db; this.backbone=backbone; this.captureAdapter=captureAdapter??new GovernedConversationCaptureAdapter(backbone); this.assessmentService=assessmentService; this.guidanceService=guidanceService; this.visualEvidenceService=visualEvidenceService; this.visualPerceptionService=visualPerceptionService; this.provider=provider; this.clock=clock; this.idProvider=idProvider; this.inFlight=new Map();
+  }
+  now() { return this.clock().toISOString(); }
+  conversation(userId, conversationId) { const row=this.db.prepare("SELECT * FROM governed_conversations WHERE conversation_id=? AND owner_user_id=?").get(conversationId,userId); if(!row)fail("conversation scope not found","AUTHORIZATION_ERROR"); return row; }
+  resolveContext(userId,input,interpretation) {
+    const prior = input.conversation_id ? this.conversation(userId,input.conversation_id) : null;
+    const sources = [{name:"EXPLICIT_UI",value:{field_id:input.field_id,season_id:input.season_id,case_id:input.case_id}},{name:"EXPLICIT_REFERENCE",value:input.explicit_reference},{name:"ROUTE",value:input.route_context},{name:"CONVERSATION",value:prior}].filter((item)=>item.value);
+    let selected = sources.find((item)=>item.value.field_id)?.value ?? null, resolutionSource = sources.find((item)=>item.value.field_id)?.name ?? null;
+    if (prior && selected?.field_id && prior.field_id && selected.field_id !== prior.field_id) fail("conversation cannot silently cross fields","AUTHORIZATION_ERROR");
+    if (!selected) {
+      const active=this.db.prepare("SELECT f.field_id,s.season_id,f.name FROM lifecycle_fields f JOIN crop_seasons s ON s.field_id=f.field_id AND s.owner_user_id=f.owner_user_id WHERE f.owner_user_id=? AND s.status='ACTIVE' ORDER BY f.updated_at DESC").all(userId);
+      if (active.length === 1) { selected=active[0]; resolutionSource="UNIQUE_ACTIVE_FIELD"; }
+      else if (active.length > 1) return { resolved:false, ambiguity:{type:"FIELD",options:active.slice(0,8).map((item)=>({field_id:item.field_id,season_id:item.season_id,label:item.name}))}, resolution_source:"AMBIGUOUS_ACTIVE_FIELDS" };
+      else return { resolved:false, ambiguity:{type:"FIELD",options:[]}, resolution_source:"NO_ACTIVE_FIELD" };
+    }
+    const field=this.db.prepare("SELECT * FROM lifecycle_fields WHERE owner_user_id=? AND field_id=?").get(userId,identifier(selected.field_id,"field_id")); if(!field)fail("field context not found","AUTHORIZATION_ERROR");
+    const seasonId=selected.season_id ?? field.season_id,season=this.db.prepare("SELECT * FROM crop_seasons WHERE owner_user_id=? AND field_id=? AND season_id=?").get(userId,field.field_id,identifier(seasonId,"season_id")); if(!season)fail("season context not found","AUTHORIZATION_ERROR");
+    let caseId=selected.case_id ?? prior?.case_id ?? null;
+    if (caseId) this.backbone.assertCase(userId,field.field_id,season.season_id,caseId);
+    if (!caseId) {
+      const open=this.db.prepare("SELECT case_id FROM investigation_cases WHERE owner_user_id=? AND field_id=? AND season_id=? AND status='OPEN' ORDER BY updated_at DESC").all(userId,field.field_id,season.season_id);
+      if(open.length===1)caseId=open[0].case_id;
+      else if(open.length>1 && ["FIELD_OBSERVATION","USER_HYPOTHESIS","VISUAL_CHECK","CASE_FOLLOW_UP"].includes(interpretation.intent))return {resolved:false,ambiguity:{type:"CASE",options:open.map((item)=>({case_id:item.case_id}))},resolution_source:"AMBIGUOUS_OPEN_CASES"};
+    }
+    return { resolved:true, field_id:field.field_id, season_id:season.season_id, case_id:caseId, field_name:field.name, season_status:season.status, resolution_source:resolutionSource, authority:"SERVER_LIFECYCLE" };
+  }
+  ensureCase(userId,context,turnId) {
+    if(context.case_id)return context.case_id;
+    const requestId=`${turnId}-case`,caseId=`case-conversation-${hash({userId,turnId}).slice(0,20)}`,created=this.captureAdapter.create(userId,requestId,"CASE",{case_id:caseId,field_id:context.field_id,season_id:context.season_id,purpose:"Governed conversation field investigation"});
+    return created.record.case_id;
+  }
+  capture(userId,context,interpretation,turnId,message) {
+    const facts=interpretation.explicit_facts.filter((item)=>item.status==="EXPLICIT"),hypothesisValue=interpretation.user_hypothesis?.status==="EXPLICIT"?interpretation.user_hypothesis:null;
+    if(!facts.length&&!hypothesisValue)return {case_id:context.case_id,observation_id:null,fact_record_references:[],hypothesis_reference:null,execution_actions:[]};
+    const caseId=this.ensureCase(userId,context,turnId),observationId=facts.length?`observation-conversation-${hash({userId,turnId}).slice(0,20)}`:null,refs=[];
+    if(facts.length)this.captureAdapter.create(userId,`${turnId}-observation`,"OBSERVATION",{observation_id:observationId,field_id:context.field_id,season_id:context.season_id,case_id:caseId,source:"USER_CONVERSATION",confidence:"NOT_ASSESSED",review_state:"UNREVIEWED",note:message});
+    const base={field_id:context.field_id,season_id:context.season_id,case_id:caseId,observation_id:observationId,source:"USER_CONVERSATION",confidence:"NOT_ASSESSED",review_state:"UNREVIEWED"};
+    const morphology=facts.filter((item)=>item.dimension==="MORPHOLOGY");
+    if(morphology.length){const record=this.captureAdapter.create(userId,`${turnId}-morphology`,"MORPHOLOGY_EVIDENCE",{...base,evidence_id:`evidence-conversation-morphology-${hash(turnId).slice(0,16)}`,evidence_level:"MO0_REPORTED",payload:{plant_part:"WHOLE_PLANT",primary_phenotypes:compact(morphology.map((item)=>item.governed_code)),observability:"USER_REPORTED"}}).record;refs.push({record_type:"MORPHOLOGY_EVIDENCE",record_id:record.evidence_id,fact_ids:morphology.map((item)=>item.fact_id)});}
+    const patterns=facts.filter((item)=>item.dimension==="SPATIAL_PATTERN"),positions=facts.filter((item)=>item.dimension==="FIELD_POSITION");
+    if(patterns.length||positions.length){const record=this.captureAdapter.create(userId,`${turnId}-spatial`,"SPATIAL_EVIDENCE",{...base,evidence_id:`evidence-conversation-spatial-${hash(turnId).slice(0,16)}`,evidence_level:"SP0_LOCAL_OBSERVATION",payload:{observation_scope:patterns.some((item)=>item.governed_code==="PATCH")?"PATCH":"LOCAL_SITE",geometry:patterns.some((item)=>item.governed_code==="PATCH")?"PATCH":"UNKNOWN",field_positions:compact(positions.map((item)=>item.governed_code)),patterns:compact(patterns.map((item)=>item.governed_code)),field_extent:"LOCAL",affected_status:"AFFECTED",location_provenance:"USER_REPORTED"}}).record;refs.push({record_type:"SPATIAL_EVIDENCE",record_id:record.evidence_id,fact_ids:[...patterns,...positions].map((item)=>item.fact_id)});}
+    const water=facts.filter((item)=>item.dimension==="WATER_CONTEXT");
+    if(water.length){const record=this.captureAdapter.create(userId,`${turnId}-water`,"WATER_CONTEXT",{...base,evidence_id:`evidence-conversation-water-${hash(turnId).slice(0,16)}`,evidence_level:"WT2_ZONE_COMPARISON",payload:{water_state:"UNEVEN_WATER",zone_reference:water.map((item)=>item.source_span.text).join("; "),source:"USER_REPORTED",source_confidence:"NOT_ASSESSED"}}).record;refs.push({record_type:"WATER_CONTEXT",record_id:record.evidence_id,fact_ids:water.map((item)=>item.fact_id)});}
+    let hypothesisReference=null;
+    if(hypothesisValue){const existing=this.db.prepare("SELECT candidate_id FROM investigation_candidates WHERE owner_user_id=? AND field_id=? AND season_id=? AND case_id=? AND authorship='USER_HYPOTHESIS' AND label=?").get(userId,context.field_id,context.season_id,caseId,hypothesisValue.label);if(existing)hypothesisReference=existing.candidate_id;else hypothesisReference=this.captureAdapter.create(userId,`${turnId}-hypothesis`,"CANDIDATE",{candidate_id:`candidate-user-hypothesis-${hash({turnId,label:hypothesisValue.label}).slice(0,16)}`,field_id:context.field_id,season_id:context.season_id,case_id:caseId,candidate_class:hypothesisValue.candidate_class,label:hypothesisValue.label,support_state:"OPEN",review_state:"UNREVIEWED",authorship:"USER_HYPOTHESIS"}).record.candidate_id;}
+    return {case_id:caseId,observation_id:observationId,fact_record_references:refs,hypothesis_reference:hypothesisReference,execution_actions:[facts.length?"RECORD_EXPLICIT_FACTS":null,hypothesisValue?"ACK":null].filter(Boolean)};
+  }
+  contextPackage(userId,context,input) {
+    const lifecycleField=this.db.prepare("SELECT name,crop_profile_json,updated_at FROM lifecycle_fields WHERE owner_user_id=? AND field_id=? AND season_id=?").get(userId,context.field_id,context.season_id),stage=this.db.prepare("SELECT stage_assessment_id,crop_stage_json,cmp_stage_json,provenance,model_version,configuration_version,updated_at FROM stage_assessments WHERE owner_user_id=? AND field_id=? AND season_id=?").get(userId,context.field_id,context.season_id),bundle=this.backbone.getBundle(userId,{field_id:context.field_id,season_id:context.season_id,case_id:context.case_id});
+    let assessment=null,guidance=null;if(context.case_id){assessment=this.assessmentService.assess(userId,{field_id:context.field_id,season_id:context.season_id,case_id:context.case_id});guidance=this.guidanceService.current(userId,{field_id:context.field_id,season_id:context.season_id,case_id:context.case_id});}
+    let image=null,visualResult=null,visualRequest=null;if(input.image_evidence_id){image=this.visualEvidenceService.get(userId,input.image_evidence_id);if(image.field_id!==context.field_id||image.crop_season_id!==context.season_id||(context.case_id&&image.case_id&&image.case_id!==context.case_id))fail("image context mismatch","AUTHORIZATION_ERROR");const history=this.visualPerceptionService.history(userId,input.image_evidence_id).history;visualResult=history.at(-1)??null;}if(context.case_id&&(input.image_evidence_id||guidance?.inspection_domain==="VISUAL_EVIDENCE")){try{visualRequest=this.visualEvidenceService.nextRequest(userId,{field_id:context.field_id,crop_season_id:context.season_id,case_id:context.case_id});}catch{visualRequest=null;}}
+    const value={ context_version:CONVERSATION_CONTEXT_VERSION, identity:{field_id:context.field_id,season_id:context.season_id,case_id:context.case_id,observation_id:input.observation_id,guidance_id:guidance?.guidance_id??input.guidance_id,image_evidence_id:input.image_evidence_id}, field:{name:lifecycleField.name,crop_profile:JSON.parse(lifecycleField.crop_profile_json),updated_at:lifecycleField.updated_at}, stage:stage?{stage_assessment_id:stage.stage_assessment_id,crop_stage:stage.crop_stage_json?JSON.parse(stage.crop_stage_json):null,cmp_stage:stage.cmp_stage_json?JSON.parse(stage.cmp_stage_json):null,provenance:stage.provenance,model_version:stage.model_version,configuration_version:stage.configuration_version,updated_at:stage.updated_at}:null, investigation:{case:bundle.cases.at(-1)??null,observation_refs:bundle.observations.map((item)=>item.observation_id),evidence_refs:bundle.evidence.map((item)=>item.evidence_id),known_facts:bundle.evidence.map((item)=>({evidence_id:item.evidence_id,evidence_type:item.evidence_type,evidence_level:item.evidence_level,review_state:item.review_state})),management_refs:bundle.management_events.map((item)=>({management_event_id:item.management_event_id,event_type:item.event_type,event_at:item.event_at,time_precision:item.time_precision})),candidate_refs:bundle.candidates.map((item)=>({candidate_id:item.candidate_id,authorship:item.authorship,support_state:item.support_state})),follow_up_refs:bundle.follow_up_plans.map((item)=>({follow_up_id:item.follow_up_id,status:item.status}))}, assessment:assessment?{assessment_id:assessment.assessment_id,revision:assessment.assessment_revision,evidence_sufficiency:assessment.evidence_sufficiency,next_best_evidence:assessment.next_best_evidence,stop_condition:assessment.stop_condition,source_bundle_hash:assessment.source_bundle_hash,rule_version:assessment.rule_version,rule_hash:assessment.rule_hash}:null, guidance:guidance?{guidance_id:guidance.guidance_id,status:guidance.status,guidance_type:guidance.guidance_type,title:guidance.title,instruction:guidance.instruction,why_now:guidance.why_now,what_to_inspect:guidance.what_to_inspect,where_to_inspect:guidance.where_to_inspect,how_to_inspect:guidance.how_to_inspect,reason_code:guidance.reason_code,context_hash:guidance.context_hash,limitations:guidance.limitations}:null, visual:{active_request:visualRequest,image:image?{image_evidence_id:image.image_evidence_id,status:image.status,plant_part_scope:image.plant_part_scope,spatial_scope:image.spatial_scope,view_type:image.view_type}:null,latest_perception:visualResult}, constraints:{conversation_is_evidence:false,model_is_scientific_authority:false,workflow_state_is_truth:false,management_runtime_implemented:false,automatic_learning:false} };
+    return {...value,context_hash:hash(value)};
+  }
+  minimumProviderContext(pkg) { return { identity:pkg.identity, field:{crop:pkg.field.crop_profile.crop??null}, stage:{crop_stage:pkg.stage?.crop_stage?.code??null,cmp_stage:pkg.stage?.cmp_stage?.stage_id??null}, known_fact_types:pkg.investigation.known_facts.map((item)=>item.evidence_type), known_management_types:pkg.investigation.management_refs.map((item)=>item.event_type), current_stop_condition:pkg.assessment?.stop_condition??null, active_visual_target:pkg.visual.active_request?.target??null, context_hash:pkg.context_hash }; }
+  primaryResponse(interpretation,pkg,visual) {
+    if(interpretation.intent==="MANAGEMENT_QUERY")return {action:"MANAGEMENT_HANDOFF",response_type:"MANAGEMENT_HANDOFF_NOT_IMPLEMENTED",text:"ตอนนี้ระบบยังไม่ให้คำแนะนำการใช้สารหรือการจัดการจากบทสนทนา บันทึกคำถามไว้เพื่อส่งต่อขั้นทบทวนการจัดการโดยผู้มีอำนาจได้",question:null,ui_action:"NONE"};
+    if(interpretation.intent==="KNOWLEDGE_QUERY")return {action:"KNOWLEDGE_LOOKUP",response_type:"GENERAL_KNOWLEDGE",text:"คำถามความรู้ทั่วไปแยกจากข้อค้นพบของแปลงนี้ เปิดคลังความรู้เพื่อดูแหล่งอ้างอิงได้",question:null,ui_action:"OPEN_KNOWLEDGE"};
+    if(visual){if(visual.status!=="COMPLETED")return {action:"ACK",response_type:"SYSTEM_LIMITATION",text:"เก็บภาพไว้แล้ว แต่ระบบอ่านภาพอัตโนมัติยังไม่พร้อมในขณะนี้ หลักฐานเดิมของแปลงยังอยู่ครบ",question:null,ui_action:"OPEN_VISUAL_REVIEW"};const next=visual.result?.next_visual_action;if(next?.action==="BETTER_VIEW_REQUIRED")return {action:"REQUEST_VISUAL_EVIDENCE",response_type:"VISUAL_GUIDANCE",text:"ภาพถูกเก็บไว้แล้ว แต่ยังเห็นจุดที่ต้องตรวจไม่ชัด ขอภาพเพิ่มอีกหนึ่งมุมตามคำขอเดิม",question:null,ui_action:"OPEN_CAMERA"};return {action:"CHECK_VISUAL_EVIDENCE",response_type:"VISUAL_GUIDANCE",text:"อ่านภาพตามเป้าหมายเดิมแล้ว ผลที่เห็นยังเป็นข้อเสนอจากระบบ รอคุณยืนยันหรือแก้ไขก่อนจึงจะเป็นหลักฐานของเคส",question:null,ui_action:"OPEN_VISUAL_REVIEW"};}
+    const guidance=pkg.guidance;if(guidance?.guidance_type==="NO_ADDITIONAL_INSPECTION")return {action:"NO_ADDITIONAL_ACTION",response_type:"NO_ADDITIONAL_ACTION",text:"รับทราบครับ ตอนนี้ยังไม่ต้องตรวจเพิ่ม เก็บสถานะเคสและหลักฐานปัจจุบันไว้ก่อน",question:null,ui_action:"OPEN_CASE"};
+    if(guidance?.reason_code==="EXPERT_REVIEW_REQUIRED")return {action:"REQUEST_EXPERT_REVIEW",response_type:"EXPERT_HANDOFF",text:"หลักฐานภาคสนามถึงจุดที่ควรส่งเคสให้ผู้เชี่ยวชาญทบทวนแล้ว โดยยังไม่สรุปสาเหตุแทนผู้เชี่ยวชาญ",question:null,ui_action:"OPEN_CASE"};
+    if(guidance?.reason_code==="LAB_EVIDENCE_REQUIRED")return {action:"REQUEST_LAB_EVIDENCE",response_type:"LAB_HANDOFF",text:"ขั้นถัดไปคือส่งต่อหลักฐานตามข้อกำหนดห้องปฏิบัติการ โดยยังไม่สรุปผลแทนห้องปฏิบัติการ",question:null,ui_action:"OPEN_CASE"};
+    if(guidance){const visualGuidance=guidance.inspection_domain==="VISUAL_EVIDENCE";return {action:visualGuidance?"REQUEST_VISUAL_EVIDENCE":"REQUEST_FIELD_CHECK",response_type:visualGuidance?"VISUAL_GUIDANCE":"FIELD_GUIDANCE",text:`รับทราบครับ ขั้นถัดไปที่ระบบแนะนำคือ ${guidance.title}: ${guidance.what_to_inspect}`,question:null,ui_action:visualGuidance?"OPEN_CAMERA":"OPEN_GUIDANCE"};}
+    if(interpretation.user_hypothesis)return {action:"ACK",response_type:"UNCERTAINTY_SUMMARY",text:"รับทราบว่าเป็นข้อสันนิษฐานของคุณ ระบบจะเก็บแยกจากสิ่งที่สังเกตจริงและยังไม่ถือเป็นผลวินิจฉัย",question:null,ui_action:"OPEN_CASE"};
+    return {action:"ACK",response_type:"ACKNOWLEDGEMENT",text:interpretation.explicit_facts.length?"รับทราบและบันทึกเฉพาะสิ่งที่คุณระบุชัดเจนไว้ในเคสแล้วครับ":"รับทราบครับ",question:null,ui_action:"OPEN_FIELD"};
+  }
+  touchConversation(userId,input,conversationId,now) {
+    if(!input.conversation_id){this.db.prepare("INSERT INTO governed_conversations VALUES(?,?,?,?,?,?,?,?,?,?,?)").run(conversationId,userId,null,null,null,input.entry_point,"ACTIVE",null,1,now,now);return 1;}
+    const prior=this.conversation(userId,conversationId);if(input.expected_conversation_revision!=null&&prior.revision!==input.expected_conversation_revision)fail("conversation changed before turn","VERSION_CONFLICT");const changed=this.db.prepare("UPDATE governed_conversations SET entry_point=?,revision=revision+1,updated_at=? WHERE conversation_id=? AND owner_user_id=? AND revision=?").run(input.entry_point,now,conversationId,userId,prior.revision).changes;if(changed!==1)fail("conversation changed before turn","VERSION_CONFLICT");return prior.revision+1;
+  }
+  clarification(userId,input,resolution,interpretation,turnId) {
+    const options=resolution.ambiguity.options,text=resolution.ambiguity.type==="CASE"?"มีหลายเคสที่ยังเปิดอยู่ ต้องการคุยต่อในเคสไหนครับ":"มีหลายแปลงที่ใช้งานอยู่ ต้องการคุยถึงแปลงไหนครับ",now=this.now(),conversationId=input.conversation_id??`conversation-${this.idProvider()}`,revision=this.touchConversation(userId,input,conversationId,now),response={turn_id:turnId,conversation_id:conversationId,conversation_revision:revision,context:{resolved:false,resolution_source:resolution.resolution_source,ambiguity:resolution.ambiguity},intent:interpretation.intent,explicit_facts:interpretation.explicit_facts,fact_record_references:[],actions:[{action:"ASK_ONE_CLARIFICATION",options}],assessment_reference:null,guidance_reference:null,visual_references:[],response_type:"CLARIFICATION",text,question:text,ui_action:"NONE",limitations:["ระบบไม่เลือกแปลงหรือเคสแทนผู้ใช้เมื่อบริบทกำกวม"],authority:{conversation:"SERVER_ORCHESTRATED",scientific:"NONE"},provider:this.provider.getManifest(),created_at:now,output_version:CONVERSATION_OUTPUT_VERSION};
+    this.persistTurn(userId,input,turnId,conversationId,interpretation,{resolved:false},response,now);return response;
+  }
+  unscopedTurn(userId,input,interpretation,turnId) {
+    const prior=input.conversation_id?this.conversation(userId,input.conversation_id):null;if(prior?.field_id)fail("field conversation cannot become unscoped","AUTHORIZATION_ERROR");
+    const now=this.now(),conversationId=input.conversation_id??`conversation-${this.idProvider()}`,knowledge=interpretation.intent==="KNOWLEDGE_QUERY",navigation=interpretation.intent==="NAVIGATION_REQUEST",response={turn_id:turnId,conversation_id:conversationId,conversation_revision:prior?prior.revision+1:1,context:{resolved:true,scope:"GENERAL",context_version:CONVERSATION_CONTEXT_VERSION,context_hash:hash({scope:"GENERAL",intent:interpretation.intent})},intent:interpretation.intent,explicit_facts:[],user_hypothesis:null,fact_record_references:[],hypothesis_reference:null,execution_actions:[],actions:[{action:knowledge?"KNOWLEDGE_LOOKUP":navigation?"NAVIGATE":"ACK"}],assessment_reference:null,guidance_reference:null,visual_references:[],response_type:knowledge?"GENERAL_KNOWLEDGE":"ACKNOWLEDGEMENT",text:knowledge?"คำถามความรู้ทั่วไปแยกจากข้อค้นพบของแปลง เปิดคลังความรู้เพื่อดูข้อมูลพร้อมแหล่งอ้างอิงได้":navigation?"รับทราบครับ ใช้ทางลัดเพื่อเปิดส่วนที่ต้องการได้":"รับทราบครับ",question:null,ui_action:knowledge?"OPEN_KNOWLEDGE":"NONE",technical_detail:null,limitations:["บทสนทนาทั่วไปนี้ไม่ได้ผูกเป็นข้อค้นพบหรือหลักฐานของแปลง"],authority:{conversation:"SERVER_ORCHESTRATED",memory:"SERVER_PERSISTED_NON_EVIDENCE",scientific:"NONE",provider_scientific_authority:false},provider:this.provider.getManifest(),created_at:now,output_version:CONVERSATION_OUTPUT_VERSION};
+    if(!prior)this.db.prepare("INSERT INTO governed_conversations VALUES(?,?,?,?,?,?,?,?,?,?,?)").run(conversationId,userId,null,null,null,input.entry_point,"ACTIVE",response.context.context_hash,1,now,now);else{if(input.expected_conversation_revision!=null&&prior.revision!==input.expected_conversation_revision)fail("conversation changed before turn","VERSION_CONFLICT");const changed=this.db.prepare("UPDATE governed_conversations SET context_hash=?,revision=revision+1,updated_at=? WHERE conversation_id=? AND owner_user_id=? AND revision=?").run(response.context.context_hash,now,conversationId,userId,prior.revision).changes;if(changed!==1)fail("conversation changed before turn","VERSION_CONFLICT");}
+    this.persistTurn(userId,input,turnId,conversationId,interpretation,response.context,response,now);return response;
+  }
+  persistTurn(userId,input,turnId,conversationId,interpretation,context,response,now) { this.db.prepare("INSERT INTO governed_conversation_turns VALUES(?,?,?,?,?,?,?,?,?,?,?,?)").run(turnId,conversationId,userId,input.request_id,input.corrects_turn_id,input.message,JSON.stringify(input),JSON.stringify(interpretation),JSON.stringify(context),JSON.stringify(response),JSON.stringify(this.provider.getManifest()),now); }
+  turn(userId,rawInput) {
+    const requestId=identifier(rawInput?.request_id,"request_id"),key=`${userId}:${requestId}`,running=this.inFlight.get(key);if(running)return running;
+    const work=this.executeTurn(userId,rawInput).finally(()=>this.inFlight.delete(key));this.inFlight.set(key,work);return work;
+  }
+  async executeTurn(userId,rawInput) {
+    identifier(userId,"user_id");const input=validateInput(rawInput),existing=this.db.prepare("SELECT response_json FROM governed_conversation_turns WHERE owner_user_id=? AND request_id=?").get(userId,input.request_id);if(existing)return {...JSON.parse(existing.response_json),idempotent_replay:true};
+    const turnId=input.turn_id??`turn-${hash({userId,requestId:input.request_id}).slice(0,24)}`;if(input.conversation_id&&input.expected_conversation_revision!=null&&this.conversation(userId,input.conversation_id).revision!==input.expected_conversation_revision)fail("conversation changed before turn","VERSION_CONFLICT");if(input.corrects_turn_id){const corrected=this.db.prepare("SELECT turn_id FROM governed_conversation_turns WHERE turn_id=? AND owner_user_id=?").get(input.corrects_turn_id,userId);if(!corrected)fail("corrected turn scope not found","AUTHORIZATION_ERROR");}
+    let interpretation=localInterpretation(input.message,input),providerManifest=this.provider.getManifest();
+    if(providerManifest.required){const generalUnscoped=input.entry_point==="GENERAL_CHAT"&&!input.field_id&&!input.route_context?.field_id&&!input.explicit_reference?.field_id&&!input.conversation_id,preliminary=generalUnscoped?{resolved:false}:this.resolveContext(userId,input,interpretation),providerPackage=preliminary.resolved?this.contextPackage(userId,preliminary,input):null,minimum=providerPackage?{...this.minimumProviderContext(providerPackage),entry_point:input.entry_point}:{entry_point:input.entry_point};try{const proposal=validateProviderProposal(await this.provider.interpret({message:input.message,minimumContext:minimum}),input.message),mergedFacts=[...interpretation.explicit_facts];for(const fact of proposal.explicit_facts)if(!mergedFacts.some((item)=>item.dimension===fact.dimension&&item.governed_code===fact.governed_code&&item.source_span.start===fact.source_span.start))mergedFacts.push(fact);const localPriority=["MANAGEMENT_QUERY","VISUAL_CHECK","FIELD_OBSERVATION","USER_HYPOTHESIS"].includes(interpretation.intent);interpretation={...interpretation,...proposal,intent:localPriority?interpretation.intent:proposal.intent,explicit_facts:mergedFacts,user_hypothesis:interpretation.user_hypothesis??proposal.user_hypothesis,interpretation_version:"provider-validated-conversation-interpretation/v1"};}catch(error){const now=this.now(),conversationId=input.conversation_id??`conversation-${this.idProvider()}`,revision=this.touchConversation(userId,input,conversationId,now),response={turn_id:turnId,conversation_id:conversationId,conversation_revision:revision,context:{resolved:false},intent:interpretation.intent,explicit_facts:[],fact_record_references:[],actions:[{action:"ACK"}],assessment_reference:null,guidance_reference:null,visual_references:[],response_type:"SYSTEM_LIMITATION",text:"บริการสนทนาไม่พร้อมในขณะนี้ แต่ข้อมูลแปลง การตรวจ เคส และหลักฐานเดิมยังใช้งานได้ตามปกติ",question:null,ui_action:"NONE",error_code:"CONVERSATION_UNAVAILABLE",limitations:[error.message,"ไม่มีการบันทึกข้อเท็จจริงจากการตีความที่ล้มเหลว"],authority:{conversation:"SERVER_ORCHESTRATED",scientific:"UNCHANGED"},provider:providerManifest,created_at:now,output_version:CONVERSATION_OUTPUT_VERSION};this.persistTurn(userId,input,turnId,conversationId,interpretation,{resolved:false},response,now);return response;}}
+    const extractedAt=this.now();interpretation={...interpretation,explicit_facts:interpretation.explicit_facts.map((item)=>({...item,extracted_at:item.extracted_at??extractedAt})),user_hypothesis:interpretation.user_hypothesis?{...interpretation.user_hypothesis,extracted_at:interpretation.user_hypothesis.extracted_at??extractedAt}:null};
+    if(input.entry_point==="GENERAL_CHAT"&&!input.field_id&&!input.route_context?.field_id&&!input.explicit_reference?.field_id&&!input.conversation_id&&["KNOWLEDGE_QUERY","NAVIGATION_REQUEST","SOCIAL_OR_OTHER"].includes(interpretation.intent))return this.unscopedTurn(userId,input,interpretation,turnId);
+    const resolution=this.resolveContext(userId,input,interpretation);if(!resolution.resolved)return this.clarification(userId,input,resolution,interpretation,turnId);
+    const prior=input.conversation_id?this.conversation(userId,input.conversation_id):null;if(input.expected_conversation_revision!=null&&prior?.revision!==input.expected_conversation_revision)fail("conversation changed before turn","VERSION_CONFLICT");
+    const captured=this.capture(userId,resolution,interpretation,turnId,input.message),context={...resolution,case_id:captured.case_id},pkg=this.contextPackage(userId,context,input);let visual=null;if(input.image_evidence_id&&interpretation.intent==="VISUAL_CHECK")visual=await this.visualPerceptionService.request(userId,{image_evidence_id:input.image_evidence_id,requested_target:input.requested_visual_target});
+    const primary=this.primaryResponse(interpretation,pkg,visual),now=this.now(),conversationId=input.conversation_id??`conversation-${this.idProvider()}`;
+    if(!prior)this.db.prepare("INSERT INTO governed_conversations VALUES(?,?,?,?,?,?,?,?,?,?,?)").run(conversationId,userId,context.field_id,context.season_id,context.case_id,input.entry_point,"ACTIVE",pkg.context_hash,1,now,now);else{const changed=this.db.prepare("UPDATE governed_conversations SET field_id=?,season_id=?,case_id=?,entry_point=?,context_hash=?,revision=revision+1,updated_at=? WHERE conversation_id=? AND owner_user_id=? AND revision=?").run(context.field_id,context.season_id,context.case_id,input.entry_point,pkg.context_hash,now,conversationId,userId,prior.revision).changes;if(changed!==1)fail("conversation changed before turn","VERSION_CONFLICT");}
+    const response={turn_id:turnId,conversation_id:conversationId,conversation_revision:prior?prior.revision+1:1,context:{resolved:true,field_id:context.field_id,season_id:context.season_id,case_id:context.case_id,resolution_source:context.resolution_source,context_hash:pkg.context_hash,context_version:CONVERSATION_CONTEXT_VERSION},intent:interpretation.intent,explicit_facts:interpretation.explicit_facts,user_hypothesis:interpretation.user_hypothesis,fact_record_references:captured.fact_record_references,hypothesis_reference:captured.hypothesis_reference,execution_actions:captured.execution_actions,actions:[{action:primary.action}],assessment_reference:pkg.assessment?{assessment_id:pkg.assessment.assessment_id,revision:pkg.assessment.revision,source_bundle_hash:pkg.assessment.source_bundle_hash}:null,guidance_reference:pkg.guidance?{guidance_id:pkg.guidance.guidance_id,status:pkg.guidance.status,context_hash:pkg.guidance.context_hash}:null,visual_references:compact([input.image_evidence_id,visual?.request?.analysis_request_id,visual?.result?.perception_result_id]),response_type:primary.response_type,text:primary.text,question:primary.question,ui_action:primary.ui_action,technical_detail:input.audience==="SPA"?{governed_codes:interpretation.explicit_facts.map((item)=>item.governed_code),context_package:pkg,execution_actions:captured.execution_actions}:null,limitations:["บทสนทนาไม่ใช่หลักฐานจนกว่าข้อเท็จจริงชัดเจนจะผ่านการบันทึกแบบ governed","ผล Step C และ Step D เป็นอำนาจของบริการเดิม ไม่ได้คำนวณโดยโมเดลสนทนา"],authority:{conversation:"SERVER_ORCHESTRATED",memory:"SERVER_PERSISTED_NON_EVIDENCE",scientific:"INVESTIGATION_BACKBONE_STEP_C_STEP_D",provider_scientific_authority:false},provider:providerManifest,created_at:now,output_version:CONVERSATION_OUTPUT_VERSION};
+    this.persistTurn(userId,input,turnId,conversationId,interpretation,pkg,response,now);return response;
+  }
+  list(userId) { identifier(userId,"user_id");return {authority:"SERVER_CONVERSATION_MEMORY",conversations:this.db.prepare("SELECT * FROM governed_conversations WHERE owner_user_id=? ORDER BY updated_at DESC").all(userId).map(safeConversation)}; }
+  history(userId,conversationId) { const conversation=this.conversation(userId,identifier(conversationId,"conversation_id")),turns=this.db.prepare("SELECT turn_id,request_id,corrects_turn_id,raw_message,response_json,created_at FROM governed_conversation_turns WHERE owner_user_id=? AND conversation_id=? ORDER BY created_at,turn_id").all(userId,conversationId).map((row)=>({turn_id:row.turn_id,request_id:row.request_id,corrects_turn_id:row.corrects_turn_id,raw_message:row.raw_message,response:JSON.parse(row.response_json),created_at:row.created_at,raw_message_is_evidence:false}));return {authority:"SERVER_CONVERSATION_MEMORY",conversation:safeConversation(conversation),turns}; }
+  rebuildContext(userId,conversationId) { const conversation=this.conversation(userId,conversationId);if(!conversation.field_id||!conversation.season_id)return {conversation:safeConversation(conversation),context:null};const input={observation_id:null,guidance_id:null,image_evidence_id:null},pkg=this.contextPackage(userId,{field_id:conversation.field_id,season_id:conversation.season_id,case_id:conversation.case_id},input);if(pkg.context_hash!==conversation.context_hash)this.db.prepare("UPDATE governed_conversations SET context_hash=?,revision=revision+1,updated_at=? WHERE conversation_id=? AND owner_user_id=?").run(pkg.context_hash,this.now(),conversationId,userId);return {conversation:safeConversation(this.conversation(userId,conversationId)),context:pkg}; }
+}

@@ -26,6 +26,8 @@ const visualEvidenceRuntime = await readFile(resolve(root, "visual-evidence.mjs"
 const visualEvidenceDocumentation = await readFile(resolve(root, "VISUAL_EVIDENCE_RUNTIME.md"), "utf8");
 const visualPerceptionRuntime = await readFile(resolve(root, "visual-perception.mjs"), "utf8");
 const visualPerceptionDocumentation = await readFile(resolve(root, "VISUAL_PERCEPTION_ADAPTER.md"), "utf8");
+const conversationRuntime = await readFile(resolve(root, "conversation-orchestrator.mjs"), "utf8");
+const conversationDocumentation = await readFile(resolve(root, "GOVERNED_CONVERSATION_ORCHESTRATOR.md"), "utf8");
 const candidateProvider = await readFile(resolve(root, "candidate-provider.mjs"), "utf8");
 const candidateProviderPackage = JSON.parse(await readFile(resolve(root, "candidate-provider-package.json"), "utf8"));
 const candidateProviderDocumentation = await readFile(resolve(root, "CANDIDATE_PROVIDER.md"), "utf8");
@@ -114,7 +116,7 @@ for (const required of ["api.open-meteo.com/v1/forecast", "temperature_2m", "wea
 }
 if (!fieldApp.includes('source: "FIELD_CENTROID"') || !fieldApp.includes("บริเวณแปลง · Open-Meteo")) failures.push("field-app.js must request and label field-centroid weather");
 if (!fieldApp.includes("new LLMGateway(new ServerLLMAdapter())")) failures.push("field-app.js missing server-only LLM adapter");
-for (const required of ["/api/assistant/chat", "store:false", "OPENAI_API_KEY", "gpt-5.6-luna", "Candidate", "field_id", "season_id"]) if (!serverRuntime.includes(required)) failures.push(`server.mjs missing AI gateway boundary: ${required}`);
+for (const required of ["/api/assistant/chat", "MIGRATION_REQUIRED", "/api/pilot/conversation-turns", "createConfiguredVisualPerceptionProvider", "field_id", "season_id"]) if (!serverRuntime.includes(required)) failures.push(`server.mjs missing governed provider or legacy migration boundary: ${required}`);
 if (serverAdapter.includes("api.openai.com") || serverAdapter.includes("OPENAI_API_KEY")) failures.push("browser server adapter must not contain provider URL or key");
 for (const required of ["assert_field_context", "assert_case_context", "assert_conversation_context", "get_guidance", "start_case", "submit_observation", "finish_case", "save_case_summary", "list_case_history", "get_management_options", "select_management_option", "PHOTO_RECEIVED", "selection_only", "field_action_performed"]) {
   if (!fieldServices.includes(required)) failures.push(`field-services.js missing Block 2 boundary: ${required}`);
@@ -148,6 +150,13 @@ for (const required of ["requestVisualPerception","getVisualPerceptionResult","g
 for (const required of ["/api/pilot/visual-perception","/api/pilot/visual-perception-history","/api/pilot/visual-perception-health","createConfiguredVisualPerceptionProvider"]) if (!serverRuntime.includes(required)) failures.push(`server.mjs missing Visual Perception API or provider boundary: ${required}`);
 for (const required of ["Purpose and authority boundary","B1 versus B2 responsibility","Provider interface and types","Structured proposal contract","Allowed and forbidden outputs","Candidate-blind and minimum-context behavior","Request lifecycle, immutability, and idempotency","Failure handling and stop conditions","Human review, Step C, and Step D","Authenticated API and diagnostics","Explicit non-goals"]) if (!visualPerceptionDocumentation.includes(required)) failures.push(`VISUAL_PERCEPTION_ADAPTER.md missing governed boundary: ${required}`);
 if (fieldApp.includes("visual-perception") || serverAdapter.includes("visual-perception")) failures.push("browser runtime must not directly invoke governed visual perception");
+for (const required of ["CONVERSATION_ORCHESTRATOR_VERSION","class GovernedConversationOrchestrator","governed_conversations","governed_conversation_turns","FIELD_OBSERVATION","USER_HYPOTHESIS","MANAGEMENT_QUERY","DEEPER_WATER_CONTEXT","CONVERSATION_UNAVAILABLE","SERVER_PERSISTED_NON_EVIDENCE","REQUEST_EXPERT_REVIEW","NO_ADDITIONAL_ACTION","provider_scientific_authority:false","store:false","strict:true"]) if (!conversationRuntime.includes(required)) failures.push(`conversation-orchestrator.mjs missing Step E contract: ${required}`);
+for (const prohibited of [/\bprobability\s*:/i,/\bdiagnosis\s*:/i,/\btreatment\s*:/i,/\bpesticide\s*:/i,/\bproduct\s*:/i,/\bdose\s*:/i,/\brate\s*:/i]) if (prohibited.test(conversationRuntime)) failures.push(`conversation-orchestrator.mjs contains prohibited scientific or management output field: ${prohibited}`);
+for (const required of ["orchestrateConversationTurn","listGovernedConversations","getGovernedConversationHistory","rebuildGovernedConversationContext"]) if (!pilotStore.includes(required)) failures.push(`pilot-store.mjs missing Governed Conversation service: ${required}`);
+for (const required of ["/api/pilot/conversation-turns","/api/pilot/conversations","/api/pilot/conversation-history","/api/pilot/conversation-context","MIGRATION_REQUIRED"]) if (!serverRuntime.includes(required)) failures.push(`server.mjs missing governed conversation API or legacy boundary: ${required}`);
+for (const required of ["Purpose and product boundary","Server memory versus provider memory","Context resolution","Authoritative Context Package","Ask-the-system-first behavior","Intent and fact extraction","One answer, multiple governed evidence records","User hypotheses","Step C and Step D integration","B1/B2 integration","Provider and secret boundary","Failure and degraded mode","Legacy transition and UI preservation","Non-goals"]) if (!conversationDocumentation.includes(required)) failures.push(`GOVERNED_CONVERSATION_ORCHESTRATOR.md missing governed boundary: ${required}`);
+if (!serverAdapter.includes("/api/pilot/conversation-turns") || !serverAdapter.includes("/api/pilot/conversations")) failures.push("browser adapter must use and resume governed server conversation memory");
+if (serverAdapter.includes("/api/assistant/chat")) failures.push("browser adapter must not use the legacy free-form field chat endpoint");
 for (const required of ["data-login-form", "data-map-mode=\"tap\"", "data-map-mode=\"center\"", "SYSTEM_ESTIMATED", "USER_CONFIRMED", "USER_OVERRIDDEN", "expected_planting_date"]) {
   if (!fieldApp.includes(required)) failures.push(`field-app.js missing workflow: ${required}`);
 }
