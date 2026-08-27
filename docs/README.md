@@ -21,6 +21,7 @@ implemented engineering behavior from conceptual future knowledge work.
 | Product and UX reviewers | [Knowledge Explorer prototype](../prototype/knowledge-explorer/README.md) | Review product vision, fictional mock content, and the prepared but not-yet-live Pages preview |
 | Workspace product reviewers | [Knowledge Lab prototype](../prototype/knowledge-lab/README.md) | Test the Thai-first static authoring and review experience with fictional placeholders |
 | Field-workspace runtime reviewers | [Governed Guidance Intelligence](../prototype/sp-assistant/GUIDANCE_INTELLIGENCE.md) | Review the deterministic Step D Guidance contract, lifecycle, provenance, suppression, and APIs |
+| Visual-evidence runtime reviewers | [Governed Visual Evidence Runtime](../prototype/sp-assistant/VISUAL_EVIDENCE_RUNTIME.md) | Review Step B1 image metadata, observability, human review, Investigation linking, and safety boundaries |
 
 Additional entry points are the [architecture book](architecture/README.md),
 [project scope and FAQ](project/README.md), [concept guides](concepts/README.md),

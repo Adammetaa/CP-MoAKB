@@ -22,6 +22,8 @@ const captureAdapter = await readFile(resolve(root, "assets", "investigation-cap
 const intelligenceRuntime = await readFile(resolve(root, "investigation-intelligence.mjs"), "utf8");
 const guidanceRuntime = await readFile(resolve(root, "guidance-intelligence.mjs"), "utf8");
 const guidanceDocumentation = await readFile(resolve(root, "GUIDANCE_INTELLIGENCE.md"), "utf8");
+const visualEvidenceRuntime = await readFile(resolve(root, "visual-evidence.mjs"), "utf8");
+const visualEvidenceDocumentation = await readFile(resolve(root, "VISUAL_EVIDENCE_RUNTIME.md"), "utf8");
 const candidateProvider = await readFile(resolve(root, "candidate-provider.mjs"), "utf8");
 const candidateProviderPackage = JSON.parse(await readFile(resolve(root, "candidate-provider-package.json"), "utf8"));
 const candidateProviderDocumentation = await readFile(resolve(root, "CANDIDATE_PROVIDER.md"), "utf8");
@@ -134,6 +136,11 @@ for (const prohibited of [/api\.openai\.com/i,/OPENAI_API_KEY/i,/fetch\s*\(/i,/\
 for (const required of ["getCurrentGovernedGuidance","getGovernedGuidanceHistory","transitionGovernedGuidance","getGovernedGuidanceDiagnostics"]) if (!pilotStore.includes(required)) failures.push(`pilot-store.mjs missing Guidance Intelligence service: ${required}`);
 for (const required of ["/api/pilot/guidance","/api/pilot/guidance-history","/api/pilot/guidance-actions","/api/pilot/guidance-diagnostics"]) if (!serverRuntime.includes(required)) failures.push(`server.mjs missing Guidance Intelligence API: ${required}`);
 for (const required of ["Guidance is not Investigation","Guidance is not Evidence","Guidance is not Management","Guidance is not a Reminder","Guidance is not Diagnosis","Selection order","Stop conditions","Authenticated APIs","Explicit non-goals"]) if (!guidanceDocumentation.includes(required)) failures.push(`GUIDANCE_INTELLIGENCE.md missing governed boundary: ${required}`);
+for (const required of ["VISUAL_EVIDENCE_RUNTIME_VERSION","VE0_RAW_IMAGE_ONLY","VE4_FIELD_LINKED_REVIEWED_VISUAL_EVIDENCE","qualityDimensions","observabilityStates","SEARCHED_NOT_FOUND requires an assessable appropriate view","VISUAL_VOCABULARY_GAP","TEST_ONLY_VISUAL_PERCEPTION_PROVIDER cannot load in normal runtime","scientific_amplification:false","training_eligible:false","raw_image_changes_candidate_state:false","governed_guidance_items","MORPHOLOGY_EVIDENCE"]) if (!visualEvidenceRuntime.includes(required)) failures.push(`visual-evidence.mjs missing Step B1 contract: ${required}`);
+for (const prohibited of [/api\.openai\.com/i,/OPENAI_API_KEY/i,/fetch\s*\(/i,/\bquality_score\b/i,/\bprobability\s*:/i,/\bproduct\s*:/i,/\brate\s*:/i]) if (prohibited.test(visualEvidenceRuntime)) failures.push(`visual-evidence.mjs contains prohibited perception, scoring, or management coupling: ${prohibited}`);
+for (const required of ["createImageEvidence","getImageEvidence","getVisualEvidenceBundle","addVisualAssessment","reviewVisualObservation","getNextVisualRequest"]) if (!pilotStore.includes(required)) failures.push(`pilot-store.mjs missing Visual Evidence service: ${required}`);
+for (const required of ["/api/pilot/visual-evidence","/api/pilot/visual-evidence-bundle","/api/pilot/visual-evidence-assessments","/api/pilot/visual-evidence-reviews","/api/pilot/visual-evidence-request"]) if (!serverRuntime.includes(required)) failures.push(`server.mjs missing Visual Evidence API: ${required}`);
+for (const required of ["Image is not Diagnosis","Quality versus observability","Visible features and vocabulary","VE maturity and review lifecycle","Affected versus normal","Step D integration","Step C invalidation","TRAINING_ELIGIBLE","Perception provider boundary","Explicit non-goals"]) if (!visualEvidenceDocumentation.includes(required)) failures.push(`VISUAL_EVIDENCE_RUNTIME.md missing governed boundary: ${required}`);
 for (const required of ["data-login-form", "data-map-mode=\"tap\"", "data-map-mode=\"center\"", "SYSTEM_ESTIMATED", "USER_CONFIRMED", "USER_OVERRIDDEN", "expected_planting_date"]) {
   if (!fieldApp.includes(required)) failures.push(`field-app.js missing workflow: ${required}`);
 }

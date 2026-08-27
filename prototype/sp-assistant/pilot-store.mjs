@@ -4,6 +4,7 @@ import { dirname, resolve } from "node:path";
 import { InvestigationBackbone, initializeInvestigationSchema } from "./investigation-backbone.mjs";
 import { InvestigationIntelligenceService, initializeInvestigationIntelligenceSchema } from "./investigation-intelligence.mjs";
 import { GuidanceIntelligenceService, initializeGuidanceIntelligenceSchema } from "./guidance-intelligence.mjs";
+import { VisualEvidenceService, initializeVisualEvidenceSchema } from "./visual-evidence.mjs";
 
 const COLLECTIONS = ["users", "fields", "seasons", "activities", "cases", "observations", "evidence", "conversations", "messages", "guidance", "decision_logs", "case_summaries", "weather_snapshots"];
 const STAGE_PROVENANCE = new Set(["SYSTEM_ESTIMATED", "USER_CONFIRMED", "USER_OVERRIDDEN"]);
@@ -30,7 +31,7 @@ function safeWorkspace(state) {
 }
 
 export class PilotStore {
-  constructor({ dbPath, exportDir, investigationRuleProvider = null, investigationCandidateProvider = null, intelligenceClock = null, intelligenceIdProvider = null, guidanceRuleProvider = null, guidanceClock = null, guidanceIdProvider = null }) {
+  constructor({ dbPath, exportDir, investigationRuleProvider = null, investigationCandidateProvider = null, intelligenceClock = null, intelligenceIdProvider = null, guidanceRuleProvider = null, guidanceClock = null, guidanceIdProvider = null, visualPerceptionProvider = null, visualClock = null, visualIdProvider = null }) {
     this.dbPath = resolve(dbPath);
     this.exportDir = resolve(exportDir);
     this.db = null;
@@ -44,6 +45,10 @@ export class PilotStore {
     this.guidanceClock = guidanceClock;
     this.guidanceIdProvider = guidanceIdProvider;
     this.guidanceIntelligence = null;
+    this.visualPerceptionProvider = visualPerceptionProvider;
+    this.visualClock = visualClock;
+    this.visualIdProvider = visualIdProvider;
+    this.visualEvidence = null;
   }
   async open() {
     await mkdir(dirname(this.dbPath), { recursive: true });
@@ -67,9 +72,11 @@ export class PilotStore {
     initializeInvestigationSchema(this.db);
     initializeInvestigationIntelligenceSchema(this.db);
     initializeGuidanceIntelligenceSchema(this.db);
+    initializeVisualEvidenceSchema(this.db);
     this.investigation = new InvestigationBackbone(this.db);
     this.investigationIntelligence = new InvestigationIntelligenceService(this.db,this.investigation,{...(this.investigationRuleProvider?{ruleProvider:this.investigationRuleProvider}:{}),...(this.investigationCandidateProvider?{candidateProvider:this.investigationCandidateProvider}:{}),...(this.intelligenceClock?{clock:this.intelligenceClock}:{}),...(this.intelligenceIdProvider?{idProvider:this.intelligenceIdProvider}:{})});
     this.guidanceIntelligence = new GuidanceIntelligenceService(this.db,this.investigation,this.investigationIntelligence,{...(this.guidanceRuleProvider?{ruleProvider:this.guidanceRuleProvider}:{}),...(this.guidanceClock?{clock:this.guidanceClock}:{}),...(this.guidanceIdProvider?{idProvider:this.guidanceIdProvider}:{})});
+    this.visualEvidence = new VisualEvidenceService(this.db,this.investigation,this.guidanceIntelligence,{...(this.visualPerceptionProvider?{perceptionProvider:this.visualPerceptionProvider}:{}),...(this.visualClock?{clock:this.visualClock}:{}),...(this.visualIdProvider?{idProvider:this.visualIdProvider}:{})});
     for (const row of this.db.prepare("SELECT user_id,state_json,updated_at FROM pilot_workspaces").all()) {
       const migrated = this.db.prepare("SELECT status FROM lifecycle_migrations WHERE owner_user_id = ?").get(row.user_id);
       if (!migrated) this.persistLifecycle(row.user_id, JSON.parse(row.state_json), row.updated_at);
@@ -172,6 +179,13 @@ export class PilotStore {
   getGovernedGuidanceHistory(userId, scope) { return this.guidanceIntelligence.history(userId,scope); }
   transitionGovernedGuidance(userId, action) { return this.guidanceIntelligence.transition(userId,action); }
   getGovernedGuidanceDiagnostics(userId, scope) { return this.guidanceIntelligence.diagnostics(userId,scope); }
+  findDuplicateImageEvidence(userId, scope) { return this.visualEvidence.findDuplicate(userId,scope); }
+  createImageEvidence(userId, image) { return this.visualEvidence.create(userId,image); }
+  getImageEvidence(userId, imageId) { return this.visualEvidence.get(userId,imageId); }
+  getVisualEvidenceBundle(userId, scope) { return this.visualEvidence.bundle(userId,scope); }
+  addVisualAssessment(userId, imageId, assessment) { return this.visualEvidence.addAssessment(userId,imageId,assessment); }
+  reviewVisualObservation(userId, review) { return this.visualEvidence.review(userId,review); }
+  getNextVisualRequest(userId, scope) { return this.visualEvidence.nextRequest(userId,scope); }
   summary() {
     const rows = this.db.prepare("SELECT state_json FROM pilot_workspaces").all(), totals = Object.fromEntries(COLLECTIONS.map((key) => [key, 0]));
     for (const row of rows) { const state = JSON.parse(row.state_json); for (const key of COLLECTIONS) totals[key] += Array.isArray(state[key]) ? state[key].length : 0; }
@@ -214,7 +228,7 @@ export class PilotStore {
     this.db.prepare("INSERT INTO pilot_meta(key,value) VALUES('last_backup_at',?) ON CONFLICT(key) DO UPDATE SET value=excluded.value").run(createdAt);
     return { created_at: createdAt, backup_file: name };
   }
-  close() { this.db?.close(); this.db = null; this.investigation = null; this.investigationIntelligence = null; this.guidanceIntelligence = null; }
+  close() { this.db?.close(); this.db = null; this.investigation = null; this.investigationIntelligence = null; this.guidanceIntelligence = null; this.visualEvidence = null; }
 }
 
 export { safeWorkspace };
