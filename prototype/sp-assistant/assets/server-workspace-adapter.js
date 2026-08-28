@@ -33,6 +33,10 @@ export class ServerWorkspaceAdapter {
   }
   async summary() { const response = await this.fetcher("/api/pilot/summary"); if (!response.ok) throw new Error("โหลดสถานะ Pilot ไม่สำเร็จ"); return response.json(); }
   async dataCatalog() { const response = await this.fetcher("/api/pilot/data-catalog"); if (!response.ok) throw new Error("โหลดสถานะข้อมูลไม่สำเร็จ"); return response.json(); }
+  managementPath(scope, endpoint = "/api/pilot/management-options") { const query=new URLSearchParams({field_id:scope.field_id,season_id:scope.season_id,case_id:scope.case_id});return `${endpoint}?${query}`; }
+  async getManagementOptions(scope) { const response=await this.fetcher(this.managementPath(scope),{headers:{accept:"application/json"}});if(!response.ok)throw new Error("โหลดทางเลือกการจัดการที่กำกับไว้ไม่สำเร็จ");return response.json(); }
+  async getManagementOptionHistory(scope) { const response=await this.fetcher(this.managementPath(scope,"/api/pilot/management-option-history"),{headers:{accept:"application/json"}});if(!response.ok)throw new Error("โหลดประวัติทางเลือกการจัดการไม่สำเร็จ");return response.json(); }
+  async getManagementReviewContext(scope) { const response=await this.fetcher(this.managementPath(scope,"/api/pilot/management-review-context"),{headers:{accept:"application/json"}});if(!response.ok)throw new Error("โหลดบริบททบทวนการจัดการไม่สำเร็จ");return response.json(); }
   async feedback(payload) { const response = await this.fetcher("/api/pilot/feedback", { method:"POST", headers:{ "content-type":"application/json" }, body:JSON.stringify(payload) }); if (!response.ok) throw new Error("บันทึก Feedback ไม่สำเร็จ"); return response.json(); }
   async uploadFeedbackImage(file) {
     const allowed = new Set(["image/jpeg", "image/png", "image/webp"]); if (!allowed.has(file.type) || file.size > 6_000_000) throw new Error("รองรับ JPG, PNG หรือ WebP ขนาดไม่เกิน 6 MB");

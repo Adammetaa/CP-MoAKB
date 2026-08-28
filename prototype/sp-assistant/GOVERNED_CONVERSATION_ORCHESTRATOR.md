@@ -12,7 +12,7 @@ The permanent authority split is:
 - An LLM is not scientific authority. It cannot set a Candidate, diagnosis, probability, support state, management choice, pesticide, product, dose, or rate.
 - Step C remains the only Investigation assessment service. Step D remains the only governed field-guidance service. Step B1/B2 remain the visual evidence and perception services.
 
-Step E does not implement management intelligence (Step F), automatic learning or promotion (Step I), diagnosis, treatment selection, product recommendation, or a redesigned chat-first UI.
+Step E does not implement management intelligence itself. It consumes the server-authoritative Step F1 Management Option Runtime and only verbalizes that structured state. It still does not implement automatic learning or promotion (Step I), diagnosis, final treatment selection, product recommendation, or a redesigned chat-first UI.
 
 ## Runtime flow
 
@@ -67,7 +67,7 @@ The package is rebuilt on each meaningful turn and by the context-resume endpoin
 
 ## Ask-the-system-first behavior
 
-Before asking the user, Step E checks server lifecycle, Investigation Bundle, Step C assessment, Step D guidance, B1 request, B2 history, and prior governed conversation context. Existing Field, season, stage, management, evidence, assessment, guidance, and visual-target facts are not requested again. Unknown remains a valid state. Step E never emits a checklist or questionnaire and never asks more than one question per turn.
+Before asking the user, Step E checks server lifecycle, Investigation Bundle, Step C assessment, Step D guidance, Step F1 management review, B1 request, B2 history, and prior governed conversation context. Existing Field, season, stage, management, evidence, assessment, guidance, option-state, and visual-target facts are not requested again. Unknown remains a valid state. Step E never emits a checklist or questionnaire and never asks more than one question per turn.
 
 ## Intent and fact extraction
 
@@ -149,4 +149,4 @@ The normal app continues to have one runtime owner and no legacy workspace. `leg
 
 ## Non-goals
 
-Step E intentionally leaves untouched: management recommendation and chemical selection, product/rate advice, autonomous diagnosis, autonomous Case resolution, provider-managed memory, automatic image upload analysis, auto-confirmation of B2 proposals, cross-field aggregation, cross-layer learning, vocabulary invention, automatic knowledge promotion, notifications, deployment, release, and production data migration.
+Step E intentionally leaves untouched: management recommendation and final selection, chemical/product/rate advice, autonomous diagnosis, autonomous Case resolution, provider-managed memory, automatic image upload analysis, auto-confirmation of B2 proposals, cross-field aggregation, cross-layer learning, vocabulary invention, automatic knowledge promotion, notifications, deployment, release, and production data migration.

@@ -18,6 +18,7 @@ const browserMapAdapter = await readFile(resolve(root, "assets", "browser-map-ad
 const prototypeLogin = await readFile(resolve(root, "assets", "prototype-login.js"), "utf8");
 const routeInteractions = await readFile(resolve(root, "assets", "route-interactions.js"), "utf8");
 const serverAdapter = await readFile(resolve(root, "assets", "server-llm-adapter.js"), "utf8");
+const serverWorkspaceAdapter = await readFile(resolve(root, "assets", "server-workspace-adapter.js"), "utf8");
 const captureAdapter = await readFile(resolve(root, "assets", "investigation-capture-adapter.js"), "utf8");
 const intelligenceRuntime = await readFile(resolve(root, "investigation-intelligence.mjs"), "utf8");
 const guidanceRuntime = await readFile(resolve(root, "guidance-intelligence.mjs"), "utf8");
@@ -28,6 +29,8 @@ const visualPerceptionRuntime = await readFile(resolve(root, "visual-perception.
 const visualPerceptionDocumentation = await readFile(resolve(root, "VISUAL_PERCEPTION_ADAPTER.md"), "utf8");
 const conversationRuntime = await readFile(resolve(root, "conversation-orchestrator.mjs"), "utf8");
 const conversationDocumentation = await readFile(resolve(root, "GOVERNED_CONVERSATION_ORCHESTRATOR.md"), "utf8");
+const managementRuntime = await readFile(resolve(root, "management-option-runtime.mjs"), "utf8");
+const managementDocumentation = await readFile(resolve(root, "GOVERNED_MANAGEMENT_OPTION_RUNTIME.md"), "utf8");
 const candidateProvider = await readFile(resolve(root, "candidate-provider.mjs"), "utf8");
 const candidateProviderPackage = JSON.parse(await readFile(resolve(root, "candidate-provider-package.json"), "utf8"));
 const candidateProviderDocumentation = await readFile(resolve(root, "CANDIDATE_PROVIDER.md"), "utf8");
@@ -157,6 +160,12 @@ for (const required of ["/api/pilot/conversation-turns","/api/pilot/conversation
 for (const required of ["Purpose and product boundary","Server memory versus provider memory","Context resolution","Authoritative Context Package","Ask-the-system-first behavior","Intent and fact extraction","One answer, multiple governed evidence records","User hypotheses","Step C and Step D integration","B1/B2 integration","Provider and secret boundary","Failure and degraded mode","Legacy transition and UI preservation","Non-goals"]) if (!conversationDocumentation.includes(required)) failures.push(`GOVERNED_CONVERSATION_ORCHESTRATOR.md missing governed boundary: ${required}`);
 if (!serverAdapter.includes("/api/pilot/conversation-turns") || !serverAdapter.includes("/api/pilot/conversations")) failures.push("browser adapter must use and resume governed server conversation memory");
 if (serverAdapter.includes("/api/assistant/chat")) failures.push("browser adapter must not use the legacy free-form field chat endpoint");
+for (const required of ["MANAGEMENT_OPTION_ENGINE_VERSION","NEED_FOR_ACTION_MODEL_VERSION","MANAGEMENT_SUITABILITY_MODEL_VERSION","SUFFICIENT_FOR_MANAGEMENT_OPTION_REVIEW","CONTINUE_MONITORING","CULTURAL_MANAGEMENT","MECHANICAL_MANAGEMENT","BIOLOGICAL_MANAGEMENT","CHEMICAL_REVIEW","EXPERT_REVIEW","NO_ACTION_CURRENTLY_JUSTIFIED","SUPPORTED_FOR_REVIEW","BLOCKED_BY_AUTHORITY","TEST_ONLY_FIXTURE cannot load in normal runtime","governed_management_reviews","governed_management_options","presentation_is_ranking:false","human_review_can_waive: false","resistance_inferred:false","field_action_created:false"]) if (!managementRuntime.includes(required)) failures.push(`management-option-runtime.mjs missing Step F1 contract: ${required}`);
+for (const prohibited of [/api\.openai\.com/i,/OPENAI_API_KEY/i,/fetch\s*\(/i,/\bscore\s*:/i,/\brank\s*:/i,/\bactive_ingredient\s*:/i,/\bproduct\s*:/i,/\brate\s*:/i,/\bdose\s*:/i]) if (prohibited.test(managementRuntime)) failures.push(`management-option-runtime.mjs contains prohibited provider, ranking, or treatment field: ${prohibited}`);
+for (const required of ["assessManagementOptions","getCurrentManagementReview","getManagementReviewHistory","getManagementReviewContext"]) if (!pilotStore.includes(required)) failures.push(`pilot-store.mjs missing Management Option service: ${required}`);
+for (const required of ["/api/pilot/management-options","/api/pilot/management-option-history","/api/pilot/management-review-context"]) if (!serverRuntime.includes(required)) failures.push(`server.mjs missing Management Option API: ${required}`);
+for (const required of ["Purpose and authority boundary","Step C and Need-for-Action gate","Management Suitability runtime","Chemical two-key gate and Thai authority","Persistence, provenance, invalidation, and history","Step D, Step E, Field Action, and Human Review","Authenticated APIs","Explicit non-goals"]) if (!managementDocumentation.includes(required)) failures.push(`GOVERNED_MANAGEMENT_OPTION_RUNTIME.md missing governed boundary: ${required}`);
+for (const required of ["getManagementOptions","getManagementOptionHistory","getManagementReviewContext"]) if (!serverWorkspaceAdapter.includes(required)) failures.push(`server-workspace-adapter.js missing Management Option read adapter: ${required}`);
 for (const required of ["data-login-form", "data-map-mode=\"tap\"", "data-map-mode=\"center\"", "SYSTEM_ESTIMATED", "USER_CONFIRMED", "USER_OVERRIDDEN", "expected_planting_date"]) {
   if (!fieldApp.includes(required)) failures.push(`field-app.js missing workflow: ${required}`);
 }
