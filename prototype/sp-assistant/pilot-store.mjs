@@ -8,6 +8,7 @@ import { VisualEvidenceService, initializeVisualEvidenceSchema } from "./visual-
 import { VisualPerceptionService, initializeVisualPerceptionSchema } from "./visual-perception.mjs";
 import { GovernedConversationOrchestrator, createConfiguredConversationProvider, initializeConversationSchema } from "./conversation-orchestrator.mjs";
 import { ManagementOptionService, initializeManagementOptionSchema } from "./management-option-runtime.mjs";
+import { DecisionActionOutcomeService, initializeDecisionActionOutcomeSchema } from "./decision-action-outcome-runtime.mjs";
 
 const COLLECTIONS = ["users", "fields", "seasons", "activities", "cases", "observations", "evidence", "conversations", "messages", "guidance", "decision_logs", "case_summaries", "weather_snapshots"];
 const STAGE_PROVENANCE = new Set(["SYSTEM_ESTIMATED", "USER_CONFIRMED", "USER_OVERRIDDEN"]);
@@ -34,7 +35,7 @@ function safeWorkspace(state) {
 }
 
 export class PilotStore {
-  constructor({ dbPath, exportDir, investigationRuleProvider = null, investigationCandidateProvider = null, intelligenceClock = null, intelligenceIdProvider = null, guidanceRuleProvider = null, guidanceClock = null, guidanceIdProvider = null, visualPerceptionProvider = null, visualClock = null, visualIdProvider = null, visualPerceptionAdapter = null, visualPerceptionClock = null, visualPerceptionIdProvider = null, visualPerceptionImageLoader = null, visualPerceptionContextResolver = null, managementRuleProvider = null, managementClock = null, managementIdProvider = null, conversationProvider = null, conversationClock = null, conversationIdProvider = null }) {
+  constructor({ dbPath, exportDir, investigationRuleProvider = null, investigationCandidateProvider = null, intelligenceClock = null, intelligenceIdProvider = null, guidanceRuleProvider = null, guidanceClock = null, guidanceIdProvider = null, visualPerceptionProvider = null, visualClock = null, visualIdProvider = null, visualPerceptionAdapter = null, visualPerceptionClock = null, visualPerceptionIdProvider = null, visualPerceptionImageLoader = null, visualPerceptionContextResolver = null, managementRuleProvider = null, managementClock = null, managementIdProvider = null, decisionActionOutcomeClock = null, decisionActionOutcomeIdProvider = null, conversationProvider = null, conversationClock = null, conversationIdProvider = null }) {
     this.dbPath = resolve(dbPath);
     this.exportDir = resolve(exportDir);
     this.db = null;
@@ -62,6 +63,9 @@ export class PilotStore {
     this.managementClock = managementClock;
     this.managementIdProvider = managementIdProvider;
     this.managementOptions = null;
+    this.decisionActionOutcomeClock = decisionActionOutcomeClock;
+    this.decisionActionOutcomeIdProvider = decisionActionOutcomeIdProvider;
+    this.decisionActionOutcomes = null;
     this.conversationProvider = conversationProvider;
     this.conversationClock = conversationClock;
     this.conversationIdProvider = conversationIdProvider;
@@ -92,6 +96,7 @@ export class PilotStore {
     initializeVisualEvidenceSchema(this.db);
     initializeVisualPerceptionSchema(this.db);
     initializeManagementOptionSchema(this.db);
+    initializeDecisionActionOutcomeSchema(this.db);
     initializeConversationSchema(this.db);
     this.investigation = new InvestigationBackbone(this.db);
     this.investigationIntelligence = new InvestigationIntelligenceService(this.db,this.investigation,{...(this.investigationRuleProvider?{ruleProvider:this.investigationRuleProvider}:{}),...(this.investigationCandidateProvider?{candidateProvider:this.investigationCandidateProvider}:{}),...(this.intelligenceClock?{clock:this.intelligenceClock}:{}),...(this.intelligenceIdProvider?{idProvider:this.intelligenceIdProvider}:{})});
@@ -99,7 +104,8 @@ export class PilotStore {
     this.visualEvidence = new VisualEvidenceService(this.db,this.investigation,this.guidanceIntelligence,{...(this.visualPerceptionProvider?{perceptionProvider:this.visualPerceptionProvider}:{}),...(this.visualClock?{clock:this.visualClock}:{}),...(this.visualIdProvider?{idProvider:this.visualIdProvider}:{})});
     this.visualPerception = new VisualPerceptionService(this.db,this.visualEvidence,{...(this.visualPerceptionAdapter?{provider:this.visualPerceptionAdapter}:{}),...(this.visualPerceptionClock?{clock:this.visualPerceptionClock}:{}),...(this.visualPerceptionIdProvider?{idProvider:this.visualPerceptionIdProvider}:{}),...(this.visualPerceptionImageLoader?{imageLoader:this.visualPerceptionImageLoader}:{}),...(this.visualPerceptionContextResolver?{contextResolver:this.visualPerceptionContextResolver}:{})});
     this.managementOptions = new ManagementOptionService(this.db,this.investigation,this.investigationIntelligence,{...(this.managementRuleProvider?{ruleProvider:this.managementRuleProvider}:{}),...(this.managementClock?{clock:this.managementClock}:{}),...(this.managementIdProvider?{idProvider:this.managementIdProvider}:{})});
-    this.conversationOrchestrator = new GovernedConversationOrchestrator(this.db,{backbone:this.investigation,assessmentService:this.investigationIntelligence,guidanceService:this.guidanceIntelligence,visualEvidenceService:this.visualEvidence,visualPerceptionService:this.visualPerception,managementService:this.managementOptions,provider:this.conversationProvider??createConfiguredConversationProvider(),...(this.conversationClock?{clock:this.conversationClock}:{}),...(this.conversationIdProvider?{idProvider:this.conversationIdProvider}:{})});
+    this.decisionActionOutcomes = new DecisionActionOutcomeService(this.db,{bundleProvider:this.investigation,assessmentService:this.investigationIntelligence,managementService:this.managementOptions,...(this.decisionActionOutcomeClock?{clock:this.decisionActionOutcomeClock}:{}),...(this.decisionActionOutcomeIdProvider?{idProvider:this.decisionActionOutcomeIdProvider}:{})});
+    this.conversationOrchestrator = new GovernedConversationOrchestrator(this.db,{backbone:this.investigation,assessmentService:this.investigationIntelligence,guidanceService:this.guidanceIntelligence,visualEvidenceService:this.visualEvidence,visualPerceptionService:this.visualPerception,managementService:this.managementOptions,decisionActionOutcomeService:this.decisionActionOutcomes,provider:this.conversationProvider??createConfiguredConversationProvider(),...(this.conversationClock?{clock:this.conversationClock}:{}),...(this.conversationIdProvider?{idProvider:this.conversationIdProvider}:{})});
     for (const row of this.db.prepare("SELECT user_id,state_json,updated_at FROM pilot_workspaces").all()) {
       const migrated = this.db.prepare("SELECT status FROM lifecycle_migrations WHERE owner_user_id = ?").get(row.user_id);
       if (!migrated) this.persistLifecycle(row.user_id, JSON.parse(row.state_json), row.updated_at);
@@ -217,6 +223,16 @@ export class PilotStore {
   getCurrentManagementReview(userId, scope) { return this.managementOptions.current(userId,scope); }
   getManagementReviewHistory(userId, scope) { return this.managementOptions.history(userId,scope); }
   getManagementReviewContext(userId, scope) { return this.managementOptions.context(userId,scope); }
+  createHumanDecision(userId, input) { return this.decisionActionOutcomes.createDecision(userId,input); }
+  getHumanDecisionHistory(userId, scope) { return this.decisionActionOutcomes.decisionHistory(userId,scope); }
+  getCurrentHumanDecision(userId, scope) { return this.decisionActionOutcomes.currentDecision(userId,scope); }
+  createManagementAction(userId, input) { return this.decisionActionOutcomes.createAction(userId,input); }
+  getManagementActionHistory(userId, scope) { return this.decisionActionOutcomes.actionHistory(userId,scope); }
+  createOutcomeObservation(userId, input) { return this.decisionActionOutcomes.createOutcomeObservation(userId,input); }
+  createOutcomeComparison(userId, input) { return this.decisionActionOutcomes.createOutcomeComparison(userId,input); }
+  getGovernedOutcomeReview(userId, managementActionId) { return this.decisionActionOutcomes.getOutcomeReview(userId,managementActionId); }
+  getGovernedOutcomeReviewHistory(userId, managementActionId) { return this.decisionActionOutcomes.outcomeReviewHistory(userId,managementActionId); }
+  getDecisionActionOutcomeContext(userId, scope) { return this.decisionActionOutcomes.serverContext(userId,scope); }
   orchestrateConversationTurn(userId, input) { return this.conversationOrchestrator.turn(userId,input); }
   listGovernedConversations(userId) { return this.conversationOrchestrator.list(userId); }
   getGovernedConversationHistory(userId, conversationId) { return this.conversationOrchestrator.history(userId,conversationId); }
@@ -227,8 +243,8 @@ export class PilotStore {
     const meta = Object.fromEntries(this.db.prepare("SELECT key,value FROM pilot_meta").all().map((row) => [row.key, row.value]));
     const feedback = this.db.prepare("SELECT COUNT(*) AS count FROM pilot_feedback").get().count;
     const feedback_by_category = Object.fromEntries(this.db.prepare("SELECT COALESCE(category,'OTHER') AS category, COUNT(*) AS count FROM pilot_feedback GROUP BY COALESCE(category,'OTHER')").all().map((item) => [item.category,item.count]));
-    const governedConversations=this.db.prepare("SELECT COUNT(*) count FROM governed_conversations").get().count,governedConversationTurns=this.db.prepare("SELECT COUNT(*) count FROM governed_conversation_turns").get().count,governedManagementReviews=this.db.prepare("SELECT COUNT(*) count FROM governed_management_reviews").get().count;
-    return { workspaces: rows.length, ...totals, governed_conversations:governedConversations, governed_conversation_turns:governedConversationTurns, governed_management_reviews:governedManagementReviews, feedback, feedback_by_category, storage_mode:"LOCAL_SQLITE", storage_path:this.dbPath, last_export_at: meta.last_export_at ?? null, last_backup_at: meta.last_backup_at ?? null };
+    const governedConversations=this.db.prepare("SELECT COUNT(*) count FROM governed_conversations").get().count,governedConversationTurns=this.db.prepare("SELECT COUNT(*) count FROM governed_conversation_turns").get().count,governedManagementReviews=this.db.prepare("SELECT COUNT(*) count FROM governed_management_reviews").get().count,governedHumanDecisions=this.db.prepare("SELECT COUNT(*) count FROM governed_human_decisions").get().count,governedManagementActions=this.db.prepare("SELECT COUNT(*) count FROM governed_management_actions").get().count,governedOutcomeObservations=this.db.prepare("SELECT COUNT(*) count FROM governed_outcome_observations").get().count;
+    return { workspaces: rows.length, ...totals, governed_conversations:governedConversations, governed_conversation_turns:governedConversationTurns, governed_management_reviews:governedManagementReviews, governed_human_decisions:governedHumanDecisions, governed_management_actions:governedManagementActions, governed_outcome_observations:governedOutcomeObservations, feedback, feedback_by_category, storage_mode:"LOCAL_SQLITE", storage_path:this.dbPath, last_export_at: meta.last_export_at ?? null, last_backup_at: meta.last_backup_at ?? null };
   }
   addFeedback(userId, { route, subject_id = null, rating, category = "OTHER", note = null, storage_key = null }) {
     safeId(userId, "user_id");
@@ -264,7 +280,7 @@ export class PilotStore {
     this.db.prepare("INSERT INTO pilot_meta(key,value) VALUES('last_backup_at',?) ON CONFLICT(key) DO UPDATE SET value=excluded.value").run(createdAt);
     return { created_at: createdAt, backup_file: name };
   }
-  close() { this.db?.close(); this.db = null; this.investigation = null; this.investigationIntelligence = null; this.guidanceIntelligence = null; this.visualEvidence = null; this.visualPerception = null; this.managementOptions = null; this.conversationOrchestrator = null; }
+  close() { this.db?.close(); this.db = null; this.investigation = null; this.investigationIntelligence = null; this.guidanceIntelligence = null; this.visualEvidence = null; this.visualPerception = null; this.managementOptions = null; this.decisionActionOutcomes = null; this.conversationOrchestrator = null; }
 }
 
 export { safeWorkspace };
