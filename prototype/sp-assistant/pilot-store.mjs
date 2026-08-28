@@ -9,6 +9,7 @@ import { VisualPerceptionService, initializeVisualPerceptionSchema } from "./vis
 import { GovernedConversationOrchestrator, createConfiguredConversationProvider, initializeConversationSchema } from "./conversation-orchestrator.mjs";
 import { ManagementOptionService, initializeManagementOptionSchema } from "./management-option-runtime.mjs";
 import { DecisionActionOutcomeService, initializeDecisionActionOutcomeSchema } from "./decision-action-outcome-runtime.mjs";
+import { FollowupReminderTimelineService, initializeFollowupReminderTimelineSchema } from "./followup-reminder-timeline-runtime.mjs";
 
 const COLLECTIONS = ["users", "fields", "seasons", "activities", "cases", "observations", "evidence", "conversations", "messages", "guidance", "decision_logs", "case_summaries", "weather_snapshots"];
 const STAGE_PROVENANCE = new Set(["SYSTEM_ESTIMATED", "USER_CONFIRMED", "USER_OVERRIDDEN"]);
@@ -35,7 +36,7 @@ function safeWorkspace(state) {
 }
 
 export class PilotStore {
-  constructor({ dbPath, exportDir, investigationRuleProvider = null, investigationCandidateProvider = null, intelligenceClock = null, intelligenceIdProvider = null, guidanceRuleProvider = null, guidanceClock = null, guidanceIdProvider = null, visualPerceptionProvider = null, visualClock = null, visualIdProvider = null, visualPerceptionAdapter = null, visualPerceptionClock = null, visualPerceptionIdProvider = null, visualPerceptionImageLoader = null, visualPerceptionContextResolver = null, managementRuleProvider = null, managementClock = null, managementIdProvider = null, decisionActionOutcomeClock = null, decisionActionOutcomeIdProvider = null, conversationProvider = null, conversationClock = null, conversationIdProvider = null }) {
+  constructor({ dbPath, exportDir, investigationRuleProvider = null, investigationCandidateProvider = null, intelligenceClock = null, intelligenceIdProvider = null, guidanceRuleProvider = null, guidanceClock = null, guidanceIdProvider = null, visualPerceptionProvider = null, visualClock = null, visualIdProvider = null, visualPerceptionAdapter = null, visualPerceptionClock = null, visualPerceptionIdProvider = null, visualPerceptionImageLoader = null, visualPerceptionContextResolver = null, managementRuleProvider = null, managementClock = null, managementIdProvider = null, decisionActionOutcomeClock = null, decisionActionOutcomeIdProvider = null, followupClock = null, followupIdProvider = null, followupTimezone = "UTC", conversationProvider = null, conversationClock = null, conversationIdProvider = null }) {
     this.dbPath = resolve(dbPath);
     this.exportDir = resolve(exportDir);
     this.db = null;
@@ -66,6 +67,10 @@ export class PilotStore {
     this.decisionActionOutcomeClock = decisionActionOutcomeClock;
     this.decisionActionOutcomeIdProvider = decisionActionOutcomeIdProvider;
     this.decisionActionOutcomes = null;
+    this.followupClock = followupClock;
+    this.followupIdProvider = followupIdProvider;
+    this.followupTimezone = followupTimezone;
+    this.followupReminders = null;
     this.conversationProvider = conversationProvider;
     this.conversationClock = conversationClock;
     this.conversationIdProvider = conversationIdProvider;
@@ -97,6 +102,7 @@ export class PilotStore {
     initializeVisualPerceptionSchema(this.db);
     initializeManagementOptionSchema(this.db);
     initializeDecisionActionOutcomeSchema(this.db);
+    initializeFollowupReminderTimelineSchema(this.db);
     initializeConversationSchema(this.db);
     this.investigation = new InvestigationBackbone(this.db);
     this.investigationIntelligence = new InvestigationIntelligenceService(this.db,this.investigation,{...(this.investigationRuleProvider?{ruleProvider:this.investigationRuleProvider}:{}),...(this.investigationCandidateProvider?{candidateProvider:this.investigationCandidateProvider}:{}),...(this.intelligenceClock?{clock:this.intelligenceClock}:{}),...(this.intelligenceIdProvider?{idProvider:this.intelligenceIdProvider}:{})});
@@ -105,7 +111,8 @@ export class PilotStore {
     this.visualPerception = new VisualPerceptionService(this.db,this.visualEvidence,{...(this.visualPerceptionAdapter?{provider:this.visualPerceptionAdapter}:{}),...(this.visualPerceptionClock?{clock:this.visualPerceptionClock}:{}),...(this.visualPerceptionIdProvider?{idProvider:this.visualPerceptionIdProvider}:{}),...(this.visualPerceptionImageLoader?{imageLoader:this.visualPerceptionImageLoader}:{}),...(this.visualPerceptionContextResolver?{contextResolver:this.visualPerceptionContextResolver}:{})});
     this.managementOptions = new ManagementOptionService(this.db,this.investigation,this.investigationIntelligence,{...(this.managementRuleProvider?{ruleProvider:this.managementRuleProvider}:{}),...(this.managementClock?{clock:this.managementClock}:{}),...(this.managementIdProvider?{idProvider:this.managementIdProvider}:{})});
     this.decisionActionOutcomes = new DecisionActionOutcomeService(this.db,{bundleProvider:this.investigation,assessmentService:this.investigationIntelligence,managementService:this.managementOptions,...(this.decisionActionOutcomeClock?{clock:this.decisionActionOutcomeClock}:{}),...(this.decisionActionOutcomeIdProvider?{idProvider:this.decisionActionOutcomeIdProvider}:{})});
-    this.conversationOrchestrator = new GovernedConversationOrchestrator(this.db,{backbone:this.investigation,assessmentService:this.investigationIntelligence,guidanceService:this.guidanceIntelligence,visualEvidenceService:this.visualEvidence,visualPerceptionService:this.visualPerception,managementService:this.managementOptions,decisionActionOutcomeService:this.decisionActionOutcomes,provider:this.conversationProvider??createConfiguredConversationProvider(),...(this.conversationClock?{clock:this.conversationClock}:{}),...(this.conversationIdProvider?{idProvider:this.conversationIdProvider}:{})});
+    this.followupReminders = new FollowupReminderTimelineService(this.db,{backbone:this.investigation,assessmentService:this.investigationIntelligence,guidanceService:this.guidanceIntelligence,managementService:this.managementOptions,decisionActionOutcomeService:this.decisionActionOutcomes,timezone:this.followupTimezone,...(this.followupClock?{clock:this.followupClock}:{}),...(this.followupIdProvider?{idProvider:this.followupIdProvider}:{})});
+    this.conversationOrchestrator = new GovernedConversationOrchestrator(this.db,{backbone:this.investigation,assessmentService:this.investigationIntelligence,guidanceService:this.guidanceIntelligence,visualEvidenceService:this.visualEvidence,visualPerceptionService:this.visualPerception,managementService:this.managementOptions,decisionActionOutcomeService:this.decisionActionOutcomes,followupReminderService:this.followupReminders,provider:this.conversationProvider??createConfiguredConversationProvider(),...(this.conversationClock?{clock:this.conversationClock}:{}),...(this.conversationIdProvider?{idProvider:this.conversationIdProvider}:{})});
     for (const row of this.db.prepare("SELECT user_id,state_json,updated_at FROM pilot_workspaces").all()) {
       const migrated = this.db.prepare("SELECT status FROM lifecycle_migrations WHERE owner_user_id = ?").get(row.user_id);
       if (!migrated) this.persistLifecycle(row.user_id, JSON.parse(row.state_json), row.updated_at);
@@ -233,6 +240,18 @@ export class PilotStore {
   getGovernedOutcomeReview(userId, managementActionId) { return this.decisionActionOutcomes.getOutcomeReview(userId,managementActionId); }
   getGovernedOutcomeReviewHistory(userId, managementActionId) { return this.decisionActionOutcomes.outcomeReviewHistory(userId,managementActionId); }
   getDecisionActionOutcomeContext(userId, scope) { return this.decisionActionOutcomes.serverContext(userId,scope); }
+  createGovernedFollowUpPlan(userId, input) { return this.followupReminders.createPlan(userId,input); }
+  getGovernedFollowUpPlans(userId, scope) { return this.followupReminders.currentPlans(userId,scope); }
+  getGovernedFollowUpHistory(userId, scope) { return this.followupReminders.planHistory(userId,scope); }
+  createGovernedReminder(userId, input) { return this.followupReminders.createReminder(userId,input); }
+  getGovernedReminders(userId, scope) { return this.followupReminders.refreshDue(userId,scope); }
+  actOnGovernedReminder(userId, input) { return this.followupReminders.actOnReminder(userId,input); }
+  getGovernedReminderHistory(userId, followUpPlanId) { return this.followupReminders.reminderHistory(userId,followUpPlanId); }
+  getDueGovernedReminders(userId, scope) { return this.followupReminders.due(userId,scope); }
+  getNotificationEligibility(userId, scope) { return this.followupReminders.notificationEligibility(userId,scope); }
+  getAuthoritativeTimeline(userId, scope) { return this.followupReminders.timeline(userId,scope); }
+  reconcileGovernedFollowUps(userId, scope) { return this.followupReminders.reconcile(userId,scope); }
+  getFollowUpReminderContext(userId, scope) { return this.followupReminders.context(userId,scope); }
   orchestrateConversationTurn(userId, input) { return this.conversationOrchestrator.turn(userId,input); }
   listGovernedConversations(userId) { return this.conversationOrchestrator.list(userId); }
   getGovernedConversationHistory(userId, conversationId) { return this.conversationOrchestrator.history(userId,conversationId); }
@@ -280,7 +299,7 @@ export class PilotStore {
     this.db.prepare("INSERT INTO pilot_meta(key,value) VALUES('last_backup_at',?) ON CONFLICT(key) DO UPDATE SET value=excluded.value").run(createdAt);
     return { created_at: createdAt, backup_file: name };
   }
-  close() { this.db?.close(); this.db = null; this.investigation = null; this.investigationIntelligence = null; this.guidanceIntelligence = null; this.visualEvidence = null; this.visualPerception = null; this.managementOptions = null; this.decisionActionOutcomes = null; this.conversationOrchestrator = null; }
+  close() { this.db?.close(); this.db = null; this.investigation = null; this.investigationIntelligence = null; this.guidanceIntelligence = null; this.visualEvidence = null; this.visualPerception = null; this.managementOptions = null; this.decisionActionOutcomes = null; this.followupReminders = null; this.conversationOrchestrator = null; }
 }
 
 export { safeWorkspace };
