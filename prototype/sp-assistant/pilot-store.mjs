@@ -10,6 +10,7 @@ import { GovernedConversationOrchestrator, createConfiguredConversationProvider,
 import { ManagementOptionService, initializeManagementOptionSchema } from "./management-option-runtime.mjs";
 import { DecisionActionOutcomeService, initializeDecisionActionOutcomeSchema } from "./decision-action-outcome-runtime.mjs";
 import { FollowupReminderTimelineService, initializeFollowupReminderTimelineSchema } from "./followup-reminder-timeline-runtime.mjs";
+import { SpatialLocalPatternService, initializeSpatialLocalPatternSchema } from "./spatial-local-pattern-runtime.mjs";
 
 const COLLECTIONS = ["users", "fields", "seasons", "activities", "cases", "observations", "evidence", "conversations", "messages", "guidance", "decision_logs", "case_summaries", "weather_snapshots"];
 const STAGE_PROVENANCE = new Set(["SYSTEM_ESTIMATED", "USER_CONFIRMED", "USER_OVERRIDDEN"]);
@@ -36,7 +37,7 @@ function safeWorkspace(state) {
 }
 
 export class PilotStore {
-  constructor({ dbPath, exportDir, investigationRuleProvider = null, investigationCandidateProvider = null, intelligenceClock = null, intelligenceIdProvider = null, guidanceRuleProvider = null, guidanceClock = null, guidanceIdProvider = null, visualPerceptionProvider = null, visualClock = null, visualIdProvider = null, visualPerceptionAdapter = null, visualPerceptionClock = null, visualPerceptionIdProvider = null, visualPerceptionImageLoader = null, visualPerceptionContextResolver = null, managementRuleProvider = null, managementClock = null, managementIdProvider = null, decisionActionOutcomeClock = null, decisionActionOutcomeIdProvider = null, followupClock = null, followupIdProvider = null, followupTimezone = "UTC", conversationProvider = null, conversationClock = null, conversationIdProvider = null }) {
+  constructor({ dbPath, exportDir, investigationRuleProvider = null, investigationCandidateProvider = null, intelligenceClock = null, intelligenceIdProvider = null, guidanceRuleProvider = null, guidanceClock = null, guidanceIdProvider = null, visualPerceptionProvider = null, visualClock = null, visualIdProvider = null, visualPerceptionAdapter = null, visualPerceptionClock = null, visualPerceptionIdProvider = null, visualPerceptionImageLoader = null, visualPerceptionContextResolver = null, managementRuleProvider = null, managementClock = null, managementIdProvider = null, decisionActionOutcomeClock = null, decisionActionOutcomeIdProvider = null, followupClock = null, followupIdProvider = null, followupTimezone = "UTC", spatialPatternClock = null, spatialPatternIdProvider = null, conversationProvider = null, conversationClock = null, conversationIdProvider = null }) {
     this.dbPath = resolve(dbPath);
     this.exportDir = resolve(exportDir);
     this.db = null;
@@ -71,6 +72,9 @@ export class PilotStore {
     this.followupIdProvider = followupIdProvider;
     this.followupTimezone = followupTimezone;
     this.followupReminders = null;
+    this.spatialPatternClock = spatialPatternClock;
+    this.spatialPatternIdProvider = spatialPatternIdProvider;
+    this.spatialLocalPatterns = null;
     this.conversationProvider = conversationProvider;
     this.conversationClock = conversationClock;
     this.conversationIdProvider = conversationIdProvider;
@@ -103,6 +107,7 @@ export class PilotStore {
     initializeManagementOptionSchema(this.db);
     initializeDecisionActionOutcomeSchema(this.db);
     initializeFollowupReminderTimelineSchema(this.db);
+    initializeSpatialLocalPatternSchema(this.db);
     initializeConversationSchema(this.db);
     this.investigation = new InvestigationBackbone(this.db);
     this.investigationIntelligence = new InvestigationIntelligenceService(this.db,this.investigation,{...(this.investigationRuleProvider?{ruleProvider:this.investigationRuleProvider}:{}),...(this.investigationCandidateProvider?{candidateProvider:this.investigationCandidateProvider}:{}),...(this.intelligenceClock?{clock:this.intelligenceClock}:{}),...(this.intelligenceIdProvider?{idProvider:this.intelligenceIdProvider}:{})});
@@ -112,6 +117,7 @@ export class PilotStore {
     this.managementOptions = new ManagementOptionService(this.db,this.investigation,this.investigationIntelligence,{...(this.managementRuleProvider?{ruleProvider:this.managementRuleProvider}:{}),...(this.managementClock?{clock:this.managementClock}:{}),...(this.managementIdProvider?{idProvider:this.managementIdProvider}:{})});
     this.decisionActionOutcomes = new DecisionActionOutcomeService(this.db,{bundleProvider:this.investigation,assessmentService:this.investigationIntelligence,managementService:this.managementOptions,...(this.decisionActionOutcomeClock?{clock:this.decisionActionOutcomeClock}:{}),...(this.decisionActionOutcomeIdProvider?{idProvider:this.decisionActionOutcomeIdProvider}:{})});
     this.followupReminders = new FollowupReminderTimelineService(this.db,{backbone:this.investigation,assessmentService:this.investigationIntelligence,guidanceService:this.guidanceIntelligence,managementService:this.managementOptions,decisionActionOutcomeService:this.decisionActionOutcomes,timezone:this.followupTimezone,...(this.followupClock?{clock:this.followupClock}:{}),...(this.followupIdProvider?{idProvider:this.followupIdProvider}:{})});
+    this.spatialLocalPatterns = new SpatialLocalPatternService(this.db,{...(this.spatialPatternClock?{clock:this.spatialPatternClock}:{}),...(this.spatialPatternIdProvider?{idProvider:this.spatialPatternIdProvider}:{})});
     this.conversationOrchestrator = new GovernedConversationOrchestrator(this.db,{backbone:this.investigation,assessmentService:this.investigationIntelligence,guidanceService:this.guidanceIntelligence,visualEvidenceService:this.visualEvidence,visualPerceptionService:this.visualPerception,managementService:this.managementOptions,decisionActionOutcomeService:this.decisionActionOutcomes,followupReminderService:this.followupReminders,provider:this.conversationProvider??createConfiguredConversationProvider(),...(this.conversationClock?{clock:this.conversationClock}:{}),...(this.conversationIdProvider?{idProvider:this.conversationIdProvider}:{})});
     for (const row of this.db.prepare("SELECT user_id,state_json,updated_at FROM pilot_workspaces").all()) {
       const migrated = this.db.prepare("SELECT status FROM lifecycle_migrations WHERE owner_user_id = ?").get(row.user_id);
@@ -252,6 +258,15 @@ export class PilotStore {
   getAuthoritativeTimeline(userId, scope) { return this.followupReminders.timeline(userId,scope); }
   reconcileGovernedFollowUps(userId, scope) { return this.followupReminders.reconcile(userId,scope); }
   getFollowUpReminderContext(userId, scope) { return this.followupReminders.context(userId,scope); }
+  createCrossCaseComparison(userId, input) { return this.spatialLocalPatterns.createComparison(userId,input); }
+  getCrossCaseComparisons(userId) { return this.spatialLocalPatterns.comparisons(userId); }
+  createLocalPatternCandidate(userId, input) { return this.spatialLocalPatterns.createCandidate(userId,input); }
+  getLocalPatternCandidates(userId) { return this.spatialLocalPatterns.candidates(userId); }
+  createLocalPatternAdjudication(userId, input) { return this.spatialLocalPatterns.createAdjudication(userId,input); }
+  getLocalPatternAdjudications(userId, candidateId = null) { return this.spatialLocalPatterns.adjudications(userId,candidateId); }
+  getLocalPatternContext(userId, candidateId) { return this.spatialLocalPatterns.context(userId,candidateId); }
+  getLocalPatternGaps(userId, candidateId) { const context=this.spatialLocalPatterns.context(userId,candidateId);return {authority:context.authority,local_pattern_candidate_id:candidateId,gaps:context.pattern_gaps,guidance_input:context.guidance_input}; }
+  getSpatialPatternProjection(userId, candidateId) { return this.spatialLocalPatterns.spatialProjection(userId,candidateId); }
   orchestrateConversationTurn(userId, input) { return this.conversationOrchestrator.turn(userId,input); }
   listGovernedConversations(userId) { return this.conversationOrchestrator.list(userId); }
   getGovernedConversationHistory(userId, conversationId) { return this.conversationOrchestrator.history(userId,conversationId); }
