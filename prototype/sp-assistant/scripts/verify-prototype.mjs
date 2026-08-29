@@ -44,9 +44,17 @@ const candidateProviderPackage = JSON.parse(await readFile(resolve(root, "candid
 const candidateProviderDocumentation = await readFile(resolve(root, "CANDIDATE_PROVIDER.md"), "utf8");
 const pilotStore = await readFile(resolve(root, "pilot-store.mjs"), "utf8");
 const serverRuntime = await readFile(resolve(root, "server.mjs"), "utf8");
+const pilotHardeningRuntime = await readFile(resolve(root, "pilot-hardening-runtime.mjs"), "utf8");
+const pilotOperations = await readFile(resolve(root, "CONTROLLED_PILOT_OPERATIONS.md"), "utf8");
+const pilotReadiness = JSON.parse(await readFile(resolve(root, "pilot-readiness-register.json"), "utf8"));
 const investigationConfig = JSON.parse(await readFile(resolve(root, "assets", "investigation-config.json"), "utf8"));
 const fieldConfig = JSON.parse(await readFile(resolve(root, "assets", "field-config.json"), "utf8"));
 const failures = [];
+
+for (const required of ["PILOT_HARDENING_RUNTIME_VERSION","PILOT_SCHEMA_VERSION","validatePilotConfiguration","preparePilotSchema","PilotHardeningService","CONTROLLED_PILOT_READY_CANDIDATE","PILOT_BLOCKED","REAL_FIELD_VALIDATION_NOT_RUN","RETENTION_POLICY_NOT_ESTABLISHED","SINGLE_PROCESS_SQLITE_LIMITATION"]) if (!pilotHardeningRuntime.includes(required)) failures.push(`pilot-hardening-runtime.mjs missing Step J contract: ${required}`);
+for (const required of ["PILOT_PROFILE","PILOT_ALLOW_LAN","PILOT_AUTH_PASSWORD","/health","/readiness","Backup","restore","Incidents","REAL_FIELD_VALIDATION","NOT_RUN","not Production Certified","one application process"]) if (!pilotOperations.includes(required)) failures.push(`CONTROLLED_PILOT_OPERATIONS.md missing operator contract: ${required}`);
+for (const required of ["/api/pilot/verified-backups","/api/pilot/restore-verifications","/api/pilot/validation-records","/api/pilot/operational-audit","/api/pilot/debt-register","FEATURE_DISABLED","CSRF_REJECTED","x-correlation-id","exportUser"]) if (!serverRuntime.includes(required)) failures.push(`server.mjs missing Step J API hardening: ${required}`);
+if (pilotReadiness.real_field_validation !== "NOT_RUN" || pilotReadiness.production_certified !== false || pilotReadiness.readiness_gates.length < 19 || pilotReadiness.blocking_stop_conditions.length < 11) failures.push("pilot-readiness-register.json overclaims readiness or omits governed gates/stops");
 
 for (const required of [
   "SP Assistant", "chat-shell", "welcome-message", "สวัสดีครับ", "วันนี้พบอะไรในแปลง?",

@@ -12,6 +12,7 @@ import { DecisionActionOutcomeService, initializeDecisionActionOutcomeSchema } f
 import { FollowupReminderTimelineService, initializeFollowupReminderTimelineSchema } from "./followup-reminder-timeline-runtime.mjs";
 import { SpatialLocalPatternService, initializeSpatialLocalPatternSchema } from "./spatial-local-pattern-runtime.mjs";
 import { LearningKnowledgeGraphService, initializeLearningKnowledgeGraphSchema } from "./learning-knowledge-graph-runtime.mjs";
+import { PilotHardeningService, preparePilotSchema } from "./pilot-hardening-runtime.mjs";
 
 const COLLECTIONS = ["users", "fields", "seasons", "activities", "cases", "observations", "evidence", "conversations", "messages", "guidance", "decision_logs", "case_summaries", "weather_snapshots"];
 const STAGE_PROVENANCE = new Set(["SYSTEM_ESTIMATED", "USER_CONFIRMED", "USER_OVERRIDDEN"]);
@@ -38,10 +39,16 @@ function safeWorkspace(state) {
 }
 
 export class PilotStore {
-  constructor({ dbPath, exportDir, investigationRuleProvider = null, investigationCandidateProvider = null, intelligenceClock = null, intelligenceIdProvider = null, guidanceRuleProvider = null, guidanceClock = null, guidanceIdProvider = null, visualPerceptionProvider = null, visualClock = null, visualIdProvider = null, visualPerceptionAdapter = null, visualPerceptionClock = null, visualPerceptionIdProvider = null, visualPerceptionImageLoader = null, visualPerceptionContextResolver = null, managementRuleProvider = null, managementClock = null, managementIdProvider = null, decisionActionOutcomeClock = null, decisionActionOutcomeIdProvider = null, followupClock = null, followupIdProvider = null, followupTimezone = "UTC", spatialPatternClock = null, spatialPatternIdProvider = null, learningClock = null, learningIdProvider = null, conversationProvider = null, conversationClock = null, conversationIdProvider = null }) {
+  constructor({ dbPath, exportDir, pilotProfile = "DEVELOPMENT", pilotConfiguration = null, migrationFailureInjector = null, hardeningClock = null, hardeningIdProvider = null, investigationRuleProvider = null, investigationCandidateProvider = null, intelligenceClock = null, intelligenceIdProvider = null, guidanceRuleProvider = null, guidanceClock = null, guidanceIdProvider = null, visualPerceptionProvider = null, visualClock = null, visualIdProvider = null, visualPerceptionAdapter = null, visualPerceptionClock = null, visualPerceptionIdProvider = null, visualPerceptionImageLoader = null, visualPerceptionContextResolver = null, managementRuleProvider = null, managementClock = null, managementIdProvider = null, decisionActionOutcomeClock = null, decisionActionOutcomeIdProvider = null, followupClock = null, followupIdProvider = null, followupTimezone = "UTC", spatialPatternClock = null, spatialPatternIdProvider = null, learningClock = null, learningIdProvider = null, conversationProvider = null, conversationClock = null, conversationIdProvider = null }) {
     this.dbPath = resolve(dbPath);
     this.exportDir = resolve(exportDir);
     this.db = null;
+    this.pilotProfile = pilotProfile;
+    this.pilotConfiguration = pilotConfiguration;
+    this.migrationFailureInjector = migrationFailureInjector;
+    this.hardeningClock = hardeningClock;
+    this.hardeningIdProvider = hardeningIdProvider;
+    this.hardening = null;
     this.investigation = null;
     this.investigationIntelligence = null;
     this.investigationRuleProvider = investigationRuleProvider;
@@ -88,6 +95,9 @@ export class PilotStore {
     await mkdir(dirname(this.dbPath), { recursive: true });
     await mkdir(this.exportDir, { recursive: true });
     this.db = new DatabaseSync(this.dbPath);
+    let schemaPreparation;
+    try { schemaPreparation = await preparePilotSchema(this.db,{profile:this.pilotProfile,dbPath:this.dbPath,exportDir:this.exportDir,migrationFailureInjector:this.migrationFailureInjector}); }
+    catch (error) { this.db.close(); this.db=null; throw error; }
     this.db.exec("PRAGMA journal_mode=WAL; PRAGMA foreign_keys=ON; CREATE TABLE IF NOT EXISTS pilot_workspaces (user_id TEXT PRIMARY KEY, state_json TEXT NOT NULL, created_at TEXT NOT NULL, updated_at TEXT NOT NULL); CREATE TABLE IF NOT EXISTS pilot_events (event_id INTEGER PRIMARY KEY AUTOINCREMENT, user_id TEXT NOT NULL, event_type TEXT NOT NULL, created_at TEXT NOT NULL); CREATE TABLE IF NOT EXISTS pilot_feedback (feedback_id TEXT PRIMARY KEY, user_id TEXT NOT NULL, route TEXT NOT NULL, subject_id TEXT, rating TEXT NOT NULL, note TEXT, created_at TEXT NOT NULL); CREATE TABLE IF NOT EXISTS pilot_meta (key TEXT PRIMARY KEY, value TEXT NOT NULL);");
     this.db.exec(`
       CREATE TABLE IF NOT EXISTS lifecycle_users (user_id TEXT PRIMARY KEY, profile_json TEXT NOT NULL, created_at TEXT NOT NULL, updated_at TEXT NOT NULL);
@@ -124,6 +134,8 @@ export class PilotStore {
     this.followupReminders = new FollowupReminderTimelineService(this.db,{backbone:this.investigation,assessmentService:this.investigationIntelligence,guidanceService:this.guidanceIntelligence,managementService:this.managementOptions,decisionActionOutcomeService:this.decisionActionOutcomes,timezone:this.followupTimezone,...(this.followupClock?{clock:this.followupClock}:{}),...(this.followupIdProvider?{idProvider:this.followupIdProvider}:{})});
     this.spatialLocalPatterns = new SpatialLocalPatternService(this.db,{...(this.spatialPatternClock?{clock:this.spatialPatternClock}:{}),...(this.spatialPatternIdProvider?{idProvider:this.spatialPatternIdProvider}:{})});
     this.learningKnowledgeGraph = new LearningKnowledgeGraphService(this.db,{spatialService:this.spatialLocalPatterns,...(this.learningClock?{clock:this.learningClock}:{}),...(this.learningIdProvider?{idProvider:this.learningIdProvider}:{})});
+    this.hardening = new PilotHardeningService(this.db,{configuration:this.pilotConfiguration,dbPath:this.dbPath,exportDir:this.exportDir,schemaPreparation,...(this.hardeningClock?{clock:this.hardeningClock}:{}),...(this.hardeningIdProvider?{idProvider:this.hardeningIdProvider}:{})});
+    this.hardening.audit("STARTUP",{detail_code:"SCHEMA_AND_STORAGE_READY"});
     this.conversationOrchestrator = new GovernedConversationOrchestrator(this.db,{backbone:this.investigation,assessmentService:this.investigationIntelligence,guidanceService:this.guidanceIntelligence,visualEvidenceService:this.visualEvidence,visualPerceptionService:this.visualPerception,managementService:this.managementOptions,decisionActionOutcomeService:this.decisionActionOutcomes,followupReminderService:this.followupReminders,provider:this.conversationProvider??createConfiguredConversationProvider(),...(this.conversationClock?{clock:this.conversationClock}:{}),...(this.conversationIdProvider?{idProvider:this.conversationIdProvider}:{})});
     for (const row of this.db.prepare("SELECT user_id,state_json,updated_at FROM pilot_workspaces").all()) {
       const migrated = this.db.prepare("SELECT status FROM lifecycle_migrations WHERE owner_user_id = ?").get(row.user_id);
@@ -286,6 +298,15 @@ export class PilotStore {
   getKnowledgePromotionHistory(userId) { return this.learningKnowledgeGraph.promotions(userId); }
   getUnifiedKnowledgeGraph(userId, subjectEntityId = null) { return this.learningKnowledgeGraph.graph(userId,{subject_entity_id:subjectEntityId}); }
   getUnifiedKnowledgeGraphContext(userId, subjectEntityId = null) { return this.learningKnowledgeGraph.graphContext(userId,subjectEntityId); }
+  getPilotHealth() { return this.hardening.health(); }
+  getPilotReadiness(input = {}) { return this.hardening.readiness(input); }
+  getOperationalAudit(userId = null) { return this.hardening.auditEvents(userId); }
+  recordOperationalAudit(type, input = {}) { return this.hardening.audit(type,input); }
+  createVerifiedBackup() { return this.hardening.backupAndVerify(); }
+  verifyBackupRestore(backupFile, targetPath) { return this.hardening.verifyRestore(backupFile,targetPath); }
+  createPilotValidationRecord(userId, input) { return this.hardening.createValidationRecord(userId,input); }
+  getPilotValidationRecords(userId) { return this.hardening.validationRecords(userId); }
+  getPilotDebtRegister() { return this.hardening.debtRegister(); }
   orchestrateConversationTurn(userId, input) { return this.conversationOrchestrator.turn(userId,input); }
   listGovernedConversations(userId) { return this.conversationOrchestrator.list(userId); }
   getGovernedConversationHistory(userId, conversationId) { return this.conversationOrchestrator.history(userId,conversationId); }
@@ -297,7 +318,15 @@ export class PilotStore {
     const feedback = this.db.prepare("SELECT COUNT(*) AS count FROM pilot_feedback").get().count;
     const feedback_by_category = Object.fromEntries(this.db.prepare("SELECT COALESCE(category,'OTHER') AS category, COUNT(*) AS count FROM pilot_feedback GROUP BY COALESCE(category,'OTHER')").all().map((item) => [item.category,item.count]));
     const governedConversations=this.db.prepare("SELECT COUNT(*) count FROM governed_conversations").get().count,governedConversationTurns=this.db.prepare("SELECT COUNT(*) count FROM governed_conversation_turns").get().count,governedManagementReviews=this.db.prepare("SELECT COUNT(*) count FROM governed_management_reviews").get().count,governedHumanDecisions=this.db.prepare("SELECT COUNT(*) count FROM governed_human_decisions").get().count,governedManagementActions=this.db.prepare("SELECT COUNT(*) count FROM governed_management_actions").get().count,governedOutcomeObservations=this.db.prepare("SELECT COUNT(*) count FROM governed_outcome_observations").get().count;
-    return { workspaces: rows.length, ...totals, governed_conversations:governedConversations, governed_conversation_turns:governedConversationTurns, governed_management_reviews:governedManagementReviews, governed_human_decisions:governedHumanDecisions, governed_management_actions:governedManagementActions, governed_outcome_observations:governedOutcomeObservations, feedback, feedback_by_category, storage_mode:"LOCAL_SQLITE", storage_path:this.dbPath, last_export_at: meta.last_export_at ?? null, last_backup_at: meta.last_backup_at ?? null };
+    return { workspaces: rows.length, ...totals, governed_conversations:governedConversations, governed_conversation_turns:governedConversationTurns, governed_management_reviews:governedManagementReviews, governed_human_decisions:governedHumanDecisions, governed_management_actions:governedManagementActions, governed_outcome_observations:governedOutcomeObservations, feedback, feedback_by_category, storage_mode:"LOCAL_SQLITE", storage_path_exposed:false, last_export_at: meta.last_export_at ?? null, last_backup_at: meta.last_backup_at ?? null };
+  }
+  summaryUser(userId) {
+    safeId(userId,"user_id");
+    const rows=this.db.prepare("SELECT state_json FROM pilot_workspaces WHERE user_id=?").all(userId),totals=Object.fromEntries(COLLECTIONS.map((key)=>[key,0]));
+    for(const row of rows){const state=JSON.parse(row.state_json);for(const key of COLLECTIONS)totals[key]+=Array.isArray(state[key])?state[key].length:0;}
+    const count=(table)=>this.db.prepare(`SELECT COUNT(*) count FROM ${table} WHERE owner_user_id=?`).get(userId).count,feedback=this.db.prepare("SELECT COUNT(*) count FROM pilot_feedback WHERE user_id=?").get(userId).count;
+    const feedback_by_category=Object.fromEntries(this.db.prepare("SELECT COALESCE(category,'OTHER') category,COUNT(*) count FROM pilot_feedback WHERE user_id=? GROUP BY COALESCE(category,'OTHER')").all(userId).map((item)=>[item.category,item.count]));
+    return{workspaces:rows.length,...totals,governed_conversations:count("governed_conversations"),governed_conversation_turns:count("governed_conversation_turns"),governed_management_reviews:count("governed_management_reviews"),governed_human_decisions:count("governed_human_decisions"),governed_management_actions:count("governed_management_actions"),governed_outcome_observations:count("governed_outcome_observations"),feedback,feedback_by_category,storage_mode:"LOCAL_SQLITE",storage_path_exposed:false};
   }
   addFeedback(userId, { route, subject_id = null, rating, category = "OTHER", note = null, storage_key = null }) {
     safeId(userId, "user_id");
@@ -327,13 +356,22 @@ export class PilotStore {
     this.db.prepare("INSERT INTO pilot_meta(key,value) VALUES('last_export_at',?) ON CONFLICT(key) DO UPDATE SET value=excluded.value").run(createdAt);
     return { created_at: createdAt, json_file: jsonName, collections: COLLECTIONS };
   }
+  async exportUser(userId) {
+    safeId(userId,"user_id");
+    const workspace=this.getWorkspace(userId),created_at=new Date().toISOString(),name=`pilot-user-export-${created_at.replace(/[:.]/g,"-")}-${crypto.randomUUID()}.json`;
+    const payload={schema_version:1,created_at,export_scope:"AUTHENTICATED_USER_ONLY",user_id:userId,workspace,feedback:this.db.prepare("SELECT feedback_id,route,subject_id,rating,category,note,created_at FROM pilot_feedback WHERE user_id=? ORDER BY created_at").all(userId),scientific_authority:false,knowledge_promotion_authority:false};
+    await writeFile(resolve(this.exportDir,name),JSON.stringify(payload,null,2),"utf8");
+    this.db.prepare("INSERT INTO pilot_meta(key,value) VALUES('last_export_at',?) ON CONFLICT(key) DO UPDATE SET value=excluded.value").run(created_at);
+    this.recordOperationalAudit("DATA_EXPORT",{actor_user_id:userId,detail_code:"USER_SCOPED_EXPORT_CREATED"});
+    return{created_at,json_file:name,export_scope:payload.export_scope};
+  }
   backup() {
     const createdAt = new Date().toISOString(), stamp = createdAt.replace(/[:.]/g, "-"), name = `pilot-backup-${stamp}.sqlite`, path = resolve(this.exportDir, name);
     this.db.exec(`VACUUM INTO '${path.replaceAll("'", "''")}'`);
     this.db.prepare("INSERT INTO pilot_meta(key,value) VALUES('last_backup_at',?) ON CONFLICT(key) DO UPDATE SET value=excluded.value").run(createdAt);
     return { created_at: createdAt, backup_file: name };
   }
-  close() { this.db?.close(); this.db = null; this.investigation = null; this.investigationIntelligence = null; this.guidanceIntelligence = null; this.visualEvidence = null; this.visualPerception = null; this.managementOptions = null; this.decisionActionOutcomes = null; this.followupReminders = null; this.conversationOrchestrator = null; }
+  close() { this.db?.close(); this.db = null; this.hardening = null; this.investigation = null; this.investigationIntelligence = null; this.guidanceIntelligence = null; this.visualEvidence = null; this.visualPerception = null; this.managementOptions = null; this.decisionActionOutcomes = null; this.followupReminders = null; this.conversationOrchestrator = null; }
 }
 
 export { safeWorkspace };

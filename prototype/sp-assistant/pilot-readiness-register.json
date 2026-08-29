@@ -1,0 +1,29 @@
+{
+  "artifact_version": "step-j-readiness-register/v1",
+  "assessment_scope": "CONTROLLED_PILOT_READY_CANDIDATE_ONLY",
+  "automated_runtime_validation": "PASSED_LOCAL_PRECOMMIT",
+  "automated_results": {"node": "430 passed", "python": "938 passed, 1 skipped"},
+  "internal_synthetic_walkthrough": "READY_TO_RUN",
+  "real_field_validation": "NOT_RUN",
+  "production_certified": false,
+  "diagnostic_accuracy_validated": false,
+  "agronomic_accuracy_validated": false,
+  "public_deployment_ready": false,
+  "validation_rounds": [
+    {"round": 0, "name": "automated runtime and safety", "status": "READY_TO_RUN"},
+    {"round": 1, "name": "internal synthetic walkthrough", "status": "READY_TO_RUN"},
+    {"round": 2, "name": "controlled participant onboarding", "status": "NOT_RUN"},
+    {"round": 3, "name": "governed case workflow", "status": "NOT_RUN"},
+    {"round": 4, "name": "debrief and accountable acceptance", "status": "NOT_RUN"}
+  ],
+  "readiness_gates": ["RUNTIME_INTEGRITY", "MIGRATION_SAFETY", "BACKUP_RESTORE", "AUTHENTICATION", "TENANT_ISOLATION", "ERROR_CONFIDENTIALITY", "PROVIDER_SAFETY", "VISUAL_SAFETY", "SCIENTIFIC_BOUNDARIES", "REGULATORY_BOUNDARIES", "PRIVACY", "AUDITABILITY", "RESTART_PERSISTENCE", "IDEMPOTENCY", "CONCURRENCY", "DEGRADED_OPERATION", "OBSERVABILITY", "PILOT_VALIDATION_INSTRUMENTS", "KNOWN_LIMITATIONS_DOCUMENTED"],
+  "blocking_stop_conditions": ["CROSS_USER_PRIVACY_BREACH", "DATA_LOSS", "HISTORY_REWRITE", "SCIENTIFIC_BOUNDARY_BYPASS", "CHEMICAL_AUTHORITY_BYPASS", "PROVIDER_AUTHORITATIVE_WRITE", "UNRECOVERABLE_DATABASE_CORRUPTION", "SILENT_MIGRATION_FAILURE", "LOST_PROVENANCE", "AUTOMATIC_KNOWLEDGE_PROMOTION", "UNEXPECTED_PUBLIC_DATA_EXPOSURE"],
+  "metrics": ["workflow_completion", "blocked_or_degraded_flow", "time_to_completion", "friction_points", "questions_asked", "external_manual_work", "provider_failure", "privacy_or_safety_issue", "boundary_violation"],
+  "performance_characterization": {"status": "REPRESENTATIVE_TEST_ONLY", "slo": false, "capacity_claim": false},
+  "known_debt": [
+    {"class": "PRIVACY_GOVERNANCE_DEBT", "detail": "RETENTION_POLICY_NOT_ESTABLISHED"},
+    {"class": "INFRASTRUCTURE_DEBT", "detail": "SINGLE_PROCESS_SQLITE_LIMITATION"},
+    {"class": "FIELD_VALIDATION_DEBT", "detail": "REAL_FIELD_VALIDATION_NOT_RUN"}
+  ],
+  "next_action": "CP-MoAKB Full-System Audit — A through J"
+}
