@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { WorkspaceRepository } from "../assets/field-services.js";
-import { DEFAULT_PROTOTYPE_USER, loginToPrototypeWorkspace, resolvePrototypeAccess } from "../assets/prototype-login.js";
+import { loginToPrototypeWorkspace, resolvePrototypeAccess } from "../assets/prototype-login.js";
 import { findOwnedRouteTarget } from "../assets/route-interactions.js";
 import { MemoryStorage } from "./support.mjs";
 
@@ -30,48 +30,45 @@ test("decorative login layers cannot intercept the password control", () => {
   assert.match(styles, /\.login-shell[^}]*z-index:1/);
 });
 
-test("empty and incorrect passwords are rejected without creating a user", () => {
+test("missing or invalid server identity is rejected without creating a user", () => {
   const repository = new WorkspaceRepository(new MemoryStorage());
-  assert.throws(() => loginToPrototypeWorkspace(repository, ""), { message: "กรุณากรอกรหัสผ่าน" });
-  assert.throws(() => loginToPrototypeWorkspace(repository, "wrong"), { message: "รหัสผ่านไม่ถูกต้อง" });
+  assert.throws(() => loginToPrototypeWorkspace(repository, null), { message: "ไม่สามารถยืนยันตัวตนจาก server" });
+  assert.throws(() => loginToPrototypeWorkspace(repository, { user_id:"not valid" }), { message: "ไม่สามารถยืนยันตัวตนจาก server" });
   assert.deepEqual(repository.load().users, []);
   assert.equal(repository.load().active_user_id, null);
 });
 
-test("password 1234 creates the stable default user and routes to GPS", () => {
+test("server-resolved identity creates the local presentation profile and routes to GPS", () => {
   const repository = new WorkspaceRepository(new MemoryStorage());
   const now = new Date("2026-08-20T08:00:00Z");
-  const result = loginToPrototypeWorkspace(repository, "1234", now, { randomUUID: () => "fixed-session" });
-  assert.deepEqual(DEFAULT_PROTOTYPE_USER, {
-    user_id: "prototype-spa-001",
-    username: "SPA1",
-    display_name: "ผู้ใช้งานทดสอบ",
-    role: "SPA",
-  });
+  const result = loginToPrototypeWorkspace(repository, { user_id:"server-user-a", login_id:"operator-a", display_name:"ผู้ทดสอบ A", role:"SPA" }, now, { randomUUID: () => "fixed-session" });
   assert.equal(result.nextRoute, "gps");
   assert.equal(result.user.session.session_id, "session_fixed-session");
   const state = repository.load();
-  assert.equal(state.active_user_id, "prototype-spa-001");
+  assert.equal(state.active_user_id, "server-user-a");
   assert.equal(state.users.length, 1);
-  assert.equal(state.users[0].user_id, "prototype-spa-001");
+  assert.equal(state.users[0].user_id, "server-user-a");
   assert.equal(state.users[0].role, "SPA");
 });
 
-test("raw password never enters repository state or the resolved user", () => {
+test("credential never enters repository state or the resolved user", () => {
   const repository = new WorkspaceRepository(new MemoryStorage());
-  const user = resolvePrototypeAccess("1234", new Date("2026-08-20T08:00:00Z"), { randomUUID: () => "privacy" });
+  const identity = { user_id:"server-user-a", login_id:"operator-a", display_name:"ผู้ทดสอบ A", role:"SPA" };
+  const user = resolvePrototypeAccess(identity, new Date("2026-08-20T08:00:00Z"), { randomUUID: () => "privacy" });
   assert.equal(Object.hasOwn(user, "password"), false);
-  loginToPrototypeWorkspace(repository, "1234", new Date("2026-08-20T08:00:00Z"), { randomUUID: () => "privacy" });
+  loginToPrototypeWorkspace(repository, identity, new Date("2026-08-20T08:00:00Z"), { randomUUID: () => "privacy" });
   const serialized = JSON.stringify(repository.load());
   assert.doesNotMatch(serialized, /1234|password|credential/i);
   assert.doesNotMatch(app, /localStorage[^\n]*(?:password|credential)|(?:password|credential)[^\n]*localStorage/i);
 });
 
-test("field runtime uses only the fixed-password login transition", () => {
-  assert.match(app, /loginToPrototypeWorkspace\(repository, password\)/);
+test("field runtime creates local identity only from authenticated server response", () => {
+  assert.match(app, /serverWorkspace\.authenticate\(password\)/);
+  assert.match(app, /loginToPrototypeWorkspace\(repository, authenticated\.identity\)/);
   assert.match(app, /route = result\.nextRoute; render\(\); requestGps\(\)/);
   assert.match(app, /elements\.namedItem\("password"\)/);
   assert.doesNotMatch(app, /resolveMockUser|login-interactions|toggle-password|forgot-password/);
+  assert.doesNotMatch(app, /authenticate\(password,\s*result\.user\.user_id\)/);
 });
 
 test("password pointer interactions do not resolve the body as a route or replace the input", () => {

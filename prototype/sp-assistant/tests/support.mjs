@@ -22,3 +22,13 @@ export function trianglePoints(offset = 0) {
     { latitude: 13.76 + offset, longitude: 100.505 + offset },
   ];
 }
+
+export function testPilotUsers(...userIds) {
+  return userIds.map((user_id) => ({ login_id:user_id, user_id, password:`credential-${user_id}`, enabled:true, display_name:user_id, role:"TEST_USER" }));
+}
+
+export async function authenticatePilot(base, userId = "user-a") {
+  const response = await fetch(`${base}/api/pilot/session`, { method:"POST", headers:{ "content-type":"application/json" }, body:JSON.stringify({ login_id:userId, password:`credential-${userId}` }) });
+  if (!response.ok) throw new Error(`test authentication failed: ${response.status}`);
+  return response.headers.get("set-cookie").split(";")[0];
+}

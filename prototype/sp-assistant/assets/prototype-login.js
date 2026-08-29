@@ -1,18 +1,12 @@
 import { createStableId } from "./field-core.js?v=fixed-login-1";
 
-export const DEFAULT_PROTOTYPE_USER = Object.freeze({
-  user_id: "prototype-spa-001",
-  username: "SPA1",
-  display_name: "ผู้ใช้งานทดสอบ",
-  role: "SPA",
-});
-
-export function resolvePrototypeAccess(password, now = new Date(), cryptoProvider = globalThis.crypto) {
-  const submittedPassword = String(password ?? "");
-  if (!submittedPassword) throw new Error("กรุณากรอกรหัสผ่าน");
-  if (submittedPassword !== "1234") throw new Error("รหัสผ่านไม่ถูกต้อง");
+export function resolvePrototypeAccess(identity, now = new Date(), cryptoProvider = globalThis.crypto) {
+  if (!identity || typeof identity !== "object" || !/^[A-Za-z0-9._:-]{1,160}$/.test(identity.user_id ?? "")) throw new Error("ไม่สามารถยืนยันตัวตนจาก server");
   return {
-    ...DEFAULT_PROTOTYPE_USER,
+    user_id:identity.user_id,
+    username:identity.login_id ?? identity.user_id,
+    display_name:identity.display_name ?? identity.login_id ?? identity.user_id,
+    role:identity.role ?? "PILOT_USER",
     session: {
       session_id: createStableId("session", cryptoProvider),
       issued_at: now.toISOString(),
@@ -21,8 +15,8 @@ export function resolvePrototypeAccess(password, now = new Date(), cryptoProvide
   };
 }
 
-export function loginToPrototypeWorkspace(repository, password, now = new Date(), cryptoProvider = globalThis.crypto) {
-  const user = resolvePrototypeAccess(password, now, cryptoProvider);
+export function loginToPrototypeWorkspace(repository, identity, now = new Date(), cryptoProvider = globalThis.crypto) {
+  const user = resolvePrototypeAccess(identity, now, cryptoProvider);
   const state = repository.load();
   state.users = state.users.filter((item) => item.user_id !== user.user_id);
   state.users.push(user);

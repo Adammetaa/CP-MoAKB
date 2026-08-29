@@ -4,10 +4,10 @@ import { FieldService, LocationService, MapService, StageService, WorkspaceRepos
 import { loginToPrototypeWorkspace } from "../assets/prototype-login.js";
 import { loadConfiguration, MemoryStorage, trianglePoints } from "./support.mjs";
 
-test("golden flow: fixed-password login to GPS fallback to persisted field reopen", async () => {
+test("golden flow: server-resolved pilot identity to GPS fallback to persisted field reopen", async () => {
   const storage = new MemoryStorage();
   const repository = new WorkspaceRepository(storage);
-  const { user, nextRoute } = loginToPrototypeWorkspace(repository, "1234", new Date("2026-08-20T08:00:00Z"), { randomUUID: () => "golden-session" });
+  const { user, nextRoute } = loginToPrototypeWorkspace(repository, { user_id:"server-user-a", login_id:"operator-a", display_name:"ผู้ทดสอบ A", role:"SPA" }, new Date("2026-08-20T08:00:00Z"), { randomUUID: () => "golden-session" });
   assert.equal(nextRoute, "gps");
 
   const location = await new LocationService(null, repository).request_location();

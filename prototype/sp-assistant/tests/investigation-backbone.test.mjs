@@ -5,6 +5,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { PilotStore } from "../pilot-store.mjs";
 import { startServer } from "../server.mjs";
+import { authenticatePilot, testPilotUsers } from "./support.mjs";
 
 const scope = { field_id:"field-investigation", season_id:"season-investigation" };
 
@@ -128,15 +129,15 @@ test("ownership, product identity, outcome learning, action separation, and migr
 });
 
 test("investigation HTTP contract creates records and returns scoped bundles", async () => {
-  const root=await mkdtemp(join(tmpdir(),"cpmoakb-investigation-api-")),options={port:0,dbPath:join(root,"pilot.sqlite"),exportDir:join(root,"exports"),uploadDir:join(root,"uploads")};
+  const root=await mkdtemp(join(tmpdir(),"cpmoakb-investigation-api-")),options={pilotUsers:testPilotUsers("user-a","user-b"),port:0,dbPath:join(root,"pilot.sqlite"),exportDir:join(root,"exports"),uploadDir:join(root,"uploads")};
   const seed=await new PilotStore({dbPath:options.dbPath,exportDir:options.exportDir}).open(); seed.putWorkspace("user-a",lifecycle()); seed.close();
   const server=await startServer(options),base=`http://127.0.0.1:${server.address().port}`;
-  const auth=await fetch(`${base}/api/pilot/session`,{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({password:"1234",user_id:"user-a"})}),cookie=auth.headers.get("set-cookie").split(";")[0];
+  const cookie=await authenticatePilot(base,"user-a");
   const created=await fetch(`${base}/api/pilot/investigation-records`,{method:"POST",headers:{cookie,"content-type":"application/json"},body:JSON.stringify({record_type:"OBSERVATION",record:{...scope,observation_id:"obs-api",source:"USER_REPORTED"}})});
   assert.equal(created.status,201); assert.equal((await created.json()).record.stage_assessment_id,"stage-season-investigation");
   const bundle=await (await fetch(`${base}/api/pilot/investigation-bundle?field_id=${scope.field_id}&season_id=${scope.season_id}&observation_id=obs-api`,{headers:{cookie}})).json();
   assert.equal(bundle.authority,"SERVER"); assert.equal(bundle.observations.length,1);
-  const otherAuth=await fetch(`${base}/api/pilot/session`,{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({password:"1234",user_id:"user-b"})}),otherCookie=otherAuth.headers.get("set-cookie").split(";")[0];
+  const otherCookie=await authenticatePilot(base,"user-b");
   assert.equal((await fetch(`${base}/api/pilot/investigation-bundle?field_id=${scope.field_id}&season_id=${scope.season_id}`,{headers:{cookie:otherCookie}})).status,403);
   await new Promise((done)=>server.close(done)); await rm(root,{recursive:true,force:true});
 });

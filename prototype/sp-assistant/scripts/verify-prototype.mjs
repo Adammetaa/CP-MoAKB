@@ -16,6 +16,7 @@ const fieldServices = await readFile(resolve(root, "assets", "field-services.js"
 const fieldStyles = await readFile(resolve(root, "assets", "field-shell.css"), "utf8");
 const browserMapAdapter = await readFile(resolve(root, "assets", "browser-map-adapter.js"), "utf8");
 const prototypeLogin = await readFile(resolve(root, "assets", "prototype-login.js"), "utf8");
+const pilotAuth = await readFile(resolve(root, "pilot-auth.mjs"), "utf8");
 const routeInteractions = await readFile(resolve(root, "assets", "route-interactions.js"), "utf8");
 const serverAdapter = await readFile(resolve(root, "assets", "server-llm-adapter.js"), "utf8");
 const serverWorkspaceAdapter = await readFile(resolve(root, "assets", "server-workspace-adapter.js"), "utf8");
@@ -109,7 +110,7 @@ for (const prohibited of ["id=\"field-app\"", "field-shell.css", "field-app.js"]
 for (const required of ["field-shell.css?v=capture-adapter-1", "field-app.js?v=capture-adapter-1"]) {
   if (!html.includes(required)) failures.push(`index.html missing fixed-login cache key: ${required}`);
 }
-if (!fieldApp.includes('prototype-login.js?v=fixed-login-1')) failures.push("field-app.js missing fixed prototype login module");
+if (!fieldApp.includes('prototype-login.js?v=fixed-login-1')) failures.push("field-app.js missing prototype login presentation module");
 if (!fieldApp.includes('route-interactions.js?v=login-route-fix-1')) failures.push("field-app.js missing scoped route interaction module");
 if (!fieldApp.includes("document.body.dataset.currentRoute = route")) failures.push("field-app.js missing diagnostic current-route attribute");
 if (fieldApp.includes("document.body.dataset.route = route")) failures.push("field-app.js must not expose body as a delegated data-route target");
@@ -121,9 +122,13 @@ for (const required of ['name="password"', 'type="password"', "เข้าส�
 for (const prohibited of ["username", "ชื่อผู้ใช้", "toggle-password", "forgot-password", "ลืมรหัสผ่าน", "aria-pressed"]) {
   if (loginView.includes(prohibited)) failures.push(`Login contains removed control: ${prohibited}`);
 }
-for (const required of ["prototype-spa-001", 'username: "SPA1"', 'display_name: "ผู้ใช้งานทดสอบ"', 'role: "SPA"', 'submittedPassword !== "1234"', "กรุณากรอกรหัสผ่าน", "รหัสผ่านไม่ถูกต้อง", 'nextRoute: "gps"', "state.active_user_id = user.user_id"]) {
-  if (!prototypeLogin.includes(required)) failures.push(`prototype-login.js missing fixed access contract: ${required}`);
+for (const required of ["resolvePrototypeAccess(identity", "identity.user_id", 'authentication_mode: "PROTOTYPE_INTERNAL_ACCESS"', 'nextRoute: "gps"', "state.active_user_id = user.user_id"]) {
+  if (!prototypeLogin.includes(required)) failures.push(`prototype-login.js missing server-resolved identity presentation contract: ${required}`);
 }
+for (const required of ["createPilotCredentialRegistry", '[\"login_id\",\"password\"]', "selected?.password", "selected.enabled", "publicIdentity(selected)"]) {
+  if (!pilotAuth.includes(required)) failures.push(`pilot-auth.mjs missing server-owned credential binding: ${required}`);
+}
+if (prototypeLogin.includes('submittedPassword !== "1234"') || prototypeLogin.includes("prototype-spa-001")) failures.push("prototype-login.js must not retain fixed local credential or identity authority");
 for (const required of ["MODEL_CONTRACTS", "RELATIONSHIP_BACKBONE", "stage_provenance", "field_id", "decision_log_id"]) {
   if (!fieldCore.includes(required)) failures.push(`field-core.js missing contract: ${required}`);
 }

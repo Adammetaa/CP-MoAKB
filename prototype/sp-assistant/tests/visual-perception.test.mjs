@@ -7,6 +7,7 @@ import { join } from "node:path";
 import { createEmptyCandidateProvider } from "../candidate-provider.mjs";
 import { PilotStore } from "../pilot-store.mjs";
 import { startServer } from "../server.mjs";
+import { authenticatePilot, testPilotUsers } from "./support.mjs";
 import {
   ManualStructuredVisualPerceptionProvider,
   OpenAIVisualPerceptionProvider,
@@ -269,13 +270,13 @@ test("visual perception schema migration v7 is recorded", async () => {
   const h=await setup(); try { assert.equal(h.store.db.prepare("SELECT COUNT(*) count FROM investigation_schema_migrations WHERE version=7").get().count, 1); } finally { await h.close(); }
 });
 
-async function login(base, userId) { const response=await fetch(`${base}/api/pilot/session`, { method:"POST", headers:{ "content-type":"application/json" }, body:JSON.stringify({ password:"1234", user_id:userId }) }); return response.headers.get("set-cookie").split(";")[0]; }
+async function login(base, userId) { return authenticatePilot(base,userId); }
 test("visual perception APIs require authentication", async () => {
-  const h=await setup(); h.store.close(); const server=await startServer({ port:0, dbPath:join(h.root,"pilot.sqlite"), exportDir:join(h.root,"exports"), uploadDir:join(h.root,"uploads") });
+  const h=await setup(); h.store.close(); const server=await startServer({ pilotUsers:testPilotUsers("user-a","user-b"), port:0, dbPath:join(h.root,"pilot.sqlite"), exportDir:join(h.root,"exports"), uploadDir:join(h.root,"uploads") });
   try { const response=await fetch(`http://127.0.0.1:${server.address().port}/api/pilot/visual-perception-health`); assert.equal(response.status, 401); } finally { await new Promise((done) => server.close(done)); await rm(h.root,{ recursive:true, force:true }); }
 });
 test("visual perception result, history, and health APIs are owner scoped and hide API keys", async () => {
-  const h=await setup({ provider:createTestOnlyVisualPerceptionAdapter(proposal()) }), image=h.store.createImageEvidence("user-a", imageInput()); h.store.close(); const server=await startServer({ port:0, dbPath:join(h.root,"pilot.sqlite"), exportDir:join(h.root,"exports"), uploadDir:join(h.root,"uploads"), visualPerceptionAdapter:createTestOnlyVisualPerceptionAdapter(proposal()) });
+  const h=await setup({ provider:createTestOnlyVisualPerceptionAdapter(proposal()) }), image=h.store.createImageEvidence("user-a", imageInput()); h.store.close(); const server=await startServer({ pilotUsers:testPilotUsers("user-a","user-b"), port:0, dbPath:join(h.root,"pilot.sqlite"), exportDir:join(h.root,"exports"), uploadDir:join(h.root,"uploads"), visualPerceptionAdapter:createTestOnlyVisualPerceptionAdapter(proposal()) });
   try { const base=`http://127.0.0.1:${server.address().port}`, cookie=await login(base,"user-a"), created=await (await fetch(`${base}/api/pilot/visual-perception`, { method:"POST", headers:{ cookie,"content-type":"application/json" }, body:JSON.stringify({ image_evidence_id:image.image_evidence_id, requested_target:"ROOT_COMPARISON" }) })).json(), result=await (await fetch(`${base}/api/pilot/visual-perception?analysis_request_id=${created.request.analysis_request_id}`, { headers:{ cookie } })).json(), history=await (await fetch(`${base}/api/pilot/visual-perception-history?image_evidence_id=${image.image_evidence_id}`, { headers:{ cookie } })).json(), health=await (await fetch(`${base}/api/pilot/visual-perception-health`, { headers:{ cookie } })).json(); assert.equal(result.result.perception_result_id, created.result.perception_result_id); assert.equal(history.history.length, 1); assert.equal(health.provider.server_side_only, true); assert.equal(JSON.stringify({ result,history,health }).includes("OPENAI_API_KEY"), false); } finally { await new Promise((done) => server.close(done)); await rm(h.root,{ recursive:true, force:true }); }
 });
 test("foreign user cannot inspect another user's perception history", async () => {

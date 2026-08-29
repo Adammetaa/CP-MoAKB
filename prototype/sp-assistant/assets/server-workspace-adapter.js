@@ -1,7 +1,8 @@
 export class ServerWorkspaceAdapter {
   constructor(fetcher = (...args) => globalThis.fetch(...args), endpoint = "/api/pilot/workspace") { this.fetcher = fetcher; this.endpoint = endpoint; this.lastError = null; this.status = "UNKNOWN"; this.queue = Promise.resolve(); }
-  async authenticate(password, userId) {
-    const response = await this.fetcher("/api/pilot/session", { method:"POST", headers:{ "content-type":"application/json" }, body:JSON.stringify({ password, user_id:userId }) });
+  async authenticate(password, loginId = null) {
+    const body = loginId == null ? { password } : { password, login_id:loginId };
+    const response = await this.fetcher("/api/pilot/session", { method:"POST", headers:{ "content-type":"application/json" }, body:JSON.stringify(body) });
     if (!response.ok) throw new Error("รหัสผ่านไม่ถูกต้อง");
     return response.json();
   }
@@ -13,15 +14,9 @@ export class ServerWorkspaceAdapter {
     const payload = await response.json(); this.status = "SERVER_AUTHORITATIVE"; this.lastError = null; return payload.state;
   }
   push(state) {
-    const snapshot = structuredClone(state);
-    this.status = "SYNCING";
-    this.queue = this.queue.catch(() => null).then(async () => {
-      try {
-        const response = await this.fetcher(this.endpoint, { method: "PUT", headers: { "content-type": "application/json" }, body: JSON.stringify({ state:snapshot }) });
-        if (!response.ok) throw new Error("pilot sync failed");
-        this.lastError = null; this.status = "SERVER_AUTHORITATIVE"; return await response.json();
-      } catch (error) { this.lastError = error; this.status = "DEGRADED_CACHE"; return { status: "PENDING_LOCAL", message: "ข้อมูลนี้ยังอยู่ใน cache และยังไม่ยืนยันบน server" }; }
-    });
+    void state;
+    this.status = "LOCAL_COMPATIBILITY_ONLY";
+    this.queue = Promise.resolve({ status:"LOCAL_COMPATIBILITY_ONLY", authority:"BROWSER_CACHE_NOT_SERVER_CONFIRMED", message:"ข้อมูล cache ไม่สามารถเขียนทับประวัติที่กำกับไว้บน server" });
     return this.queue;
   }
   async uploadEvidence(file, context) {

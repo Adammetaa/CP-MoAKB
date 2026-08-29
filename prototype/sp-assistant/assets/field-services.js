@@ -12,6 +12,13 @@ import {
   validateFieldName,
 } from "./field-core.js?v=fixed-login-1";
 
+export const BROWSER_COMPATIBILITY_AUTHORITY = Object.freeze({
+  authority:"LOCAL_COMPATIBILITY_ONLY",
+  server_confirmed:false,
+  may_replace_governed_records:false,
+  retained_collections:Object.freeze(["users","fields","seasons","activities","cases","observations","evidence","conversations","messages","guidance","decision_logs","case_summaries","weather_snapshots"]),
+});
+
 export class WorkspaceRepository {
   constructor(storage, key = "cpmoakb.field-workspace.v1", onSave = null) { this.storage = storage; this.key = key; this.onSave = onSave; this.pendingSave = Promise.resolve(); }
   load() {

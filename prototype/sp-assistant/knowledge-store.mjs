@@ -38,6 +38,6 @@ export class PilotKnowledgeStore {
   program(stageId = null) {
     const stages = stageId ? this.companyProgram.stages.filter((stage) => stage.stage_id === stageId) : this.companyProgram.stages;
     if (stageId && stages.length !== 1) throw new Error("invalid company program stage");
-    return { schema_version:this.companyProgram.schema_version, status:this.companyProgram.status, title:this.companyProgram.title, sources:this.companyProgram.sources, governance:this.companyProgram.governance, stages };
+    return { schema_version:this.companyProgram.schema_version, status:this.companyProgram.status, title:this.companyProgram.title, sources:this.companyProgram.sources, governance:{...this.companyProgram.governance,content_class:"REFERENCE_ONLY",case_actionable:false,management_recommendation:false,regulatory_authority:false,stage_match_is_approved_use:false,historical_program_rate_is_case_rate:false}, stages };
   }
 }

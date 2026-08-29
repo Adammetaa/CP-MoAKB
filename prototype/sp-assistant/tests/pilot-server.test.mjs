@@ -4,17 +4,20 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { startServer } from "../server.mjs";
+import { PilotStore } from "../pilot-store.mjs";
 
 async function session(base, userId = "prototype-spa-001") {
-  const response = await fetch(`${base}/api/pilot/session`, { method:"POST", headers:{ "content-type":"application/json" }, body:JSON.stringify({ password:"1234", user_id:userId }) });
+  const response = await fetch(`${base}/api/pilot/session`, { method:"POST", headers:{ "content-type":"application/json" }, body:JSON.stringify({ login_id:userId, password:`credential-${userId}` }) });
   assert.equal(response.status, 200); return response.headers.get("set-cookie").split(";")[0];
 }
 
 test("pilot API requires a session and restores workspace after restart", async () => {
-  const root = await mkdtemp(join(tmpdir(), "cpmoakb-server-")), options = { port:0, dbPath:join(root, "pilot.sqlite"), exportDir:join(root, "exports"), uploadDir:join(root, "uploads") };
+  const root = await mkdtemp(join(tmpdir(), "cpmoakb-server-")), options = { port:0, dbPath:join(root, "pilot.sqlite"), exportDir:join(root, "exports"), uploadDir:join(root, "uploads"), pilotUsers:["prototype-spa-001","prototype-spa-002"].map((user_id)=>({login_id:user_id,user_id,password:`credential-${user_id}`,enabled:true})) };
+  let state = { schema_version:2, users:[], fields:[{ field_id:"field-1", owner_user_id:"prototype-spa-001", name:"นาไทย" }], seasons:[{ season_id:"season-1", field_id:"field-1" }], activities:[], cases:[], observations:[], evidence:[], conversations:[], messages:[], guidance:[], decision_logs:[], case_summaries:[], weather_snapshots:[] };
+  const seed=await new PilotStore({dbPath:options.dbPath,exportDir:options.exportDir}).open();seed.putWorkspace("prototype-spa-001",state);seed.close();
   let server = await startServer(options), base = `http://127.0.0.1:${server.address().port}`;
   assert.equal((await fetch(`${base}/api/pilot/workspace`)).status, 401);
-  let cookie = await session(base), state = { schema_version:2, users:[], fields:[{ field_id:"field-1", owner_user_id:"prototype-spa-001", name:"นาไทย" }], seasons:[{ season_id:"season-1", field_id:"field-1" }], activities:[], cases:[], observations:[], evidence:[], conversations:[], messages:[], guidance:[], decision_logs:[], case_summaries:[], weather_snapshots:[] };
+  let cookie = await session(base);
   const catalog = await (await fetch(`${base}/api/pilot/data-catalog`, { headers:{ cookie } })).json();
   assert.equal(catalog.catalog_version, "pilot-data-catalog/v1"); assert.equal(catalog.datasets.find((item) => item.dataset_id === "FIELD_STAGE_MODEL").status, "INTERNAL_OPERATIONAL_NOT_CANONICAL");
   assert.equal((await fetch(`${base}/api/knowledge/search?q=โรคไหม้`)).status, 401);
@@ -28,7 +31,7 @@ test("pilot API requires a session and restores workspace after restart", async 
   const feedback = await fetch(`${base}/api/pilot/feedback`, { method:"POST", headers:{ cookie, "content-type":"application/json" }, body:JSON.stringify({ route:"inspection", subject_id:knowledge.results[0].record_id, rating:"NEEDS_DATA", category:"INSPECTION", note:"ต้องการมิติงานแปลงเพิ่ม", storage_key:feedbackStorage }) });
   assert.equal(feedback.status, 201); assert.equal((await feedback.json()).category, "INSPECTION");
   const pilotSummary = await (await fetch(`${base}/api/pilot/summary`, { headers:{ cookie } })).json(); assert.equal(pilotSummary.feedback, 1); assert.equal(pilotSummary.feedback_by_category.INSPECTION, 1); assert.equal(pilotSummary.storage_mode, "LOCAL_SQLITE");
-  assert.equal((await fetch(`${base}/api/pilot/workspace`, { method:"PUT", headers:{ cookie, "content-type":"application/json" }, body:JSON.stringify({ state }) })).status, 200);
+  assert.equal((await fetch(`${base}/api/pilot/workspace`, { method:"PUT", headers:{ cookie, "content-type":"application/json" }, body:JSON.stringify({ state }) })).status, 410);
   const freshCookie = await session(base);
   const lifecycle = await (await fetch(`${base}/api/pilot/lifecycle`, { headers:{ cookie:freshCookie } })).json();
   assert.equal(lifecycle.authority,"SERVER"); assert.equal(lifecycle.fields[0].name,"นาไทย");

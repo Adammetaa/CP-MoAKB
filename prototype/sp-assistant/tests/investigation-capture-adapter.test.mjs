@@ -6,7 +6,7 @@ import { join } from "node:path";
 import { InvestigationCaptureAdapter, InvestigationDraftRepository, ServerInvestigationAdapter } from "../assets/investigation-capture-adapter.js";
 import { PilotStore } from "../pilot-store.mjs";
 import { startServer } from "../server.mjs";
-import { MemoryStorage } from "./support.mjs";
+import { MemoryStorage, authenticatePilot, testPilotUsers } from "./support.mjs";
 
 const scope={field_id:"field-capture",season_id:"season-capture"};
 
@@ -15,11 +15,11 @@ function lifecycle(userId="user-a"){
 }
 
 function ids(){let value=0;return {randomUUID:()=>`00000000-0000-4000-8000-${String(++value).padStart(12,"0")}`};}
-async function authenticate(base,userId="user-a"){const response=await fetch(`${base}/api/pilot/session`,{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({password:"1234",user_id:userId})});return response.headers.get("set-cookie").split(";")[0];}
+async function authenticate(base,userId="user-a"){return authenticatePilot(base,userId);}
 function authenticatedFetcher(base,cookie){return (path,options={})=>fetch(`${base}${path}`,{...options,headers:{...(options.headers??{}),cookie}});}
 
 async function harness(){
-  const root=await mkdtemp(join(tmpdir(),"cpmoakb-capture-adapter-")),options={port:0,dbPath:join(root,"pilot.sqlite"),exportDir:join(root,"exports"),uploadDir:join(root,"uploads")};
+  const root=await mkdtemp(join(tmpdir(),"cpmoakb-capture-adapter-")),options={pilotUsers:testPilotUsers("user-a","user-b"),port:0,dbPath:join(root,"pilot.sqlite"),exportDir:join(root,"exports"),uploadDir:join(root,"uploads")};
   const seed=await new PilotStore({dbPath:options.dbPath,exportDir:options.exportDir}).open();seed.putWorkspace("user-a",lifecycle());seed.close();
   const server=await startServer(options),base=`http://127.0.0.1:${server.address().port}`,cookie=await authenticate(base);
   return {root,options,server,base,cookie,close:async()=>{await new Promise((done)=>server.close(done));await rm(root,{recursive:true,force:true});}};

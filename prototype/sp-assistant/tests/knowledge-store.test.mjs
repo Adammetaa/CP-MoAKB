@@ -29,6 +29,11 @@ test("company rice program is stage-scoped, governed, and keeps wind limitations
   assert.equal(all.stages.length, 9);
   assert.equal(all.governance.sent_to_openai, false);
   assert.equal(all.governance.wind_adjusted, false);
+  assert.equal(all.governance.content_class, "REFERENCE_ONLY");
+  assert.equal(all.governance.case_actionable, false);
+  assert.equal(all.governance.regulatory_authority, false);
+  assert.equal(all.governance.stage_match_is_approved_use, false);
+  assert.equal(all.governance.historical_program_rate_is_case_rate, false);
   const stage = store.program("CMP-06").stages[0];
   assert.equal(stage.stage_id, "CMP-06");
   assert.ok(stage.items.every(([name, rate]) => name && /ไร่/.test(rate)));

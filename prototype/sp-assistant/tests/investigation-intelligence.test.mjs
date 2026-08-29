@@ -8,7 +8,7 @@ import { InvestigationIntelligenceEngine, StaticInvestigationRuleProvider } from
 import { createEmptyCandidateProvider } from "../candidate-provider.mjs";
 import { PilotStore } from "../pilot-store.mjs";
 import { startServer } from "../server.mjs";
-import { MemoryStorage } from "./support.mjs";
+import { MemoryStorage, authenticatePilot, testPilotUsers } from "./support.mjs";
 
 const scope={field_id:"field-intelligence",season_id:"season-intelligence"};
 
@@ -120,8 +120,8 @@ test("human correction preserves the system snapshot and evidence/stage changes 
 
 test("assessment API is session-scoped and records attributed review history",async()=>{
   const root=await mkdtemp(join(tmpdir(),"cpmoakb-intelligence-api-")),dbPath=join(root,"pilot.sqlite"),exportDir=join(root,"exports"),seed=await new PilotStore({dbPath,exportDir}).open();seed.putWorkspace("user-a",lifecycle());const caseRecord=create(seed,"CASE",{case_id:"case-api-intelligence",purpose:"API assessment"});create(seed,"CANDIDATE",{candidate_id:"candidate-api",case_id:caseRecord.case_id,candidate_class:"UNKNOWN",support_state:"OPEN"});seed.close();
-  const server=await startServer({port:0,dbPath,exportDir,uploadDir:join(root,"uploads")});try{
-    const base=`http://127.0.0.1:${server.address().port}`,login=async(user_id)=>{const response=await fetch(`${base}/api/pilot/session`,{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({password:"1234",user_id})});return response.headers.get("set-cookie").split(";")[0];},cookie=await login("user-a"),url=`${base}/api/pilot/investigation-assessment?field_id=${scope.field_id}&season_id=${scope.season_id}&case_id=${caseRecord.case_id}`,assessmentResponse=await fetch(url,{headers:{cookie}}),assessment=await assessmentResponse.json();
+  const server=await startServer({pilotUsers:testPilotUsers("user-a","user-b"),port:0,dbPath,exportDir,uploadDir:join(root,"uploads")});try{
+    const base=`http://127.0.0.1:${server.address().port}`,login=async(user_id)=>authenticatePilot(base,user_id),cookie=await login("user-a"),url=`${base}/api/pilot/investigation-assessment?field_id=${scope.field_id}&season_id=${scope.season_id}&case_id=${caseRecord.case_id}`,assessmentResponse=await fetch(url,{headers:{cookie}}),assessment=await assessmentResponse.json();
     assert.equal(assessmentResponse.status,200);assert.equal(assessment.authority,"SERVER_DERIVED_INVESTIGATION_ASSESSMENT");const reviewResponse=await fetch(`${base}/api/pilot/investigation-assessment-reviews`,{method:"POST",headers:{cookie,"content-type":"application/json"},body:JSON.stringify({assessment_id:assessment.assessment_id,action:"MARK_UNRESOLVED",rationale:"No finding is authorized from the current evidence."})}),review=await reviewResponse.json();assert.equal(reviewResponse.status,201);assert.equal(review.status,"REVIEW_RECORDED");assert.equal(review.review.reviewer_user_id,"user-a");
     const foreignCookie=await login("user-b"),foreign=await fetch(url,{headers:{cookie:foreignCookie}});assert.equal(foreign.status,403);
   }finally{await new Promise((done)=>server.close(done));await rm(root,{recursive:true,force:true});}
