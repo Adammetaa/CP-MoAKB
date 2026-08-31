@@ -1,4 +1,5 @@
 import { DatabaseSync } from "node:sqlite";
+import { randomUUID } from "node:crypto";
 import { mkdir, writeFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import { InvestigationBackbone, initializeInvestigationSchema } from "./investigation-backbone.mjs";
@@ -220,6 +221,27 @@ export class PilotStore {
     if (!workspace) return null;
     const { fields, seasons, guidance } = workspace.state;
     return { authority:"SERVER", user_id:userId, fields, seasons, guidance, updated_at:workspace.updated_at };
+  }
+  createFieldLifecycle(userId, input) {
+    safeId(userId,"user_id");
+    if (!input || typeof input !== "object" || Array.isArray(input)) throw new Error("invalid field lifecycle request");
+    input=safeWorkspace(input);
+    const allowed=new Set(["name","polygon","centroid","area","crop","variety","planting_method","planting_date","expected_planting_date","current_crop_stage","current_cmp_stage","stage_provenance"]);
+    if(Object.keys(input).some((key)=>!allowed.has(key)))throw new Error("invalid field lifecycle request");
+    const name=String(input.name??"").trim();if(!name||name.length>50)throw new Error("invalid field name");
+    if(!input.polygon||input.polygon.type!=="Polygon"||!Array.isArray(input.polygon.coordinates?.[0])||input.polygon.coordinates[0].length<4)throw new Error("invalid field geometry");
+    if(input.stage_provenance!=null&&!STAGE_PROVENANCE.has(input.stage_provenance))throw new Error("invalid stage provenance");
+    const now=new Date().toISOString(),fieldId=`field-${randomUUID()}`,seasonId=`season-${randomUUID()}`,field={...structuredClone(input),field_id:fieldId,season_id:seasonId,owner_user_id:userId,created_at:now,updated_at:now},season={season_id:seasonId,field_id:fieldId,crop:input.crop??"rice",planting_date:input.planting_date??null,expected_planting_date:input.expected_planting_date??null,variety:input.variety??"",planting_method:input.planting_method??"",status:"ACTIVE",created_at:now,updated_at:now};
+    const existingWorkspace=this.getWorkspace(userId),base=existingWorkspace?.state??{schema_version:2,users:[{user_id:userId,role:"SPA"}],fields:[],seasons:[],guidance:[],activities:[],cases:[],observations:[],evidence:[],conversations:[],messages:[],decision_logs:[],case_summaries:[],weather_snapshots:[]};
+    this.persistLifecycle(userId,{
+      ...base,
+      fields:[...(base.fields ?? []),field],
+      seasons:[...(base.seasons ?? []),season],
+      guidance:base.guidance ?? [],
+    },now);
+    if(!existingWorkspace){const initial={...base,fields:[field],seasons:[season],guidance:[],lifecycle_authority:"SERVER"};this.db.prepare("INSERT INTO pilot_workspaces(user_id,state_json,created_at,updated_at) VALUES(?,?,?,?)").run(userId,JSON.stringify(initial),now,now);}
+    this.db.prepare("INSERT INTO pilot_events(user_id,event_type,created_at) VALUES(?,?,?)").run(userId,"FIELD_LIFECYCLE_CREATED",now);
+    return {authority:"SERVER_LIFECYCLE",field,season};
   }
   getGuidance(userId, fieldId, seasonId) {
     safeId(userId,"user_id"); safeId(fieldId,"field_id"); safeId(seasonId,"season_id");

@@ -15,6 +15,7 @@ export class ServerLLMAdapter {
       return { status:"AVAILABLE", message:payload.text, provider:payload.provider?.provider_id, model:payload.provider?.provider_version, response_id:payload.turn_id, governed_response:payload };
     } catch { return { status: "UNAVAILABLE", message: "เชื่อมต่อบริการ AI ไม่สำเร็จ ข้อมูลแปลงและการสนทนาในเครื่องยังใช้งานได้" }; }
   }
+  async history(input){const key=`${input.field_id??"none"}:${input.season_id??"none"}`,conversationId=await this.resumeConversation(key,input);if(!conversationId)return{conversation_id:null,turns:[]};const response=await this.fetcher(`/api/pilot/conversation-history?${new URLSearchParams({conversation_id:conversationId})}`,{headers:{accept:"application/json"}});if(!response.ok)return{conversation_id:conversationId,turns:[]};return response.json();}
   async analyze_image() { return { status: "UNAVAILABLE", analysis_performed: false, message: "รับรูปแล้ว แต่ระบบวิเคราะห์ภาพฝั่ง server จะเปิดในขั้นถัดไป" }; }
   async compose_explanation() { return { status: "UNAVAILABLE", message: "ใช้คำอธิบายจากกฎและหลักฐานที่กำกับไว้" }; }
 }

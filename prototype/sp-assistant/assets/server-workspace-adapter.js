@@ -7,6 +7,9 @@ export class ServerWorkspaceAdapter {
     return response.json();
   }
   async hasSession() { const response = await this.fetcher("/api/pilot/session", { headers:{ accept:"application/json" } }); return response.ok; }
+  async session() { const response=await this.fetcher("/api/pilot/session",{headers:{accept:"application/json"}});if(!response.ok)throw new Error("กรุณาเข้าสู่ระบบอีกครั้ง");return response.json(); }
+  async lifecycle() { const response=await this.fetcher("/api/pilot/lifecycle",{headers:{accept:"application/json"}});if(response.status===404)return{authority:"SERVER",fields:[],seasons:[],guidance:[]};if(!response.ok)throw new Error("โหลดข้อมูลแปลงจากระบบไม่สำเร็จ");return response.json(); }
+  async createField(input) { return this.governedWrite("/api/pilot/fields",input,"บันทึกแปลงบนระบบไม่สำเร็จ"); }
   async pull() {
     const response = await this.fetcher(this.endpoint, { headers: { accept: "application/json" } });
     if (response.status === 404) return null;
@@ -26,6 +29,22 @@ export class ServerWorkspaceAdapter {
     const response = await this.fetcher("/api/pilot/evidence", { method:"POST", headers:{ "content-type":"application/json" }, body:JSON.stringify({ field_id:context.field_id, season_id:context.season_id, original_filename:file.name, media_type:file.type, size_bytes:file.size, content_base64:btoa(binary) }) });
     const payload = await response.json().catch(() => ({})); if (!response.ok) throw new Error(payload.message ?? "บันทึกภาพไม่สำเร็จ"); return payload;
   }
+  async createInvestigationRecord(recordType,record,requestId=globalThis.crypto.randomUUID()) { return this.governedWrite("/api/pilot/investigation-records",{record_type:recordType,record,request_id:`spa-${requestId}`},"บันทึกข้อมูลการตรวจไม่สำเร็จ"); }
+  async getInvestigationBundle(scope) { return this.scopedGet("/api/pilot/investigation-bundle",scope,"โหลดหลักฐานการตรวจไม่สำเร็จ"); }
+  async getInvestigationAssessment(scope) { return this.scopedGet("/api/pilot/investigation-assessment",scope,"ประเมินหลักฐานการตรวจไม่สำเร็จ"); }
+  async getGuidance(scope) { return this.scopedGet("/api/pilot/guidance",scope,"โหลดขั้นตอนถัดไปไม่สำเร็จ"); }
+  scopedPath(endpoint,scope) { return `${endpoint}?${new URLSearchParams(Object.fromEntries(Object.entries(scope).filter(([,value])=>value!=null)))}`; }
+  async scopedGet(endpoint,scope,errorMessage) { const response=await this.fetcher(this.scopedPath(endpoint,scope),{headers:{accept:"application/json"}}),body=await response.json().catch(()=>({}));if(!response.ok)throw new Error(body.message??errorMessage);return body; }
+  async uploadVisualEvidence(file,context,{observation_id=null,guidance_id=null,capture_intent="PLANT_CONTEXT",plant_part_scope="WHOLE_PLANT",spatial_scope="SAMPLED_OBJECT",view_type="DETAIL"}={}) {
+    const allowed=new Set(["image/jpeg","image/png","image/webp"]);if(!allowed.has(file.type)||file.size>6_000_000)throw new Error("รองรับเฉพาะ JPG, PNG หรือ WebP ขนาดไม่เกิน 6 MB");
+    const bytes=new Uint8Array(await file.arrayBuffer());let binary="";for(let index=0;index<bytes.length;index+=0x8000)binary+=String.fromCharCode(...bytes.subarray(index,index+0x8000));
+    return this.governedWrite("/api/pilot/visual-evidence",{field_id:context.field_id,crop_season_id:context.season_id,case_id:context.case_id,observation_id,guidance_id,sampling_event_id:null,capture_session_id:null,site_reference:null,captured_at:new Date().toISOString(),source:"UPLOAD",capture_intent,plant_part_scope,spatial_scope,view_type,original_filename:file.name,media_type:file.type,size_bytes:file.size,width:null,height:null,orientation:null,comparison_pair_id:null,comparison_role:"UNKNOWN_ROLE",comparison_role_source:"UNKNOWN",content_base64:btoa(binary)},"บันทึก Visual Evidence ไม่สำเร็จ");
+  }
+  async getVisualEvidenceBundle(scope) { return this.scopedGet("/api/pilot/visual-evidence-bundle",{...scope,crop_season_id:scope.season_id,season_id:null},"โหลดสถานะภาพไม่สำเร็จ"); }
+  async assessVisualEvidence(imageEvidenceId,assessment) { return this.governedWrite("/api/pilot/visual-evidence-assessments",{image_evidence_id:imageEvidenceId,assessment},"บันทึกการตรวจภาพไม่สำเร็จ"); }
+  async reviewVisualEvidence(payload) { return this.governedWrite("/api/pilot/visual-evidence-reviews",payload,"บันทึกการทบทวนภาพไม่สำเร็จ"); }
+  async getVisualRequest(scope) { return this.scopedGet("/api/pilot/visual-evidence-request",{...scope,crop_season_id:scope.season_id,season_id:null},"โหลดคำขอภาพไม่สำเร็จ"); }
+  async requestVisualPerception(payload) { try{return await this.governedWrite("/api/pilot/visual-perception",payload,"ตัวช่วยอ่านภาพยังไม่พร้อม");}catch(error){return{status:"DEGRADED",analysis_performed:false,message:error.message};} }
   async summary() { const response = await this.fetcher("/api/pilot/summary"); if (!response.ok) throw new Error("โหลดสถานะ Pilot ไม่สำเร็จ"); return response.json(); }
   async dataCatalog() { const response = await this.fetcher("/api/pilot/data-catalog"); if (!response.ok) throw new Error("โหลดสถานะข้อมูลไม่สำเร็จ"); return response.json(); }
   managementPath(scope, endpoint = "/api/pilot/management-options") { const query=new URLSearchParams({field_id:scope.field_id,season_id:scope.season_id,case_id:scope.case_id});return `${endpoint}?${query}`; }

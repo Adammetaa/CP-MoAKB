@@ -39,14 +39,7 @@ const approved = new Set([
   "knowledge-lab/assets/i18n/en.json",
   "sp-assistant/index.html",
   "sp-assistant/deployment.json",
-  "sp-assistant/assets/decision-authority.js",
-  "sp-assistant/assets/decision-gates.js",
-  "sp-assistant/assets/chemical-slice.js",
-  "sp-assistant/assets/knowledge-qa.js",
-  "sp-assistant/assets/app.js",
-  "sp-assistant/assets/chat.css",
-  "sp-assistant/assets/polish.css",
-  "sp-assistant/assets/styles.css",
+  ...["browser-map-adapter.js","field-app.js","field-config.json","field-core.js","field-services.js","field-shell.css","governed-spa-runtime.js","investigation-capture-adapter.js","investigation-config.json","prototype-login.js","route-interactions.js","server-knowledge-adapter.js","server-llm-adapter.js","server-workspace-adapter.js"].map((asset)=>`sp-assistant/assets/${asset}`),
 ]);
 
 const walk = async (directory) => {
@@ -65,8 +58,8 @@ export const verifyArtifact = async (root) => {
   const resolvedRoot = resolve(root);
   const files = await walk(resolvedRoot);
   const relativeFiles = files.map((path) => relative(resolvedRoot, path).split(sep).join("/"));
-  if (relativeFiles.length !== 63 || approved.size !== 63) {
-    throw new Error("Pages artifact must contain exactly 63 approved files");
+  if (relativeFiles.length !== 69 || approved.size !== 69) {
+    throw new Error("Pages artifact must contain exactly 69 approved files");
   }
   const unexpected = relativeFiles.filter((path) => !approved.has(path));
   const missing = [...approved].filter((path) => !relativeFiles.includes(path));
@@ -204,31 +197,15 @@ export const verifyArtifact = async (root) => {
   }
 
   const assistant = await readFile(resolve(resolvedRoot, "sp-assistant", "index.html"), "utf8");
-  for (const requirement of ["SP Assistant", "วันนี้พบอะไรในแปลง?", "chat-shell", "เพิ่มรูปภาพ", "ยังไม่อัปโหลดหรือจัดเก็บรูปภาพ", "ไม่ใช่คำวินิจฉัยหรือคำแนะนำ", "../knowledge-explorer/rice-disease-corpus.html", '<meta name="robots" content="noindex,nofollow">']) {
+  for (const requirement of ["SP Assistant", "Field Intelligence Workspace", "field-app", "field-shell.css", '<meta name="robots" content="noindex,nofollow">']) {
     if (!assistant.includes(requirement)) throw new Error(`SP Assistant lost product boundary: ${requirement}`);
   }
-  const assistantApp = await readFile(resolve(resolvedRoot, "sp-assistant", "assets", "app.js"), "utf8");
-  for (const prohibited of ["XMLHttpRequest", "WebSocket", "sendBeacon", "localStorage", "sessionStorage", "indexedDB", "FileReader", "FormData"]) {
-    if (assistantApp.includes(prohibited)) throw new Error(`SP Assistant contains prohibited network or persistence capability: ${prohibited}`);
-  }
-  for (const weatherBoundary of ["https://archive-api.open-meteo.com/v1/archive", "https://api.open-meteo.com/v1/forecast", 'credentials: "omit"', 'referrerPolicy: "no-referrer"']) {
-    if (!assistantApp.includes(weatherBoundary)) throw new Error(`SP Assistant lost weather-only network boundary: ${weatherBoundary}`);
-  }
-  for (const surveillanceBoundary of ["demoFieldCases", "haversineDistanceKm", "ระยะค้นหาเป็นตัวกรองการแสดงผล", "NEARBY ≠ RELATED", "CASE CLUSTER ≠ OUTBREAK"]) {
-    if (!assistantApp.includes(surveillanceBoundary)) throw new Error(`SP Assistant lost browser-local surveillance boundary: ${surveillanceBoundary}`);
-  }
-  for (const conversationBoundary of ["guidedQuestionControls", "nextBestAction", "answerRecords", "conversationHistory", "Photo received ≠ Photo analyzed", "CONTROL FAILURE ≠ RESISTANCE", "โหมดทดสอบภาคสนาม"]) {
-    if (!assistantApp.includes(conversationBoundary)) throw new Error(`SP Assistant lost guided-conversation boundary: ${conversationBoundary}`);
-  }
+  const assistantApp = await readFile(resolve(resolvedRoot, "sp-assistant", "assets", "field-app.js"), "utf8"),governedRuntime=await readFile(resolve(resolvedRoot,"sp-assistant","assets","governed-spa-runtime.js"),"utf8");
+  for (const boundary of ["GovernedSpaRuntime","uploadPhoto","renderGovernedSummary","Candidate ≠ Diagnosis"]) if(!assistantApp.includes(boundary))throw new Error(`SP Assistant lost governed primary boundary: ${boundary}`);
+  for (const boundary of ["SERVER_CONFIRMED","LOCAL_DRAFT","question_limit_per_turn","Learning Candidate","ยังเรียกว่าเป็นการระบาดไม่ได้"]) if(!governedRuntime.includes(boundary))throw new Error(`SP Assistant lost governed runtime boundary: ${boundary}`);
   const assistantCommit = assistant.match(/<p data-build-version>Build: ([0-9a-f]{12})<\/p>/)?.[1];
   if (!assistantCommit) throw new Error("SP Assistant lost visible build identity");
-  for (const asset of ["decision-authority.js", "decision-gates.js", "chemical-slice.js", "knowledge-qa.js", "app.js"]) {
-    if (!assistant.includes(`src="assets/${asset}?v=${assistantCommit}"`)) throw new Error(`SP Assistant asset is not tied to visible build identity: ${asset}`);
-  }
-  const assistantKnowledge = await readFile(resolve(resolvedRoot, "sp-assistant", "assets", "knowledge-qa.js"), "utf8");
-  for (const routingBoundary of ["window.SPKnowledgeQA", "MECHANISM_LOOKUP", "terminologyAliases", "isCaseFirst", 'data-review="CORRECT"', "data-export-review"]) {
-    if (!assistantKnowledge.includes(routingBoundary)) throw new Error(`SP Assistant lost current knowledge routing or review capability: ${routingBoundary}`);
-  }
+  if(!assistant.includes(`src="assets/field-app.js?v=${assistantCommit}"`)||!assistant.includes(`href="assets/field-shell.css?v=${assistantCommit}"`))throw new Error("SP Assistant primary assets are not tied to visible build identity");
   const assistantMetadata = JSON.parse(await readFile(resolve(resolvedRoot, "sp-assistant", "deployment.json"), "utf8"));
   if (assistantMetadata.deployment_mode !== "preview" || assistantMetadata.prototype !== "sp-assistant" || assistantMetadata.status !== "local-demo-not-published" || !/^[0-9a-f]{40}$/.test(assistantMetadata.commit) || Number.isNaN(Date.parse(assistantMetadata.build_timestamp)) || assistantCommit !== assistantMetadata.commit.slice(0, 12)) throw new Error("SP Assistant deployment metadata is unsafe or incomplete");
 

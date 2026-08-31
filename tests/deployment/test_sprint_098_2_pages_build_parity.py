@@ -32,31 +32,19 @@ def test_pages_build_contains_current_assistant_with_visible_identity() -> None:
         check=False,
     )
     assert completed.returncode == 0, completed.stdout + completed.stderr
-    assert "63 approved files" in completed.stdout
+    assert "69 approved files" in completed.stdout
 
     html = (ARTIFACT / "index.html").read_text(encoding="utf-8")
     version = TEST_COMMIT[:12]
     assert f"<p data-build-version>Build: {version}</p>" in html
-    for asset in (
-        "decision-authority.js",
-        "decision-gates.js",
-        "chemical-slice.js",
-        "knowledge-qa.js",
-        "app.js",
-    ):
-        assert f'src="assets/{asset}?v={version}"' in html
+    assert f'src="assets/field-app.js?v={version}"' in html
+    assert f'href="assets/field-shell.css?v={version}"' in html
+    for asset in ("field-app.js", "field-shell.css", "governed-spa-runtime.js", "server-workspace-adapter.js"):
         assert (ARTIFACT / "assets" / asset).is_file()
 
-    knowledge = (ARTIFACT / "assets" / "knowledge-qa.js").read_text(encoding="utf-8")
-    for marker in (
-        "window.SPKnowledgeQA",
-        "MECHANISM_LOOKUP",
-        "terminologyAliases",
-        "isCaseFirst",
-        'data-review="CORRECT"',
-        "data-export-review",
-    ):
-        assert marker in knowledge
+    runtime = (ARTIFACT / "assets" / "governed-spa-runtime.js").read_text(encoding="utf-8")
+    for marker in ("SERVER_CONFIRMED", "LOCAL_DRAFT", "question_limit_per_turn", "Learning Candidate"):
+        assert marker in runtime
 
     metadata = json.loads((ARTIFACT / "deployment.json").read_text(encoding="utf-8"))
     assert metadata["commit"] == TEST_COMMIT

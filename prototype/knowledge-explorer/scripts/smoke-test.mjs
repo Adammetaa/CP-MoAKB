@@ -46,7 +46,7 @@ try {
   const assistantResponse = await fetch(`${base}sp-assistant/`);
   if (!assistantResponse.ok) throw new Error(`SP Assistant failed with ${assistantResponse.status}`);
   const assistant = await assistantResponse.text();
-  for (const requirement of ["SP Assistant", "วันนี้พบอะไรในแปลง?", "chat-shell", "เพิ่มรูปภาพ", "ไม่ใช่คำวินิจฉัยหรือคำแนะนำ"]) {
+  for (const requirement of ["SP Assistant", "Field Intelligence Workspace", "field-app", "field-shell.css", "Build:"]) {
     if (!assistant.includes(requirement)) throw new Error(`SP Assistant missing ${requirement}`);
   }
 
@@ -119,14 +119,10 @@ try {
     "knowledge-lab/assets/i18n/th.json",
     "knowledge-lab/assets/i18n/en.json",
     "knowledge-lab/deployment.json",
-    "sp-assistant/assets/styles.css",
-    "sp-assistant/assets/chat.css",
-    "sp-assistant/assets/polish.css",
-    "sp-assistant/assets/decision-authority.js",
-    "sp-assistant/assets/decision-gates.js",
-    "sp-assistant/assets/chemical-slice.js",
-    "sp-assistant/assets/knowledge-qa.js",
-    "sp-assistant/assets/app.js",
+    "sp-assistant/assets/field-shell.css",
+    "sp-assistant/assets/field-app.js",
+    "sp-assistant/assets/governed-spa-runtime.js",
+    "sp-assistant/assets/server-workspace-adapter.js",
     "sp-assistant/deployment.json",
   ]) {
     const response = await fetch(`${base}${asset}`);

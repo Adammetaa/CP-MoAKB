@@ -139,7 +139,7 @@ for (const required of ["api.open-meteo.com/v1/forecast", "temperature_2m", "wea
   if (!fieldServices.includes(required)) failures.push(`field-services.js missing real weather contract: ${required}`);
 }
 if (!fieldApp.includes('source: "FIELD_CENTROID"') || !fieldApp.includes("บริเวณแปลง · Open-Meteo")) failures.push("field-app.js must request and label field-centroid weather");
-if (!fieldApp.includes("new LLMGateway(new ServerLLMAdapter())")) failures.push("field-app.js missing server-only LLM adapter");
+for(const required of ["const serverLLM = new ServerLLMAdapter()","new LLMGateway(serverLLM)","new GovernedSpaRuntime({workspace:serverWorkspace,llm:serverLLM})"])if(!fieldApp.includes(required))failures.push(`field-app.js missing governed server adapter: ${required}`);
 for (const required of ["/api/assistant/chat", "MIGRATION_REQUIRED", "/api/pilot/conversation-turns", "createConfiguredVisualPerceptionProvider", "field_id", "season_id"]) if (!serverRuntime.includes(required)) failures.push(`server.mjs missing governed provider or legacy migration boundary: ${required}`);
 if (serverAdapter.includes("api.openai.com") || serverAdapter.includes("OPENAI_API_KEY")) failures.push("browser server adapter must not contain provider URL or key");
 for (const required of ["assert_field_context", "assert_case_context", "assert_conversation_context", "get_guidance", "start_case", "submit_observation", "finish_case", "save_case_summary", "list_case_history", "get_management_options", "select_management_option", "PHOTO_RECEIVED", "selection_only", "field_action_performed"]) {

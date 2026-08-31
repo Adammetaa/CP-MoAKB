@@ -164,15 +164,17 @@ await writeFile(
 );
 const assistantVersion = commit.slice(0, 12);
 const assistantSource = await readFile(resolve(assistantRoot, "index.html"), "utf8");
-if (!assistantSource.includes("?v=source-tree") || !assistantSource.includes("Build: source-tree")) {
+if (!assistantSource.includes("Build: source-tree")) {
   throw new Error("SP Assistant source is missing build-version placeholders");
 }
 await writeFile(
   resolve(assistantOutput, "index.html"),
-  assistantSource.replaceAll("?v=source-tree", `?v=${assistantVersion}`).replace("Build: source-tree", `Build: ${assistantVersion}`),
+  assistantSource.replace(/\?v=[A-Za-z0-9._-]+/g, `?v=${assistantVersion}`).replace("Build: source-tree", `Build: ${assistantVersion}`),
   "utf8",
 );
-await cp(resolve(assistantRoot, "assets"), resolve(assistantOutput, "assets"), { recursive: true });
+const assistantAssets=["browser-map-adapter.js","field-app.js","field-config.json","field-core.js","field-services.js","field-shell.css","governed-spa-runtime.js","investigation-capture-adapter.js","investigation-config.json","prototype-login.js","route-interactions.js","server-knowledge-adapter.js","server-llm-adapter.js","server-workspace-adapter.js"];
+await mkdir(resolve(assistantOutput,"assets"),{recursive:true});
+for(const asset of assistantAssets)await cp(resolve(assistantRoot,"assets",asset),resolve(assistantOutput,"assets",asset));
 await writeFile(
   resolve(assistantOutput, "deployment.json"),
   `${JSON.stringify({ deployment_mode: "preview", prototype: "sp-assistant", commit, build_timestamp: buildTimestamp, package_version: packageVersion, status: "local-demo-not-published" }, null, 2)}\n`,
