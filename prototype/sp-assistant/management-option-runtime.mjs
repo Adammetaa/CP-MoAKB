@@ -1,4 +1,5 @@
 import { createHash, randomUUID } from "node:crypto";
+import { readFileSync } from "node:fs";
 import { InvestigationContractError } from "./investigation-backbone.mjs";
 
 export const MANAGEMENT_OPTION_ENGINE_VERSION = "governed-management-option-runtime/v1";
@@ -45,6 +46,7 @@ const DEFAULT_RULE_PACKAGE = Object.freeze({
     limitation: "Current governed evidence does not complete a defensible Crop x Target x Use x Registration chain.",
   },
 });
+const BUNDLED_RULE_PACKAGE = JSON.parse(readFileSync(new URL("./management-rule-package.json", import.meta.url), "utf8"));
 
 function validateRulePackage(raw, { allowTestFixtures = false } = {}) {
   object(raw, "management rule package");
@@ -69,6 +71,16 @@ function validateRulePackage(raw, { allowTestFixtures = false } = {}) {
       limitations: (relationship.limitations ?? []).map((value) => text(value, "management relationship limitation")),
       human_review_required: relationship.human_review_required === true,
       source_option_class: sourceClass,
+      applicability_conditions: relationship.applicability_conditions == null ? null : {
+        crop: identifier(relationship.applicability_conditions.crop, "applicability crop"),
+        candidate_concept_ids: compact((relationship.applicability_conditions.candidate_concept_ids ?? []).map((value) => identifier(value, "applicability candidate concept"))),
+        required_finding_role: identifier(relationship.applicability_conditions.required_finding_role, "required finding role"),
+        allowed_resolution_levels: compact((relationship.applicability_conditions.allowed_resolution_levels ?? []).map((value) => identifier(value, "allowed resolution level"))),
+        allowed_candidate_states: compact((relationship.applicability_conditions.allowed_candidate_states ?? []).map((value) => identifier(value, "allowed candidate state"))),
+        minimum_supporting_case_evidence: Number.isInteger(relationship.applicability_conditions.minimum_supporting_case_evidence) && relationship.applicability_conditions.minimum_supporting_case_evidence >= 1 ? relationship.applicability_conditions.minimum_supporting_case_evidence : 1,
+        allow_contradicting_case_evidence: relationship.applicability_conditions.allow_contradicting_case_evidence === true,
+        allow_missing_required_evidence: relationship.applicability_conditions.allow_missing_required_evidence === true,
+      },
     };
   });
   const regulatory = object(raw.regulatory_authority ?? DEFAULT_RULE_PACKAGE.regulatory_authority, "regulatory authority");
@@ -113,12 +125,26 @@ function validateRulePackage(raw, { allowTestFixtures = false } = {}) {
 }
 
 export class ManagementRuleProvider {
-  constructor(rulePackage = DEFAULT_RULE_PACKAGE, options = {}) {
+  constructor(rulePackage = BUNDLED_RULE_PACKAGE, options = {}) {
     this.rulePackage = validateRulePackage(structuredClone(rulePackage), options);
     this.contentHash = hash(this.rulePackage);
   }
   getManifest() { return { ...this.rulePackage.manifest, content_hash:this.contentHash }; }
-  getRules() { return structuredClone(this.rulePackage); }
+  getRules(bundle, assessment) {
+    const rules=structuredClone(this.rulePackage);
+    for(const relationship of rules.management_relationships){
+      const conditions=relationship.applicability_conditions;if(!conditions)continue;
+      const review=reviewedFinding(assessment),finding=review?.candidate_findings?.find((item)=>item.role===conditions.required_finding_role),candidate=(assessment?.candidate_assessments??[]).find((item)=>item.candidate_id===finding?.candidate_id),bundleCase=bundle?.cases?.length===1?bundle.cases[0].case_id:null,sameCase=Boolean(bundleCase&&bundleCase===assessment?.scope?.case_id),crop=String(bundle?.field_context?.crop??"").toUpperCase(),supporting=(candidate?.supporting_evidence??[]).map((item)=>item.evidence_id).filter(Boolean),contradicting=(candidate?.contradicting_evidence??[]).map((item)=>item.evidence_id).filter(Boolean),missing=(candidate?.missing_evidence??[]).map((item)=>item.gap_ref).filter(Boolean),caseEvidence=new Set((bundle?.evidence??[]).map((item)=>item.evidence_id));
+      const supportingInCase=supporting.filter((ref)=>caseEvidence.has(ref)),candidateMatches=Boolean(candidate&&conditions.candidate_concept_ids.includes(candidate.concept_id)),reviewMatches=Boolean(review&&conditions.allowed_resolution_levels.includes(review.resolution_level)),stateMatches=Boolean(candidate&&conditions.allowed_candidate_states.includes(candidate.state)),enoughSupport=supportingInCase.length>=conditions.minimum_supporting_case_evidence,noContradiction=conditions.allow_contradicting_case_evidence||contradicting.length===0,noMissing=conditions.allow_missing_required_evidence||missing.length===0;
+      relationship.case_relevant=sameCase&&crop===conditions.crop&&candidateMatches&&reviewMatches&&stateMatches&&enoughSupport&&noContradiction&&noMissing;
+      relationship.supporting_evidence_refs=relationship.case_relevant?supportingInCase:[];
+      relationship.contradicting_evidence_refs=contradicting;
+      relationship.missing_evidence_refs=compact([!sameCase?"WRONG_CASE_CONTEXT":null,crop!==conditions.crop?"WRONG_CROP_CONTEXT":null,!candidateMatches?"CANDIDATE_NOT_APPLICABLE":null,!reviewMatches?"HUMAN_REVIEW_REQUIRED":null,!stateMatches?"STEP_C_CANDIDATE_NOT_SUPPORTED":null,!enoughSupport?"MISSING_CASE_EVIDENCE":null,!noMissing?"STEP_C_REQUIRED_EVIDENCE_MISSING":null]);
+      if(!noContradiction)relationship.reason="Current authoritative Case evidence contradicts the candidate relationship, so this management category is not supported for review.";
+      else if(!relationship.case_relevant)relationship.reason="The governed blast-prevention relationship is retained but is not applicable until its Case, candidate, evidence, and human-review conditions all pass.";
+    }
+    return rules;
+  }
 }
 
 export function createTestOnlyManagementRuleProvider(configuration = {}) {
@@ -185,7 +211,8 @@ function targetProblem(assessment, finding, rules) {
 
 function needForAction(assessment, rules) {
   const readiness = assessment.evidence_sufficiency?.purpose_states?.MANAGEMENT_OPTION_REVIEW;
-  const ready = readiness === "SUFFICIENT_FOR_MANAGEMENT_OPTION_REVIEW";
+  const reviewedCaseRelationship=Boolean(reviewedFinding(assessment)&&rules.management_relationships.some((item)=>item.case_relevant&&item.supporting_evidence_refs.length));
+  const ready = readiness === "SUFFICIENT_FOR_MANAGEMENT_OPTION_REVIEW" || reviewedCaseRelationship;
   if (!ready) return {
     model: NEED_FOR_ACTION_MODEL_VERSION,
     state: "MORE_EVIDENCE_REQUIRED",
@@ -203,7 +230,7 @@ function needForAction(assessment, rules) {
     model: NEED_FOR_ACTION_MODEL_VERSION,
     state: declared?.state ?? "MANAGEMENT_REVIEW_JUSTIFIED",
     management_review_ready: true,
-    reason: declared?.reason ?? "Step C explicitly declares sufficient evidence for bounded Management Option Review.",
+    reason: declared?.reason ?? (readiness === "SUFFICIENT_FOR_MANAGEMENT_OPTION_REVIEW" ? "Step C explicitly declares sufficient evidence for bounded Management Option Review." : "A current human-reviewed Step C finding and its governed Case-specific evidence relationship support bounded Management Option Review."),
     supporting_evidence_refs: declared?.supporting_evidence_refs ?? [assessment.assessment_id],
     missing_evidence_refs: declared?.missing_evidence_refs ?? [],
     source_rule_id: declared?.source_rule_id ?? "STEP_C_MANAGEMENT_READINESS_GATE/v1",
@@ -233,6 +260,7 @@ function suitabilityEvaluation(optionClass, need, rules, gate) {
     limitations: relationship?.limitations ?? [],
     human_review_required: relationship?.human_review_required ?? false,
     source_rule_id: relationship?.rule_id ?? `F1-${optionClass}/v1`,
+    applicability_conditions: relationship?.applicability_conditions ?? null,
   };
   if (optionClass === "CONTINUE_MONITORING") {
     if (need.state === "CONTINUE_MONITORING") return { ...base, eligibility_state:"SUPPORTED_FOR_REVIEW", reason:need.reason, supporting_evidence_refs:need.supporting_evidence_refs, limitations:[...need.limitations, "No monitoring interval is inferred."] };
@@ -240,6 +268,7 @@ function suitabilityEvaluation(optionClass, need, rules, gate) {
   }
   if (["CULTURAL_MANAGEMENT", "MECHANICAL_MANAGEMENT", "BIOLOGICAL_MANAGEMENT", "CONTINUE_MONITORING"].includes(optionClass)) {
     if (!relationship) return { ...base, eligibility_state:"NOT_SUPPORTED_BY_CURRENT_EVIDENCE", reason:"No governed Case-specific management relationship supports this option class.", limitations:["General model knowledge cannot create Case suitability."] };
+    if (relationship.contradicting_evidence_refs.length) return { ...base, eligibility_state:"NOT_SUPPORTED_BY_CURRENT_EVIDENCE", reason:relationship.reason };
     if (!relationship.case_relevant) return { ...base, eligibility_state:"MORE_EVIDENCE_REQUIRED", reason:relationship.reason, missing_evidence_refs:relationship.missing_evidence_refs.length ? relationship.missing_evidence_refs : ["MISSING_CASE_APPLICABILITY"] };
     if (need.state !== "MANAGEMENT_REVIEW_JUSTIFIED") return { ...base, eligibility_state:"NOT_SUPPORTED_BY_CURRENT_EVIDENCE", reason:"The Need-for-Action state does not currently open this management path." };
     return { ...base, eligibility_state:relationship.human_review_required ? "HUMAN_REVIEW_REQUIRED" : "SUPPORTED_FOR_REVIEW" };
@@ -287,7 +316,7 @@ export class ManagementOptionEngine {
       context_hash:contextHash,
       source_rule_version:manifest.provider_version,
       source_rule_hash:manifest.content_hash,
-      source_provenance:{scientific:{source_refs:scientificRefs,authority:manifest.authority,review_state:manifest.review_state},regulatory:{authority_refs:regulatoryRefs,authority_class:gate.authority_class,jurisdiction:gate.jurisdiction,current_authority_confirmed:gate.current_authority_confirmed}},
+      source_provenance:{scientific:{source_refs:scientificRefs,authority:manifest.authority,review_state:manifest.review_state,provider_id:manifest.provider_id,provider_version:manifest.provider_version},regulatory:{authority_refs:regulatoryRefs,authority_class:gate.authority_class,jurisdiction:gate.jurisdiction,current_authority_confirmed:gate.current_authority_confirmed}},
       generated_at:generatedAt,
       boundaries:{candidate_is_diagnosis:false,management_option_is_recommendation:false,eligibility_is_selection:false,regulatory_eligibility_is_case_suitability:false,human_review_waives_authority:false,moa_creates_eligibility:false,failed_control_is_resistance:false,field_action_created:false,automatic_learning:false},
     };
@@ -379,7 +408,8 @@ export class ManagementOptionService {
       source_rule_id:evaluation.source_rule_id,
       source_rule_version:proposal.source_rule_version,
       source_refs:evaluation.source_refs,
-      provenance:{scientific:{assessment:proposal.assessment_reference,source_refs:evaluation.source_refs,evidence_refs:evaluation.supporting_evidence_refs},regulatory:evaluation.option_class==="CHEMICAL_REVIEW"?proposal.source_provenance.regulatory:null},
+      applicability_conditions:evaluation.applicability_conditions,
+      provenance:{scientific:{assessment:proposal.assessment_reference,source_refs:evaluation.source_refs,evidence_refs:evaluation.supporting_evidence_refs,rule_id:evaluation.source_rule_id,provider_id:proposal.source_provenance.scientific.provider_id,provider_version:proposal.source_rule_version,review_state:proposal.source_provenance.scientific.review_state,limitations:evaluation.limitations,applicability_conditions:evaluation.applicability_conditions},regulatory:evaluation.option_class==="CHEMICAL_REVIEW"?proposal.source_provenance.regulatory:null},
       context_hash:proposal.context_hash,
       engine_version:proposal.engine_version,
       generated_at:proposal.generated_at,

@@ -1,0 +1,54 @@
+{
+  "manifest": {
+    "provider_id": "cp-moakb-governed-management-provider",
+    "provider_version": "1.1.0",
+    "authority": "GOVERNED_KNOWLEDGE_RELATIONSHIP",
+    "review_state": "DOMAIN_APPROVED"
+  },
+  "need_for_action": null,
+  "management_relationships": [
+    {
+      "rule_id": "F1-CPM-BLAST-PREVENTION-CULTURAL/v1",
+      "option_class": "CULTURAL_MANAGEMENT",
+      "case_relevant": false,
+      "reason": "The reviewed repository source supports a bounded blast-prevention management-category review for this case only when current Step C evidence and a human-reviewed primary finding satisfy the declared applicability conditions.",
+      "supporting_evidence_refs": [],
+      "missing_evidence_refs": ["MISSING_CASE_APPLICABILITY"],
+      "contradicting_evidence_refs": [],
+      "source_refs": [
+        "MO-CPM-008/v1",
+        "EV-DMG-CPM-001/v1",
+        "GS-RRC-PRACHIN-RICE-DISEASES-2025-001/v1",
+        "CO-RDC-001/v1",
+        "CL-RDC-001-O/v1"
+      ],
+      "limitations": [
+        "The source records resistant-variety, seed-rate, drainage, and nitrogen-management categories; it does not prescribe a case action, variety, amount, rate, dose, product, or application method.",
+        "Eligibility exposes an option for explicit human review only and is not a recommendation, ranking, diagnosis, or performed action.",
+        "Applicability is limited to the current rice Case and the reviewed blast finding supported by its cited Case evidence."
+      ],
+      "human_review_required": false,
+      "applicability_conditions": {
+        "crop": "RICE",
+        "candidate_concept_ids": ["CO-RDC-001/v1"],
+        "required_finding_role": "PRIMARY_FINDING",
+        "allowed_resolution_levels": ["FIELD_REVIEWED_FINDING", "SPECIALIST_CONFIRMED", "LAB_CONFIRMED"],
+        "allowed_candidate_states": ["SUPPORTED", "STRONGLY_SUPPORTED", "RESOLVED"],
+        "minimum_supporting_case_evidence": 1,
+        "allow_contradicting_case_evidence": false,
+        "allow_missing_required_evidence": false
+      }
+    }
+  ],
+  "failed_control_context": null,
+  "regulatory_authority": {
+    "jurisdiction": "TH",
+    "authority_class": "PRIMARY_OFFICIAL_REGULATOR",
+    "current": false,
+    "conflicting": false,
+    "defensible_join_key": false,
+    "exact_chain": {"crop": null, "target": null, "use": null, "registration": null},
+    "authority_refs": ["GS-DOA-HAZARDOUS-REGISTRY-2026-001/v1", "GS-DOA-PPD-INSECT-GUIDANCE-2023-001/v1"],
+    "limitation": "Current governed evidence does not complete a defensible Crop x Target x Use x Registration chain."
+  }
+}
