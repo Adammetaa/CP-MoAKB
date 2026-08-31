@@ -1,8 +1,8 @@
 {
-  "artifact_version": "step-j-readiness-register/v1",
+  "artifact_version": "r2b-readiness-register/v2",
   "assessment_scope": "CONTROLLED_PILOT_READY_CANDIDATE_ONLY",
-  "automated_runtime_validation": "PASSED_LOCAL_PRECOMMIT",
-  "automated_results": {"node": "430 passed", "python": "938 passed, 1 skipped"},
+  "automated_runtime_validation": "EXECUTABLE_CURRENT_EVIDENCE_REQUIRED",
+  "automated_results": {"authority": "GET /api/pilot/readiness", "fixed_historical_counts_are_not_current_evidence": true},
   "internal_synthetic_walkthrough": "READY_TO_RUN",
   "real_field_validation": "NOT_RUN",
   "production_certified": false,
@@ -25,5 +25,5 @@
     {"class": "INFRASTRUCTURE_DEBT", "detail": "SINGLE_PROCESS_SQLITE_LIMITATION"},
     {"class": "FIELD_VALIDATION_DEBT", "detail": "REAL_FIELD_VALIDATION_NOT_RUN"}
   ],
-  "next_action": "CP-MoAKB Full-System Audit — A through J"
+  "next_action": "Final Full-System Audit post-remediation"
 }

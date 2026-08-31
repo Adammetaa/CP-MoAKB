@@ -92,14 +92,9 @@ export class PilotStore {
     this.conversationIdProvider = conversationIdProvider;
     this.conversationOrchestrator = null;
   }
-  async open() {
-    await mkdir(dirname(this.dbPath), { recursive: true });
-    await mkdir(this.exportDir, { recursive: true });
-    this.db = new DatabaseSync(this.dbPath);
-    let schemaPreparation;
-    try { schemaPreparation = await preparePilotSchema(this.db,{profile:this.pilotProfile,dbPath:this.dbPath,exportDir:this.exportDir,migrationFailureInjector:this.migrationFailureInjector}); }
-    catch (error) { this.db.close(); this.db=null; throw error; }
-    this.db.exec("PRAGMA journal_mode=WAL; PRAGMA foreign_keys=ON; CREATE TABLE IF NOT EXISTS pilot_workspaces (user_id TEXT PRIMARY KEY, state_json TEXT NOT NULL, created_at TEXT NOT NULL, updated_at TEXT NOT NULL); CREATE TABLE IF NOT EXISTS pilot_events (event_id INTEGER PRIMARY KEY AUTOINCREMENT, user_id TEXT NOT NULL, event_type TEXT NOT NULL, created_at TEXT NOT NULL); CREATE TABLE IF NOT EXISTS pilot_feedback (feedback_id TEXT PRIMARY KEY, user_id TEXT NOT NULL, route TEXT NOT NULL, subject_id TEXT, rating TEXT NOT NULL, note TEXT, created_at TEXT NOT NULL); CREATE TABLE IF NOT EXISTS pilot_meta (key TEXT PRIMARY KEY, value TEXT NOT NULL);");
+  initializeSchema(checkpoint = () => {}) {
+    this.db.exec("PRAGMA foreign_keys=ON; CREATE TABLE IF NOT EXISTS pilot_workspaces (user_id TEXT PRIMARY KEY, state_json TEXT NOT NULL, created_at TEXT NOT NULL, updated_at TEXT NOT NULL); CREATE TABLE IF NOT EXISTS pilot_events (event_id INTEGER PRIMARY KEY AUTOINCREMENT, user_id TEXT NOT NULL, event_type TEXT NOT NULL, created_at TEXT NOT NULL); CREATE TABLE IF NOT EXISTS pilot_feedback (feedback_id TEXT PRIMARY KEY, user_id TEXT NOT NULL, route TEXT NOT NULL, subject_id TEXT, rating TEXT NOT NULL, note TEXT, created_at TEXT NOT NULL);");
+    checkpoint("AFTER_BASE");
     this.db.exec(`
       CREATE TABLE IF NOT EXISTS lifecycle_users (user_id TEXT PRIMARY KEY, profile_json TEXT NOT NULL, created_at TEXT NOT NULL, updated_at TEXT NOT NULL);
       CREATE TABLE IF NOT EXISTS lifecycle_fields (field_id TEXT PRIMARY KEY, owner_user_id TEXT NOT NULL, name TEXT NOT NULL, geometry_json TEXT, centroid_json TEXT, area_json TEXT, crop_profile_json TEXT NOT NULL, season_id TEXT NOT NULL, created_at TEXT NOT NULL, updated_at TEXT NOT NULL);
@@ -114,17 +109,21 @@ export class PilotStore {
     const feedbackColumns = new Set(this.db.prepare("PRAGMA table_info(pilot_feedback)").all().map((column) => column.name));
     if (!feedbackColumns.has("category")) this.db.exec("ALTER TABLE pilot_feedback ADD COLUMN category TEXT");
     if (!feedbackColumns.has("storage_key")) this.db.exec("ALTER TABLE pilot_feedback ADD COLUMN storage_key TEXT");
-    initializeInvestigationSchema(this.db);
-    initializeInvestigationIntelligenceSchema(this.db);
-    initializeGuidanceIntelligenceSchema(this.db);
-    initializeVisualEvidenceSchema(this.db);
-    initializeVisualPerceptionSchema(this.db);
-    initializeManagementOptionSchema(this.db);
-    initializeDecisionActionOutcomeSchema(this.db);
-    initializeFollowupReminderTimelineSchema(this.db);
-    initializeSpatialLocalPatternSchema(this.db);
-    initializeLearningKnowledgeGraphSchema(this.db);
-    initializeConversationSchema(this.db);
+    checkpoint("AFTER_LIFECYCLE");
+    initializeInvestigationSchema(this.db); initializeInvestigationIntelligenceSchema(this.db); initializeGuidanceIntelligenceSchema(this.db); checkpoint("AFTER_A_D");
+    initializeVisualEvidenceSchema(this.db); checkpoint("AFTER_B1"); initializeVisualPerceptionSchema(this.db); checkpoint("AFTER_B2");
+    initializeManagementOptionSchema(this.db); checkpoint("AFTER_F1"); initializeDecisionActionOutcomeSchema(this.db); checkpoint("AFTER_F2");
+    initializeFollowupReminderTimelineSchema(this.db); initializeSpatialLocalPatternSchema(this.db); checkpoint("AFTER_H");
+    initializeLearningKnowledgeGraphSchema(this.db); checkpoint("AFTER_I"); initializeConversationSchema(this.db); checkpoint("AFTER_E");
+  }
+  requireFeature(feature) { const enabled=this.pilotConfiguration?.feature_flags?.[feature]??true;if(enabled!==true){this.hardening?.audit("FEATURE_DISABLED_REQUEST",{severity:"WARN",detail_code:feature});throw Object.assign(new Error("governed feature is disabled"),{code:"FEATURE_DISABLED",status:503,feature});} }
+  async open() {
+    await mkdir(dirname(this.dbPath), { recursive: true });
+    await mkdir(this.exportDir, { recursive: true });
+    this.db = new DatabaseSync(this.dbPath);
+    let schemaPreparation;
+    try { this.db.exec("PRAGMA foreign_keys=ON"); schemaPreparation = await preparePilotSchema(this.db,{profile:this.pilotProfile,dbPath:this.dbPath,exportDir:this.exportDir,migrationFailureInjector:this.migrationFailureInjector,initializeSchema:(checkpoint)=>this.initializeSchema(checkpoint)}); this.db.exec("PRAGMA journal_mode=WAL"); }
+    catch (error) { this.db.close(); this.db=null; throw error; }
     this.investigation = new InvestigationBackbone(this.db);
     this.investigationIntelligence = new InvestigationIntelligenceService(this.db,this.investigation,{...(this.investigationRuleProvider?{ruleProvider:this.investigationRuleProvider}:{}),...(this.investigationCandidateProvider?{candidateProvider:this.investigationCandidateProvider}:{}),...(this.intelligenceClock?{clock:this.intelligenceClock}:{}),...(this.intelligenceIdProvider?{idProvider:this.intelligenceIdProvider}:{})});
     this.guidanceIntelligence = new GuidanceIntelligenceService(this.db,this.investigation,this.investigationIntelligence,{...(this.guidanceRuleProvider?{ruleProvider:this.guidanceRuleProvider}:{}),...(this.guidanceClock?{clock:this.guidanceClock}:{}),...(this.guidanceIdProvider?{idProvider:this.guidanceIdProvider}:{})});
@@ -137,6 +136,7 @@ export class PilotStore {
     this.learningKnowledgeGraph = new LearningKnowledgeGraphService(this.db,{spatialService:this.spatialLocalPatterns,...(this.learningClock?{clock:this.learningClock}:{}),...(this.learningIdProvider?{idProvider:this.learningIdProvider}:{})});
     this.hardening = new PilotHardeningService(this.db,{configuration:this.pilotConfiguration,dbPath:this.dbPath,exportDir:this.exportDir,schemaPreparation,...(this.hardeningClock?{clock:this.hardeningClock}:{}),...(this.hardeningIdProvider?{idProvider:this.hardeningIdProvider}:{})});
     this.hardening.audit("STARTUP",{detail_code:"SCHEMA_AND_STORAGE_READY"});
+    for (const capability of this.hardening.capabilityManifest().capabilities) this.hardening.audit(capability.enabled?"FEATURE_ENABLED":"FEATURE_DISABLED",{detail_code:capability.feature});
     this.conversationOrchestrator = new GovernedConversationOrchestrator(this.db,{backbone:this.investigation,assessmentService:this.investigationIntelligence,guidanceService:this.guidanceIntelligence,visualEvidenceService:this.visualEvidence,visualPerceptionService:this.visualPerception,managementService:this.managementOptions,decisionActionOutcomeService:this.decisionActionOutcomes,followupReminderService:this.followupReminders,provider:this.conversationProvider??createConfiguredConversationProvider(),...(this.conversationClock?{clock:this.conversationClock}:{}),...(this.conversationIdProvider?{idProvider:this.conversationIdProvider}:{})});
     for (const row of this.db.prepare("SELECT user_id,state_json,updated_at FROM pilot_workspaces").all()) {
       const migrated = this.db.prepare("SELECT status FROM lifecycle_migrations WHERE owner_user_id = ?").get(row.user_id);
@@ -268,24 +268,24 @@ export class PilotStore {
   addVisualAssessment(userId, imageId, assessment) { return this.visualEvidence.addAssessment(userId,imageId,assessment); }
   reviewVisualObservation(userId, review) { return this.visualEvidence.review(userId,review); }
   getNextVisualRequest(userId, scope) { return this.visualEvidence.nextRequest(userId,scope); }
-  requestVisualPerception(userId, request) { return this.visualPerception.request(userId,request); }
-  getVisualPerceptionResult(userId, requestId) { return this.visualPerception.get(userId,requestId); }
-  getVisualPerceptionHistory(userId, imageId) { return this.visualPerception.history(userId,imageId); }
-  getVisualPerceptionHealth(userId) { return this.visualPerception.health(userId); }
-  assessManagementOptions(userId, scope) { return this.managementOptions.assess(userId,scope); }
-  getCurrentManagementReview(userId, scope) { return this.managementOptions.current(userId,scope); }
+  requestVisualPerception(userId, request) { this.requireFeature("visual_perception_provider");return this.visualPerception.request(userId,request); }
+  getVisualPerceptionResult(userId, requestId) { this.requireFeature("visual_perception_provider");return this.visualPerception.get(userId,requestId); }
+  getVisualPerceptionHistory(userId, imageId) { this.requireFeature("visual_perception_provider");return this.visualPerception.history(userId,imageId); }
+  getVisualPerceptionHealth(userId) { this.requireFeature("visual_perception_provider");return this.visualPerception.health(userId); }
+  assessManagementOptions(userId, scope) { this.requireFeature("f1_management_review");return this.managementOptions.assess(userId,scope); }
+  getCurrentManagementReview(userId, scope) { this.requireFeature("f1_management_review");return this.managementOptions.current(userId,scope); }
   getManagementReviewHistory(userId, scope) { return this.managementOptions.history(userId,scope); }
-  getManagementReviewContext(userId, scope) { return this.managementOptions.context(userId,scope); }
-  createHumanDecision(userId, input) { return this.decisionActionOutcomes.createDecision(userId,input); }
-  getHumanDecisionHistory(userId, scope) { return this.decisionActionOutcomes.decisionHistory(userId,scope); }
-  getCurrentHumanDecision(userId, scope) { return this.decisionActionOutcomes.currentDecision(userId,scope); }
-  createManagementAction(userId, input) { return this.decisionActionOutcomes.createAction(userId,input); }
+  getManagementReviewContext(userId, scope) { this.requireFeature("f1_management_review");return this.managementOptions.context(userId,scope); }
+  createHumanDecision(userId, input) { this.requireFeature("f2_management_action");return this.decisionActionOutcomes.createDecision(userId,input); }
+  getHumanDecisionHistory(userId, scope) { const derive=this.pilotConfiguration?.feature_flags?.f2_management_action!==false;return this.decisionActionOutcomes.decisionHistory(userId,scope,{deriveValidity:derive}); }
+  getCurrentHumanDecision(userId, scope) { if(this.pilotConfiguration?.feature_flags?.f2_management_action===false)return this.decisionActionOutcomes.decisionHistory(userId,scope,{deriveValidity:false}).filter((item)=>item.history_state!=="SUPERSEDED").at(-1)??null;return this.decisionActionOutcomes.currentDecision(userId,scope); }
+  createManagementAction(userId, input) { this.requireFeature("f2_management_action");return this.decisionActionOutcomes.createAction(userId,input); }
   getManagementActionHistory(userId, scope) { return this.decisionActionOutcomes.actionHistory(userId,scope); }
-  createOutcomeObservation(userId, input) { return this.decisionActionOutcomes.createOutcomeObservation(userId,input); }
-  createOutcomeComparison(userId, input) { return this.decisionActionOutcomes.createOutcomeComparison(userId,input); }
-  getGovernedOutcomeReview(userId, managementActionId) { return this.decisionActionOutcomes.getOutcomeReview(userId,managementActionId); }
+  createOutcomeObservation(userId, input) { this.requireFeature("f2_management_action");return this.decisionActionOutcomes.createOutcomeObservation(userId,input); }
+  createOutcomeComparison(userId, input) { this.requireFeature("f2_management_action");return this.decisionActionOutcomes.createOutcomeComparison(userId,input); }
+  getGovernedOutcomeReview(userId, managementActionId) { this.requireFeature("f2_management_action");return this.decisionActionOutcomes.getOutcomeReview(userId,managementActionId); }
   getGovernedOutcomeReviewHistory(userId, managementActionId) { return this.decisionActionOutcomes.outcomeReviewHistory(userId,managementActionId); }
-  getDecisionActionOutcomeContext(userId, scope) { return this.decisionActionOutcomes.serverContext(userId,scope); }
+  getDecisionActionOutcomeContext(userId, scope) { this.requireFeature("f2_management_action");return this.decisionActionOutcomes.serverContext(userId,scope); }
   createGovernedFollowUpPlan(userId, input) { return this.followupReminders.createPlan(userId,input); }
   getGovernedFollowUpPlans(userId, scope) { return this.followupReminders.currentPlans(userId,scope); }
   getGovernedFollowUpHistory(userId, scope) { return this.followupReminders.planHistory(userId,scope); }
@@ -298,30 +298,31 @@ export class PilotStore {
   getAuthoritativeTimeline(userId, scope) { return this.followupReminders.timeline(userId,scope); }
   reconcileGovernedFollowUps(userId, scope) { return this.followupReminders.reconcile(userId,scope); }
   getFollowUpReminderContext(userId, scope) { return this.followupReminders.context(userId,scope); }
-  createCrossCaseComparison(userId, input) { return this.spatialLocalPatterns.createComparison(userId,input); }
-  getCrossCaseComparisons(userId) { return this.spatialLocalPatterns.comparisons(userId); }
-  createLocalPatternCandidate(userId, input) { return this.spatialLocalPatterns.createCandidate(userId,input); }
-  getLocalPatternCandidates(userId) { return this.spatialLocalPatterns.candidates(userId); }
-  createLocalPatternAdjudication(userId, input) { return this.spatialLocalPatterns.createAdjudication(userId,input); }
-  getLocalPatternAdjudications(userId, candidateId = null) { return this.spatialLocalPatterns.adjudications(userId,candidateId); }
-  getLocalPatternContext(userId, candidateId) { return this.spatialLocalPatterns.context(userId,candidateId); }
-  getLocalPatternGaps(userId, candidateId) { const context=this.spatialLocalPatterns.context(userId,candidateId);return {authority:context.authority,local_pattern_candidate_id:candidateId,gaps:context.pattern_gaps,guidance_input:context.guidance_input}; }
-  getSpatialPatternProjection(userId, candidateId) { return this.spatialLocalPatterns.spatialProjection(userId,candidateId); }
-  interpretLearningIntent(raw) { return this.learningKnowledgeGraph.interpretLearningIntent(raw); }
-  createLearningNomination(userId, input) { return this.learningKnowledgeGraph.createNomination(userId,input); }
-  getLearningNominations(userId) { return this.learningKnowledgeGraph.nominations(userId); }
-  getKnowledgeGaps(userId) { return this.learningKnowledgeGraph.knowledgeGaps(userId); }
-  getKnowledgeWorkQueue(userId) { return this.learningKnowledgeGraph.workQueue(userId); }
-  createReviewedCaseBundle(userId, input) { return this.learningKnowledgeGraph.createBundle(userId,input); }
-  getReviewedCaseBundles(userId) { return this.learningKnowledgeGraph.bundles(userId); }
-  createKnowledgeAssertionCandidate(userId, input) { return this.learningKnowledgeGraph.createAssertionCandidate(userId,input); }
-  getKnowledgeAssertionCandidates(userId) { return this.learningKnowledgeGraph.candidates(userId); }
-  createKnowledgePromotionReview(userId, input) { return this.learningKnowledgeGraph.createPromotionReview(userId,input); }
-  getKnowledgePromotionHistory(userId) { return this.learningKnowledgeGraph.promotions(userId); }
-  getUnifiedKnowledgeGraph(userId, subjectEntityId = null) { return this.learningKnowledgeGraph.graph(userId,{subject_entity_id:subjectEntityId}); }
-  getUnifiedKnowledgeGraphContext(userId, subjectEntityId = null) { return this.learningKnowledgeGraph.graphContext(userId,subjectEntityId); }
+  createCrossCaseComparison(userId, input) { this.requireFeature("step_h_local_pattern");return this.spatialLocalPatterns.createComparison(userId,input); }
+  getCrossCaseComparisons(userId) { this.requireFeature("step_h_local_pattern");return this.spatialLocalPatterns.comparisons(userId); }
+  createLocalPatternCandidate(userId, input) { this.requireFeature("step_h_local_pattern");return this.spatialLocalPatterns.createCandidate(userId,input); }
+  getLocalPatternCandidates(userId) { this.requireFeature("step_h_local_pattern");return this.spatialLocalPatterns.candidates(userId); }
+  createLocalPatternAdjudication(userId, input) { this.requireFeature("step_h_local_pattern");return this.spatialLocalPatterns.createAdjudication(userId,input); }
+  getLocalPatternAdjudications(userId, candidateId = null) { this.requireFeature("step_h_local_pattern");return this.spatialLocalPatterns.adjudications(userId,candidateId); }
+  getLocalPatternContext(userId, candidateId) { this.requireFeature("step_h_local_pattern");return this.spatialLocalPatterns.context(userId,candidateId); }
+  getLocalPatternGaps(userId, candidateId) { this.requireFeature("step_h_local_pattern");const context=this.spatialLocalPatterns.context(userId,candidateId);return {authority:context.authority,local_pattern_candidate_id:candidateId,gaps:context.pattern_gaps,guidance_input:context.guidance_input}; }
+  getSpatialPatternProjection(userId, candidateId) { this.requireFeature("step_h_local_pattern");return this.spatialLocalPatterns.spatialProjection(userId,candidateId); }
+  interpretLearningIntent(raw) { this.requireFeature("step_i_learning");return this.learningKnowledgeGraph.interpretLearningIntent(raw); }
+  createLearningNomination(userId, input) { this.requireFeature("step_i_learning");return this.learningKnowledgeGraph.createNomination(userId,input); }
+  getLearningNominations(userId) { this.requireFeature("step_i_learning");return this.learningKnowledgeGraph.nominations(userId); }
+  getKnowledgeGaps(userId) { this.requireFeature("step_i_learning");return this.learningKnowledgeGraph.knowledgeGaps(userId); }
+  getKnowledgeWorkQueue(userId) { this.requireFeature("step_i_learning");return this.learningKnowledgeGraph.workQueue(userId); }
+  createReviewedCaseBundle(userId, input) { this.requireFeature("step_i_learning");return this.learningKnowledgeGraph.createBundle(userId,input); }
+  getReviewedCaseBundles(userId) { this.requireFeature("step_i_learning");return this.learningKnowledgeGraph.bundles(userId); }
+  createKnowledgeAssertionCandidate(userId, input) { this.requireFeature("step_i_learning");return this.learningKnowledgeGraph.createAssertionCandidate(userId,input); }
+  getKnowledgeAssertionCandidates(userId) { this.requireFeature("step_i_learning");return this.learningKnowledgeGraph.candidates(userId); }
+  createKnowledgePromotionReview(userId, input) { this.requireFeature("step_i_learning");return this.learningKnowledgeGraph.createPromotionReview(userId,input); }
+  getKnowledgePromotionHistory(userId) { this.requireFeature("step_i_learning");return this.learningKnowledgeGraph.promotions(userId); }
+  getUnifiedKnowledgeGraph(userId, subjectEntityId = null) { this.requireFeature("step_i_learning");return this.learningKnowledgeGraph.graph(userId,{subject_entity_id:subjectEntityId}); }
+  getUnifiedKnowledgeGraphContext(userId, subjectEntityId = null) { this.requireFeature("step_i_learning");return this.learningKnowledgeGraph.graphContext(userId,subjectEntityId); }
   getPilotHealth() { return this.hardening.health(); }
-  getPilotReadiness(input = {}) { return this.hardening.readiness(input); }
+  getPilotReadiness(input = {}) { const result=this.hardening.readiness(input),flags=this.pilotConfiguration?.feature_flags??{},gate=result.gates.find((item)=>item.gate==="DEGRADED_OPERATION"),required=["f1_management_review","f2_management_action"].filter((feature)=>flags[feature]===false),optional=["step_h_local_pattern","step_i_learning"].filter((feature)=>flags[feature]===false);if(required.length){Object.assign(gate,{state:"BLOCKED",reason_codes:required.map((feature)=>`REQUIRED_CAPABILITY_DISABLED:${feature}`),blocking:true,results:{capability_profile:"CONTROLLED_PILOT_A_J"}});result.state="PILOT_BLOCKED";result.readiness="BLOCKED";}else if(optional.length&&result.readiness!=="BLOCKED"){Object.assign(gate,{state:"CONDITIONAL",reason_codes:optional.map((feature)=>`OPTIONAL_CAPABILITY_DISABLED:${feature}`),blocking:false,results:{capability_profile:"CONTROLLED_PILOT_A_J"}});result.state="CONDITIONAL_PILOT_READINESS";result.readiness="DEGRADED";}return result; }
+  getPilotCapabilities() { return this.hardening.capabilityManifest(); }
   getOperationalAudit(userId = null) { return this.hardening.auditEvents(userId); }
   recordOperationalAudit(type, input = {}) { return this.hardening.audit(type,input); }
   createVerifiedBackup() { return this.hardening.backupAndVerify(); }
@@ -329,7 +330,7 @@ export class PilotStore {
   createPilotValidationRecord(userId, input) { return this.hardening.createValidationRecord(userId,input); }
   getPilotValidationRecords(userId) { return this.hardening.validationRecords(userId); }
   getPilotDebtRegister() { return this.hardening.debtRegister(); }
-  orchestrateConversationTurn(userId, input) { return this.conversationOrchestrator.turn(userId,input); }
+  orchestrateConversationTurn(userId, input) { this.requireFeature("conversation_provider");return this.conversationOrchestrator.turn(userId,input); }
   listGovernedConversations(userId) { return this.conversationOrchestrator.list(userId); }
   getGovernedConversationHistory(userId, conversationId) { return this.conversationOrchestrator.history(userId,conversationId); }
   rebuildGovernedConversationContext(userId, conversationId) { return this.conversationOrchestrator.rebuildContext(userId,conversationId); }

@@ -28,7 +28,16 @@ async function readJson(request, limit = 32_768) { if(!String(request.headers["c
 function json(response, status, payload) { response.writeHead(status, { "content-type":"application/json; charset=utf-8", "cache-control":"no-store", "x-content-type-options":"nosniff" }); response.end(JSON.stringify(payload)); }
 function contractError(message) { return Object.assign(new Error(message),{code:"VALIDATION_ERROR",status:400}); }
 function sessionToken(request) { return request.headers.cookie?.split(";").map((item) => item.trim()).find((item) => item.startsWith("pilot_session="))?.slice("pilot_session=".length) ?? null; }
-function enabledForPath(path,flags){const groups=[["conversation_provider",["/api/pilot/conversation"]],["visual_perception_provider",["/api/pilot/visual-perception"]],["f1_management_review",["/api/pilot/management-options","/api/pilot/management-option-history","/api/pilot/management-review-context"]],["f2_management_action",["/api/pilot/human-decision","/api/pilot/management-action","/api/pilot/outcome-","/api/pilot/decision-action-outcome"]],["step_h_local_pattern",["/api/pilot/cross-case","/api/pilot/local-pattern","/api/pilot/spatial-pattern"]],["step_i_learning",["/api/pilot/learning-","/api/pilot/reviewed-case","/api/pilot/knowledge-"]]];const item=groups.find(([,prefixes])=>prefixes.some((prefix)=>path.startsWith(prefix)));return item?flags[item[0]]!==false:true;}
+const FEATURE_ROUTE_CONTRACT=Object.freeze([
+  {feature:"conversation_provider",methods:["POST"],prefixes:["/api/pilot/conversation-turns"]},
+  {feature:"visual_perception_provider",methods:["GET","POST"],prefixes:["/api/pilot/visual-perception"]},
+  {feature:"f1_management_review",methods:["GET"],prefixes:["/api/pilot/management-options","/api/pilot/management-review-context"]},
+  {feature:"f2_management_action",methods:["POST"],prefixes:["/api/pilot/human-decisions","/api/pilot/management-actions","/api/pilot/outcome-observations","/api/pilot/outcome-comparisons"]},
+  {feature:"f2_management_action",methods:["GET"],paths:["/api/pilot/outcome-review","/api/pilot/decision-action-outcome-context"]},
+  {feature:"step_h_local_pattern",methods:["GET","POST"],prefixes:["/api/pilot/cross-case-comparisons","/api/pilot/local-pattern","/api/pilot/spatial-pattern"]},
+  {feature:"step_i_learning",methods:["GET","POST"],prefixes:["/api/pilot/learning-","/api/pilot/reviewed-case","/api/pilot/knowledge-"]}
+]);
+export function featureForRequest(method,path){return FEATURE_ROUTE_CONTRACT.find((item)=>item.methods.includes(method)&&((item.paths??[]).includes(path)||(item.prefixes??[]).some((prefix)=>path.startsWith(prefix))))?.feature??null;}
 
 async function serveStatic(request, response) {
   const pathname = decodeURIComponent(new URL(request.url, "http://localhost").pathname), relative = pathname === "/" ? "index.html" : pathname.replace(/^\/+/, "");
@@ -61,8 +70,9 @@ export async function startServer({ port, host, dbPath, exportDir, uploadDir: co
       if (url.pathname.startsWith("/api/") && (!session || session.expires_at < Date.now())) return json(response, 401, { status:"AUTHENTICATION_REQUIRED" });
       if(["POST","PUT","PATCH","DELETE"].includes(request.method)&&request.headers.origin){const origin=new URL(request.headers.origin);if(origin.host!==request.headers.host)throw Object.assign(new Error("same-origin request required"),{code:"CSRF_REJECTED",status:403});}
       if(request.method==="POST"&&url.pathname==="/api/pilot/session/logout"){sessions.delete(sessionToken(request));response.setHeader("set-cookie","pilot_session=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0");return json(response,200,{status:"SIGNED_OUT"});}
-      if(url.pathname.startsWith("/api/pilot/")&&!enabledForPath(url.pathname,configuration.feature_flags))return json(response,503,{status:"FEATURE_DISABLED",error_code:"FEATURE_DISABLED",correlation_id:correlationId});
+      const governedFeature=featureForRequest(request.method,url.pathname);if(governedFeature&&configuration.feature_flags[governedFeature]!==true){store.recordOperationalAudit("FEATURE_DISABLED_REQUEST",{severity:"WARN",correlation_id:correlationId,actor_user_id:session.user_id,detail_code:governedFeature});return json(response,503,{status:"FEATURE_DISABLED",error_code:"FEATURE_DISABLED",feature:governedFeature,availability:"DISABLED",authority:"SERVER_STARTUP_CONFIGURATION",runtime_version:store.getPilotCapabilities().runtime_version,correlation_id:correlationId});}
       if(request.method==="GET"&&url.pathname==="/api/pilot/readiness")return json(response,200,store.getPilotReadiness({provider_state:conversationProvider?"READY":"UNAVAILABLE",visual_provider_state:selectedVisualPerceptionAdapter?"READY":"UNAVAILABLE"}));
+      if(request.method==="GET"&&url.pathname==="/api/pilot/capabilities")return json(response,200,store.getPilotCapabilities());
       if(request.method==="GET"&&url.pathname==="/api/pilot/operational-audit")return json(response,200,{events:store.getOperationalAudit(session.user_id)});
       if(request.method==="GET"&&url.pathname==="/api/pilot/debt-register")return json(response,200,{debts:store.getPilotDebtRegister()});
       if(request.method==="POST"&&url.pathname==="/api/pilot/verified-backups")return json(response,201,{status:"BACKUP_VERIFIED",...(await store.createVerifiedBackup())});

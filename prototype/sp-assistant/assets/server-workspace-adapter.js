@@ -8,6 +8,7 @@ export class ServerWorkspaceAdapter {
   }
   async hasSession() { const response = await this.fetcher("/api/pilot/session", { headers:{ accept:"application/json" } }); return response.ok; }
   async session() { const response=await this.fetcher("/api/pilot/session",{headers:{accept:"application/json"}});if(!response.ok)throw new Error("กรุณาเข้าสู่ระบบอีกครั้ง");return response.json(); }
+  async capabilities() { const response=await this.fetcher("/api/pilot/capabilities",{headers:{accept:"application/json"}});if(!response.ok)throw new Error("โหลดสิทธิ์ความสามารถของระบบไม่สำเร็จ");return response.json(); }
   async lifecycle() { const response=await this.fetcher("/api/pilot/lifecycle",{headers:{accept:"application/json"}});if(response.status===404)return{authority:"SERVER",fields:[],seasons:[],guidance:[]};if(!response.ok)throw new Error("โหลดข้อมูลแปลงจากระบบไม่สำเร็จ");return response.json(); }
   async createField(input) { return this.governedWrite("/api/pilot/fields",input,"บันทึกแปลงบนระบบไม่สำเร็จ"); }
   async pull() {

@@ -24,6 +24,8 @@ Unsupported, authority-blocked, not-applicable, and more-evidence-required optio
 
 Changes of mind and corrections append a new immutable decision that explicitly supersedes the current decision. Prior JSON is never rewritten. Optimistic current-ID checks prevent stale clients from silently replacing state.
 
+Current reads derive `current_validity`, `actionability`, and bounded reason codes against the current Step C/F1 revision, Investigation Bundle, F1 context, selected-option eligibility, and regulatory state. A stale Decision remains immutable and visible in history, but cannot create a new planned Management Action or confirm a planned Action as performed. A new explicit Decision restores actionability. Reminder and Timeline-only changes do not invalidate a Decision, and already performed Actions and Outcomes remain intact.
+
 ## Management Action and historical facts
 
 The Management Action schema records the Human Decision reference, option class, description, bounded parameters, planning/performance times, actor and source, location and application context references, limitations, provenance, revision, and supersession link.

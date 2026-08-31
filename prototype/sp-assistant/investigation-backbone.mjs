@@ -129,7 +129,8 @@ function applicationRate(value, name) { if (value == null) return null; object(v
 function tankMix(value, name) { object(value,name); allowed(value,["reported_name","active_ingredient","identity_confidence"],name); const confidence=member(value.identity_confidence,enumSet(["UNKNOWN","REPORTED_UNVERIFIED","RESOLVED","VERIFIED"]),`${name}.identity_confidence`); const active=text(value.active_ingredient,`${name}.active_ingredient`,{optional:true,max:300}); if (active && !["RESOLVED","VERIFIED"].includes(confidence)) fail("active ingredient requires resolved product identity"); return { reported_name:text(value.reported_name,`${name}.reported_name`,{max:300}), active_ingredient:active, identity_confidence:confidence }; }
 
 export function initializeInvestigationSchema(db, now = new Date().toISOString()) {
-  db.exec("BEGIN IMMEDIATE");
+  const nested=db.isTransaction===true;
+  db.exec(nested?"SAVEPOINT investigation_schema_init":"BEGIN IMMEDIATE");
   try {
     db.exec(`
       CREATE TABLE IF NOT EXISTS investigation_schema_migrations (version INTEGER PRIMARY KEY, applied_at TEXT NOT NULL);
@@ -166,8 +167,8 @@ export function initializeInvestigationSchema(db, now = new Date().toISOString()
     db.prepare("INSERT OR IGNORE INTO investigation_schema_migrations(version,applied_at) VALUES(1,?)").run(now);
     db.prepare("INSERT OR IGNORE INTO investigation_schema_migrations(version,applied_at) VALUES(2,?)").run(now);
     db.prepare("INSERT OR IGNORE INTO investigation_schema_migrations(version,applied_at) VALUES(4,?)").run(now);
-    db.exec("COMMIT");
-  } catch (error) { db.exec("ROLLBACK"); throw error; }
+    db.exec(nested?"RELEASE SAVEPOINT investigation_schema_init":"COMMIT");
+  } catch (error) { db.exec(nested?"ROLLBACK TO SAVEPOINT investigation_schema_init; RELEASE SAVEPOINT investigation_schema_init":"ROLLBACK"); throw error; }
 }
 
 export class InvestigationBackbone {
