@@ -46,6 +46,9 @@ const candidateProviderDocumentation = await readFile(resolve(root, "CANDIDATE_P
 const pilotStore = await readFile(resolve(root, "pilot-store.mjs"), "utf8");
 const serverRuntime = await readFile(resolve(root, "server.mjs"), "utf8");
 const pilotHardeningRuntime = await readFile(resolve(root, "pilot-hardening-runtime.mjs"), "utf8");
+const mobileFieldCaptureRuntime = await readFile(resolve(root, "mobile-field-capture-alpha.mjs"), "utf8");
+const mobileFieldCaptureDocumentation = await readFile(resolve(root, "MOBILE_FIELD_CAPTURE_ALPHA.md"), "utf8");
+const round0MobileChecklist = await readFile(resolve(root, "ROUND_0_MOBILE_FIELD_CAPTURE_CHECKLIST.md"), "utf8");
 const pilotOperations = await readFile(resolve(root, "CONTROLLED_PILOT_OPERATIONS.md"), "utf8");
 const pilotReadiness = JSON.parse(await readFile(resolve(root, "pilot-readiness-register.json"), "utf8"));
 const investigationConfig = JSON.parse(await readFile(resolve(root, "assets", "investigation-config.json"), "utf8"));
@@ -56,6 +59,12 @@ for (const required of ["PILOT_HARDENING_RUNTIME_VERSION","PILOT_SCHEMA_VERSION"
 for (const required of ["PILOT_PROFILE","PILOT_ALLOW_LAN","PILOT_AUTH_PASSWORD","/health","/readiness","Backup","restore","Incidents","REAL_FIELD_VALIDATION","NOT_RUN","not Production Certified","one application process"]) if (!pilotOperations.includes(required)) failures.push(`CONTROLLED_PILOT_OPERATIONS.md missing operator contract: ${required}`);
 for (const required of ["/api/pilot/verified-backups","/api/pilot/restore-verifications","/api/pilot/validation-records","/api/pilot/operational-audit","/api/pilot/debt-register","FEATURE_DISABLED","CSRF_REJECTED","x-correlation-id","exportUser"]) if (!serverRuntime.includes(required)) failures.push(`server.mjs missing Step J API hardening: ${required}`);
 if (pilotReadiness.real_field_validation !== "NOT_RUN" || pilotReadiness.production_certified !== false || pilotReadiness.readiness_gates.length < 19 || pilotReadiness.blocking_stop_conditions.length < 11) failures.push("pilot-readiness-register.json overclaims readiness or omits governed gates/stops");
+for (const required of ["FIELD_CAPTURE_ALPHA","FIELD_CAPTURE_ALPHA_FEATURE_FLAGS","capture_only","public_base_url","secure_cookie","governed_learning_signals"]) if (!pilotHardeningRuntime.includes(required)) failures.push(`pilot-hardening-runtime.mjs missing M0A contract: ${required}`);
+for (const required of ["UNANSWERED_QUESTION","INTERPRETATION_GAP","MISSING_EVIDENCE","USER_CORRECTION","FAILED_CONTROL_REPORT_CANDIDATE","PRODUCT_QUESTION","ACTIVE_INGREDIENT_QUESTION","MISSING_CANDIDATE","MISSING_MANAGEMENT_RELATIONSHIP","USEFUL_COMPLETED_CASE","learning_signal_is_evidence:false","automatic_promotion:false"]) if (!mobileFieldCaptureRuntime.includes(required)) failures.push(`mobile-field-capture-alpha.mjs missing bounded signal contract: ${required}`);
+for (const required of ["OpenAI","server remains authoritative","A signal is never Evidence","No public deployment","Real field validation"]) if (!mobileFieldCaptureDocumentation.includes(required)) failures.push(`MOBILE_FIELD_CAPTURE_ALPHA.md missing boundary: ${required}`);
+for (const required of ["360", "second device", "ไม่รู้", "B1 visual evidence", "Controlled Pilot profile", "authoritative timeline"]) if (!round0MobileChecklist.includes(required)) failures.push(`ROUND_0_MOBILE_FIELD_CAPTURE_CHECKLIST.md missing walkthrough: ${required}`);
+for (const required of ["name=\"login_id\"","capture=\"environment\" data-chat-photo","governedRuntime.captureStatement(text)","serverWorkspace.logout()","captureOnly()"] ) if (!fieldApp.includes(required)) failures.push(`field-app.js missing mobile capture workflow: ${required}`);
+for (const required of ["overflow-x:hidden","safe-area-inset-bottom","min-height:44px"]) if (!fieldStyles.includes(required)) failures.push(`field-shell.css missing M0A mobile safety: ${required}`);
 
 for (const required of [
   "SP Assistant", "chat-shell", "welcome-message", "สวัสดีครับ", "วันนี้พบอะไรในแปลง?",
@@ -119,7 +128,8 @@ const loginView = fieldApp.match(/function renderLogin\(\)[\s\S]*?function rende
 for (const required of ['name="password"', 'type="password"', "เข้าสู่ระบบ", "สำหรับทดสอบภายใน"]) {
   if (!loginView.includes(required)) failures.push(`Login missing minimal access control: ${required}`);
 }
-for (const prohibited of ["username", "ชื่อผู้ใช้", "toggle-password", "forgot-password", "ลืมรหัสผ่าน", "aria-pressed"]) {
+for (const required of ['name="login_id"', 'autocomplete="username"', "ชื่อผู้ใช้"]) if (!loginView.includes(required)) failures.push(`Login missing multi-user control: ${required}`);
+for (const prohibited of ["toggle-password", "forgot-password", "ลืมรหัสผ่าน", "aria-pressed"]) {
   if (loginView.includes(prohibited)) failures.push(`Login contains removed control: ${prohibited}`);
 }
 for (const required of ["resolvePrototypeAccess(identity", "identity.user_id", 'authentication_mode: "PROTOTYPE_INTERNAL_ACCESS"', 'nextRoute: "gps"', "state.active_user_id = user.user_id"]) {

@@ -12,14 +12,16 @@ const html = await readFile(new URL("../index.html", import.meta.url), "utf8");
 const legacyHtml = await readFile(new URL("../legacy.html", import.meta.url), "utf8");
 const loginRender = app.match(/function renderLogin\(\)[\s\S]*?function renderGps\(\)/)?.[0] ?? "";
 
-test("login UI contains only password and submit controls", () => {
+test("login UI contains independent user identity, password, and submit controls", () => {
   assert.match(loginRender, /data-login-form/);
+  assert.match(loginRender, /<input id="login-id" name="login_id" autocomplete="username"/);
   assert.match(loginRender, /<input id="password" name="password" type="password"/);
   assert.match(loginRender, /เข้าสู่ระบบ/);
   assert.match(loginRender, /สำหรับทดสอบภายใน/);
-  assert.equal((loginRender.match(/<input\b/g) ?? []).length, 1);
+  assert.equal((loginRender.match(/<input\b/g) ?? []).length, 2);
   assert.equal((loginRender.match(/<button\b/g) ?? []).length, 1);
-  assert.doesNotMatch(loginRender, /username|ชื่อผู้ใช้|SPA1|CA1|AG1/);
+  assert.match(loginRender, /ชื่อผู้ใช้/);
+  assert.doesNotMatch(loginRender, /SPA1|CA1|AG1/);
   assert.doesNotMatch(loginRender, /toggle-password|aria-pressed|forgot-password|ลืมรหัสผ่าน/);
   assert.doesNotMatch(loginRender, /data-route|href=/);
 });
@@ -63,9 +65,9 @@ test("credential never enters repository state or the resolved user", () => {
 });
 
 test("field runtime creates local identity only from authenticated server response", () => {
-  assert.match(app, /serverWorkspace\.authenticate\(password\)/);
+  assert.match(app, /serverWorkspace\.authenticate\(password,loginId\)/);
   assert.match(app, /loginToPrototypeWorkspace\(repository, authenticated\.identity\)/);
-  assert.match(app, /route = result\.nextRoute; render\(\); requestGps\(\)/);
+  assert.match(app, /governedRuntime\.captureOnly\(\)\?"fields":result\.nextRoute/);
   assert.match(app, /elements\.namedItem\("password"\)/);
   assert.doesNotMatch(app, /resolveMockUser|login-interactions|toggle-password|forgot-password/);
   assert.doesNotMatch(app, /authenticate\(password,\s*result\.user\.user_id\)/);

@@ -13,6 +13,7 @@ import { DecisionActionOutcomeService, initializeDecisionActionOutcomeSchema } f
 import { FollowupReminderTimelineService, initializeFollowupReminderTimelineSchema } from "./followup-reminder-timeline-runtime.mjs";
 import { SpatialLocalPatternService, initializeSpatialLocalPatternSchema } from "./spatial-local-pattern-runtime.mjs";
 import { LearningKnowledgeGraphService, initializeLearningKnowledgeGraphSchema } from "./learning-knowledge-graph-runtime.mjs";
+import { MobileFieldCaptureAlphaService, initializeMobileFieldCaptureAlphaSchema } from "./mobile-field-capture-alpha.mjs";
 import { PilotHardeningService, preparePilotSchema } from "./pilot-hardening-runtime.mjs";
 
 const COLLECTIONS = ["users", "fields", "seasons", "activities", "cases", "observations", "evidence", "conversations", "messages", "guidance", "decision_logs", "case_summaries", "weather_snapshots"];
@@ -91,6 +92,7 @@ export class PilotStore {
     this.conversationClock = conversationClock;
     this.conversationIdProvider = conversationIdProvider;
     this.conversationOrchestrator = null;
+    this.mobileFieldCaptureAlpha = null;
   }
   initializeSchema(checkpoint = () => {}) {
     this.db.exec("PRAGMA foreign_keys=ON; CREATE TABLE IF NOT EXISTS pilot_workspaces (user_id TEXT PRIMARY KEY, state_json TEXT NOT NULL, created_at TEXT NOT NULL, updated_at TEXT NOT NULL); CREATE TABLE IF NOT EXISTS pilot_events (event_id INTEGER PRIMARY KEY AUTOINCREMENT, user_id TEXT NOT NULL, event_type TEXT NOT NULL, created_at TEXT NOT NULL); CREATE TABLE IF NOT EXISTS pilot_feedback (feedback_id TEXT PRIMARY KEY, user_id TEXT NOT NULL, route TEXT NOT NULL, subject_id TEXT, rating TEXT NOT NULL, note TEXT, created_at TEXT NOT NULL);");
@@ -114,7 +116,7 @@ export class PilotStore {
     initializeVisualEvidenceSchema(this.db); checkpoint("AFTER_B1"); initializeVisualPerceptionSchema(this.db); checkpoint("AFTER_B2");
     initializeManagementOptionSchema(this.db); checkpoint("AFTER_F1"); initializeDecisionActionOutcomeSchema(this.db); checkpoint("AFTER_F2");
     initializeFollowupReminderTimelineSchema(this.db); initializeSpatialLocalPatternSchema(this.db); checkpoint("AFTER_H");
-    initializeLearningKnowledgeGraphSchema(this.db); checkpoint("AFTER_I"); initializeConversationSchema(this.db); checkpoint("AFTER_E");
+    initializeLearningKnowledgeGraphSchema(this.db); checkpoint("AFTER_I"); initializeConversationSchema(this.db); initializeMobileFieldCaptureAlphaSchema(this.db); checkpoint("AFTER_E");
   }
   requireFeature(feature) { const enabled=this.pilotConfiguration?.feature_flags?.[feature]??true;if(enabled!==true){this.hardening?.audit("FEATURE_DISABLED_REQUEST",{severity:"WARN",detail_code:feature});throw Object.assign(new Error("governed feature is disabled"),{code:"FEATURE_DISABLED",status:503,feature});} }
   async open() {
@@ -137,7 +139,8 @@ export class PilotStore {
     this.hardening = new PilotHardeningService(this.db,{configuration:this.pilotConfiguration,dbPath:this.dbPath,exportDir:this.exportDir,schemaPreparation,...(this.hardeningClock?{clock:this.hardeningClock}:{}),...(this.hardeningIdProvider?{idProvider:this.hardeningIdProvider}:{})});
     this.hardening.audit("STARTUP",{detail_code:"SCHEMA_AND_STORAGE_READY"});
     for (const capability of this.getPilotCapabilities().capabilities) this.hardening.audit(capability.availability==="AVAILABLE"?"FEATURE_ENABLED":"FEATURE_DISABLED",{detail_code:capability.feature});
-    this.conversationOrchestrator = new GovernedConversationOrchestrator(this.db,{backbone:this.investigation,assessmentService:this.investigationIntelligence,guidanceService:this.guidanceIntelligence,visualEvidenceService:this.visualEvidence,visualPerceptionService:this.visualPerception,managementService:this.managementOptions,decisionActionOutcomeService:this.decisionActionOutcomes,followupReminderService:this.followupReminders,provider:this.conversationProvider??createConfiguredConversationProvider(),...(this.conversationClock?{clock:this.conversationClock}:{}),...(this.conversationIdProvider?{idProvider:this.conversationIdProvider}:{})});
+    this.mobileFieldCaptureAlpha = new MobileFieldCaptureAlphaService(this.db,{...(this.conversationClock?{clock:this.conversationClock}:{}),...(this.conversationIdProvider?{idProvider:this.conversationIdProvider}:{})});
+    this.conversationOrchestrator = new GovernedConversationOrchestrator(this.db,{backbone:this.investigation,assessmentService:this.investigationIntelligence,guidanceService:this.guidanceIntelligence,visualEvidenceService:this.visualEvidence,visualPerceptionService:this.visualPerception,managementService:this.managementOptions,decisionActionOutcomeService:this.decisionActionOutcomes,followupReminderService:this.followupReminders,provider:this.conversationProvider??createConfiguredConversationProvider(),fieldCaptureAlpha:this.pilotProfile==="FIELD_CAPTURE_ALPHA",...(this.conversationClock?{clock:this.conversationClock}:{}),...(this.conversationIdProvider?{idProvider:this.conversationIdProvider}:{})});
     for (const row of this.db.prepare("SELECT user_id,state_json,updated_at FROM pilot_workspaces").all()) {
       const migrated = this.db.prepare("SELECT status FROM lifecycle_migrations WHERE owner_user_id = ?").get(row.user_id);
       if (!migrated) this.persistLifecycle(row.user_id, JSON.parse(row.state_json), row.updated_at);
@@ -321,7 +324,7 @@ export class PilotStore {
   getUnifiedKnowledgeGraph(userId, subjectEntityId = null) { this.requireFeature("step_i_learning");return this.learningKnowledgeGraph.graph(userId,{subject_entity_id:subjectEntityId}); }
   getUnifiedKnowledgeGraphContext(userId, subjectEntityId = null) { this.requireFeature("step_i_learning");return this.learningKnowledgeGraph.graphContext(userId,subjectEntityId); }
   getPilotHealth() { return this.hardening.health(); }
-  getPilotReadiness(input = {}) { const visual_provider_manifest=this.visualPerception?.provider?.getManifest?.()??null,result=this.hardening.readiness({...input,visual_provider_manifest}),flags=this.pilotConfiguration?.feature_flags??{},gate=result.gates.find((item)=>item.gate==="DEGRADED_OPERATION"),required=["f1_management_review","f2_management_action"].filter((feature)=>flags[feature]===false),optional=["step_h_local_pattern","step_i_learning"].filter((feature)=>flags[feature]===false);if(required.length){Object.assign(gate,{state:"BLOCKED",reason_codes:required.map((feature)=>`REQUIRED_CAPABILITY_DISABLED:${feature}`),blocking:true,results:{capability_profile:"CONTROLLED_PILOT_A_J"}});result.state="PILOT_BLOCKED";result.readiness="BLOCKED";}else if(optional.length&&result.readiness!=="BLOCKED"){Object.assign(gate,{state:"CONDITIONAL",reason_codes:optional.map((feature)=>`OPTIONAL_CAPABILITY_DISABLED:${feature}`),blocking:false,results:{capability_profile:"CONTROLLED_PILOT_A_J"}});result.state="CONDITIONAL_PILOT_READINESS";result.readiness="DEGRADED";}return result; }
+  getPilotReadiness(input = {}) { const visual_provider_manifest=this.visualPerception?.provider?.getManifest?.()??null,result=this.hardening.readiness({...input,visual_provider_manifest}),flags=this.pilotConfiguration?.feature_flags??{},gate=result.gates.find((item)=>item.gate==="DEGRADED_OPERATION"),captureOnly=this.pilotProfile==="FIELD_CAPTURE_ALPHA",required=captureOnly?[]:["f1_management_review","f2_management_action"].filter((feature)=>flags[feature]===false),optional=captureOnly?[]:["step_h_local_pattern","step_i_learning"].filter((feature)=>flags[feature]===false);if(captureOnly){Object.assign(gate,{state:"PASS",reason_codes:["FIELD_CAPTURE_ALPHA_SCOPE_ENFORCED"],blocking:false,results:{capability_profile:"FIELD_CAPTURE_ALPHA",capture_only:true,f1_f2_access:false}});result.capability_profile="FIELD_CAPTURE_ALPHA";result.capture_only=true;}else if(required.length){Object.assign(gate,{state:"BLOCKED",reason_codes:required.map((feature)=>`REQUIRED_CAPABILITY_DISABLED:${feature}`),blocking:true,results:{capability_profile:"CONTROLLED_PILOT_A_J"}});result.state="PILOT_BLOCKED";result.readiness="BLOCKED";}else if(optional.length&&result.readiness!=="BLOCKED"){Object.assign(gate,{state:"CONDITIONAL",reason_codes:optional.map((feature)=>`OPTIONAL_CAPABILITY_DISABLED:${feature}`),blocking:false,results:{capability_profile:"CONTROLLED_PILOT_A_J"}});result.state="CONDITIONAL_PILOT_READINESS";result.readiness="DEGRADED";}return result; }
   getPilotCapabilities() { return this.hardening.capabilityManifest({visual_provider_manifest:this.visualPerception?.provider?.getManifest?.()??null}); }
   getOperationalAudit(userId = null) { return this.hardening.auditEvents(userId); }
   recordOperationalAudit(type, input = {}) { return this.hardening.audit(type,input); }
@@ -330,7 +333,9 @@ export class PilotStore {
   createPilotValidationRecord(userId, input) { return this.hardening.createValidationRecord(userId,input); }
   getPilotValidationRecords(userId) { return this.hardening.validationRecords(userId); }
   getPilotDebtRegister() { return this.hardening.debtRegister(); }
-  orchestrateConversationTurn(userId, input) { this.requireFeature("conversation_provider");return this.conversationOrchestrator.turn(userId,input); }
+  async orchestrateConversationTurn(userId, input) { this.requireFeature("conversation_provider");const result=await this.conversationOrchestrator.turn(userId,input);result.learning_signals=this.mobileFieldCaptureAlpha.captureTurn(userId,input,result);return result; }
+  getLearningSignals(userId) { return this.mobileFieldCaptureAlpha.listOwner(userId); }
+  getAdminLearningSignals() { return this.mobileFieldCaptureAlpha.listAdmin(); }
   listGovernedConversations(userId) { return this.conversationOrchestrator.list(userId); }
   getGovernedConversationHistory(userId, conversationId) { return this.conversationOrchestrator.history(userId,conversationId); }
   rebuildGovernedConversationContext(userId, conversationId) { return this.conversationOrchestrator.rebuildContext(userId,conversationId); }
@@ -394,7 +399,7 @@ export class PilotStore {
     this.db.prepare("INSERT INTO pilot_meta(key,value) VALUES('last_backup_at',?) ON CONFLICT(key) DO UPDATE SET value=excluded.value").run(createdAt);
     return { created_at: createdAt, backup_file: name };
   }
-  close() { this.db?.close(); this.db = null; this.hardening = null; this.investigation = null; this.investigationIntelligence = null; this.guidanceIntelligence = null; this.visualEvidence = null; this.visualPerception = null; this.managementOptions = null; this.decisionActionOutcomes = null; this.followupReminders = null; this.conversationOrchestrator = null; }
+  close() { this.db?.close(); this.db = null; this.hardening = null; this.investigation = null; this.investigationIntelligence = null; this.guidanceIntelligence = null; this.visualEvidence = null; this.visualPerception = null; this.managementOptions = null; this.decisionActionOutcomes = null; this.followupReminders = null; this.conversationOrchestrator = null; this.mobileFieldCaptureAlpha = null; }
 }
 
 export { safeWorkspace };
