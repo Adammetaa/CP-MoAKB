@@ -211,8 +211,7 @@ function targetProblem(assessment, finding, rules) {
 
 function needForAction(assessment, rules) {
   const readiness = assessment.evidence_sufficiency?.purpose_states?.MANAGEMENT_OPTION_REVIEW;
-  const reviewedCaseRelationship=Boolean(reviewedFinding(assessment)&&rules.management_relationships.some((item)=>item.case_relevant&&item.supporting_evidence_refs.length));
-  const ready = readiness === "SUFFICIENT_FOR_MANAGEMENT_OPTION_REVIEW" || reviewedCaseRelationship;
+  const ready = readiness === "SUFFICIENT_FOR_MANAGEMENT_OPTION_REVIEW";
   if (!ready) return {
     model: NEED_FOR_ACTION_MODEL_VERSION,
     state: "MORE_EVIDENCE_REQUIRED",
@@ -230,7 +229,7 @@ function needForAction(assessment, rules) {
     model: NEED_FOR_ACTION_MODEL_VERSION,
     state: declared?.state ?? "MANAGEMENT_REVIEW_JUSTIFIED",
     management_review_ready: true,
-    reason: declared?.reason ?? (readiness === "SUFFICIENT_FOR_MANAGEMENT_OPTION_REVIEW" ? "Step C explicitly declares sufficient evidence for bounded Management Option Review." : "A current human-reviewed Step C finding and its governed Case-specific evidence relationship support bounded Management Option Review."),
+    reason: declared?.reason ?? "Step C explicitly declares sufficient evidence for bounded Management Option Review.",
     supporting_evidence_refs: declared?.supporting_evidence_refs ?? [assessment.assessment_id],
     missing_evidence_refs: declared?.missing_evidence_refs ?? [],
     source_rule_id: declared?.source_rule_id ?? "STEP_C_MANAGEMENT_READINESS_GATE/v1",

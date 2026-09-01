@@ -94,6 +94,17 @@ operational rule can recognize that explicit relations differentiate part of a
 multi-Candidate set, but only a governed rule provider may declare stronger
 purpose readiness.
 
+The production `cp-moakb-step-c-management-sufficiency-provider@1.0.0`
+declares one bounded management-review sufficiency rule. It requires the
+current rice Case to contain a supported blast Candidate with current linked
+morphology Evidence, an attributed human-reviewed primary finding, no required
+missing or contradicting Evidence, and a current human-reviewed water-context
+Evidence record. The rule binds the blast investigation records to the
+source-stated drainage-management category in `MO-CPM-008/v1`. It establishes
+only `SUFFICIENT_FOR_MANAGEMENT_OPTION_REVIEW`; it does not select an option,
+prescribe drainage, or create a Decision or Action. Candidate support, Human
+Review, or an F1 relationship cannot substitute for any rule condition.
+
 Next Best Evidence is one structured request, never an interrogation script.
 Types are `QUESTION`, `PHOTO`, `FIELD_CHECK`, `SAMPLING`, `COUNT`,
 `MEASUREMENT`, `COMPARISON_SITE`, `MANAGEMENT_RECORD`, `WEATHER_CONTEXT`,

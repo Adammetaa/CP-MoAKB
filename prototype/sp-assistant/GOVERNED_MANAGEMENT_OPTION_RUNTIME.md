@@ -10,6 +10,11 @@ The runtime accepts only the server-authoritative Investigation Bundle and the c
 
 `need-for-action-decision/v1` retains the categorical states `MORE_EVIDENCE_REQUIRED`, `CONTINUE_MONITORING`, `NO_ACTION_DETERMINATION_SUPPORTED`, `MANAGEMENT_REVIEW_JUSTIFIED`, and `HUMAN_REVIEW_REQUIRED`. A Candidate or user request is never sufficient. When Step C does not declare `SUFFICIENT_FOR_MANAGEMENT_OPTION_REVIEW`, F1 returns `MORE_EVIDENCE_REQUIRED` and identifies Step D as the next authority.
 
+This is an absolute authority gate. A Case-relevant management relationship,
+a supported Candidate, and an attributed human-reviewed finding may be inputs
+to the Step C provider, but none may bypass or elevate the explicit Step C
+`purpose_states.MANAGEMENT_OPTION_REVIEW` result.
+
 The gate never emits spray-required, chemical-required, treat-now, a severity score, a percentage, or a rank.
 
 ## Management Suitability runtime

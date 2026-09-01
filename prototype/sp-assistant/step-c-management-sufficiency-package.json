@@ -1,0 +1,62 @@
+{
+  "schema_version": "step-c-management-sufficiency-package/v1",
+  "manifest": {
+    "provider_id": "cp-moakb-step-c-management-sufficiency-provider",
+    "provider_version": "1.0.0",
+    "authority": "GOVERNED_KNOWLEDGE_RELATIONSHIP",
+    "review_state": "DOMAIN_APPROVED",
+    "valid_from": "2026-09-01T00:00:00.000Z"
+  },
+  "sources": [
+    {
+      "source_id": "SRC-STEP-C-BLAST-INVESTIGATION/v1",
+      "repository_path": "docs/knowledge/rice-disease-corpus-001/evidence-and-claims.md",
+      "record_ids": ["CO-RDC-001/v1", "CL-RDC-001-O/v1", "EV-RDC-001A/v1", "EV-RDC-001B/v1"],
+      "authority": "GOVERNED_KNOWLEDGE_RELATIONSHIP",
+      "review_state": "DOMAIN_APPROVED"
+    },
+    {
+      "source_id": "SRC-STEP-C-BLAST-MANAGEMENT/v1",
+      "repository_path": "docs/knowledge/crop-protection-management-001/management-options.md",
+      "record_ids": ["MO-CPM-008/v1", "EV-DMG-CPM-001/v1", "GS-RRC-PRACHIN-RICE-DISEASES-2025-001/v1"],
+      "authority": "GOVERNED_KNOWLEDGE_RELATIONSHIP",
+      "review_state": "DOMAIN_APPROVED"
+    }
+  ],
+  "rules": [
+    {
+      "rule_id": "STEP-C-BLAST-DRAINAGE-MANAGEMENT-SUFFICIENCY/v1",
+      "purpose": "MANAGEMENT_OPTION_REVIEW",
+      "sufficient_state": "SUFFICIENT_FOR_MANAGEMENT_OPTION_REVIEW",
+      "candidate_concept_ids": ["CO-RDC-001/v1"],
+      "crop": "RICE",
+      "required_finding_role": "PRIMARY_FINDING",
+      "allowed_resolution_levels": ["FIELD_REVIEWED_FINDING", "SPECIALIST_CONFIRMED", "LAB_CONFIRMED"],
+      "allowed_candidate_states": ["SUPPORTED", "STRONGLY_SUPPORTED", "RESOLVED"],
+      "minimum_supporting_case_evidence": 1,
+      "required_current_evidence": [
+        {
+          "evidence_type": "WATER",
+          "allowed_evidence_levels": ["WT1_FIELD_OBSERVED", "WT2_ZONE_COMPARISON", "WT3_VALIDATED_CONTEXT"],
+          "allowed_review_states": ["HUMAN_REVIEWED", "DOMAIN_APPROVED"]
+        }
+      ],
+      "allow_missing_required_evidence": false,
+      "allow_contradicting_case_evidence": false,
+      "source_refs": [
+        "CO-RDC-001/v1",
+        "CL-RDC-001-O/v1",
+        "EV-RDC-001A/v1",
+        "EV-RDC-001B/v1",
+        "MO-CPM-008/v1",
+        "EV-DMG-CPM-001/v1",
+        "GS-RRC-PRACHIN-RICE-DISEASES-2025-001/v1"
+      ],
+      "limitations": [
+        "This rule establishes sufficiency only to review a bounded nonchemical blast-prevention management category; it does not diagnose blast or recommend an action.",
+        "The current water-context record supports review of the source-stated drainage category only; no drainage instruction, water level, schedule, variety, seed rate, nitrogen rate, product, or application method is inferred.",
+        "A supported Candidate, reviewed finding, or management relationship cannot substitute for the required current Case Evidence or override missing or contradicting Evidence."
+      ]
+    }
+  ]
+}
