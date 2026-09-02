@@ -2,7 +2,8 @@ import { CONVERSATION_SCOPES, PHOTO_EVIDENCE_BOUNDARY, STAGE_PROVENANCE, createS
 import { BROWSER_COMPATIBILITY_AUTHORITY, ConversationService, DecisionService, EvidenceService, FieldService, GuidanceService, InvestigationService, LLMGateway, LocationService, MapService, StageService, WeatherService, WorkspaceRepository, loadFieldConfiguration, loadInvestigationConfiguration } from "./field-services.js?v=real-weather-2";
 import { loginToPrototypeWorkspace } from "./prototype-login.js?v=fixed-login-1";
 import { findOwnedRouteTarget } from "./route-interactions.js?v=login-route-fix-1";
-import { createPreferredMapAdapter, mountGoogleFieldPreview } from "./browser-map-adapter.js?v=google-satellite-3";
+import { createPreferredMapAdapter, mountGoogleFieldPreview } from "./browser-map-adapter.js?v=round-zero-1";
+import { runRecoverableChatSubmission } from "./chat-recovery.js?v=round-zero-1";
 import { ServerLLMAdapter } from "./server-llm-adapter.js?v=server-ai-1";
 import { ServerWorkspaceAdapter } from "./server-workspace-adapter.js?v=pilot-data-1";
 import { ServerKnowledgeAdapter } from "./server-knowledge-adapter.js?v=knowledge-pilot-1";
@@ -300,8 +301,8 @@ function renderGovernedSummary(){
 
 function ensureFieldConversation() {
   const context = fieldContext(); let conversation = conversationService.find_field_conversation(context);
-  if (!conversation) conversation = conversationService.create_conversation(context, CONVERSATION_SCOPES.FIELD_SCOPED);
-  activeConversationId = conversation.conversation_id; activeCaseId = null; return conversation;
+  if (!conversation) { conversation = conversationService.create_conversation(context, CONVERSATION_SCOPES.FIELD_SCOPED); activeCaseId = null; }
+  activeConversationId = conversation.conversation_id; return conversation;
 }
 
 async function resumeFieldConversation(){const field=selectedField();if(!governedRuntime.scopeFor(field))return;const history=await serverLLM.history(fieldContext(field)),conversation=ensureFieldConversation();activeConversationId=history.conversation?.conversation_id??history.conversation_id??activeConversationId;if(history.conversation?.case_id){activeCaseId=history.conversation.case_id;await governedRuntime.resumeCase({field_id:field.field_id,season_id:field.season_id,case_id:activeCaseId});governedRuntime.caseState.conversation_id=activeConversationId;governedCase=governedRuntime.caseState;}const context=conversationContext(conversation.conversation_id,null,field),existing=new Set(conversationService.list_messages(context).map((item)=>item.response_id).filter(Boolean));for(const turn of history.turns??[]){if(existing.has(`${turn.turn_id}-user`))continue;conversationService.append_message(context,{role:"USER",content:turn.raw_message,message_type:"SERVER_HISTORY",status:"SAVED",response_id:`${turn.turn_id}-user`});conversationService.append_message(context,{role:"ASSISTANT",content:turn.response?.text??"รับทราบครับ",message_type:"SERVER_HISTORY",status:"SAVED",response_id:turn.turn_id});}}
@@ -314,14 +315,24 @@ function renderFreeChat() {
 
 async function sendFieldChat(text, { appendUser = true } = {}) {
   if (chatPending || !text) return;
-  const field=selectedField();if(!governedRuntime.caseState?.scope||governedRuntime.caseState.scope.field_id!==field.field_id){await governedRuntime.startCase(field,"บันทึกภาคสนามผ่านแชท");activeCaseId=governedRuntime.caseState.scope.case_id;governedCase=governedRuntime.caseState;}
-  const context = conversationContext(activeConversationId, activeCaseId);
+  const field=selectedField(), context = conversationContext(activeConversationId, activeCaseId);
   if (appendUser) conversationService.append_message(context, { role:"USER", content:text, status:"SAVED" });
-  chatPending = true; chatRetryText = null; renderFreeChat();
-  const response = await governedRuntime.captureStatement(text);activeConversationId=governedRuntime.caseState.conversation_id;governedCase=governedRuntime.caseState;
-  chatPending = false;
-  conversationService.append_message(context, { role:"ASSISTANT", content:response.message, message_type:response.status, status:response.status === "AVAILABLE" ? "SAVED" : "FAILED", provider:response.provider, model:response.model, response_id:response.response_id, error_code:response.status === "AVAILABLE" ? null : "PROVIDER_UNAVAILABLE" });
-  chatRetryText = response.status === "AVAILABLE" ? null : text; renderFreeChat();
+  chatRetryText = null;
+  await runRecoverableChatSubmission({
+    onPending(value){ chatPending=value;renderFreeChat(); },
+    async submit(){
+      if(!governedRuntime.caseState?.scope||governedRuntime.caseState.scope.field_id!==field.field_id){await governedRuntime.startCase(field,"บันทึกภาคสนามผ่านแชท");activeCaseId=governedRuntime.caseState.scope.case_id;governedCase=governedRuntime.caseState;}
+      return governedRuntime.captureStatement(text);
+    },
+    async onSuccess(response){
+      activeConversationId=governedRuntime.caseState.conversation_id;governedCase=governedRuntime.caseState;
+      conversationService.append_message(context, { role:"ASSISTANT", content:response.message, message_type:response.status, status:"SAVED", provider:response.provider, model:response.model, response_id:response.response_id, error_code:null });
+    },
+    async onFailure(){
+      chatRetryText = text;
+      conversationService.append_message(context, { role:"ASSISTANT", content:"ยังส่งข้อความนี้ไม่สำเร็จครับ ข้อความของคุณยังอยู่ และสามารถลองส่งอีกครั้งได้", message_type:"SUBMISSION_FAILED", status:"FAILED", error_code:"CHAT_SUBMISSION_FAILED" });
+    },
+  });
 }
 
 function renderLearn() {
@@ -513,7 +524,7 @@ root.addEventListener("change", async (event) => {
   if (event.target.matches("[data-chat-photo]")) {
     const file = event.target.files?.[0]; if (!file) return;
     const field=selectedField();if(!governedRuntime.caseState?.scope&&field&&governedRuntime.scopeFor(field)){try{await governedRuntime.startCase(field,"บันทึกภาพภาคสนามผ่านแชท");activeCaseId=governedRuntime.caseState.scope.case_id;governedCase=governedRuntime.caseState;}catch(error){formError=error.message;event.target.value="";renderFreeChat();return;}}const context=conversationContext(activeConversationId,activeCaseId),activeScope=governedRuntime.caseState?.scope;
-    if(activeScope?.field_id===field?.field_id&&activeScope?.season_id===field?.season_id){try{const uploaded=await governedRuntime.uploadPhoto(file);governedCase=governedRuntime.caseState;conversationService.append_message(context,{role:"USER",content:`ส่งภาพ ${file.name}`,message_type:"B1_VISUAL_EVIDENCE",evidence_id:uploaded.image.image_evidence_id});conversationService.append_message(context,{role:"ASSISTANT",content:"รับภาพเข้า B1 Visual Evidence แล้ว ภาพที่รับยังไม่ใช่การวิเคราะห์หรือการวินิจฉัย และยังทบทวนด้วยมนุษย์ได้หาก B2 ไม่พร้อม",message_type:"SERVER_RECORDED"});}catch(error){conversationService.append_message(context,{role:"ASSISTANT",content:error.message,message_type:"UPLOAD_FAILED"});}}
+    if(activeScope?.field_id===field?.field_id&&activeScope?.season_id===field?.season_id){try{const uploaded=await governedRuntime.uploadPhoto(file);governedCase=governedRuntime.caseState;conversationService.append_message(context,{role:"USER",content:`ส่งภาพ ${file.name}`,message_type:"VISUAL_EVIDENCE_CAPTURE",evidence_id:uploaded.image.image_evidence_id});conversationService.append_message(context,{role:"ASSISTANT",content:"รับภาพไว้แล้วครับ ตอนนี้ภาพจะถูกเก็บเป็นข้อมูลประกอบ แต่ยังไม่ได้ใช้ยืนยันสาเหตุ",message_type:"SERVER_RECORDED"});}catch(error){conversationService.append_message(context,{role:"ASSISTANT",content:error.message,message_type:"UPLOAD_FAILED"});}}
     else conversationService.append_message(context,{role:"ASSISTANT",content:"กรุณาเริ่มเคสการตรวจบนระบบก่อนใช้ภาพเพื่อการตรวจ ภาพนี้ยังไม่ถูกอัปโหลด วิเคราะห์ หรือสร้างหลักฐานทางวิทยาศาสตร์",message_type:"CASE_REQUIRED"});
     event.target.value="";renderFreeChat();
   }

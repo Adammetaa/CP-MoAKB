@@ -49,6 +49,7 @@ const pilotHardeningRuntime = await readFile(resolve(root, "pilot-hardening-runt
 const mobileFieldCaptureRuntime = await readFile(resolve(root, "mobile-field-capture-alpha.mjs"), "utf8");
 const mobileFieldCaptureDocumentation = await readFile(resolve(root, "MOBILE_FIELD_CAPTURE_ALPHA.md"), "utf8");
 const round0MobileChecklist = await readFile(resolve(root, "ROUND_0_MOBILE_FIELD_CAPTURE_CHECKLIST.md"), "utf8");
+const round0ReadinessClosure = await readFile(resolve(root, "ROUND_0_PUBLIC_LINK_READINESS_CLOSURE.md"), "utf8");
 const pilotOperations = await readFile(resolve(root, "CONTROLLED_PILOT_OPERATIONS.md"), "utf8");
 const pilotReadiness = JSON.parse(await readFile(resolve(root, "pilot-readiness-register.json"), "utf8"));
 const investigationConfig = JSON.parse(await readFile(resolve(root, "assets", "investigation-config.json"), "utf8"));
@@ -63,7 +64,11 @@ for (const required of ["FIELD_CAPTURE_ALPHA","FIELD_CAPTURE_ALPHA_FEATURE_FLAGS
 for (const required of ["UNANSWERED_QUESTION","INTERPRETATION_GAP","MISSING_EVIDENCE","USER_CORRECTION","FAILED_CONTROL_REPORT_CANDIDATE","PRODUCT_QUESTION","ACTIVE_INGREDIENT_QUESTION","MISSING_CANDIDATE","MISSING_MANAGEMENT_RELATIONSHIP","USEFUL_COMPLETED_CASE","learning_signal_is_evidence:false","automatic_promotion:false"]) if (!mobileFieldCaptureRuntime.includes(required)) failures.push(`mobile-field-capture-alpha.mjs missing bounded signal contract: ${required}`);
 for (const required of ["OpenAI","server remains authoritative","A signal is never Evidence","No public deployment","Real field validation"]) if (!mobileFieldCaptureDocumentation.includes(required)) failures.push(`MOBILE_FIELD_CAPTURE_ALPHA.md missing boundary: ${required}`);
 for (const required of ["360", "second device", "ไม่รู้", "B1 visual evidence", "Controlled Pilot profile", "authoritative timeline"]) if (!round0MobileChecklist.includes(required)) failures.push(`ROUND_0_MOBILE_FIELD_CAPTURE_CHECKLIST.md missing walkthrough: ${required}`);
+for (const required of ["natural Thai", "finally", "Google Satellite", "OpenStreetMap", "Step C", "REAL_FIELD_VALIDATION", "NOT_RUN"]) if (!round0ReadinessClosure.includes(required)) failures.push(`ROUND_0_PUBLIC_LINK_READINESS_CLOSURE.md missing M0A.1 boundary: ${required}`);
 for (const required of ["name=\"login_id\"","capture=\"environment\" data-chat-photo","governedRuntime.captureStatement(text)","serverWorkspace.logout()","captureOnly()"] ) if (!fieldApp.includes(required)) failures.push(`field-app.js missing mobile capture workflow: ${required}`);
+for (const required of ["runRecoverableChatSubmission", "chatRetryText = text", "ข้อความของคุณยังอยู่", "VISUAL_EVIDENCE_CAPTURE"]) if (!fieldApp.includes(required)) failures.push(`field-app.js missing M0A.1 recovery or natural image contract: ${required}`);
+for (const required of ["gm_authFailure", "Google Maps runtime timed out", "ResilientPreferredMapAdapter", 'this.mode === "preview" ? ""']) if (!browserMapAdapter.includes(required)) failures.push(`browser-map-adapter.js missing M0A.1 provider fallback or preview contract: ${required}`);
+if (!serverWorkspaceAdapter.includes("managementPath(scope, endpoint") || !serverWorkspaceAdapter.includes("return this.scopedPath(endpoint,scope)")) failures.push("server-workspace-adapter.js must omit undefined management scope values through the common path builder");
 for (const required of ["overflow-x:hidden","safe-area-inset-bottom","min-height:44px"]) if (!fieldStyles.includes(required)) failures.push(`field-shell.css missing M0A mobile safety: ${required}`);
 
 for (const required of [
@@ -116,7 +121,7 @@ for (const required of ["class=\"workspace\"", "chat-shell", "data-problem", "as
 for (const prohibited of ["id=\"field-app\"", "field-shell.css", "field-app.js"]) {
   if (legacyHtml.includes(prohibited)) failures.push(`legacy.html contains Field Workspace surface: ${prohibited}`);
 }
-for (const required of ["field-shell.css?v=capture-adapter-1", "field-app.js?v=r2a1-1"]) {
+for (const required of ["field-shell.css?v=capture-adapter-1", "field-app.js?v=round-zero-1"]) {
   if (!html.includes(required)) failures.push(`index.html missing fixed-login cache key: ${required}`);
 }
 if (!fieldApp.includes('prototype-login.js?v=fixed-login-1')) failures.push("field-app.js missing prototype login presentation module");

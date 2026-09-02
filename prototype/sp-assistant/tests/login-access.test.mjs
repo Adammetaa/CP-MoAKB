@@ -122,7 +122,7 @@ test("normal and legacy documents remain runtime-isolated", () => {
   assert.match(html, /id="field-app"/);
   assert.doesNotMatch(html, /class="workspace"|class="conversation chat-shell"|assets\/styles\.css|assets\/app\.js/);
   assert.match(html, /field-shell\.css\?v=capture-adapter-1/);
-  assert.match(html, /field-app\.js\?v=r2a1-1/);
+  assert.match(html, /field-app\.js\?v=round-zero-1/);
   assert.doesNotMatch(legacyHtml, /id="field-app"|field-shell\.css|field-app\.js/);
   assert.match(legacyHtml, /class="workspace"/);
   assert.match(legacyHtml, /assets\/app\.js\?v=legacy-isolated-1/);

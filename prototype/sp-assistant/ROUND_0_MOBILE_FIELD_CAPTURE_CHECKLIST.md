@@ -13,6 +13,10 @@ Record device, browser, viewport, user identity, Field/Season, Case, start/end t
 - [ ] Questions about products, active ingredients, chemicals, rate, dose, drone settings, or resistance receive the capture-only limitation and no F1/F2 record is created.
 - [ ] Logout invalidates the server session; browser Back/refresh cannot reopen protected data without authentication.
 - [ ] Retry after a failed response does not duplicate the governed turn or structured records.
+- [ ] Network, provider, 401, 403, 500, 503, and malformed-response failures release the Chat composer without a page refresh and retain a retryable user message.
+- [ ] Normal Chat contains no governed evidence codes or A–J implementation labels; the response acknowledges what was understood and asks at most one natural Thai question.
+- [ ] Google Satellite stays primary when healthy; missing key, load/auth/referer/init/runtime/timeout failures cleanly replace the broken surface with attributed OpenStreetMap.
+- [ ] Home and Field Detail previews show a clean polygon without vertex numbers or edit handles; Draw Field keeps numbered vertices, undo, clear, and close-polygon controls.
 - [ ] Owner Learning Signals and the protected admin listing are bounded and contain no automatic knowledge-promotion authority.
 - [ ] Under the existing Controlled Pilot profile (not `FIELD_CAPTURE_ALPHA`), rerun the supported synthetic Step C → F1 management path and confirm the Human Decision boundary remains explicit.
 - [ ] Under the existing Controlled Pilot profile, rerun the insufficient-management path and confirm Step C keeps F1 closed.

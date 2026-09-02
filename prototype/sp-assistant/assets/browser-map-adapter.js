@@ -31,6 +31,20 @@ export function unprojectWebMercator(x, y, zoom) {
 
 const GOOGLE_MAPS_KEY_URL = new URL("./google-maps-key.local.txt", import.meta.url);
 let googleMapsPromise;
+const googleFailureListeners = new Set();
+let googleFailureHookInstalled = false;
+
+function subscribeGoogleFailure(listener) {
+  googleFailureListeners.add(listener);
+  if (!googleFailureHookInstalled) {
+    const previous = globalThis.gm_authFailure;
+    globalThis.gm_authFailure = () => {
+      try { previous?.(); } finally { for (const notify of [...googleFailureListeners]) notify(new Error("Google Maps authentication failed")); }
+    };
+    googleFailureHookInstalled = true;
+  }
+  return () => googleFailureListeners.delete(listener);
+}
 
 export async function loadGoogleMaps() {
   if (globalThis.google?.maps) return globalThis.google.maps;
@@ -43,28 +57,36 @@ export async function loadGoogleMaps() {
     await new Promise((resolve, reject) => {
       const callbackName = `__cpmoakbGoogleMapsReady${Date.now()}`;
       const script = document.createElement("script");
-      globalThis[callbackName] = () => { delete globalThis[callbackName]; resolve(); };
+      let settled=false;
+      const finish=(callback,value)=>{if(settled)return;settled=true;clearTimeout(timeout);unsubscribeFailure();delete globalThis[callbackName];callback(value);};
+      const unsubscribeFailure=subscribeGoogleFailure((error)=>{script.remove();finish(reject,error);});
+      const timeout = setTimeout(() => { script.remove();finish(reject,new Error("Google Maps load timed out")); }, 10_000);
+      globalThis[callbackName] = () => finish(resolve);
       script.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(apiKey)}&callback=${callbackName}&v=weekly&loading=async`;
       script.async = true;
-      script.onerror = () => { delete globalThis[callbackName]; reject(new Error("Google Maps failed to load")); };
+      script.onerror = () => finish(reject,new Error("Google Maps failed to load"));
       document.head.append(script);
     });
     return globalThis.google.maps;
-  })();
+  })().catch((error) => { googleMapsPromise = undefined; throw error; });
   return googleMapsPromise;
 }
 
 export class GoogleSatelliteMapAdapter {
-  constructor(container, maps) { this.container = container; this.maps = maps; this.overlays = []; this.listeners = []; }
+  constructor(container, maps, { onProviderFailure = null, timeoutMs = 8_000 } = {}) { this.container = container; this.maps = maps; this.overlays = []; this.listeners = []; this.onProviderFailure = onProviderFailure; this.timeoutMs = timeoutMs; }
 
   mount({ center, zoom = 17, points = [], closed = false, mode = "tap", onMapClick, onViewportChange } = {}) {
     this.mode = mode; this.onMapClick = onMapClick; this.onViewportChange = onViewportChange;
     this.container.classList.add("real-map-surface", "google-satellite-map");
     this.container.innerHTML = "";
-    this.map = new this.maps.Map(this.container, {
+    try { this.map = new this.maps.Map(this.container, {
       center: { lat: Number(center.latitude), lng: Number(center.longitude) }, zoom: Number(zoom), mapTypeId: "satellite",
-      disableDefaultUI: true, clickableIcons: false, keyboardShortcuts: false, gestureHandling: "greedy", tilt: 0,
-    });
+      disableDefaultUI: true, clickableIcons: false, keyboardShortcuts: false, gestureHandling: mode === "preview" ? "none" : "greedy", tilt: 0,
+    }); } catch (error) { this.onProviderFailure?.(error); return this; }
+    this.unsubscribeFailure = subscribeGoogleFailure((error) => this.onProviderFailure?.(error));
+    this.readyTimer = setTimeout(() => this.onProviderFailure?.(new Error("Google Maps runtime timed out")), this.timeoutMs);
+    const ready = this.map.addListener("tilesloaded", () => clearTimeout(this.readyTimer));
+    this.listeners.push(ready);
     this.listeners.push(this.map.addListener("click", (event) => {
       if (this.mode === "tap") this.onMapClick?.({ latitude: event.latLng.lat(), longitude: event.latLng.lng() });
     }));
@@ -73,6 +95,11 @@ export class GoogleSatelliteMapAdapter {
       this.onViewportChange?.({ center: { latitude: mapCenter.lat(), longitude: mapCenter.lng() }, zoom: this.map.getZoom() });
     }));
     this._draw(points, closed);
+    if (mode === "preview" && points.length && this.maps.LatLngBounds && this.map.fitBounds) {
+      const bounds = new this.maps.LatLngBounds();
+      points.forEach((point) => bounds.extend({ lat:Number(point.latitude), lng:Number(point.longitude) }));
+      this.map.fitBounds(bounds, 16);
+    }
     return this;
   }
 
@@ -83,43 +110,38 @@ export class GoogleSatelliteMapAdapter {
       const shape = new Shape({ map: this.map, paths: closed ? path : undefined, path: closed ? undefined : path, strokeColor: "#dfff62", strokeOpacity: 1, strokeWeight: 4, fillColor: "#6f992d", fillOpacity: .34, clickable: false });
       this.overlays.push(shape);
     }
-    path.forEach((position, index) => {
+    if (this.mode !== "preview") path.forEach((position, index) => {
       const marker = new this.maps.Marker({ map: this.map, position, label: { text: String(index + 1), color: "#075f36", fontWeight: "800" }, icon: { path: this.maps.SymbolPath.CIRCLE, fillColor: "#ffffff", fillOpacity: 1, strokeColor: "#075f36", strokeWeight: 4, scale: 9 }, clickable: false });
       this.overlays.push(marker);
     });
   }
 
   getCenter() { const center = this.map.getCenter(); return { latitude: center.lat(), longitude: center.lng() }; }
-  destroy() { this.listeners.forEach((listener) => listener.remove()); this.overlays.forEach((overlay) => overlay.setMap(null)); this.listeners = []; this.overlays = []; }
+  destroy() { clearTimeout(this.readyTimer);this.unsubscribeFailure?.();this.listeners.forEach((listener) => listener.remove()); this.overlays.forEach((overlay) => overlay.setMap(null)); this.listeners = []; this.overlays = []; }
+}
+
+export class ResilientPreferredMapAdapter {
+  constructor(container, maps, options = {}) { this.container=container;this.maps=maps;this.options=options;this.active=null;this.mountOptions=null;this.failed=false; }
+  mount(options = {}) { this.mountOptions=options;try{this.active=new GoogleSatelliteMapAdapter(this.container,this.maps,{...this.options,onProviderFailure:(error)=>this.fallback(error)});this.active.mount(options);}catch(error){this.fallback(error);}return this; }
+  fallback() { if(this.failed)return;this.failed=true;this.active?.destroy?.();this.container.classList.remove("google-satellite-map");this.container.innerHTML="";this.active=new BrowserMapAdapter(this.container);this.active.mount(this.mountOptions??{}); }
+  getCenter() { return this.active?.getCenter?.()??this.mountOptions?.center; }
+  setZoom(value) { return this.active?.setZoom?.(value); }
+  destroy() { this.active?.destroy?.(); }
 }
 
 export async function createPreferredMapAdapter(container) {
-  try { return new GoogleSatelliteMapAdapter(container, await loadGoogleMaps()); }
+  try { return new ResilientPreferredMapAdapter(container, await loadGoogleMaps()); }
   catch { return new BrowserMapAdapter(container); }
 }
 
 export async function mountGoogleFieldPreview(container, coordinates) {
-  let maps;
-  try { maps = await loadGoogleMaps(); }
-  catch {
-    if (!container?.isConnected || !coordinates?.length) return null;
-    const points = coordinates.map(([longitude, latitude]) => ({ latitude:Number(latitude), longitude:Number(longitude) }));
-    const center = { latitude:points.reduce((sum, point) => sum + point.latitude, 0) / points.length, longitude:points.reduce((sum, point) => sum + point.longitude, 0) / points.length };
-    const fallback = new BrowserMapAdapter(container);
-    fallback.mount({ center, zoom:16, points, closed:true, mode:"preview" });
-    return () => fallback.destroy();
-  }
-  if (!container?.isConnected) return null;
-  const path = coordinates.map(([longitude, latitude]) => ({ lat: Number(latitude), lng: Number(longitude) }));
-  const mapSurface = document.createElement("div");
-  mapSurface.className = "google-field-preview-map";
-  container.prepend(mapSurface);
-  const map = new maps.Map(mapSurface, { mapTypeId: "satellite", disableDefaultUI: true, clickableIcons: false, gestureHandling: "none", keyboardShortcuts: false, tilt: 0 });
-  const polygon = new maps.Polygon({ map, paths: path, strokeColor: "#dfff62", strokeOpacity: 1, strokeWeight: 3, fillColor: "#6f992d", fillOpacity: .25, clickable: false });
-  const bounds = new maps.LatLngBounds();
-  path.forEach((point) => bounds.extend(point));
-  map.fitBounds(bounds, 16);
-  return () => { polygon.setMap(null); mapSurface.remove(); };
+  if (!container?.isConnected || !coordinates?.length) return null;
+  const points = coordinates.map(([longitude, latitude]) => ({ latitude:Number(latitude), longitude:Number(longitude) }));
+  const center = { latitude:points.reduce((sum, point) => sum + point.latitude, 0) / points.length, longitude:points.reduce((sum, point) => sum + point.longitude, 0) / points.length };
+  const adapter = await createPreferredMapAdapter(container);
+  if (!container.isConnected) return null;
+  adapter.mount({ center, zoom:16, points, closed:true, mode:"preview" });
+  return () => adapter.destroy();
 }
 
 function escapeAttribute(value) {
@@ -239,7 +261,7 @@ export class BrowserMapAdapter {
     const shape = screenPoints.length > 1
       ? `<${this.closed ? "polygon" : "polyline"} points="${pointsValue}" ${this.closed ? 'fill="rgba(112,153,45,.34)"' : 'fill="none"'} stroke="#dfff62" stroke-width="3" stroke-linejoin="round"/>`
       : "";
-    const markers = screenPoints.map((point, index) => `<g><circle cx="${point.x}" cy="${point.y}" r="9" fill="#fff" stroke="#11613b" stroke-width="4"/><text x="${point.x + 13}" y="${point.y - 11}" fill="#fff" stroke="rgba(0,0,0,.45)" stroke-width="2" paint-order="stroke" font-size="15" font-weight="800">${index + 1}</text></g>`).join("");
+    const markers = this.mode === "preview" ? "" : screenPoints.map((point, index) => `<g><circle cx="${point.x}" cy="${point.y}" r="9" fill="#fff" stroke="#11613b" stroke-width="4"/><text x="${point.x + 13}" y="${point.y - 11}" fill="#fff" stroke="rgba(0,0,0,.45)" stroke-width="2" paint-order="stroke" font-size="15" font-weight="800">${index + 1}</text></g>`).join("");
     this.polygonLayer.setAttribute("viewBox", `0 0 ${width} ${height}`);
     this.polygonLayer.innerHTML = `${shape}${markers}`;
   }

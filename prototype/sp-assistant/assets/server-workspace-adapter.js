@@ -49,7 +49,7 @@ export class ServerWorkspaceAdapter {
   async requestVisualPerception(payload) { try{return await this.governedWrite("/api/pilot/visual-perception",payload,"ตัวช่วยอ่านภาพยังไม่พร้อม");}catch(error){return{status:"DEGRADED",analysis_performed:false,message:error.message};} }
   async summary() { const response = await this.fetcher("/api/pilot/summary"); if (!response.ok) throw new Error("โหลดสถานะ Pilot ไม่สำเร็จ"); return response.json(); }
   async dataCatalog() { const response = await this.fetcher("/api/pilot/data-catalog"); if (!response.ok) throw new Error("โหลดสถานะข้อมูลไม่สำเร็จ"); return response.json(); }
-  managementPath(scope, endpoint = "/api/pilot/management-options") { const query=new URLSearchParams({field_id:scope.field_id,season_id:scope.season_id,case_id:scope.case_id});return `${endpoint}?${query}`; }
+  managementPath(scope, endpoint = "/api/pilot/management-options") { return this.scopedPath(endpoint,scope); }
   async getManagementOptions(scope) { const response=await this.fetcher(this.managementPath(scope),{headers:{accept:"application/json"}});if(!response.ok)throw new Error("โหลดทางเลือกการจัดการที่กำกับไว้ไม่สำเร็จ");return response.json(); }
   async getManagementOptionHistory(scope) { const response=await this.fetcher(this.managementPath(scope,"/api/pilot/management-option-history"),{headers:{accept:"application/json"}});if(!response.ok)throw new Error("โหลดประวัติทางเลือกการจัดการไม่สำเร็จ");return response.json(); }
   async getManagementReviewContext(scope) { const response=await this.fetcher(this.managementPath(scope,"/api/pilot/management-review-context"),{headers:{accept:"application/json"}});if(!response.ok)throw new Error("โหลดบริบททบทวนการจัดการไม่สำเร็จ");return response.json(); }

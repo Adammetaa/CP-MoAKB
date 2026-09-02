@@ -20,6 +20,8 @@ Natural corrections append a new turn, point to the corrected turn, retain the o
 
 Learning Signals are protected operational review inputs only. The ten classes are `UNANSWERED_QUESTION`, `INTERPRETATION_GAP`, `MISSING_EVIDENCE`, `USER_CORRECTION`, `FAILED_CONTROL_REPORT_CANDIDATE`, `PRODUCT_QUESTION`, `ACTIVE_INGREDIENT_QUESTION`, `MISSING_CANDIDATE`, `MISSING_MANAGEMENT_RELATIONSHIP`, and `USEFUL_COMPLETED_CASE`. A signal is never Evidence, a Learning Candidate, Canonical Knowledge, or an automatic promotion.
 
+Round-0 field Chat uses a bounded natural-Thai presentation layer. Governed evidence concepts remain server-side; normal users receive an acknowledgement, a short reflection of what was understood, and at most one useful question. The presentation layer cannot alter the Step C evidence request, sufficiency state, stop condition, or any management authority. Common scope URLs omit null and undefined values, Chat always releases its pending state after failure, Google Satellite remains primary with automatic OpenStreetMap fallback, and read-only maps omit numbered vertices. See [Round-0 UX and Public-Link Readiness Closure](ROUND_0_PUBLIC_LINK_READINESS_CLOSURE.md).
+
 ## Limitations
 
 - Single-process SQLite remains the supported runtime topology.
