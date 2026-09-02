@@ -127,7 +127,7 @@ export class MobileFieldCaptureAlphaService {
     if(response.actions?.some((item)=>["REQUEST_FIELD_CHECK","REQUEST_VISUAL_EVIDENCE"].includes(item.action))||response.intent==="FIELD_OBSERVATION")add("MISSING_EVIDENCE","Current governed assessment retains an evidence gap for operational review; this signal does not require another user question.");
     if(/ควบคุมไม่ได้|ไม่ได้ผล|พ่น(?:ยา|สาร|ผลิตภัณฑ์)?แล้ว.*(?:ยัง|ไม่)/iu.test(message))add("FAILED_CONTROL_REPORT_CANDIDATE","User reported possible failed control; no resistance or efficacy conclusion was inferred.");
     if(/ผลิตภัณฑ์|ยี่ห้อ|ชื่อการค้า/iu.test(message))add("PRODUCT_QUESTION","User asked about a product; no case recommendation authority was created.");
-    if(/สารออกฤทธิ์|active ingredient/iu.test(message))add("ACTIVE_INGREDIENT_QUESTION","User asked about an active ingredient; reference interest is not case suitability.");
+    if(/สารออกฤทธิ์|ชื่อสามัญสาร|active ingredient|[^\s?？]{2,80}อยู่กลุ่มอะไร/iu.test(message))add("ACTIVE_INGREDIENT_QUESTION","User asked about an explicit active ingredient wording or classification reference; reference interest is not case suitability.");
     if(response.context?.case_id&&(!response.assessment_reference||(response.intent==="FIELD_OBSERVATION"&&!response.hypothesis_reference)))add("MISSING_CANDIDATE","Current Case has no explicitly authored Candidate relationship for this captured observation.");
     if(response.management_review_reference?.need_for_action_state==="MORE_EVIDENCE_REQUIRED"||(response.intent==="MANAGEMENT_QUERY"&&!response.management_review_reference))add("MISSING_MANAGEMENT_RELATIONSHIP","Current state does not authorize a management relationship for review.");
     return signals;

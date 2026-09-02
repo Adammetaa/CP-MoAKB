@@ -93,6 +93,12 @@ export class ServerWorkspaceAdapter {
   async getKnowledgePromotionHistory() { const response=await this.fetcher("/api/pilot/knowledge-promotion-history",{headers:{accept:"application/json"}});if(!response.ok)throw new Error("โหลดประวัติการเลื่อนสถานะความรู้ไม่สำเร็จ");return response.json(); }
   async getKnowledgeGraph(subjectEntityId=null) { const query=subjectEntityId?"?"+new URLSearchParams({subject_entity_id:subjectEntityId}):"";const response=await this.fetcher("/api/pilot/knowledge-graph"+query,{headers:{accept:"application/json"}});if(!response.ok)throw new Error("โหลดกราฟความรู้ไม่สำเร็จ");return response.json(); }
   async getKnowledgeGraphContext(subjectEntityId=null) { const query=subjectEntityId?"?"+new URLSearchParams({subject_entity_id:subjectEntityId}):"";const response=await this.fetcher("/api/pilot/knowledge-graph-context"+query,{headers:{accept:"application/json"}});if(!response.ok)throw new Error("โหลดบริบทกราฟความรู้ไม่สำเร็จ");return response.json(); }
+  async getLearningReviewDashboard(filters={}) { return this.scopedGet("/api/pilot/admin/learning-review/dashboard",filters,"โหลดกล่องข้อมูลไม่สำเร็จ"); }
+  async getLearningReviewDetail(signalId) { return this.scopedGet("/api/pilot/admin/learning-review/detail",{signal_id:signalId},"โหลดรายละเอียดรายการไม่สำเร็จ"); }
+  async createLearningReviewEvent(payload) { return this.governedWrite("/api/pilot/admin/learning-review/events",payload,"บันทึกผลทบทวนไม่สำเร็จ"); }
+  async linkRelatedLearningSignal(payload) { return this.governedWrite("/api/pilot/admin/learning-review/relationships",payload,"เชื่อมรายการที่เกี่ยวข้องไม่สำเร็จ"); }
+  async setLearningPriority(payload) { return this.governedWrite("/api/pilot/admin/learning-review/priorities",payload,"บันทึกลำดับงานไม่สำเร็จ"); }
+  async getPendingLearningFollowup(scope) { return this.scopedGet("/api/pilot/learning-review-follow-up",scope,"โหลดคำขอข้อมูลเพิ่มไม่สำเร็จ"); }
   async feedback(payload) { const response = await this.fetcher("/api/pilot/feedback", { method:"POST", headers:{ "content-type":"application/json" }, body:JSON.stringify(payload) }); if (!response.ok) throw new Error("บันทึก Feedback ไม่สำเร็จ"); return response.json(); }
   async uploadFeedbackImage(file) {
     const allowed = new Set(["image/jpeg", "image/png", "image/webp"]); if (!allowed.has(file.type) || file.size > 6_000_000) throw new Error("รองรับ JPG, PNG หรือ WebP ขนาดไม่เกิน 6 MB");

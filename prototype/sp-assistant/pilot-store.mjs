@@ -14,6 +14,7 @@ import { FollowupReminderTimelineService, initializeFollowupReminderTimelineSche
 import { SpatialLocalPatternService, initializeSpatialLocalPatternSchema } from "./spatial-local-pattern-runtime.mjs";
 import { LearningKnowledgeGraphService, initializeLearningKnowledgeGraphSchema } from "./learning-knowledge-graph-runtime.mjs";
 import { MobileFieldCaptureAlphaService, initializeMobileFieldCaptureAlphaSchema } from "./mobile-field-capture-alpha.mjs";
+import { LearningReviewService, initializeLearningReviewSchema } from "./learning-review-runtime.mjs";
 import { PilotHardeningService, preparePilotSchema } from "./pilot-hardening-runtime.mjs";
 
 const COLLECTIONS = ["users", "fields", "seasons", "activities", "cases", "observations", "evidence", "conversations", "messages", "guidance", "decision_logs", "case_summaries", "weather_snapshots"];
@@ -93,6 +94,7 @@ export class PilotStore {
     this.conversationIdProvider = conversationIdProvider;
     this.conversationOrchestrator = null;
     this.mobileFieldCaptureAlpha = null;
+    this.learningReview = null;
   }
   initializeSchema(checkpoint = () => {}) {
     this.db.exec("PRAGMA foreign_keys=ON; CREATE TABLE IF NOT EXISTS pilot_workspaces (user_id TEXT PRIMARY KEY, state_json TEXT NOT NULL, created_at TEXT NOT NULL, updated_at TEXT NOT NULL); CREATE TABLE IF NOT EXISTS pilot_events (event_id INTEGER PRIMARY KEY AUTOINCREMENT, user_id TEXT NOT NULL, event_type TEXT NOT NULL, created_at TEXT NOT NULL); CREATE TABLE IF NOT EXISTS pilot_feedback (feedback_id TEXT PRIMARY KEY, user_id TEXT NOT NULL, route TEXT NOT NULL, subject_id TEXT, rating TEXT NOT NULL, note TEXT, created_at TEXT NOT NULL);");
@@ -116,7 +118,7 @@ export class PilotStore {
     initializeVisualEvidenceSchema(this.db); checkpoint("AFTER_B1"); initializeVisualPerceptionSchema(this.db); checkpoint("AFTER_B2");
     initializeManagementOptionSchema(this.db); checkpoint("AFTER_F1"); initializeDecisionActionOutcomeSchema(this.db); checkpoint("AFTER_F2");
     initializeFollowupReminderTimelineSchema(this.db); initializeSpatialLocalPatternSchema(this.db); checkpoint("AFTER_H");
-    initializeLearningKnowledgeGraphSchema(this.db); checkpoint("AFTER_I"); initializeConversationSchema(this.db); initializeMobileFieldCaptureAlphaSchema(this.db); checkpoint("AFTER_E");
+    initializeLearningKnowledgeGraphSchema(this.db); checkpoint("AFTER_I"); initializeConversationSchema(this.db); initializeMobileFieldCaptureAlphaSchema(this.db); initializeLearningReviewSchema(this.db); checkpoint("AFTER_E");
   }
   requireFeature(feature) { const enabled=this.pilotConfiguration?.feature_flags?.[feature]??true;if(enabled!==true){this.hardening?.audit("FEATURE_DISABLED_REQUEST",{severity:"WARN",detail_code:feature});throw Object.assign(new Error("governed feature is disabled"),{code:"FEATURE_DISABLED",status:503,feature});} }
   async open() {
@@ -140,6 +142,7 @@ export class PilotStore {
     this.hardening.audit("STARTUP",{detail_code:"SCHEMA_AND_STORAGE_READY"});
     for (const capability of this.getPilotCapabilities().capabilities) this.hardening.audit(capability.availability==="AVAILABLE"?"FEATURE_ENABLED":"FEATURE_DISABLED",{detail_code:capability.feature});
     this.mobileFieldCaptureAlpha = new MobileFieldCaptureAlphaService(this.db,{...(this.conversationClock?{clock:this.conversationClock}:{}),...(this.conversationIdProvider?{idProvider:this.conversationIdProvider}:{})});
+    this.learningReview = new LearningReviewService(this.db,{...(this.conversationClock?{clock:this.conversationClock}:{}),...(this.conversationIdProvider?{idProvider:this.conversationIdProvider}:{})});
     this.conversationOrchestrator = new GovernedConversationOrchestrator(this.db,{backbone:this.investigation,assessmentService:this.investigationIntelligence,guidanceService:this.guidanceIntelligence,visualEvidenceService:this.visualEvidence,visualPerceptionService:this.visualPerception,managementService:this.managementOptions,decisionActionOutcomeService:this.decisionActionOutcomes,followupReminderService:this.followupReminders,provider:this.conversationProvider??createConfiguredConversationProvider(),fieldCaptureAlpha:this.pilotProfile==="FIELD_CAPTURE_ALPHA",...(this.conversationClock?{clock:this.conversationClock}:{}),...(this.conversationIdProvider?{idProvider:this.conversationIdProvider}:{})});
     for (const row of this.db.prepare("SELECT user_id,state_json,updated_at FROM pilot_workspaces").all()) {
       const migrated = this.db.prepare("SELECT status FROM lifecycle_migrations WHERE owner_user_id = ?").get(row.user_id);
@@ -333,9 +336,17 @@ export class PilotStore {
   createPilotValidationRecord(userId, input) { return this.hardening.createValidationRecord(userId,input); }
   getPilotValidationRecords(userId) { return this.hardening.validationRecords(userId); }
   getPilotDebtRegister() { return this.hardening.debtRegister(); }
-  async orchestrateConversationTurn(userId, input) { this.requireFeature("conversation_provider");const result=await this.conversationOrchestrator.turn(userId,input);result.learning_signals=this.mobileFieldCaptureAlpha.captureTurn(userId,input,result);return result; }
+  async orchestrateConversationTurn(userId, input) { this.requireFeature("conversation_provider");const result=await this.conversationOrchestrator.turn(userId,input);result.learning_signals=this.mobileFieldCaptureAlpha.captureTurn(userId,input,result);result.human_review_followup_resolution=this.learningReview.resolveFollowup(userId,input,result);return result; }
   getLearningSignals(userId) { return this.mobileFieldCaptureAlpha.listOwner(userId); }
   getAdminLearningSignals() { return this.mobileFieldCaptureAlpha.listAdmin(); }
+  getLearningReviewInbox(filters={}) { return this.learningReview.list(filters); }
+  getLearningReviewDashboard(filters={}) { return this.learningReview.dashboard(filters); }
+  getLearningReviewDetail(signalId) { return this.learningReview.detail(signalId); }
+  createLearningReviewEvent(reviewerUserId,input) { return this.learningReview.review(reviewerUserId,input); }
+  linkRelatedLearningSignal(reviewerUserId,input) { return this.learningReview.link(reviewerUserId,input); }
+  setLearningPriority(reviewerUserId,input) { return this.learningReview.priority(reviewerUserId,input); }
+  getPendingLearningFollowup(userId,scope) { return this.learningReview.pendingFollowup(userId,scope); }
+  exportLearningReview(format,filters={}) { return this.learningReview.export(format,filters); }
   listGovernedConversations(userId) { return this.conversationOrchestrator.list(userId); }
   getGovernedConversationHistory(userId, conversationId) { return this.conversationOrchestrator.history(userId,conversationId); }
   rebuildGovernedConversationContext(userId, conversationId) { return this.conversationOrchestrator.rebuildContext(userId,conversationId); }
@@ -399,7 +410,7 @@ export class PilotStore {
     this.db.prepare("INSERT INTO pilot_meta(key,value) VALUES('last_backup_at',?) ON CONFLICT(key) DO UPDATE SET value=excluded.value").run(createdAt);
     return { created_at: createdAt, backup_file: name };
   }
-  close() { this.db?.close(); this.db = null; this.hardening = null; this.investigation = null; this.investigationIntelligence = null; this.guidanceIntelligence = null; this.visualEvidence = null; this.visualPerception = null; this.managementOptions = null; this.decisionActionOutcomes = null; this.followupReminders = null; this.conversationOrchestrator = null; this.mobileFieldCaptureAlpha = null; }
+  close() { this.db?.close(); this.db = null; this.hardening = null; this.investigation = null; this.investigationIntelligence = null; this.guidanceIntelligence = null; this.visualEvidence = null; this.visualPerception = null; this.managementOptions = null; this.decisionActionOutcomes = null; this.followupReminders = null; this.conversationOrchestrator = null; this.mobileFieldCaptureAlpha = null; this.learningReview = null; }
 }
 
 export { safeWorkspace };
