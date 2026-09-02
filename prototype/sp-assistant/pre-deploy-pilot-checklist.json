@@ -1,0 +1,33 @@
+{
+  "artifact_version": "m0d-pre-deploy-gate/v1",
+  "scope": "FIELD_CAPTURE_ALPHA_CONTROLLED_3_TO_5_USERS",
+  "target_provider": "RENDER",
+  "deployment_performed": false,
+  "real_field_validation": "NOT_RUN",
+  "gate": "HOLD_FOR_PRE_DEPLOY_FIXES",
+  "items": [
+    {"id":"M0B_SYNC","label":"M0B checkpoint synchronized","status":"VERIFIED_IN_REPOSITORY","evidence":"origin/main = 8ad2b77a29372823db766fa7a2775f7381a0668b"},
+    {"id":"TARGET_HOST","label":"target host chosen","status":"READY","evidence":"Render Blueprint in render.yaml"},
+    {"id":"PERSISTENT_DISK","label":"persistent disk configured","status":"READY_TO_PROVISION","evidence":"render.yaml /var/data 1 GB paid disk"},
+    {"id":"HTTPS_BASE_URL","label":"exact HTTPS base URL known","status":"UNRESOLVED","evidence":"Record exact Render external origin after service reservation"},
+    {"id":"PROFILE","label":"FIELD_CAPTURE_ALPHA profile","status":"READY","evidence":"render.yaml PILOT_PROFILE"},
+    {"id":"USERS","label":"3+ enabled pilot users","status":"READY_TO_CONFIGURE","evidence":"PILOT_USERS_JSON server-owned registry"},
+    {"id":"PASSWORDS","label":"secure passwords configured","status":"UNRESOLVED","evidence":"Populate only in Render secret manager"},
+    {"id":"OPENAI","label":"OpenAI secret configured if used","status":"OPTIONAL_UNRESOLVED","evidence":"OPENAI_API_KEY server-only; provider degradation is bounded"},
+    {"id":"GOOGLE_KEY","label":"Google key configured","status":"UNRESOLVED","evidence":"Populate authenticated browser key after origin is known"},
+    {"id":"GOOGLE_REFERRER","label":"Google domain restriction configured","status":"UNRESOLVED","evidence":"https://<exact-render-domain>/* and Maps JavaScript API only"},
+    {"id":"SQLITE_PATH","label":"SQLite path persistent","status":"READY_TO_PROVISION","evidence":"/var/data/pilot.sqlite"},
+    {"id":"IMAGE_PATH","label":"image path persistent","status":"READY_TO_PROVISION","evidence":"/var/data/uploads"},
+    {"id":"BASELINE_BACKUP","label":"baseline backup completed","status":"NOT_RUN_ON_TARGET","evidence":"Run before first user"},
+    {"id":"RESTORE","label":"isolated restore PASS","status":"NOT_RUN_ON_TARGET","evidence":"Target-compatible procedure and local automated rehearsal available"},
+    {"id":"HEALTH","label":"/health PASS","status":"NOT_RUN_ON_TARGET","evidence":"Run against exact HTTPS origin"},
+    {"id":"READINESS","label":"/readiness acceptable","status":"NOT_RUN_ON_TARGET","evidence":"Do not override blocked or conditional gates"},
+    {"id":"COOKIE","label":"secure cookie verified","status":"READY_TO_VERIFY","evidence":"Secure; HttpOnly; SameSite=Strict contract"},
+    {"id":"ADMIN_ACCESS","label":"SPA/Admin review access verified","status":"READY_TO_VERIFY","evidence":"Protected schema 13 Learning Dashboard"},
+    {"id":"FIELD_DENIAL","label":"Field User Admin denial verified","status":"READY_TO_VERIFY","evidence":"Server-side 403 contract"},
+    {"id":"NO_REGISTRATION","label":"no public registration","status":"READY","evidence":"No signup or public user-creation route"},
+    {"id":"SINGLE_INSTANCE","label":"single-instance enforcement","status":"READY","evidence":"disk + numInstances: 1 + WEB_CONCURRENCY=1"},
+    {"id":"KILL_SWITCH","label":"rollback/kill-switch procedure","status":"READY","evidence":"Suspend service or disable users without deleting data"},
+    {"id":"DEPLOY_AUTHORIZATION","label":"explicit user deployment authorization","status":"UNCHECKED","evidence":"Must be supplied after the M0D report"}
+  ]
+}
