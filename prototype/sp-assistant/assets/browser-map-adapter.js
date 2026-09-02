@@ -50,10 +50,10 @@ export async function loadGoogleMaps() {
   if (globalThis.google?.maps) return globalThis.google.maps;
   if (googleMapsPromise) return googleMapsPromise;
   googleMapsPromise = (async () => {
-    const response = await fetch(GOOGLE_MAPS_KEY_URL, { cache: "no-store" });
-    if (!response.ok) throw new Error("Google Maps local key is not configured");
-    const apiKey = (await response.text()).trim();
-    if (!apiKey || apiKey.startsWith("YOUR_")) throw new Error("Google Maps local key is empty");
+    let apiKey="";
+    try{const response=await fetch("/api/pilot/map-configuration",{credentials:"same-origin",headers:{accept:"application/json"}}),configuration=await response.json();if(response.ok&&configuration?.available===true&&typeof configuration.browser_key==="string")apiKey=configuration.browser_key.trim();}catch{/* Development may use the ignored local key file. */}
+    if(!apiKey)try{const response=await fetch(GOOGLE_MAPS_KEY_URL,{cache:"no-store"});if(response.ok)apiKey=(await response.text()).trim();}catch{/* OSM remains the governed fallback. */}
+    if (!apiKey || apiKey.startsWith("YOUR_")) throw new Error("Google Maps browser key is not configured");
     await new Promise((resolve, reject) => {
       const callbackName = `__cpmoakbGoogleMapsReady${Date.now()}`;
       const script = document.createElement("script");

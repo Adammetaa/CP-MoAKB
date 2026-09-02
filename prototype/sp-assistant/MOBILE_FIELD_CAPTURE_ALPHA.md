@@ -12,6 +12,8 @@ The alpha profile enables conversation capture and B1 visual evidence. B2 is opt
 
 Configure `PILOT_PROFILE=FIELD_CAPTURE_ALPHA` and at least three enabled identities in `PILOT_USERS_JSON`. For LAN binding, explicitly set `PILOT_HOST`, `PILOT_ALLOW_LAN=true`, and `PILOT_PUBLIC_BASE_URL`. Any non-loopback public base URL must be HTTPS; the server then marks session cookies `Secure`. TLS termination remains an operator responsibility. Startup health and capability responses report mode, binding, public base URL, and secure-cookie state without exposing credentials.
 
+The prepared single-instance HTTPS hosting contract, referrer-restricted production Google Maps key, aligned database/image backup procedure, restore rehearsal, and real-device checklist are documented in [HTTPS Mobile Pilot Operations](HTTPS_MOBILE_PILOT_OPERATIONS.md). This configuration is prepared but not deployed.
+
 ## Capture behavior
 
 Each turn retains the raw message, validated interpretation, minimum governed context, response, timestamp, and provider manifest. Explicit facts are written through the investigation capture adapter. Known facts are reused, and a response contains at most one question. “ไม่รู้”, “ไม่ได้ดู”, “จำไม่ได้”, “ไม่มีรูป”, and “ไว้ดูทีหลัง” are stored as bounded unresolved learning signals and do not trigger a questioning loop.

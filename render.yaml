@@ -7,17 +7,26 @@ services:
     buildCommand: npm install
     startCommand: node server.mjs
     healthCheckPath: /health
+    autoDeploy: false
     envVars:
+      - key: PILOT_PROFILE
+        value: FIELD_CAPTURE_ALPHA
       - key: PILOT_HOST
         value: 0.0.0.0
       - key: PILOT_ALLOW_LAN
         value: "true"
+      - key: PILOT_PUBLIC_BASE_URL
+        sync: false
+      - key: PILOT_USERS_JSON
+        sync: false
       - key: PILOT_DB_PATH
         value: /var/data/pilot.sqlite
       - key: PILOT_EXPORT_DIR
         value: /var/data/exports
       - key: PILOT_UPLOAD_DIR
         value: /var/data/uploads
+      - key: GOOGLE_MAPS_BROWSER_KEY
+        sync: false
       - key: OPENAI_API_KEY
         sync: false
       - key: OPENAI_MODEL

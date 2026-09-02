@@ -1,6 +1,6 @@
 # Internal Pilot Cloud Handoff
 
-Status: prepared, not deployed.
+Status: superseded by the bounded `FIELD_CAPTURE_ALPHA` HTTPS handoff, still not deployed. See [HTTPS Mobile Pilot Operations](HTTPS_MOBILE_PILOT_OPERATIONS.md).
 
 ## Current storage
 
@@ -8,7 +8,7 @@ The running localhost pilot stores shared application state, feedback, exports, 
 
 ## Prepared pilot deployment
 
-The repository-root `render.yaml` defines one paid Node web service with a 1 GB persistent disk mounted at `/var/data`. SQLite, exports and uploaded evidence are explicitly redirected to that disk. `OPENAI_API_KEY` remains a dashboard secret and is never committed.
+The repository-root `render.yaml` defines one paid Node web service with a 1 GB persistent disk mounted at `/var/data`. SQLite, exports and uploaded evidence are explicitly redirected to that disk. The exact HTTPS origin, three-user credential registry, Google browser key, and optional `OPENAI_API_KEY` remain dashboard secrets and are never committed.
 
 This configuration is intentionally single-instance because SQLite on a persistent disk must have one writer. It is suitable for a bounded internal pilot, not production scale.
 
@@ -18,8 +18,8 @@ This configuration is intentionally single-instance because SQLite on a persiste
 2. Create a Render Blueprint from the repository.
 3. Verify the service is on Starter or higher; free services cannot attach persistent disks.
 4. Set `OPENAI_API_KEY` in the Render dashboard.
-5. Restrict the Google Maps browser key to the final HTTPS hostname in addition to localhost.
-6. Change the prototype shared password before inviting a wider group. The fixed `1234` flow is not production authentication.
+5. Restrict the Google Maps browser key to `https://<pilot-domain>/*` and the Maps JavaScript API.
+6. Configure at least three distinct server-owned identities through `PILOT_USERS_JSON`; do not use the development fallback credential.
 7. Import the latest local export only after verifying field and season counts.
 8. Test mobile login, field creation, chat persistence, image upload, knowledge search, feedback, export and backup.
 

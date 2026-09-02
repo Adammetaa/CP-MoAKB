@@ -50,6 +50,9 @@ const mobileFieldCaptureRuntime = await readFile(resolve(root, "mobile-field-cap
 const mobileFieldCaptureDocumentation = await readFile(resolve(root, "MOBILE_FIELD_CAPTURE_ALPHA.md"), "utf8");
 const round0MobileChecklist = await readFile(resolve(root, "ROUND_0_MOBILE_FIELD_CAPTURE_CHECKLIST.md"), "utf8");
 const round0ReadinessClosure = await readFile(resolve(root, "ROUND_0_PUBLIC_LINK_READINESS_CLOSURE.md"), "utf8");
+const httpsPilotOperations = await readFile(resolve(root, "HTTPS_MOBILE_PILOT_OPERATIONS.md"), "utf8");
+const httpsPilotEnvironment = await readFile(resolve(root, "pilot-mobile.env.example"), "utf8");
+const renderManifest = await readFile(resolve(root, "..", "..", "render.yaml"), "utf8");
 const pilotOperations = await readFile(resolve(root, "CONTROLLED_PILOT_OPERATIONS.md"), "utf8");
 const pilotReadiness = JSON.parse(await readFile(resolve(root, "pilot-readiness-register.json"), "utf8"));
 const investigationConfig = JSON.parse(await readFile(resolve(root, "assets", "investigation-config.json"), "utf8"));
@@ -65,9 +68,15 @@ for (const required of ["UNANSWERED_QUESTION","INTERPRETATION_GAP","MISSING_EVID
 for (const required of ["OpenAI","server remains authoritative","A signal is never Evidence","No public deployment","Real field validation"]) if (!mobileFieldCaptureDocumentation.includes(required)) failures.push(`MOBILE_FIELD_CAPTURE_ALPHA.md missing boundary: ${required}`);
 for (const required of ["360", "second device", "ไม่รู้", "B1 visual evidence", "Controlled Pilot profile", "authoritative timeline"]) if (!round0MobileChecklist.includes(required)) failures.push(`ROUND_0_MOBILE_FIELD_CAPTURE_CHECKLIST.md missing walkthrough: ${required}`);
 for (const required of ["natural Thai", "finally", "Google Satellite", "OpenStreetMap", "Step C", "REAL_FIELD_VALIDATION", "NOT_RUN"]) if (!round0ReadinessClosure.includes(required)) failures.push(`ROUND_0_PUBLIC_LINK_READINESS_CLOSURE.md missing M0A.1 boundary: ${required}`);
+for (const required of ["FIELD_CAPTURE_ALPHA","PILOT_PUBLIC_BASE_URL","PILOT_USERS_JSON","GOOGLE_MAPS_BROWSER_KEY","/var/data/pilot.sqlite","/var/data/uploads","autoDeploy: false"]) if (!renderManifest.includes(required)) failures.push(`render.yaml missing M0C hosting contract: ${required}`);
+for (const required of ["HttpOnly; SameSite=Strict; Secure","https://<pilot-domain>/*","database-plus-images restore rehearsal","Android Chrome","iPhone Safari","REAL_FIELD_VALIDATION"]) if (!httpsPilotOperations.includes(required)) failures.push(`HTTPS_MOBILE_PILOT_OPERATIONS.md missing M0C operator contract: ${required}`);
+for (const required of ["PILOT_PROFILE=FIELD_CAPTURE_ALPHA","PILOT_PUBLIC_BASE_URL=https://","PILOT_USERS_JSON=","GOOGLE_MAPS_BROWSER_KEY="]) if (!httpsPilotEnvironment.includes(required)) failures.push(`pilot-mobile.env.example missing M0C configuration: ${required}`);
+if (/OPENAI_API_KEY=(?!OPTIONAL_SERVER_SIDE_SECRET)|password":"(?!REPLACE_WITH_SECRET)/u.test(httpsPilotEnvironment)) failures.push("pilot-mobile.env.example contains populated credentials");
 for (const required of ["name=\"login_id\"","capture=\"environment\" data-chat-photo","governedRuntime.captureStatement(text)","serverWorkspace.logout()","captureOnly()"] ) if (!fieldApp.includes(required)) failures.push(`field-app.js missing mobile capture workflow: ${required}`);
 for (const required of ["runRecoverableChatSubmission", "chatRetryText = text", "ข้อความของคุณยังอยู่", "VISUAL_EVIDENCE_CAPTURE"]) if (!fieldApp.includes(required)) failures.push(`field-app.js missing M0A.1 recovery or natural image contract: ${required}`);
 for (const required of ["gm_authFailure", "Google Maps runtime timed out", "ResilientPreferredMapAdapter", 'this.mode === "preview" ? ""']) if (!browserMapAdapter.includes(required)) failures.push(`browser-map-adapter.js missing M0A.1 provider fallback or preview contract: ${required}`);
+for (const required of ["/api/pilot/map-configuration","GOOGLE_MAPS_BROWSER_KEY","conversation_provider=","visual_perception_provider="]) if (!serverRuntime.includes(required)) failures.push(`server.mjs missing M0C runtime boundary: ${required}`);
+for (const required of ["pilot-backup-manifest/v1","image_integrity_state","ISOLATED_DATABASE_AND_IMAGES_RESTORE_VERIFIED"]) if (!pilotHardeningRuntime.includes(required)) failures.push(`pilot-hardening-runtime.mjs missing aligned M0C backup contract: ${required}`);
 if (!serverWorkspaceAdapter.includes("managementPath(scope, endpoint") || !serverWorkspaceAdapter.includes("return this.scopedPath(endpoint,scope)")) failures.push("server-workspace-adapter.js must omit undefined management scope values through the common path builder");
 for (const required of ["overflow-x:hidden","safe-area-inset-bottom","min-height:44px"]) if (!fieldStyles.includes(required)) failures.push(`field-shell.css missing M0A mobile safety: ${required}`);
 
@@ -121,7 +130,7 @@ for (const required of ["class=\"workspace\"", "chat-shell", "data-problem", "as
 for (const prohibited of ["id=\"field-app\"", "field-shell.css", "field-app.js"]) {
   if (legacyHtml.includes(prohibited)) failures.push(`legacy.html contains Field Workspace surface: ${prohibited}`);
 }
-for (const required of ["field-shell.css?v=capture-adapter-1", "field-app.js?v=round-zero-1"]) {
+for (const required of ["field-shell.css?v=capture-adapter-1", "field-app.js?v=https-pilot-1"]) {
   if (!html.includes(required)) failures.push(`index.html missing fixed-login cache key: ${required}`);
 }
 if (!fieldApp.includes('prototype-login.js?v=fixed-login-1')) failures.push("field-app.js missing prototype login presentation module");
