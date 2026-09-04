@@ -6,7 +6,7 @@ Status: hosting-ready configuration, not deployed. This is not production readin
 
 Run exactly one Node SP Assistant process behind Render-managed HTTPS. `render.yaml` fixes `numInstances: 1`, `WEB_CONCURRENCY=1`, `autoDeploy: false`, and a paid persistent disk. Render does not permit a disk-backed service to scale beyond one instance; do not remove the disk, enable autoscaling, create another writable service, or run a second process against this SQLite file. Keep SQLite, exports/backups, and uploads on the same protected persistent volume, outside the static application directory. The deployment manifest uses `/var/data/pilot.sqlite`, `/var/data/exports`, and `/var/data/uploads`; none is served as a public directory. This limitation is accepted only for the controlled 3–5 user pilot and is not a production-scale concurrency claim.
 
-Set the variables in `pilot-mobile.env.example` through the host secret/environment manager. `PILOT_PUBLIC_BASE_URL` must be the exact root HTTPS origin. `PILOT_USERS_JSON` must contain at least three enabled, server-owned credentials, including a bounded SPA reviewer and two distinct Field users. Replace every placeholder; never commit the populated values. Keep F1, F2, Step H, and Step I disabled through the `FIELD_CAPTURE_ALPHA` profile.
+Set the variables in `pilot-mobile.env.example` through the host secret/environment manager. On Render, do not enter `PILOT_PUBLIC_BASE_URL` manually: the Blueprint self-references `RENDER_EXTERNAL_URL`, so it receives the exact assigned root HTTPS origin during service creation. `PILOT_USERS_JSON` must contain at least three enabled, server-owned credentials, including a bounded SPA reviewer and two distinct Field users. Replace every applicable placeholder; never commit the populated values. Keep F1, F2, Step H, and Step I disabled through the `FIELD_CAPTURE_ALPHA` profile.
 
 Classify deployment configuration as follows. `OPENAI_API_KEY` and populated `PILOT_USERS_JSON` are **SECRET** and server-only. `GOOGLE_MAPS_BROWSER_KEY` is **PUBLIC CONFIG** delivered only to authenticated browsers and must be HTTP-referrer/API restricted. `PILOT_PROFILE`, `PILOT_PUBLIC_BASE_URL`, `PILOT_HOST`, `PILOT_ALLOW_LAN`, `WEB_CONCURRENCY`, `PILOT_DB_PATH`, `PILOT_EXPORT_DIR`, `PILOT_UPLOAD_DIR`, and `OPENAI_MODEL` are **OPERATIONAL CONFIG**. Do not print populated values for secrets in logs, reports, support messages, or shell history.
 
@@ -18,7 +18,7 @@ The bounded startup line reports profile, network mode, bind address, public bas
 
 TLS terminates at the managed HTTPS endpoint. Keep the application and API same-origin. Sessions use `HttpOnly; SameSite=Strict; Secure` under the configured HTTPS public URL, and no token is placed in a URL or browser storage.
 
-After Render reserves the service hostname, copy its exact external root origin into `PILOT_PUBLIC_BASE_URL`. Do not guess it from the service name. Create a Google Maps JavaScript browser key restricted to the Maps JavaScript API and this exact HTTP referrer pattern:
+After Render reserves the service hostname, verify that self-wired `PILOT_PUBLIC_BASE_URL` exactly equals `RENDER_EXTERNAL_URL`; do not guess or copy the origin manually. Create a Google Maps JavaScript browser key restricted to the Maps JavaScript API and this exact HTTP referrer pattern:
 
 `https://<pilot-domain>/*`
 
@@ -49,7 +49,7 @@ Do not mark `REAL_FIELD_VALIDATION` complete from automated or synthetic checks.
 
 ## Operator runbook
 
-Deployment remains a manual, accountable operation. After the M0B checkpoint is synchronized, create or review one Render Blueprint from the repository and `main` branch, confirm the Starter-or-higher plan, `numInstances: 1`, `/var/data` disk, and `autoDeploy: false`, then record the exact generated HTTPS origin. Populate the Render environment manager from `pilot-mobile.env.example`, replacing every placeholder. Do not deploy until the accountable user explicitly authorizes it.
+Deployment remains a manual, accountable operation. After the M0B checkpoint is synchronized, create or review one Render Blueprint from the repository and `main` branch, confirm the paid compute plan, `numInstances: 1`, `/var/data` disk, `autoDeploy: false`, and the `RENDER_EXTERNAL_URL` self-reference, then record the exact generated HTTPS origin. Populate the remaining Render environment values from `pilot-mobile.env.example`, replacing every applicable placeholder but not manually setting `PILOT_PUBLIC_BASE_URL`. Do not deploy until the accountable user explicitly authorizes it.
 
 For observation, request public `GET /health`, then `GET /readiness`; use authenticated readiness for deeper gates. View Render logs through the dashboard using correlation IDs and event codes. Never paste or search logs using passwords, cookies, API keys, `PILOT_USERS_JSON`, raw Chat, database paths, or image bytes. Restart with Render's manual restart only after writes are quiesced; recheck health and readiness afterward.
 
