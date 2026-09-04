@@ -3,7 +3,7 @@ services:
     name: cp-moakb-internal-pilot
     runtime: node
     rootDir: prototype/sp-assistant
-    plan: starter
+    plan: 0.5c-512mb
     # Controlled-pilot SQLite authority: one writable process and one instance only.
     numInstances: 1
     buildCommand: npm install

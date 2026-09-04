@@ -21,7 +21,7 @@ async function login(base, user) {
 
 test("M0D Render configuration is persistent, manual, and explicitly single-instance", async () => {
   const render = await readFile(new URL("../../../render.yaml", import.meta.url), "utf8");
-  for (const expected of ["plan: starter", "numInstances: 1", "WEB_CONCURRENCY", "value: \"1\"", "autoDeploy: false", "mountPath: /var/data", "PILOT_DB_PATH", "/var/data/pilot.sqlite", "PILOT_UPLOAD_DIR", "/var/data/uploads", "PILOT_EXPORT_DIR", "/var/data/exports"]) assert.match(render, new RegExp(expected.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
+  for (const expected of ["plan: 0.5c-512mb", "numInstances: 1", "WEB_CONCURRENCY", "value: \"1\"", "autoDeploy: false", "mountPath: /var/data", "PILOT_DB_PATH", "/var/data/pilot.sqlite", "PILOT_UPLOAD_DIR", "/var/data/uploads", "PILOT_EXPORT_DIR", "/var/data/exports"]) assert.match(render, new RegExp(expected.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
   assert.equal((render.match(/^\s+- type: web$/gm) ?? []).length, 1);
   assert.doesNotMatch(render, /scaling:|numInstances:\s*[2-9]/);
 });
