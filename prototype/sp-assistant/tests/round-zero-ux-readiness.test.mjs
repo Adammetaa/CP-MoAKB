@@ -54,6 +54,10 @@ test("M0A.1 chat retry succeeds after a failed attempt",async()=>{
   assert.equal((await runRecoverableChatSubmission(callbacks)).ok,true);assert.equal(pending,false);
 });
 
+test("M0E.1 pending render failure is controlled, observable, and does not retain the lock",async()=>{let pending=false,failures=0,submits=0,first=true;const callbacks={onPending(value){pending=value;if(value&&first){first=false;throw new Error("render failed");}},submit:async()=>{submits+=1;return{status:"AVAILABLE",message:"รับทราบครับ"};},onSuccess:async()=>{},onFailure:async()=>{failures+=1;}};const failed=await runRecoverableChatSubmission(callbacks);assert.equal(failed.ok,false);assert.match(failed.error.message,/render failed/);assert.equal(pending,false);assert.equal(submits,0);assert.equal(failures,1);const retried=await runRecoverableChatSubmission(callbacks);assert.equal(retried.ok,true);assert.equal(submits,1);assert.equal(pending,false);});
+
+test("M0E.1 pending release rendering failure cannot replace a successful submission",async()=>{const result=await runRecoverableChatSubmission({onPending(value){if(!value)throw new Error("release render failed");},submit:async()=>({status:"AVAILABLE",message:"รับทราบครับ"}),onSuccess:async()=>{},onFailure:async()=>{}});assert.equal(result.ok,true);assert.match(result.pendingReleaseError.message,/release render failed/);});
+
 function fakeMaps({throwOnMap=false}={}){
   const markers=[];
   class Map { constructor(){if(throwOnMap)throw new Error("provider runtime");} addListener(){return{remove(){}};} getCenter(){return{lat:()=>13.75,lng:()=>100.5};}getZoom(){return 17;}fitBounds(){} }
@@ -77,7 +81,7 @@ test("M0A.1 Google initialization failure cleans the surface and switches to OSM
 
 test("M0A.1 field composer uses try/finally recovery, retains retry text, and mobile widths remain guarded",async()=>{
   const [app,css,map]=await Promise.all([readFile(new URL("../assets/field-app.js",import.meta.url),"utf8"),readFile(new URL("../assets/field-shell.css",import.meta.url),"utf8"),readFile(new URL("../assets/browser-map-adapter.js",import.meta.url),"utf8")]);
-  assert.match(app,/runRecoverableChatSubmission/);assert.match(app,/chatRetryText = text/);assert.match(app,/ข้อความของคุณยังอยู่/);assert.doesNotMatch(app,/รับภาพเข้า B1|หาก B2/u);
+  assert.match(app,/runRecoverableChatSubmission/);assert.match(app,/chatRetryText=text/);assert.match(app,/ยังส่งไม่สำเร็จ/);assert.doesNotMatch(app,/รับภาพเข้า B1|หาก B2/u);
   for(const width of [360,390,400,412,430])assert.ok(width<=430&&css.includes("@media (max-width:520px)"));
   assert.match(css,/overflow-x:hidden/);assert.match(css,/safe-area-inset-bottom/);assert.match(map,/gm_authFailure/);assert.match(map,/Google Maps runtime timed out/);assert.match(map,/this\.mode === "preview" \? ""/);
 });

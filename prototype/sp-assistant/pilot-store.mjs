@@ -348,6 +348,7 @@ export class PilotStore {
   getPendingLearningFollowup(userId,scope) { return this.learningReview.pendingFollowup(userId,scope); }
   exportLearningReview(format,filters={}) { return this.learningReview.export(format,filters); }
   listGovernedConversations(userId) { return this.conversationOrchestrator.list(userId); }
+  ensureGovernedConversation(userId, input) { this.requireFeature("conversation_provider");return this.conversationOrchestrator.ensureConversation(userId,input); }
   getGovernedConversationHistory(userId, conversationId) { return this.conversationOrchestrator.history(userId,conversationId); }
   rebuildGovernedConversationContext(userId, conversationId) { return this.conversationOrchestrator.rebuildContext(userId,conversationId); }
   summary() {
