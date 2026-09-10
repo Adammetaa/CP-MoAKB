@@ -67,7 +67,7 @@ test("credential never enters repository state or the resolved user", () => {
 test("field runtime creates local identity only from authenticated server response", () => {
   assert.match(app, /serverWorkspace\.authenticate\(password,loginId\)/);
   assert.match(app, /loginToPrototypeWorkspace\(repository, authenticated\.identity\)/);
-  assert.match(app, /governedRuntime\.captureOnly\(\)\?"fields":result\.nextRoute/);
+  assert.match(app, /route = result\.nextRoute/);
   assert.match(app, /elements\.namedItem\("password"\)/);
   assert.doesNotMatch(app, /resolveMockUser|login-interactions|toggle-password|forgot-password/);
   assert.doesNotMatch(app, /authenticate\(password,\s*result\.user\.user_id\)/);

@@ -42,6 +42,13 @@ export class ServerWorkspaceAdapter {
     const bytes=new Uint8Array(await file.arrayBuffer());let binary="";for(let index=0;index<bytes.length;index+=0x8000)binary+=String.fromCharCode(...bytes.subarray(index,index+0x8000));
     return this.governedWrite("/api/pilot/visual-evidence",{field_id:context.field_id,crop_season_id:context.season_id,case_id:context.case_id,conversation_id,observation_id,guidance_id,sampling_event_id:null,capture_session_id:null,site_reference:null,captured_at:new Date().toISOString(),source:"UPLOAD",capture_intent,plant_part_scope,spatial_scope,view_type,original_filename:file.name,media_type:file.type,size_bytes:file.size,width:null,height:null,orientation:null,comparison_pair_id:null,comparison_role:"UNKNOWN_ROLE",comparison_role_source:"UNKNOWN",content_base64:btoa(binary)},"บันทึก Visual Evidence ไม่สำเร็จ");
   }
+  async uploadUserAttachment(file,context) {
+    const allowed=new Set(["image/jpeg","image/png","image/webp","application/pdf","application/vnd.openxmlformats-officedocument.wordprocessingml.document","application/vnd.openxmlformats-officedocument.spreadsheetml.sheet","text/csv","text/plain"]);
+    if(!allowed.has(file.type)||file.size>10*1024*1024)throw new Error("รองรับ JPG, PNG, WebP, PDF, DOCX, XLSX, CSV หรือ TXT ขนาดไม่เกิน 10 MB");
+    const bytes=new Uint8Array(await file.arrayBuffer());let binary="";for(let index=0;index<bytes.length;index+=0x8000)binary+=String.fromCharCode(...bytes.subarray(index,index+0x8000));
+    return this.governedWrite("/api/pilot/attachments",{field_id:context.field_id,season_id:context.season_id,case_id:context.case_id,conversation_id:context.conversation_id,original_filename:file.name,mime_type:file.type,size_bytes:file.size,content_base64:btoa(binary)},"แนบไฟล์ไม่สำเร็จ");
+  }
+  async getUserAttachments(scope) { return this.scopedGet("/api/pilot/attachments",scope,"โหลดไฟล์แนบไม่สำเร็จ"); }
   async getVisualEvidenceBundle(scope) { return this.scopedGet("/api/pilot/visual-evidence-bundle",{...scope,crop_season_id:scope.season_id,season_id:null},"โหลดสถานะภาพไม่สำเร็จ"); }
   async assessVisualEvidence(imageEvidenceId,assessment) { return this.governedWrite("/api/pilot/visual-evidence-assessments",{image_evidence_id:imageEvidenceId,assessment},"บันทึกการตรวจภาพไม่สำเร็จ"); }
   async reviewVisualEvidence(payload) { return this.governedWrite("/api/pilot/visual-evidence-reviews",payload,"บันทึกการทบทวนภาพไม่สำเร็จ"); }

@@ -4,7 +4,7 @@ import { resolve, dirname } from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
 
 export const PILOT_HARDENING_RUNTIME_VERSION='controlled-pilot-hardening/v2';
-export const PILOT_SCHEMA_VERSION=13;
+export const PILOT_SCHEMA_VERSION=14;
 export const PILOT_PROFILES=Object.freeze(['DEVELOPMENT','CONTROLLED_PILOT','FIELD_CAPTURE_ALPHA','TEST']);
 export const READINESS_STATES=Object.freeze(['READY','DEGRADED','BLOCKED']);
 export const PILOT_VALIDATION_STATES=Object.freeze(['NOT_RUN','READY_TO_RUN','IN_PROGRESS','COMPLETED_WITH_FINDINGS','ACCEPTED','BLOCKED']);
@@ -25,7 +25,7 @@ function stable(value){if(Array.isArray(value))return value.map(stable);if(value
 function hash(value){return createHash('sha256').update(JSON.stringify(stable(value))).digest('hex');}
 function integrity(db){const rows=db.prepare('PRAGMA integrity_check').all().map((row)=>Object.values(row)[0]);return{state:rows.length===1&&rows[0]==='ok'?'PASS':'BLOCKED',results:rows};}
 function tableExists(db,name){return Boolean(db.prepare("SELECT 1 FROM sqlite_master WHERE type='table' AND name=?").get(name));}
-export const PILOT_SCHEMA_COMPONENTS=Object.freeze(['pilot_workspaces','lifecycle_fields','investigation_cases','investigation_assessments','governed_guidance_items','image_evidence','visual_perception_requests','governed_management_reviews','governed_human_decisions','governed_follow_up_plans','governed_local_pattern_candidates','governed_learning_nominations','governed_conversations','governed_learning_signals','governed_learning_review_events','governed_learning_signal_links','governed_learning_followup_requests','governed_learning_candidates','governed_learning_priority_events','pilot_operational_audit']);
+export const PILOT_SCHEMA_COMPONENTS=Object.freeze(['pilot_workspaces','lifecycle_fields','investigation_cases','investigation_assessments','governed_guidance_items','image_evidence','visual_perception_requests','governed_management_reviews','governed_human_decisions','governed_follow_up_plans','governed_local_pattern_candidates','governed_learning_nominations','governed_conversations','governed_learning_signals','governed_learning_review_events','governed_learning_signal_links','governed_learning_followup_requests','governed_learning_candidates','governed_learning_priority_events','governed_user_attachments','pilot_operational_audit']);
 export const PILOT_SCHEMA_FINGERPRINT=hash({schema_version:PILOT_SCHEMA_VERSION,components:PILOT_SCHEMA_COMPONENTS,runtime:PILOT_HARDENING_RUNTIME_VERSION});
 function migrationMarker(db){if(!tableExists(db,'pilot_meta'))return null;const raw=db.prepare("SELECT value FROM pilot_meta WHERE key='pilot_migration_completion'").get()?.value;if(!raw)return null;try{return JSON.parse(raw);}catch{return null;}}
 function migrationState(db){const marker=migrationMarker(db),missing=PILOT_SCHEMA_COMPONENTS.filter((name)=>!tableExists(db,name));return{complete:Boolean(marker&&marker.schema_version===PILOT_SCHEMA_VERSION&&marker.schema_fingerprint===PILOT_SCHEMA_FINGERPRINT&&!missing.length),marker,missing_components:missing};}
