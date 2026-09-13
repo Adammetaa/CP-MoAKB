@@ -11,7 +11,7 @@ import { ServerLLMAdapter } from "../assets/server-llm-adapter.js";
 import { GovernedSpaRuntime } from "../assets/governed-spa-runtime.js";
 
 const users=[
-  {login_id:"spa",user_id:"pilot-spa",password:"secret-spa",enabled:true,display_name:"SPA reviewer",role:"SPA"},
+  {login_id:"spa",user_id:"pilot-spa",password:"secret-spa",enabled:true,display_name:"Pilot administrator",role:"ADMIN"},
   {login_id:"field-a",user_id:"pilot-field-a",password:"secret-a",enabled:true,display_name:"Field User A",role:"FIELD_USER"},
   {login_id:"field-b",user_id:"pilot-field-b",password:"secret-b",enabled:true,display_name:"Field User B",role:"FIELD_USER"},
 ];

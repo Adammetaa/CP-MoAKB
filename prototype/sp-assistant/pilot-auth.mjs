@@ -34,7 +34,7 @@ export function createPilotCredentialRegistry({ users, defaultPassword, defaultU
   const loginIds = new Set(), userIds = new Set();
   const records = configured.map((entry) => {
     if (!entry || typeof entry !== "object" || Array.isArray(entry)) invalid("invalid pilot credential record");
-    const allowed = new Set(["login_id","user_id","password","enabled","display_name","role"]);
+    const allowed = new Set(["login_id","user_id","password","enabled","display_name","role","tenant_id","capabilities"]);
     if (Object.keys(entry).some((key) => !allowed.has(key))) invalid("unsupported pilot credential field");
     const login_id = safeIdentifier(entry.login_id, "login_id"), user_id = safeIdentifier(entry.user_id, "user_id");
     if (loginIds.has(login_id) || userIds.has(user_id)) invalid("duplicate pilot credential identity");
@@ -47,6 +47,8 @@ export function createPilotCredentialRegistry({ users, defaultPassword, defaultU
       enabled:entry.enabled !== false,
       display_name:typeof entry.display_name === "string" && entry.display_name.trim() ? entry.display_name.trim().slice(0,160) : login_id,
       role:typeof entry.role === "string" && IDENTIFIER.test(entry.role) ? entry.role : "PILOT_USER",
+      tenant_id:entry.tenant_id == null ? "single-pilot" : safeIdentifier(entry.tenant_id,"tenant_id"),
+      capabilities:Object.freeze(entry.capabilities == null ? [] : Array.isArray(entry.capabilities)&&entry.capabilities.every((item)=>item==="REVIEW_COORDINATE")&&new Set(entry.capabilities).size===entry.capabilities.length?[...entry.capabilities]:invalid("invalid pilot capabilities")),
     });
   });
   const enabled = records.filter((record) => record.enabled);
@@ -64,5 +66,6 @@ export function createPilotCredentialRegistry({ users, defaultPassword, defaultU
       return publicIdentity(selected);
     },
     publicIdentities:records.map(publicIdentity),
+    scopedIdentities:records.map(({user_id,role,tenant_id,enabled,capabilities})=>({user_id,role,tenant_id,enabled,capabilities})),
   });
 }

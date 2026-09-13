@@ -17,6 +17,7 @@ import { MobileFieldCaptureAlphaService, initializeMobileFieldCaptureAlphaSchema
 import { LearningReviewService, initializeLearningReviewSchema } from "./learning-review-runtime.mjs";
 import { PilotHardeningService, preparePilotSchema } from "./pilot-hardening-runtime.mjs";
 import { UserAttachmentService, initializeUserAttachmentSchema } from "./user-attachment.mjs";
+import { GovernedAccessService, initializeGovernedAccessSchema } from "./governed-access.mjs";
 
 const COLLECTIONS = ["users", "fields", "seasons", "activities", "cases", "observations", "evidence", "conversations", "messages", "guidance", "decision_logs", "case_summaries", "weather_snapshots"];
 const STAGE_PROVENANCE = new Set(["SYSTEM_ESTIMATED", "USER_CONFIRMED", "USER_OVERRIDDEN"]);
@@ -43,12 +44,13 @@ function safeWorkspace(state) {
 }
 
 export class PilotStore {
-  constructor({ dbPath, exportDir, pilotProfile = "DEVELOPMENT", pilotConfiguration = null, migrationFailureInjector = null, hardeningClock = null, hardeningIdProvider = null, investigationRuleProvider = null, investigationCandidateProvider = null, intelligenceClock = null, intelligenceIdProvider = null, guidanceRuleProvider = null, guidanceClock = null, guidanceIdProvider = null, visualPerceptionProvider = null, visualClock = null, visualIdProvider = null, visualPerceptionAdapter = null, visualPerceptionClock = null, visualPerceptionIdProvider = null, visualPerceptionImageLoader = null, visualPerceptionContextResolver = null, managementRuleProvider = null, managementClock = null, managementIdProvider = null, decisionActionOutcomeClock = null, decisionActionOutcomeIdProvider = null, followupClock = null, followupIdProvider = null, followupTimezone = "UTC", spatialPatternClock = null, spatialPatternIdProvider = null, learningClock = null, learningIdProvider = null, conversationProvider = null, conversationClock = null, conversationIdProvider = null }) {
+  constructor({ dbPath, exportDir, pilotProfile = "DEVELOPMENT", pilotConfiguration = null, scopedIdentities = [], migrationFailureInjector = null, hardeningClock = null, hardeningIdProvider = null, investigationRuleProvider = null, investigationCandidateProvider = null, intelligenceClock = null, intelligenceIdProvider = null, guidanceRuleProvider = null, guidanceClock = null, guidanceIdProvider = null, visualPerceptionProvider = null, visualClock = null, visualIdProvider = null, visualPerceptionAdapter = null, visualPerceptionClock = null, visualPerceptionIdProvider = null, visualPerceptionImageLoader = null, visualPerceptionContextResolver = null, managementRuleProvider = null, managementClock = null, managementIdProvider = null, decisionActionOutcomeClock = null, decisionActionOutcomeIdProvider = null, followupClock = null, followupIdProvider = null, followupTimezone = "UTC", spatialPatternClock = null, spatialPatternIdProvider = null, learningClock = null, learningIdProvider = null, conversationProvider = null, conversationClock = null, conversationIdProvider = null }) {
     this.dbPath = resolve(dbPath);
     this.exportDir = resolve(exportDir);
     this.db = null;
     this.pilotProfile = pilotProfile;
     this.pilotConfiguration = pilotConfiguration;
+    this.scopedIdentities = scopedIdentities;
     this.migrationFailureInjector = migrationFailureInjector;
     this.hardeningClock = hardeningClock;
     this.hardeningIdProvider = hardeningIdProvider;
@@ -97,6 +99,7 @@ export class PilotStore {
     this.mobileFieldCaptureAlpha = null;
     this.learningReview = null;
     this.userAttachments = null;
+    this.access = null;
   }
   initializeSchema(checkpoint = () => {}) {
     this.db.exec("PRAGMA foreign_keys=ON; CREATE TABLE IF NOT EXISTS pilot_workspaces (user_id TEXT PRIMARY KEY, state_json TEXT NOT NULL, created_at TEXT NOT NULL, updated_at TEXT NOT NULL); CREATE TABLE IF NOT EXISTS pilot_events (event_id INTEGER PRIMARY KEY AUTOINCREMENT, user_id TEXT NOT NULL, event_type TEXT NOT NULL, created_at TEXT NOT NULL); CREATE TABLE IF NOT EXISTS pilot_feedback (feedback_id TEXT PRIMARY KEY, user_id TEXT NOT NULL, route TEXT NOT NULL, subject_id TEXT, rating TEXT NOT NULL, note TEXT, created_at TEXT NOT NULL);");
@@ -120,7 +123,7 @@ export class PilotStore {
     initializeVisualEvidenceSchema(this.db); checkpoint("AFTER_B1"); initializeVisualPerceptionSchema(this.db); checkpoint("AFTER_B2");
     initializeManagementOptionSchema(this.db); checkpoint("AFTER_F1"); initializeDecisionActionOutcomeSchema(this.db); checkpoint("AFTER_F2");
     initializeFollowupReminderTimelineSchema(this.db); initializeSpatialLocalPatternSchema(this.db); checkpoint("AFTER_H");
-    initializeLearningKnowledgeGraphSchema(this.db); checkpoint("AFTER_I"); initializeConversationSchema(this.db); initializeMobileFieldCaptureAlphaSchema(this.db); initializeLearningReviewSchema(this.db); initializeUserAttachmentSchema(this.db); checkpoint("AFTER_E");
+    initializeLearningKnowledgeGraphSchema(this.db); checkpoint("AFTER_I"); initializeConversationSchema(this.db); initializeMobileFieldCaptureAlphaSchema(this.db); initializeLearningReviewSchema(this.db); initializeUserAttachmentSchema(this.db); initializeGovernedAccessSchema(this.db); checkpoint("AFTER_E");
   }
   requireFeature(feature) { const enabled=this.pilotConfiguration?.feature_flags?.[feature]??true;if(enabled!==true){this.hardening?.audit("FEATURE_DISABLED_REQUEST",{severity:"WARN",detail_code:feature});throw Object.assign(new Error("governed feature is disabled"),{code:"FEATURE_DISABLED",status:503,feature});} }
   async open() {
@@ -145,7 +148,8 @@ export class PilotStore {
     for (const capability of this.getPilotCapabilities().capabilities) this.hardening.audit(capability.availability==="AVAILABLE"?"FEATURE_ENABLED":"FEATURE_DISABLED",{detail_code:capability.feature});
     this.mobileFieldCaptureAlpha = new MobileFieldCaptureAlphaService(this.db,{...(this.conversationClock?{clock:this.conversationClock}:{}),...(this.conversationIdProvider?{idProvider:this.conversationIdProvider}:{})});
     this.learningReview = new LearningReviewService(this.db,{...(this.conversationClock?{clock:this.conversationClock}:{}),...(this.conversationIdProvider?{idProvider:this.conversationIdProvider}:{})});
-    this.userAttachments = new UserAttachmentService(this.db,{...(this.conversationClock?{clock:this.conversationClock}:{}),...(this.conversationIdProvider?{idProvider:this.conversationIdProvider}:{})});
+    this.access = new GovernedAccessService(this.db,{identities:this.scopedIdentities});
+    this.userAttachments = new UserAttachmentService(this.db,{access:this.access,...(this.conversationClock?{clock:this.conversationClock}:{}),...(this.conversationIdProvider?{idProvider:this.conversationIdProvider}:{})});
     this.conversationOrchestrator = new GovernedConversationOrchestrator(this.db,{backbone:this.investigation,assessmentService:this.investigationIntelligence,guidanceService:this.guidanceIntelligence,visualEvidenceService:this.visualEvidence,visualPerceptionService:this.visualPerception,managementService:this.managementOptions,decisionActionOutcomeService:this.decisionActionOutcomes,followupReminderService:this.followupReminders,provider:this.conversationProvider??createConfiguredConversationProvider(),fieldCaptureAlpha:this.pilotProfile==="FIELD_CAPTURE_ALPHA",...(this.conversationClock?{clock:this.conversationClock}:{}),...(this.conversationIdProvider?{idProvider:this.conversationIdProvider}:{})});
     for (const row of this.db.prepare("SELECT user_id,state_json,updated_at FROM pilot_workspaces").all()) {
       const migrated = this.db.prepare("SELECT status FROM lifecycle_migrations WHERE owner_user_id = ?").get(row.user_id);
@@ -263,6 +267,14 @@ export class PilotStore {
   updateInvestigationRecord(userId, recordType, recordId, expectedRevision, record, requestId = null) { return requestId ? this.investigation.updateIdempotent(userId,requestId,recordType,recordId,expectedRevision,record) : this.investigation.update(userId,recordType,recordId,expectedRevision,record); }
   getInvestigationBundle(userId, scope) { return this.investigation.getBundle(userId,scope); }
   getInvestigationTimeline(userId, scope) { return this.investigation.getTimeline(userId,scope); }
+  getFieldHistory(userId,{field_id,season_id}) {
+    this.investigation.assertScope(userId,field_id,season_id);
+    const observations=this.db.prepare(`SELECT o.observation_id,o.case_id,o.note,o.observed_at,o.review_state,o.source,o.revision FROM investigation_observations o WHERE o.owner_user_id=? AND o.field_id=? AND o.season_id=? AND o.review_state IN ('HUMAN_REVIEWED','DOMAIN_APPROVED') AND EXISTS (SELECT 1 FROM governed_observation_review_events r WHERE (r.observation_id=o.observation_id AND r.action='CONFIRM') OR (r.corrected_observation_id=o.observation_id AND r.action='CORRECT')) ORDER BY o.observed_at,o.observation_id`).all(userId,field_id,season_id);
+    const activities=this.db.prepare("SELECT management_event_id,case_id,event_type,event_at,time_precision,source,created_at FROM management_events WHERE owner_user_id=? AND field_id=? AND season_id=? ORDER BY created_at,management_event_id").all(userId,field_id,season_id);
+    const followups=this.db.prepare("SELECT follow_up_plan_id,case_id,status,plan_json,created_at FROM governed_follow_up_plans WHERE owner_user_id=? AND field_id=? AND season_id=? ORDER BY created_at,follow_up_plan_id").all(userId,field_id,season_id);
+    const events=[...observations.map((item)=>({event_type:"CONFIRMED_OBSERVATION",record_id:item.observation_id,case_id:item.case_id,at:item.observed_at,text:item.note,review_state:item.review_state,source:item.source})),...activities.map((item)=>({event_type:"RECORDED_ACTIVITY",record_id:item.management_event_id,case_id:item.case_id,at:item.event_at??item.created_at,text:item.event_type,source:item.source,time_precision:item.time_precision})),...followups.map((item)=>({event_type:"FOLLOW_UP_PLAN",record_id:item.follow_up_plan_id,case_id:item.case_id,at:item.created_at,text:JSON.parse(item.plan_json).purpose,status:item.status,source:"GOVERNED_FOLLOW_UP_PLAN"}))].sort((a,b)=>a.at.localeCompare(b.at)||a.record_id.localeCompare(b.record_id));
+    return {authority:"SERVER_GOVERNED_FIELD_HISTORY",field_id,season_id,events,unreviewed_reports_excluded:true,legacy_unverified_review_excluded:true,causal_inference:false};
+  }
   assessInvestigation(userId, scope) { return this.investigationIntelligence.assess(userId,scope); }
   getInvestigationAssessmentHistory(userId, scope) { return this.investigationIntelligence.history(userId,scope); }
   reviewInvestigationAssessment(userId, review) { return this.investigationIntelligence.review(userId,review); }
@@ -341,15 +353,15 @@ export class PilotStore {
   getPilotDebtRegister() { return this.hardening.debtRegister(); }
   async orchestrateConversationTurn(userId, input) { this.requireFeature("conversation_provider");const result=await this.conversationOrchestrator.turn(userId,input);result.learning_signals=this.mobileFieldCaptureAlpha.captureTurn(userId,input,result);result.human_review_followup_resolution=this.learningReview.resolveFollowup(userId,input,result);return result; }
   getLearningSignals(userId) { return this.mobileFieldCaptureAlpha.listOwner(userId); }
-  getAdminLearningSignals() { return this.mobileFieldCaptureAlpha.listAdmin(); }
-  getLearningReviewInbox(filters={}) { return this.learningReview.list(filters); }
-  getLearningReviewDashboard(filters={}) { return this.learningReview.dashboard(filters); }
-  getLearningReviewDetail(signalId) { const detail=this.learningReview.detail(signalId);detail.current_case_context.attachments=detail.case_id?this.userAttachments.list("reviewer",{case_id:detail.case_id},{reviewer:true}):[];return detail; }
+  getAdminLearningSignals(requesterUserId=null) { const signals=this.mobileFieldCaptureAlpha.listAdmin();if(!requesterUserId)return signals;const visible=new Set(this.access.visibleSignals(requesterUserId));return signals.filter((item)=>visible.has(item.signal_id)); }
+  getLearningReviewInbox(filters={},requesterUserId=null) { return this.learningReview.list(filters,requesterUserId?new Set(this.access.visibleSignals(requesterUserId)):null); }
+  getLearningReviewDashboard(filters={},requesterUserId=null) { return this.learningReview.dashboard(filters,requesterUserId?new Set(this.access.visibleSignals(requesterUserId)):null); }
+  getLearningReviewDetail(signalId,requesterUserId=null) { const signal=this.learningReview.signal(signalId);if(requesterUserId&&!this.access.canReviewSignal(requesterUserId,signal))throw Object.assign(new Error("Learning Signal not found"),{code:"NOT_FOUND",status:404});const detail=this.learningReview.detail(signalId);const caseRow=detail.case_id?this.db.prepare("SELECT * FROM investigation_cases WHERE case_id=?").get(detail.case_id):null;const caseAllowed=requesterUserId&&caseRow&&this.access.canReadCase(requesterUserId,caseRow);detail.current_case_context.attachments=caseAllowed?this.userAttachments.list(requesterUserId,{case_id:detail.case_id}):[];if(requesterUserId&&!caseAllowed){const visible=new Set(this.access.visibleSignals(requesterUserId));detail.current_case_context.evidence=[];detail.current_case_context.visual_evidence=[];detail.visual_evidence_count=0;detail.has_visual_evidence=false;detail.user_said.previous=null;detail.user_said.next=null;detail.system_assessed={response_type:detail.system_assessed?.response_type??null,authority:"REVIEW_ITEM_ONLY_REDACTED"};detail.human_review.relationships=detail.human_review.relationships.filter((relationship)=>visible.has(relationship.source_signal_id)&&visible.has(relationship.target_signal_id));detail.human_review.history=detail.human_review.history.map((event)=>({...event,source_references:event.source_references?.filter((reference)=>visible.has(reference)||reference===signal.turn_id)??[]}));}return detail; }
   createLearningReviewEvent(reviewerUserId,input) { return this.learningReview.review(reviewerUserId,input); }
   linkRelatedLearningSignal(reviewerUserId,input) { return this.learningReview.link(reviewerUserId,input); }
   setLearningPriority(reviewerUserId,input) { return this.learningReview.priority(reviewerUserId,input); }
   getPendingLearningFollowup(userId,scope) { return this.learningReview.pendingFollowup(userId,scope); }
-  exportLearningReview(format,filters={}) { return this.learningReview.export(format,filters); }
+  exportLearningReview(format,filters={},requesterUserId=null) { return this.learningReview.export(format,filters,requesterUserId?new Set(this.access.visibleSignals(requesterUserId)):null); }
   validateUserAttachmentScope(userId,input) { return this.userAttachments.validateScope(userId,input); }
   createUserAttachment(userId,input) { return this.userAttachments.create(userId,input); }
   getUserAttachment(userId,attachmentId,options={}) { return this.userAttachments.get(userId,attachmentId,options); }

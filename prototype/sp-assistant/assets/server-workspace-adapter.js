@@ -33,6 +33,7 @@ export class ServerWorkspaceAdapter {
   }
   async createInvestigationRecord(recordType,record,requestId=globalThis.crypto.randomUUID()) { return this.governedWrite("/api/pilot/investigation-records",{record_type:recordType,record,request_id:`spa-${requestId}`},"บันทึกข้อมูลการตรวจไม่สำเร็จ"); }
   async getInvestigationBundle(scope) { return this.scopedGet("/api/pilot/investigation-bundle",scope,"โหลดหลักฐานการตรวจไม่สำเร็จ"); }
+  async getFieldHistory(scope) { return this.scopedGet("/api/pilot/field-history",scope,"โหลดประวัติแปลงที่ผ่านการทบทวนไม่สำเร็จ"); }
   async getInvestigationAssessment(scope) { return this.scopedGet("/api/pilot/investigation-assessment",scope,"ประเมินหลักฐานการตรวจไม่สำเร็จ"); }
   async getGuidance(scope) { return this.scopedGet("/api/pilot/guidance",scope,"โหลดขั้นตอนถัดไปไม่สำเร็จ"); }
   scopedPath(endpoint,scope) { return `${endpoint}?${new URLSearchParams(Object.fromEntries(Object.entries(scope).filter(([,value])=>value!=null)))}`; }

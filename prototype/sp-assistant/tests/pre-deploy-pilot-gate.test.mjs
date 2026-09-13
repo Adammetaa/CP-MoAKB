@@ -8,7 +8,7 @@ import { validatePilotConfiguration } from "../pilot-hardening-runtime.mjs";
 import { createEmptyCandidateProvider } from "../candidate-provider.mjs";
 
 const users = [
-  { login_id:"spa", user_id:"pilot-spa", password:"test-spa-password", enabled:true, display_name:"SPA reviewer", role:"SPA" },
+  { login_id:"spa", user_id:"pilot-spa", password:"test-spa-password", enabled:true, display_name:"Pilot administrator", role:"ADMIN" },
   { login_id:"field-a", user_id:"pilot-field-a", password:"test-field-a-password", enabled:true, display_name:"Field User A", role:"FIELD_USER" },
   { login_id:"field-b", user_id:"pilot-field-b", password:"test-field-b-password", enabled:true, display_name:"Field User B", role:"FIELD_USER" },
 ];
