@@ -34,6 +34,13 @@ export class ServerWorkspaceAdapter {
   async createInvestigationRecord(recordType,record,requestId=globalThis.crypto.randomUUID()) { return this.governedWrite("/api/pilot/investigation-records",{record_type:recordType,record,request_id:`spa-${requestId}`},"บันทึกข้อมูลการตรวจไม่สำเร็จ"); }
   async getInvestigationBundle(scope) { return this.scopedGet("/api/pilot/investigation-bundle",scope,"โหลดหลักฐานการตรวจไม่สำเร็จ"); }
   async getFieldHistory(scope) { return this.scopedGet("/api/pilot/field-history",scope,"โหลดประวัติแปลงที่ผ่านการทบทวนไม่สำเร็จ"); }
+  async getScopedFields() { return this.scopedGet("/api/pilot/access/fields",{},"โหลดแปลงที่ได้รับมอบหมายไม่สำเร็จ"); }
+  async getScopedField(fieldId) { return this.scopedGet("/api/pilot/access/field",{field_id:fieldId},"ไม่มีสิทธิ์เปิดแปลงนี้"); }
+  async getScopedCases() { return this.scopedGet("/api/pilot/access/cases",{},"โหลดเคสที่ได้รับมอบหมายไม่สำเร็จ"); }
+  async getScopedCase(caseId) { return this.scopedGet("/api/pilot/access/case",{case_id:caseId},"ไม่มีสิทธิ์เปิดเคสนี้"); }
+  async createScopedCase(scope,purpose) { return this.governedWrite("/api/pilot/access/cases",{field_id:scope.field_id,season_id:scope.season_id,purpose},"ไม่สามารถเริ่มเคสในแปลงที่ได้รับมอบหมาย"); }
+  async sendScopedCaseTurn(caseId,message,requestId=globalThis.crypto.randomUUID()) { return this.governedWrite("/api/pilot/access/case-turns",{case_id:caseId,message,request_id:`assigned-${requestId}`},"ไม่สามารถบันทึกข้อมูลในเคสที่ได้รับมอบหมาย"); }
+  async reviewScopedObservation(input) { return this.governedWrite("/api/pilot/observation-reviews",input,"ไม่สามารถบันทึกการทบทวน Observation"); }
   async getInvestigationAssessment(scope) { return this.scopedGet("/api/pilot/investigation-assessment",scope,"ประเมินหลักฐานการตรวจไม่สำเร็จ"); }
   async getGuidance(scope) { return this.scopedGet("/api/pilot/guidance",scope,"โหลดขั้นตอนถัดไปไม่สำเร็จ"); }
   scopedPath(endpoint,scope) { return `${endpoint}?${new URLSearchParams(Object.fromEntries(Object.entries(scope).filter(([,value])=>value!=null)))}`; }
