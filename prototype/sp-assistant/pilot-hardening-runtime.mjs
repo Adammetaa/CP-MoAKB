@@ -4,7 +4,7 @@ import { resolve, dirname } from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
 
 export const PILOT_HARDENING_RUNTIME_VERSION='controlled-pilot-hardening/v2';
-export const PILOT_SCHEMA_VERSION=15;
+export const PILOT_SCHEMA_VERSION=16;
 export const PILOT_PROFILES=Object.freeze(['DEVELOPMENT','CONTROLLED_PILOT','FIELD_CAPTURE_ALPHA','TEST']);
 export const READINESS_STATES=Object.freeze(['READY','DEGRADED','BLOCKED']);
 export const PILOT_VALIDATION_STATES=Object.freeze(['NOT_RUN','READY_TO_RUN','IN_PROGRESS','COMPLETED_WITH_FINDINGS','ACCEPTED','BLOCKED']);

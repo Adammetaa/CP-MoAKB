@@ -183,15 +183,18 @@ export class PilotStore {
   }
   persistLifecycle(userId, state, now) {
     const fields = Array.isArray(state.fields) ? state.fields : [], seasons = Array.isArray(state.seasons) ? state.seasons : [], guidance = Array.isArray(state.guidance) ? state.guidance : [];
+    const fieldIds=new Set(),seasonIds=new Set();
     for (const field of fields) {
       safeId(field.field_id,"field_id");
+      if(fieldIds.has(field.field_id))throw new Error("duplicate field identity");fieldIds.add(field.field_id);
       field.season_id ??= seasons.find((season) => season.field_id === field.field_id)?.season_id;
       safeId(field.season_id,"season_id");
       if (field.owner_user_id !== userId) throw new Error("field ownership mismatch");
       if (!seasons.some((season) => season.season_id === field.season_id && season.field_id === field.field_id)) throw new Error("field season mismatch");
       if (field.stage_provenance != null && !STAGE_PROVENANCE.has(field.stage_provenance)) throw new Error("invalid stage provenance");
     }
-    for (const season of seasons) if (!fields.some((field) => field.field_id === season.field_id && field.season_id === season.season_id)) throw new Error("orphan crop season");
+    for (const season of seasons){safeId(season.season_id,"season_id");if(seasonIds.has(season.season_id))throw new Error("duplicate crop season identity");seasonIds.add(season.season_id);if(!fieldIds.has(season.field_id))throw new Error("orphan crop season");}
+    for(const field of fields){const active=seasons.filter((season)=>season.field_id===field.field_id&&season.status==="ACTIVE");if(active.length>1||active.length===1&&active[0].season_id!==field.season_id)throw new Error("invalid active crop season");}
     this.db.exec("BEGIN IMMEDIATE");
     try {
       const user = (Array.isArray(state.users) ? state.users : []).find((item) => item.user_id === userId) ?? { user_id:userId, role:"SPA" };
@@ -202,15 +205,12 @@ export class PilotStore {
       for (const field of fields) {
         const created = field.created_at ?? now, profile = { crop:field.crop ?? "rice", variety:field.variety ?? "", planting_method:field.planting_method ?? "", planting_date:field.planting_date ?? null, expected_planting_date:field.expected_planting_date ?? null };
         if (upsertField.run(field.field_id,userId,String(field.name ?? ""),JSON.stringify(field.polygon ?? null),JSON.stringify(field.centroid ?? null),JSON.stringify(field.area ?? null),JSON.stringify(profile),field.season_id,created,now).changes !== 1) throw new Error("field ownership mismatch");
-        const season = seasons.find((item) => item.season_id === field.season_id);
-        if (upsertSeason.run(season.season_id,field.field_id,userId,season.crop ?? field.crop ?? "rice",field.planting_date ?? season.planting_date ?? null,field.expected_planting_date ?? season.expected_planting_date ?? null,field.variety ?? season.variety ?? "",field.planting_method ?? season.planting_method ?? "",season.status ?? "ACTIVE",season.created_at ?? created,now).changes !== 1) throw new Error("season ownership mismatch");
-        const cropDate = field.planting_date ?? field.expected_planting_date, cropAge = cropDate ? Math.floor((Date.parse(now.slice(0,10)) - Date.parse(cropDate)) / 86_400_000) : null;
-        const modelVersion = field.current_crop_stage?.model_version ?? field.current_cmp_stage?.model_version ?? "field-stage-model/v1";
-        upsertStage.run(`stage-${field.season_id}`,userId,field.field_id,field.season_id,Number.isFinite(cropAge) ? cropAge : null,JSON.stringify(field.current_crop_stage ?? null),JSON.stringify(field.current_cmp_stage ?? null),field.stage_provenance ?? "SYSTEM_ESTIMATED",modelVersion,"cmp-operational-stage-model/v2",field.stage_assessment?.assessed_at ?? field.updated_at ?? now,now);
       }
+      for(const season of seasons){const field=fields.find((item)=>item.field_id===season.field_id),current=field.season_id===season.season_id,created=season.created_at??field.created_at??now;if(upsertSeason.run(season.season_id,field.field_id,userId,season.crop??(current?field.crop:null)??"rice",current?field.planting_date??season.planting_date??null:season.planting_date??null,current?field.expected_planting_date??season.expected_planting_date??null:season.expected_planting_date??null,current?field.variety??season.variety??"":season.variety??"",current?field.planting_method??season.planting_method??"":season.planting_method??"",season.status??(current?"ACTIVE":"COMPLETED"),created,now).changes!==1)throw new Error("season ownership mismatch");}
+      for(const field of fields){const active=this.db.prepare("SELECT season_id FROM crop_seasons WHERE owner_user_id=? AND field_id=? AND status='ACTIVE'").all(userId,field.field_id);if(active.length>1||active.length===1&&active[0].season_id!==field.season_id)throw new Error("invalid active crop season");const cropDate=field.planting_date??field.expected_planting_date,cropAge=cropDate?Math.floor((Date.parse(now.slice(0,10))-Date.parse(cropDate))/86_400_000):null,modelVersion=field.current_crop_stage?.model_version??field.current_cmp_stage?.model_version??"field-stage-model/v1";upsertStage.run(`stage-${field.season_id}`,userId,field.field_id,field.season_id,Number.isFinite(cropAge)?cropAge:null,JSON.stringify(field.current_crop_stage??null),JSON.stringify(field.current_cmp_stage??null),field.stage_provenance??"SYSTEM_ESTIMATED",modelVersion,"cmp-operational-stage-model/v2",field.stage_assessment?.assessed_at??field.updated_at??now,now);}
       const upsertGuidance = this.db.prepare("INSERT INTO guidance_states(guidance_item_id,owner_user_id,field_id,season_id,state_json,updated_at) VALUES(?,?,?,?,?,?) ON CONFLICT(guidance_item_id) DO UPDATE SET state_json=excluded.state_json, updated_at=excluded.updated_at WHERE guidance_states.owner_user_id=excluded.owner_user_id AND guidance_states.field_id=excluded.field_id AND guidance_states.season_id=excluded.season_id");
       for (const item of guidance) {
-        if (item.user_id !== userId || !fields.some((field) => field.field_id === item.field_id && field.season_id === item.season_id)) throw new Error("guidance context mismatch");
+        if (item.user_id !== userId || !seasons.some((season) => season.field_id === item.field_id && season.season_id === item.season_id)) throw new Error("guidance context mismatch");
         if (upsertGuidance.run(safeId(item.guidance_item_id,"guidance_item_id"),userId,item.field_id,item.season_id,JSON.stringify(item),now).changes !== 1) throw new Error("guidance ownership mismatch");
       }
       this.db.prepare("INSERT INTO lifecycle_migrations(owner_user_id,status,source_schema_version,imported_at,updated_at) VALUES(?,?,?,?,?) ON CONFLICT(owner_user_id) DO UPDATE SET status=excluded.status, updated_at=excluded.updated_at").run(userId,"IMPORTED",Number(state.schema_version ?? 0),state.pilot_migration?.imported_at ?? now,now);
@@ -256,6 +256,20 @@ export class PilotStore {
     this.db.prepare("INSERT INTO pilot_events(user_id,event_type,created_at) VALUES(?,?,?)").run(userId,"FIELD_LIFECYCLE_CREATED",now);
     return {authority:"SERVER_LIFECYCLE",field,season};
   }
+  transitionCropSeason(userId,input){
+    safeId(userId,"user_id");if(!input||typeof input!=="object"||Array.isArray(input))throw new Error("invalid crop season transition");input=safeWorkspace(input);
+    const allowed=new Set(["field_id","expected_current_season_id","crop","variety","planting_method","planting_date","expected_planting_date","current_crop_stage","current_cmp_stage","stage_provenance"]);if(Object.keys(input).some((key)=>!allowed.has(key)))throw new Error("invalid crop season transition");
+    const fieldId=safeId(input.field_id,"field_id"),expected=safeId(input.expected_current_season_id,"expected_current_season_id"),current=this.db.prepare("SELECT * FROM lifecycle_fields WHERE owner_user_id=? AND field_id=?").get(userId,fieldId);if(!current)throw Object.assign(new Error("field scope not found"),{status:403,code:"AUTHORIZATION_ERROR"});if(current.season_id!==expected)throw Object.assign(new Error("current crop season changed"),{status:409,code:"VERSION_CONFLICT"});
+    const oldSeason=this.db.prepare("SELECT * FROM crop_seasons WHERE owner_user_id=? AND field_id=? AND season_id=?").get(userId,fieldId,expected);if(!oldSeason)throw new Error("current crop season missing");
+    const active=this.db.prepare("SELECT season_id FROM crop_seasons WHERE owner_user_id=? AND field_id=? AND status='ACTIVE'").all(userId,fieldId);if(active.length>1||active.length===1&&active[0].season_id!==expected)throw new Error("invalid active crop season");
+    const date=input.planting_date??input.expected_planting_date;if(typeof date!=="string"||!/^\d{4}-\d{2}-\d{2}$/.test(date)||!Number.isFinite(Date.parse(`${date}T00:00:00Z`)))throw new Error("planting date required");if(input.planting_date&&input.expected_planting_date)throw new Error("choose one planting date");
+    if(input.stage_provenance!=null&&!STAGE_PROVENANCE.has(input.stage_provenance))throw new Error("invalid stage provenance");
+    const existing=this.getWorkspace(userId);if(!existing)throw new Error("field lifecycle missing");const state=existing.state,field=state.fields.find((item)=>item.field_id===fieldId);if(!field)throw new Error("field lifecycle missing");
+    const now=new Date().toISOString(),seasonId=`season-${randomUUID()}`,nextField={...field,season_id:seasonId,crop:input.crop??field.crop??"rice",variety:input.variety??"",planting_method:input.planting_method??"",planting_date:input.planting_date??null,expected_planting_date:input.expected_planting_date??null,current_crop_stage:input.current_crop_stage??null,current_cmp_stage:input.current_cmp_stage??null,stage_provenance:input.stage_provenance??"SYSTEM_ESTIMATED",stage_assessment:null,updated_at:now},nextSeason={season_id:seasonId,field_id:fieldId,crop:nextField.crop,planting_date:nextField.planting_date,expected_planting_date:nextField.expected_planting_date,variety:nextField.variety,planting_method:nextField.planting_method,status:"ACTIVE",created_at:now,updated_at:now};
+    const nextState={...state,fields:state.fields.map((item)=>item.field_id===fieldId?nextField:item),seasons:[...state.seasons.map((item)=>item.season_id===expected?{...item,status:"COMPLETED",updated_at:now}:item),nextSeason]};
+    this.persistLifecycle(userId,nextState,now);this.db.prepare("INSERT INTO pilot_events(user_id,event_type,created_at) VALUES(?,?,?)").run(userId,"CROP_SEASON_TRANSITIONED",now);
+    return{authority:"SERVER_LIFECYCLE",field:this.getLifecycle(userId).fields.find((item)=>item.field_id===fieldId),previous_season_id:expected,season:nextSeason};
+  }
   getGuidance(userId, fieldId, seasonId) {
     safeId(userId,"user_id"); safeId(fieldId,"field_id"); safeId(seasonId,"season_id");
     const field = this.db.prepare("SELECT field_id FROM lifecycle_fields WHERE field_id = ? AND owner_user_id = ?").get(fieldId,userId);
@@ -265,7 +279,7 @@ export class PilotStore {
   }
   createInvestigationRecord(userId, recordType, record, requestId = null) { return requestId ? this.investigation.createIdempotent(userId,requestId,recordType,record) : this.investigation.create(userId,recordType,record); }
   updateInvestigationRecord(userId, recordType, recordId, expectedRevision, record, requestId = null) { return requestId ? this.investigation.updateIdempotent(userId,requestId,recordType,recordId,expectedRevision,record) : this.investigation.update(userId,recordType,recordId,expectedRevision,record); }
-  getInvestigationBundle(userId, scope) { return this.investigation.getBundle(userId,scope); }
+  getInvestigationBundle(userId, scope) { const bundle=this.investigation.getBundle(userId,scope);if(bundle.field_context)return bundle;const field=this.db.prepare("SELECT name,crop_profile_json FROM lifecycle_fields WHERE owner_user_id=? AND field_id=?").get(userId,scope.field_id),season=this.db.prepare("SELECT crop,rice_variety,planting_method,status FROM crop_seasons WHERE owner_user_id=? AND field_id=? AND season_id=?").get(userId,scope.field_id,scope.season_id);if(!field||!season)return bundle;const profile=JSON.parse(field.crop_profile_json);return{...bundle,field_context:{field_id:scope.field_id,season_id:scope.season_id,field_name:field.name,crop:season.crop??profile.crop??null,variety:season.rice_variety??profile.variety??null,planting_method:season.planting_method??profile.planting_method??null,season_status:season.status,authority:"SERVER_LIFECYCLE"}}; }
   getInvestigationTimeline(userId, scope) { return this.investigation.getTimeline(userId,scope); }
   getFieldHistory(userId,{field_id,season_id}) {
     this.investigation.assertScope(userId,field_id,season_id);
