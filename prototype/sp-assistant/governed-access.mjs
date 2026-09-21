@@ -72,6 +72,36 @@ export class GovernedAccessService {
   }
   coordinator(userId) { return this.isAdmin(userId) || this.identity(userId).capabilities?.includes("REVIEW_COORDINATE") === true || this.active(userId,"SYSTEM","pilot","REVIEW_COORDINATE"); }
   hasReviewScope(userId) { this.identity(userId);return this.coordinator(userId)||Boolean(this.db.prepare("SELECT 1 FROM governed_access_grants WHERE subject_user_id=? AND tenant_id=? AND capability IN ('CASE_REVIEW','REVIEW_ITEM_REVIEW') AND revoked_at IS NULL LIMIT 1").get(userId,this.tenant(userId))); }
+  accessSummary(userId) {
+    const identity=this.identity(userId),fields=this.visibleFields(userId),cases=this.visibleCases(userId),reviewItems=this.hasReviewScope(userId)?this.visibleSignals(userId):[];
+    const grants=this.db.prepare("SELECT scope_type,capability FROM governed_access_grants WHERE subject_user_id=? AND tenant_id=? AND revoked_at IS NULL ORDER BY scope_type,capability").all(userId,this.tenant(userId));
+    const capabilitySet=new Set();
+    if(fields.some((item)=>item.owner_user_id===userId))capabilitySet.add("OWNED_FIELD_WORK");
+    if(grants.some((item)=>item.scope_type==="FIELD"))capabilitySet.add("ASSIGNED_FIELD_WORK");
+    if(grants.some((item)=>item.scope_type==="CASE"&&item.capability==="CASE_OPERATE"))capabilitySet.add("ASSIGNED_CASE_WORK");
+    if(this.hasReviewScope(userId))capabilitySet.add("REVIEW_WORK");
+    if(this.coordinator(userId))capabilitySet.add("REVIEW_COORDINATION");
+    const scopeCounts={FIELD:0,CASE:0,REVIEW_ITEM:0,SYSTEM:0};
+    for(const grant of grants)scopeCounts[grant.scope_type]=(scopeCounts[grant.scope_type]??0)+1;
+    return {
+      authority:"SERVER_SCOPED_ACCESS_PROJECTION",
+      identity:{user_id:identity.user_id,role:identity.role,tenant_id:this.tenant(userId)},
+      permissions:{can_view_review_inbox:this.hasReviewScope(userId),can_coordinate_review:this.coordinator(userId),can_manage_access:this.coordinator(userId)},
+      counts:{owned_field_count:fields.filter((item)=>item.owner_user_id===userId).length,assigned_field_count:fields.filter((item)=>item.owner_user_id!==userId).length,assigned_case_count:cases.filter((item)=>item.owner_user_id!==userId).length,review_assignment_count:grants.filter((item)=>["CASE_REVIEW","REVIEW_ITEM_REVIEW"].includes(item.capability)).length,review_item_count:reviewItems.length},
+      capabilities:[...capabilitySet].sort(),
+      scopes:Object.entries(scopeCounts).filter(([,count])=>count>0).map(([scope_type,count])=>({scope_type,count}))
+    };
+  }
+  operationalHome(userId,{loadFields=()=>this.visibleFields(userId),loadCases=()=>this.visibleCases(userId),loadDue=null,loadReview=()=>this.visibleSignals(userId)}={}) {
+    this.identity(userId);const canViewReview=this.hasReviewScope(userId),available=(value)=>({status:"AVAILABLE",...value}),unavailable=()=>({status:"UNAVAILABLE"});
+    let fields=null,cases=null,fieldCard,caseCard,evidenceCard,dueCard,reviewCard;
+    try{fields=loadFields();fieldCard=available({owned_count:fields.filter((item)=>item.owner_user_id===userId).length,assigned_count:fields.filter((item)=>item.owner_user_id!==userId).length,items:fields});}catch{fieldCard=unavailable();}
+    try{cases=loadCases();const open=cases.filter((item)=>item.status==="OPEN");caseCard=available({open_count:open.length,assigned_count:open.filter((item)=>item.owner_user_id!==userId).length,items:open});const ids=open.map((item)=>item.case_id);let pending=0;if(ids.length){const placeholders=ids.map(()=>"?").join(",");pending=this.db.prepare(`SELECT COUNT(*) count FROM investigation_observations WHERE case_id IN (${placeholders}) AND review_state IN ('UNREVIEWED','DISPUTED')`).get(...ids).count;}evidenceCard=available({pending_count:pending,case_count:open.length});}catch{caseCard=unavailable();evidenceCard=unavailable();}
+    try{const due=loadDue&&cases?cases.flatMap((item)=>loadDue(item)??[]):[];dueCard=available({count:due.length,items:due.map((item)=>({reminder_id:item.reminder_id,case_id:item.case_id,field_id:item.field_id,due_at:item.due_at,status:item.status}))});}catch{dueCard=unavailable();}
+    if(canViewReview){try{const items=loadReview();reviewCard=available({count:items.length});}catch{reviewCard=unavailable();}}
+    const continueTarget=cases?.find((item)=>item.status==="OPEN")??fields?.[0]??null;
+    return {authority:"SERVER_OPERATIONAL_HOME_PROJECTION",generated_at:this.clock().toISOString(),cards:{continue_work:continueTarget?available({target:continueTarget.case_id?{type:"CASE",case_id:continueTarget.case_id,label:continueTarget.purpose??continueTarget.case_id}:{type:"FIELD",field_id:continueTarget.field_id,label:continueTarget.name}}):available({target:null}),fields:fieldCard,cases:caseCard,evidence:evidenceCard,due_followup:dueCard,...(reviewCard?{review_work:reviewCard}:{}),quick_actions:available({actions:["CREATE_FIELD","OPEN_FIELDS","OPEN_LEARNING",...(canViewReview?["OPEN_REVIEW"]:[])]})}};
+  }
   grant(actorUserId, input) {
     id(actorUserId,"actor_user_id"); if (!this.coordinator(actorUserId)) fail("grant authority required");
     const subject = id(input?.subject_user_id,"subject_user_id"), type = id(input?.scope_type,"scope_type"), scopeId = id(input?.scope_id,"scope_id"), capability = id(input?.capability,"capability");
