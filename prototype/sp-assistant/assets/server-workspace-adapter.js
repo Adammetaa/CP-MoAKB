@@ -12,6 +12,16 @@ export class ServerWorkspaceAdapter {
   async capabilities() { const response=await this.fetcher("/api/pilot/capabilities",{headers:{accept:"application/json"}});if(!response.ok)throw new Error("โหลดสิทธิ์ความสามารถของระบบไม่สำเร็จ");return response.json(); }
   async getAccessSummary() { const response=await this.fetcher("/api/pilot/access/summary",{headers:{accept:"application/json"}}),body=await response.json().catch(()=>({}));if(!response.ok)throw new Error(body.message??"โหลดขอบเขตสิทธิ์ไม่สำเร็จ");return body; }
   async getOperationalHome() { const response=await this.fetcher("/api/pilot/home",{headers:{accept:"application/json"}}),body=await response.json().catch(()=>({}));if(!response.ok)throw new Error(body.message??"โหลดภาพรวมงานไม่สำเร็จ");return body; }
+  async getAssignments() { return this.scopedGet("/api/pilot/access/assignments",{},"ไม่มีสิทธิ์จัดการการมอบหมาย"); }
+  async grantAssignment(input) { return this.governedWrite("/api/pilot/access/grants",input,"สร้างการมอบหมายไม่สำเร็จ"); }
+  async revokeAssignment(grant_id,reason) { return this.governedWrite("/api/pilot/access/revocations",{grant_id,reason},"ยกเลิกการมอบหมายไม่สำเร็จ"); }
+  async getFieldSeasons(fieldId) { return this.scopedGet("/api/pilot/access/field-seasons",{field_id:fieldId},"โหลดฤดูปลูกไม่สำเร็จ"); }
+  async getScopedFieldHistory(scope) { return this.scopedGet("/api/pilot/access/field-history",scope,"โหลดประวัติฤดูปลูกไม่สำเร็จ"); }
+  async getNotifications() { return this.scopedGet("/api/pilot/notifications",{},"โหลดการแจ้งเตือนไม่สำเร็จ"); }
+  async getChatContextCandidates() { return this.scopedGet("/api/pilot/access/chat-context",{},"โหลดบริบทสนทนาไม่สำเร็จ"); }
+  async listConversations() { return this.scopedGet("/api/pilot/conversations",{},"โหลดบทสนทนาไม่สำเร็จ"); }
+  async getConversationHistory(conversationId) { return this.scopedGet("/api/pilot/conversation-history",{conversation_id:conversationId},"โหลดประวัติสนทนาไม่สำเร็จ"); }
+  async sendGeneralChat(message,{conversation_id=null,remain_general=true,field_id=null,season_id=null,case_id=null,expected_conversation_revision=null,request_id=globalThis.crypto.randomUUID()}={}) { return this.governedWrite("/api/pilot/conversation-turns",{request_id:`general-${request_id}`,message,entry_point:"GENERAL_CHAT",remain_general,...(conversation_id?{conversation_id}:{}),...(field_id?{field_id}:{}),...(season_id?{season_id}:{}),...(case_id?{case_id}:{}),...(expected_conversation_revision!=null?{expected_conversation_revision}: {})},"ส่งข้อความทั่วไปไม่สำเร็จ"); }
   async lifecycle() { const response=await this.fetcher("/api/pilot/lifecycle",{headers:{accept:"application/json"}});if(response.status===404)return{authority:"SERVER",fields:[],seasons:[],guidance:[]};if(!response.ok)throw new Error("โหลดข้อมูลแปลงจากระบบไม่สำเร็จ");return response.json(); }
   async createField(input) { return this.governedWrite("/api/pilot/fields",input,"บันทึกแปลงบนระบบไม่สำเร็จ"); }
   async pull() {

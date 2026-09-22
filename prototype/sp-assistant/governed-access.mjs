@@ -92,6 +92,48 @@ export class GovernedAccessService {
       scopes:Object.entries(scopeCounts).filter(([,count])=>count>0).map(([scope_type,count])=>({scope_type,count}))
     };
   }
+  assignmentManagement(userId) {
+    if (!this.coordinator(userId)) fail("assignment management capability required");
+    const tenantId=this.tenant(userId),sameTenant=(ownerUserId)=>{const owner=this.identities.get(ownerUserId);return owner?.enabled!==false&&(owner?.tenant_id??"single-pilot")===tenantId;};
+    const users=[...this.identities.values()].filter((item)=>item.enabled!==false&&sameTenant(item.user_id)).map((item)=>({user_id:item.user_id,display_name:item.display_name??item.login_id??item.user_id,role:item.role,can_self_assign:item.user_id!==userId||this.isAdmin(userId)})).sort((a,b)=>a.display_name.localeCompare(b.display_name));
+    const fields=this.db.prepare("SELECT field_id,owner_user_id,name FROM lifecycle_fields ORDER BY name,field_id").all().filter((item)=>sameTenant(item.owner_user_id)).map((item)=>({scope_type:"FIELD",scope_id:item.field_id,label:item.name,owner_user_id:item.owner_user_id}));
+    const cases=this.db.prepare("SELECT c.case_id,c.owner_user_id,c.field_id,c.purpose,f.name field_name FROM investigation_cases c JOIN lifecycle_fields f ON f.field_id=c.field_id ORDER BY c.opened_at,c.case_id").all().filter((item)=>sameTenant(item.owner_user_id)).map((item)=>({scope_type:"CASE",scope_id:item.case_id,label:item.purpose||`เคสใน ${item.field_name}`,field_id:item.field_id,owner_user_id:item.owner_user_id}));
+    const reviewItems=this.db.prepare("SELECT signal_id,owner_user_id,case_id,signal_class FROM governed_learning_signals ORDER BY created_at,signal_id").all().filter((item)=>sameTenant(item.owner_user_id)).map((item)=>({scope_type:"REVIEW_ITEM",scope_id:item.signal_id,label:`${item.signal_class} · ${item.signal_id}`,case_id:item.case_id,owner_user_id:item.owner_user_id}));
+    const labels=new Map([...fields,...cases,...reviewItems].map((item)=>[`${item.scope_type}:${item.scope_id}`,item.label]));
+    const assignments=this.db.prepare("SELECT * FROM governed_access_grants WHERE tenant_id=? AND scope_type<>'SYSTEM' ORDER BY granted_at DESC,grant_id DESC").all(tenantId).map((item)=>({grant_id:item.grant_id,subject_user_id:item.subject_user_id,subject_label:users.find((user)=>user.user_id===item.subject_user_id)?.display_name??item.subject_user_id,scope_type:item.scope_type,scope_id:item.scope_id,scope_label:labels.get(`${item.scope_type}:${item.scope_id}`)??"ขอบเขตที่ไม่พร้อมใช้งาน",capability:item.capability,granted_by:item.granted_by,granted_at:item.granted_at,state:item.revoked_at?"REVOKED":"ACTIVE",revoked_at:item.revoked_at??null}));
+    return {authority:"SERVER_ASSIGNMENT_MANAGEMENT_PROJECTION",permissions:{can_manage_access:true},users,scopes:[...fields,...cases,...reviewItems],allowed_combinations:[{scope_type:"FIELD",capabilities:["FIELD_OPERATE"]},{scope_type:"CASE",capabilities:["CASE_OPERATE","CASE_REVIEW"]},{scope_type:"REVIEW_ITEM",capabilities:["REVIEW_ITEM_REVIEW"]}],assignments};
+  }
+  cropSeasons(userId,fieldId) {
+    const field=this.db.prepare("SELECT * FROM lifecycle_fields WHERE field_id=?").get(id(fieldId,"field_id"));
+    if(!field||!this.canReadField(userId,field))fail("field not found",404);
+    const seasons=this.db.prepare("SELECT season_id,field_id,crop,planting_date,expected_planting_date,rice_variety,planting_method,status,created_at,updated_at FROM crop_seasons WHERE owner_user_id=? AND field_id=? ORDER BY CASE status WHEN 'ACTIVE' THEN 0 ELSE 1 END,created_at DESC,season_id").all(field.owner_user_id,field.field_id).map((item)=>({...item,current:item.season_id===field.season_id,authority:"SERVER_FIELD_SEASON_MEMBERSHIP"}));
+    return {authority:"SERVER_SCOPED_CROP_SEASONS",field:{field_id:field.field_id,name:field.name,current_season_id:field.season_id},seasons};
+  }
+  fieldHistory(userId,fieldId,seasonId,loadHistory) {
+    const field=this.db.prepare("SELECT * FROM lifecycle_fields WHERE field_id=?").get(id(fieldId,"field_id"));
+    if(!field||!this.canReadField(userId,field))fail("field not found",404);
+    const season=this.db.prepare("SELECT season_id FROM crop_seasons WHERE season_id=? AND field_id=? AND owner_user_id=?").get(id(seasonId,"season_id"),field.field_id,field.owner_user_id);
+    if(!season)fail("crop season not found",404);
+    return loadHistory(field.owner_user_id,{field_id:field.field_id,season_id:season.season_id});
+  }
+  chatContextCandidates(userId) {
+    const fields=this.visibleFields(userId),cases=this.visibleCases(userId).filter((item)=>item.status==="OPEN");
+    return {authority:"SERVER_SCOPED_CHAT_CONTEXT_CANDIDATES",selection_required:fields.length+cases.length>1,fields:fields.map((item)=>({field_id:item.field_id,season_id:item.season_id,label:item.name,access_kind:item.access_kind,permissions:item.permissions})),cases:cases.map((item)=>({case_id:item.case_id,field_id:item.field_id,season_id:item.season_id,label:item.purpose??item.case_id,access_kind:item.access_kind,permissions:item.permissions}))};
+  }
+  notifications(userId,{loadDue=null}={}) {
+    this.identity(userId);const tenantId=this.tenant(userId),items=[];
+    const grants=this.db.prepare("SELECT * FROM governed_access_grants WHERE subject_user_id=? AND tenant_id=? AND scope_type<>'SYSTEM' ORDER BY granted_at,grant_id").all(userId,tenantId);
+    for(const grant of grants){
+      if(grant.revoked_at){items.push({notification_id:`assignment-revoked:${grant.grant_id}`,category:"ASSIGNMENT_REVOKED",occurred_at:grant.revoked_at,title:"การมอบหมายสิ้นสุดแล้ว",body:`สิทธิ์ ${grant.capability} ไม่สามารถเปิดเป้าหมายเดิมได้อีก`,target:null,target_state:"NO_LONGER_AVAILABLE",authority:"EVENT_PROJECTION_ONLY"});continue;}
+      const target=grant.scope_type==="FIELD"?{type:"FIELD",field_id:grant.scope_id}:grant.scope_type==="CASE"?{type:"CASE",case_id:grant.scope_id}:grant.scope_type==="REVIEW_ITEM"?{type:"REVIEW_ITEM",signal_id:grant.scope_id}:null;
+      items.push({notification_id:`assignment-created:${grant.grant_id}`,category:"ASSIGNMENT_CREATED",occurred_at:grant.granted_at,title:"ได้รับมอบหมายงาน",body:`${grant.scope_type} · ${grant.capability}`,target,target_state:"REAUTHORIZE_ON_OPEN",authority:"EVENT_PROJECTION_ONLY"});
+    }
+    const cases=this.visibleCases(userId);
+    if(loadDue)for(const caseItem of cases){for(const reminder of loadDue(caseItem)??[])items.push({notification_id:`follow-up-due:${reminder.reminder_id}`,category:"FOLLOW_UP_DUE",occurred_at:reminder.due_at??reminder.created_at,title:"ถึงกำหนดติดตาม",body:reminder.reason??"มีรายการติดตามที่ถึงกำหนด",target:{type:"CASE",case_id:caseItem.case_id},target_state:"REAUTHORIZE_ON_OPEN",authority:"EVENT_PROJECTION_ONLY"});}
+    const reviewCount=this.hasReviewScope(userId)?this.visibleSignals(userId).length:0;if(reviewCount)items.push({notification_id:`review-due:${userId}`,category:"REVIEW_DUE",occurred_at:this.clock().toISOString(),title:"มีงานทบทวน",body:`${reviewCount} รายการที่มองเห็นได้ตามสิทธิ์`,target:{type:"REVIEW_INBOX"},target_state:"REAUTHORIZE_ON_OPEN",authority:"EVENT_PROJECTION_ONLY"});
+    items.sort((a,b)=>b.occurred_at.localeCompare(a.occurred_at)||a.notification_id.localeCompare(b.notification_id));
+    return {authority:"SERVER_GOVERNED_NOTIFICATION_PROJECTION",generated_at:this.clock().toISOString(),read_state_authority:"NOT_IMPLEMENTED",items};
+  }
   operationalHome(userId,{loadFields=()=>this.visibleFields(userId),loadCases=()=>this.visibleCases(userId),loadDue=null,loadReview=()=>this.visibleSignals(userId)}={}) {
     this.identity(userId);const canViewReview=this.hasReviewScope(userId),available=(value)=>({status:"AVAILABLE",...value}),unavailable=()=>({status:"UNAVAILABLE"});
     let fields=null,cases=null,fieldCard,caseCard,evidenceCard,dueCard,reviewCard;

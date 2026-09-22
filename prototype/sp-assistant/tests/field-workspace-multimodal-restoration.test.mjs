@@ -22,7 +22,7 @@ function matches(name,pattern){test(name,()=>assert.match(app,pattern));}
 
 matches("M0E.2 01 Home remains reachable in capture profile",/\[\"home\", \"⌂\", \"หน้าหลัก\"\]/);
 matches("M0E.2 02 Field navigation remains reachable",/\[\"fields\", \"▦\", \"แปลง\"\]/);
-matches("M0E.2 03 Chat remains reachable",/\[\"free-chat\", \"▢\", \"แชท\"\]/);
+matches("M0E.2 03 Chat remains reachable",/\[\"general-chat\", \"▢\", \"แชท\"\]/);
 matches("M0E.2 04 Knowledge remains reachable",/\[\"learn\", \"▤\", \"เรียนรู้\"\]/);
 matches("M0E.2 05 Profile remains reachable",/\[\"profile\", \"♙\", \"โปรไฟล์\"\]/);
 matches("M0E.2 06 SPA Learning Inbox remains role-gated",/isReviewAdministrator\(\).*learning-inbox/);
