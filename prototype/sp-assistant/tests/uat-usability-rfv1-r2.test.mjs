@@ -18,6 +18,15 @@ test("RFV1-R2 separates compact Field Detail preview from viewport-aware boundar
   assert.ok(app.indexOf("workspace-guidance")<app.indexOf("field-detail-map-panel"),"primary actions must precede the Field Detail map preview");
 });
 
+test("HOME-01 bounds the selected Field satellite preview independently from its facts",async()=>{
+  const css=await read("../assets/field-shell.css");
+  assert.match(css,/\.selected-field-card \{[^}]*grid-template-columns:260px minmax\(0,1fr\);[^}]*align-items:start/);
+  assert.match(css,/\.selected-field-card > \.field-card-visual \{[^}]*height:220px; min-height:0; max-height:220px;[^}]*contain:layout paint/);
+  assert.match(css,/@media \(max-width:820px\)[\s\S]*?\.selected-field-card > \.field-card-visual \{ height:200px; max-height:200px; \}/);
+  assert.match(css,/@media \(max-width:480px\) \{ \.selected-field-card > \.field-card-visual \{ height:180px; max-height:180px; \} \}/);
+  assert.match(css,/\.map-canvas \{ height:min\(56vh,430px\); min-height:340px/);
+});
+
 test("RFV1-R2 preserves center-pin controls and prevents narrow editor control collisions",async()=>{
   const [css,app]=await Promise.all([read("../assets/field-shell.css"),read("../assets/field-app.js")]);
   for(const marker of ["center-mode","center-crosshair","add-center-point",'data-map-action="add-center"',"finish-area-button","map-area-badge"])assert.match(app,new RegExp(marker));
