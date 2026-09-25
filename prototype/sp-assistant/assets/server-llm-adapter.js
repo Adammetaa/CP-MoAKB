@@ -9,12 +9,12 @@ export class ServerLLMAdapter {
   async ensureConversation(input) { const key=this.conversationKey(input),known=await this.resumeConversation(key,input);if(known)return known;const response=await this.fetcher("/api/pilot/conversations",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({field_id:input.field_id,season_id:input.season_id,case_id:input.case_id,entry_point:input.entry_point??"CASE"})}),payload=await response.json().catch(()=>({}));if(!response.ok||!payload.conversation?.conversation_id)throw new Error(payload.message??"เริ่มการสนทนาบนระบบไม่สำเร็จ");this.conversations.set(key,payload.conversation.conversation_id);return payload.conversation.conversation_id; }
   async chat(input) {
     try {
-      const key = this.conversationKey(input), conversationId = input.conversation_id ?? await this.resumeConversation(key,input);
-      const response = await this.fetcher(this.endpoint, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ request_id:input.request_id??`browser-turn-${this.idProvider()}`, conversation_id:conversationId, message:input.message, entry_point:input.scope === "CASE_SCOPED" ? "CASE" : "FIELD", field_id:input.field_id ?? null, season_id:input.season_id ?? null, case_id:input.case_id ?? null, audience:input.audience ?? "SP" }) });
+      const key = this.conversationKey(input), conversationId = input.conversation_id ?? (input.force_new_conversation ? null : await this.resumeConversation(key,input));
+      const response = await this.fetcher(this.endpoint, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ request_id:input.request_id??`browser-turn-${this.idProvider()}`, conversation_id:conversationId, message:input.message, entry_point:input.entry_point??(input.scope === "CASE_SCOPED" ? "CASE" : "FIELD"), field_id:input.field_id ?? null, season_id:input.season_id ?? null, case_id:input.case_id ?? null, context_policy:input.context_policy??"RESUME_BEFORE_CREATE", audience:input.audience ?? "SP" }) });
       const payload = await response.json().catch(() => ({}));
       if (!response.ok) return { status: "UNAVAILABLE", message: payload.message ?? "บริการ AI ยังไม่พร้อมใช้งาน" };
       if (typeof payload.text !== "string" || !payload.text.trim() || typeof payload.turn_id !== "string") return { status:"UNAVAILABLE", message:"ได้รับคำตอบที่ไม่สมบูรณ์ กรุณาลองส่งอีกครั้ง" };
-      if (payload.conversation_id) this.conversations.set(key,payload.conversation_id);
+      if (payload.conversation_id) { this.conversations.set(key,payload.conversation_id);if(payload.context?.case_id)this.conversations.set(this.conversationKey({...input,case_id:payload.context.case_id}),payload.conversation_id); }
       return { status:"AVAILABLE", message:payload.text, provider:payload.provider?.provider_id, model:payload.provider?.provider_version, response_id:payload.turn_id, governed_response:payload };
     } catch { return { status: "UNAVAILABLE", message: "เชื่อมต่อบริการ AI ไม่สำเร็จ ข้อมูลแปลงและการสนทนาในเครื่องยังใช้งานได้" }; }
   }

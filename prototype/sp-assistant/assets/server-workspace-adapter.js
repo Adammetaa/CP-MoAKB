@@ -55,6 +55,7 @@ export class ServerWorkspaceAdapter {
   async reviewScopedObservation(input) { return this.governedWrite("/api/pilot/observation-reviews",input,"ไม่สามารถบันทึกการทบทวน Observation"); }
   async getInvestigationAssessment(scope) { return this.scopedGet("/api/pilot/investigation-assessment",scope,"ประเมินหลักฐานการตรวจไม่สำเร็จ"); }
   async getGuidance(scope) { return this.scopedGet("/api/pilot/guidance",scope,"โหลดขั้นตอนถัดไปไม่สำเร็จ"); }
+  async transitionGuidance(input) { return this.governedWrite("/api/pilot/guidance-actions",input,"บันทึกสถานะขั้นตอนตรวจไม่สำเร็จ"); }
   scopedPath(endpoint,scope) { return `${endpoint}?${new URLSearchParams(Object.fromEntries(Object.entries(scope).filter(([,value])=>value!=null)))}`; }
   async scopedGet(endpoint,scope,errorMessage) { const response=await this.fetcher(this.scopedPath(endpoint,scope),{headers:{accept:"application/json"}}),body=await response.json().catch(()=>({}));if(!response.ok)throw new Error(body.message??errorMessage);return body; }
   async uploadVisualEvidence(file,context,{observation_id=null,guidance_id=null,conversation_id=null,capture_intent="PLANT_CONTEXT",plant_part_scope="WHOLE_PLANT",spatial_scope="SAMPLED_OBJECT",view_type="DETAIL"}={}) {

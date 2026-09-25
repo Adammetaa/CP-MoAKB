@@ -26,6 +26,7 @@ export function containsForbiddenFieldChatTerm(value) { return hasForbiddenTerm(
 
 export function naturalQuestionForGuidance(guidance = {}) {
   const concept = String(guidance.evidence_concept ?? "").trim();
+  if (concept === "FIELD_PATTERN_CONTEXT_PHOTO") return "ช่วยถ่ายภาพมุมกว้างบริเวณที่มีอาการ ให้เห็นทั้งกอที่มีอาการและต้นรอบข้างได้ไหมครับ?";
   if (guidance.inspection_domain === "VISUAL_EVIDENCE") return "ถ้ามีรูปที่เห็นจุดนี้ชัด ส่งเพิ่มได้ไหมครับ?";
   if (NATURAL_QUESTIONS[concept]) return NATURAL_QUESTIONS[concept];
   if (/WATER|น้ำ/iu.test(`${concept} ${guidance.what_to_inspect ?? ""}`)) return NATURAL_QUESTIONS.WATER_CONTEXT;
@@ -48,7 +49,8 @@ export function acknowledgementForFacts(explicitFacts = []) {
 
 export function composeNaturalFieldGuidance({ explicitFacts = [], guidance = {} } = {}) {
   const question = naturalQuestionForGuidance(guidance);
-  const text = `${acknowledgementForFacts(explicitFacts)} ขอเช็กเพิ่มอีกอย่างเดียวครับ ${question}`;
+  const transition = guidance.evidence_concept === "FIELD_PATTERN_CONTEXT_PHOTO" ? " ตอนนี้ขอดูรูปแบบรอบบริเวณนั้นก่อนครับ " : " ขอเช็กเพิ่มอีกอย่างเดียวครับ ";
+  const text = `${acknowledgementForFacts(explicitFacts)}${transition}${question}`;
   if (hasForbiddenTerm(text) || hasForbiddenTerm(question)) throw new Error("field chat presentation leaked governed vocabulary");
   return { text, question, presentation_version:CONVERSATION_PRESENTATION_VERSION };
 }

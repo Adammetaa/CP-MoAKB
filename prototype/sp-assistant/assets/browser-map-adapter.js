@@ -117,7 +117,7 @@ export class GoogleSatelliteMapAdapter {
   }
 
   getCenter() { const center = this.map.getCenter(); return { latitude: center.lat(), longitude: center.lng() }; }
-  destroy() { clearTimeout(this.readyTimer);this.unsubscribeFailure?.();this.listeners.forEach((listener) => listener.remove()); this.overlays.forEach((overlay) => overlay.setMap(null)); this.listeners = []; this.overlays = []; }
+  destroy() { clearTimeout(this.readyTimer);this.unsubscribeFailure?.();this.listeners.forEach((listener) => listener?.remove?.()); this.overlays.forEach((overlay) => overlay?.setMap?.(null)); this.listeners = []; this.overlays = []; }
 }
 
 export class ResilientPreferredMapAdapter {

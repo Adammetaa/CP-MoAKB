@@ -32,7 +32,7 @@ matches("M0E.2 09 Inspection is a first-class route",/route === "inspection"\) r
 matches("M0E.2 10 Timeline is a first-class route",/route === "history"\) renderHistory/);
 matches("M0E.2 11 capture boot no longer starts at Fields",/route=currentUser\(\)\?"home":"login"/);
 matches("M0E.2 12 Inspection resumes the Field conversation",/startInspection[\s\S]*await resumeFieldConversation\(\)/);
-matches("M0E.2 13 Inspection ensures authoritative shared context",/ensureAuthoritativeChatContext\(field,"INSPECTION"\)/);
+matches("M0E.2 13 Inspection ensures an authoritative Case-scoped conversation",/ensureAuthoritativeChatContext\(field,"CASE"\)/);
 matches("M0E.2 14 Chat and Inspection use one caseState",/governedRuntime\.caseState\.scope\.case_id/);
 matches("M0E.2 15 camera is explicit",/📷 ถ่ายภาพ/);
 matches("M0E.2 16 camera requests environment capture",/capture="environment" data-\$\{surface\}-camera/);

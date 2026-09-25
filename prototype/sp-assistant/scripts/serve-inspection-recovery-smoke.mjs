@@ -1,0 +1,21 @@
+import { mkdtemp, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { PilotStore } from "../pilot-store.mjs";
+import { createEmptyCandidateProvider } from "../candidate-provider.mjs";
+import { startServer } from "../server.mjs";
+
+const fieldUser={login_id:"rfv1-browser",user_id:"rfv1-browser",password:"rfv1-browser-secret",display_name:"RFV1 Browser",role:"FIELD_USER",tenant_id:"tenant-rfv1",enabled:true};
+const users=[fieldUser,{login_id:"rfv1-reviewer",user_id:"rfv1-reviewer",password:"rfv1-reviewer-secret",role:"SPA",tenant_id:"tenant-rfv1",enabled:true},{login_id:"rfv1-admin",user_id:"rfv1-admin",password:"rfv1-admin-secret",role:"ADMIN",tenant_id:"tenant-rfv1",enabled:true}];
+const field={field_id:"field-rfv1-browser",season_id:"season-rfv1-browser",owner_user_id:fieldUser.user_id,name:"แปลงทดสอบ RFV1",polygon:{type:"Polygon",coordinates:[[[100,13],[100.01,13],[100,13.01],[100,13]]]},centroid:{latitude:13.003,longitude:100.003},area:{rai:1.2,hectares:.19},crop:"rice",variety:"หอมมะลิ",planting_date:"2026-08-01",current_crop_stage:{code:"TILLERING",label:"แตกกอ"},current_cmp_stage:{stage_id:"CMP-03",label:"ระยะแตกกอ"},stage_provenance:"USER_CONFIRMED",created_at:"2026-08-01T00:00:00Z",updated_at:"2026-09-20T00:00:00Z"};
+const state={schema_version:2,users:[{user_id:fieldUser.user_id,role:fieldUser.role}],fields:[field],seasons:[{field_id:field.field_id,season_id:field.season_id,crop:"rice",status:"ACTIVE"}],guidance:[],activities:[],cases:[],observations:[],evidence:[],conversations:[],messages:[],decision_logs:[],case_summaries:[],weather_snapshots:[]};
+const root=await mkdtemp(join(tmpdir(),"cpmoakb-rfv1-ui-")),dbPath=join(root,"pilot.sqlite"),exportDir=join(root,"exports"),uploadDir=join(root,"uploads"),seed=await new PilotStore({dbPath,exportDir,pilotProfile:"FIELD_CAPTURE_ALPHA",scopedIdentities:users,investigationCandidateProvider:createEmptyCandidateProvider()}).open();
+seed.putWorkspace(fieldUser.user_id,state);
+seed.createInvestigationRecord(fieldUser.user_id,"CASE",{field_id:field.field_id,season_id:field.season_id,case_id:"case-existing-rfv1",purpose:"เคสเดิมสำหรับทดสอบการเลือก"});
+seed.close();
+const server=await startServer({port:0,host:"127.0.0.1",dbPath,exportDir,uploadDir,pilotUsers:users,pilotProfile:"FIELD_CAPTURE_ALPHA",investigationCandidateProvider:createEmptyCandidateProvider()});
+console.log(JSON.stringify({url:`http://127.0.0.1:${server.address().port}/`,login_id:fieldUser.login_id,password:fieldUser.password}));
+process.stdin.resume();
+const close=async()=>{await new Promise((resolve)=>server.close(resolve));await rm(root,{recursive:true,force:true,maxRetries:5,retryDelay:100});process.exit(0);};
+process.on("SIGINT",close);
+process.on("SIGTERM",close);
